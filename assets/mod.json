@@ -7,6 +7,6 @@
   "main": "UnitInfo.core.Main",
   "minGameVersion": "126",
   "dependencies": [],
-  "hidden": false,
+  "hidden": true,
   "java": true
 }

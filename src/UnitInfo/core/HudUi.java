@@ -36,16 +36,16 @@ public class HudUi {
     }
     
     public void reset(Table table){
+        addTable();
         table.remove();
         table.reset();
-        addTable();
     }
     
     public void addTable(){
         Vars.ui.hudGroup.addChild(new Table(table -> {
             Unit unit = getUnit();
             table.update(() -> {
-                if(getUnit() != unit) reset(table);
+                if(getUnit() != unit || getUnit().type == null) reset(table);
             });
             table.left();
             table.table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
@@ -95,9 +95,9 @@ public class HudUi {
                     )).growX().left();
                     tt.row();
                     if(getUnit() instanceof Payloadc) tt.add(new SBar(
-                            () -> Core.bundle.format("shar-stat.payloadCapacity", Mathf.round(((Payloadc)getUnit()).payloadUsed()), Mathf.round(unit.type().payloadCapacity)),
+                            () -> Core.bundle.format("shar-stat.payloadCapacity", Mathf.round(((Payloadc)getUnit()).payloadUsed()), Mathf.round(getUnit().type().payloadCapacity)),
                             () -> Pal.items,
-                            () -> Mathf.clamp(((Payloadc)getUnit()).payloadUsed() / unit.type().payloadCapacity)
+                            () -> Mathf.clamp(((Payloadc)getUnit()).payloadUsed() / getUnit().type().payloadCapacity)
                     )).growX().left();
 
                 });

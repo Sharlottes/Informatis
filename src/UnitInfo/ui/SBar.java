@@ -107,19 +107,19 @@ public class SBar extends Element{
         blink = Mathf.lerpDelta(blink, 0f, 0.2f);
         value = Mathf.lerpDelta(value, computed, 0.15f);
 
-        NinePatchDrawable bar = (NinePatchDrawable) drawable("shar-barS");
+        NinePatchDrawable bar = (NinePatchDrawable) drawable("unitinfo-barS");
         Draw.colorl(0.1f);
         bar.draw(x, y, width, height);
         Draw.color(color, blinkColor, blink);
 
-        NinePatchDrawable top = (NinePatchDrawable) drawable("shar-barS-top");
+        NinePatchDrawable top = (NinePatchDrawable) drawable("unitinfo-barS-top");
         float topWidth = width * value;
 
-        if(topWidth > Core.atlas.find("shar-bar-top").width){
+        if(topWidth > Core.atlas.find("unitinfo-bar-top").width){
             top.draw(x, y, topWidth, height);
         }else{
             if(ScissorStack.push(scissor.set(x, y, topWidth, height))){
-                top.draw(x, y, Core.atlas.find("shar-bar-top").width, height);
+                top.draw(x, y, Core.atlas.find("unitinfo-bar-top").width, height);
                 ScissorStack.pop();
             }
         }
