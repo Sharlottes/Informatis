@@ -1,0 +1,45 @@
+plugins {
+    id 'java'
+}
+
+group pGroup
+
+sourceSets.main {
+    java.srcDir("src/")
+    resources.srcDir("assets/")
+}
+
+repositories {
+    mavenCentral()
+    maven { url "https://jitpack.io" }
+}
+
+dependencies {
+    implementation "com.github.Anuken.Mindustry:core:$pMindustryVersion"
+}
+
+jar {
+    archiveFileName.set pArtifactFilename
+}
+
+task dexify(type: Jar) {
+    archiveName "dexed-$pArtifactFilename"
+
+    final File jarArtifact = new File(tasks.jar.archiveFile.get().asFile.parent, pArtifactFilename),
+               dexedArtifact = new File(tasks.dexify.getTemporaryDir(), "dexed.jar")
+    doFirst {
+        exec {
+            workingDir dexedArtifact.parent
+            def command = ["d8", "--min-api", pMinApi, "--output", dexedArtifact, jarArtifact]
+            if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows'))
+                commandLine("cmd", "/c", *command)
+            else
+                commandLine(*command)
+
+        }
+    }
+
+    from(zipTree(jarArtifact), zipTree(dexedArtifact))
+}
+
+task buildDex dependsOn "build", "dexify"
