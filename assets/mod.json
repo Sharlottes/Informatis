@@ -1,11 +1,11 @@
 {
-  "name": "modtemplate",
-  "displayName": "Template",
-  "author": "[#8738ff[]]Sonnicon[[]]",
-  "description": "Gradle jar Mindustry mod template",
+  "name": "unitinfo",
+  "displayName": "Unit Infomation",
+  "author": "Sharlotte",
+  "description": "The mod displays more information for unit, such as health, armor, shield, weapon/weapon reload etc",
   "version": "0",
-  "main": "sonnicon.modtemplate.ModTemplate",
-  "minGameVersion": "105",
+  "main": "UnitInfo.core.Main",
+  "minGameVersion": "126",
   "dependencies": [],
   "hidden": false,
   "java": true

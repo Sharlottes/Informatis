@@ -4,6 +4,11 @@ plugins {
 
 group pGroup
 
+version '1.0'
+
+sourceCompatibility = 8
+
+
 sourceSets.main {
     java.srcDir("src/")
     resources.srcDir("assets/")
@@ -14,12 +19,25 @@ repositories {
     maven { url "https://jitpack.io" }
 }
 
-dependencies {
-    implementation "com.github.Anuken.Mindustry:core:$pMindustryVersion"
-}
-
 jar {
     archiveFileName.set pArtifactFilename
+
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+}
+
+
+dependencies {
+    implementation  'com.github.younggam:multi-lib:java-v1.1.0'
+
+    compileOnly "com.github.Anuken.Arc:arc-core:$pMindustryVersion"
+    compileOnly "com.github.Anuken.Mindustry:core:$pMindustryVersion"
+
+    compileOnly "com.github.Anuken.Mindustry:annotations:$pMindustryVersion"
+    annotationProcessor "com.github.Anuken.Mindustry:annotations:$pMindustryVersion"
 }
 
 task dexify(type: Jar) {
