@@ -15,12 +15,16 @@ import arc.struct.Seq;
 import arc.util.Log;
 import arc.util.Nullable;
 import arc.util.Scaling;
+import arc.util.Time;
 import mindustry.Vars;
+import mindustry.ai.types.FormationAI;
+import mindustry.content.Items;
 import mindustry.entities.abilities.ForceFieldAbility;
 import mindustry.entities.abilities.ShieldRegenFieldAbility;
 import mindustry.entities.units.WeaponMount;
 import mindustry.gen.*;
 import mindustry.graphics.Pal;
+import mindustry.type.AmmoTypes;
 import mindustry.type.UnitType;
 import mindustry.type.Weapon;
 import mindustry.ui.Bar;
@@ -35,6 +39,9 @@ public class HudUi {
     Table weapon = new Table();
     @Nullable UnitType type;
     @Nullable Unit unit;
+
+    float heat;
+
     public Unit getUnit(){
         Seq<Unit> units = Groups.unit.intersect(Core.input.mouseWorldX(), Core.input.mouseWorldY(), 4, 4);
         if(units.size <= 0) return player.unit();
@@ -71,11 +78,6 @@ public class HudUi {
                 }
             )
         );
-        if(getUnit() instanceof Payloadc) bars.add(new SBar(
-                () -> Core.bundle.format("shar-stat.payloadCapacity", Mathf.round(((Payloadc)getUnit()).payloadUsed()), Mathf.round(getUnit().type().payloadCapacity)),
-                () -> Pal.items,
-                () -> Mathf.clamp(((Payloadc)getUnit()).payloadUsed() / getUnit().type().payloadCapacity)
-        ));
         bars.add(new Stack(){{
             add(new Table(t -> {
                 t.defaults().width(23 * 8f);
@@ -95,6 +97,42 @@ public class HudUi {
                 t.pack();
             }));
         }});
+        bars.add(new SBar(
+                () -> Core.bundle.format("shar-stat.commandUnits", Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == getUnit()), getUnit().type().commandLimit),
+                () -> Pal.powerBar.cpy().lerp(Pal.surge.cpy().mul(Pal.lighterOrange), Mathf.absin(Time.time, 7f / (1f + Mathf.clamp(Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == getUnit()) / (getUnit().type().commandLimit * 1f))), 1f)),
+                () -> Mathf.clamp(Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == getUnit()) / (getUnit().type().commandLimit * 1f))
+        ));
+        bars.add(new Stack(){{
+            add(new Table(t -> {
+                t.defaults().width(23 * 8f);
+                t.defaults().height(4f * 8f);
+                t.top();
+                t.add(new SBar(
+                        () -> Vars.state.rules.unitAmmo ? Core.bundle.format("shar-stat.ammos", getUnit().ammo, getUnit().type.ammoCapacity) : Core.bundle.format("shar-stat.infinityAmmos"),
+                        () -> player.dead() || player.unit() instanceof BlockUnitc ? Pal.ammo : getUnit().type.ammoType.color,
+                        () -> Vars.state.rules.unitAmmo ? getUnit().ammof() : 1f
+                )).growX().left();
+            }));
+            add(new Table(t -> {
+                t.left();
+                t.add(new Image(){{
+                    update(() -> {
+                        TextureRegion region = Items.copper.icon(Cicon.small);
+                        if(getUnit().type != null){
+                            if(getUnit().type.ammoType == AmmoTypes.thorium) region = Items.thorium.icon(Cicon.small);
+                            if(getUnit().type.ammoType == AmmoTypes.power || getUnit().type.ammoType == AmmoTypes.powerLow || getUnit().type.ammoType == AmmoTypes.powerHigh) region = Icon.powerSmall.getRegion();
+                        }
+                        setDrawable(region);
+                    });
+                }}).size(30f).scaling(Scaling.bounded).padBottom(4 * 8f).padRight(6 * 8f);
+                t.pack();
+            }));
+        }});
+        bars.add(new SBar(
+                () -> Core.bundle.format("shar-stat.payloadCapacity", Mathf.round(((Payloadc)getUnit()).payloadUsed()), Mathf.round(getUnit().type().payloadCapacity)),
+                () -> Pal.items,
+                () -> Mathf.clamp(((Payloadc)getUnit()).payloadUsed() / getUnit().type().payloadCapacity)
+        ));
     }
 
     public void addWeapon(){
@@ -183,16 +221,21 @@ public class HudUi {
                 });
             }).padRight(24 * 8f);
             table.row();
+            Unit unittemp = getUnit();
             table.update(() -> {
-                type = getUnit().type;
-                unit = getUnit();
+                heat += Time.delta;
+                if (heat >= 16 && unittemp != getUnit()) {
+                    heat = 0f;
+                    type = getUnit().type;
+                    unit = getUnit();
 
-                table.removeChild(weapon);
-                table.removeChild(weapon);
-                addWeapon();
-                table.row();
+                    table.removeChild(weapon);
+                    table.removeChild(weapon);
+                    addWeapon();
+                    table.row();
 
-                table.add(weapon);
+                    table.add(weapon);
+                }
             });
 
             table.fillParent = true;
