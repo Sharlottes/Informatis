@@ -179,6 +179,66 @@ public class HudUi {
                     tt.center();
                 }
             }).padRight(24 * 8f);
+            tx.row();
+            tx.table(scene.getStyle(Button.ButtonStyle.class).up, t1 -> t1.table(tt -> {
+                tt.defaults().minSize(4 * 8f);
+                tt.left();
+                tt.top();
+                int amount = 0;
+                if(type != null) amount = Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == getUnit());
+                Seq<Unit> units = new Seq<>();
+                units = Groups.unit.copy(units).filter(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == getUnit());
+                for(int r = 0; r < amount; r++){
+                    Unit unit = units.get(r);
+                    TextureRegion region = unit.type.icon(Cicon.full);
+                    if(type.weapons.size > 1 && r % 3 == 0) tt.row();
+                    else if(r % 3 == 0) tt.row();
+                    tt.table(unittable -> {
+                        unittable.left();
+                        unittable.add(new Stack(){{
+                            add(new Table(o -> {
+                                o.left();
+                                o.image(region).size(30).scaling(Scaling.bounded);
+                            }));
+
+                            add(new Table(h -> {
+                                h.add(new Stack(){{
+                                    add(new Table(e -> {
+                                        e.defaults().growX().height(9).width(42f).padRight(2*8).padTop(8*2f);
+                                        e.left();
+                                        Bar healthBar = new Bar(
+                                                () -> "",
+                                                () -> Pal.health,
+                                                unit::healthf);
+                                        e.add(healthBar).left();
+                                        e.pack();
+                                    }));
+                                    add(new Table(e -> e.add(new Stack(){{
+                                        add(new Table(t -> {
+                                            t.defaults().growX().height(9).width(42f).padRight(2*8).padTop(8*5f);
+                                            t.left();
+                                            t.add(new Bar(
+                                                    () -> "",
+                                                    () -> unit.stack.item == null || unit.stack.amount <= 0 ? Pal.items : unit.stack.item.color.cpy().lerp(Color.white, 0.15f),
+                                                    () -> Mathf.clamp(unit.stack.amount / (unit.type.itemCapacity * 1f))
+                                            )).growX().left();
+                                        }));
+                                        add(new Table(t -> {
+                                            t.left();
+                                            t.add(new Image(){{
+                                                update(() -> setDrawable(unit.stack.item == null || unit.stack.amount <= 0 ? Core.atlas.find("clear") : unit.stack.item.icon(Cicon.small)));
+                                            }}).size(30f).scaling(Scaling.bounded).padBottom(4 * 8f).padLeft(2 * 8f);
+                                            t.pack();
+                                        }));
+                                    }})));
+                                }}).padTop(2*8).padRight(2*8);
+                                h.pack();
+                            }));
+                        }}).left();
+                    }).left();
+                    tt.center();
+                }
+            })).padRight(24 * 8f);
         });
     }
     public void addTable(){
