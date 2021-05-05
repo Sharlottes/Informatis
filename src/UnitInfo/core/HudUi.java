@@ -137,10 +137,10 @@ public class HudUi {
 
     public void addWeapon(){
         weapon = new Table(tx -> {
-            tx.defaults().minSize(24 * 8f);
+            tx.defaults().minSize(12 * 8f);
             tx.left();
             tx.table(scene.getStyle(Button.ButtonStyle.class).up, tt -> {
-                tt.defaults().minSize(8 * 8f);
+                tt.defaults().minSize(4 * 8f);
                 tt.left();
                 tt.top();
                 int amount = 0;
@@ -157,13 +157,13 @@ public class HudUi {
                         weapontable.add(new Stack(){{
                             add(new Table(o -> {
                                 o.left();
-                                o.image(region).size(60).scaling(Scaling.bounded);
+                                o.image(region).size(30).scaling(Scaling.bounded);
                             }));
 
                             add(new Table(h -> {
                                 h.add(new Stack(){{
                                     add(new Table(e -> {
-                                        e.defaults().growX().height(9).width(42f).padRight(2*8).padTop(8*2f);
+                                        e.defaults().growX().height(9).width(21f).padRight(2*8).padTop(8*2f);
                                         Bar reloadBar = new Bar(
                                                 () -> "",
                                                 () -> Pal.accent.cpy().lerp(Color.orange, mount.reload / weapon.reload),
