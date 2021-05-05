@@ -5,11 +5,15 @@ import arc.Core;
 import arc.graphics.Color;
 import arc.graphics.g2d.TextureRegion;
 import arc.math.Mathf;
+import arc.scene.Element;
+import arc.scene.style.TextureRegionDrawable;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.Stack;
 import arc.scene.ui.layout.Table;
+import arc.scene.utils.Elem;
 import arc.struct.Seq;
 import arc.util.Log;
+import arc.util.Nullable;
 import arc.util.Scaling;
 import mindustry.Vars;
 import mindustry.entities.abilities.ForceFieldAbility;
@@ -27,6 +31,10 @@ import static mindustry.Vars.content;
 import static mindustry.Vars.player;
 
 public class HudUi {
+    Seq<Element> bars = new Seq<>();
+    Table weapon = new Table();
+    @Nullable UnitType type;
+    @Nullable Unit unit;
     public Unit getUnit(){
         Seq<Unit> units = Groups.unit.intersect(Core.input.mouseWorldX(), Core.input.mouseWorldY(), 4, 4);
         if(units.size <= 0) return player.unit();
@@ -36,18 +44,110 @@ public class HudUi {
     }
     
     public void reset(Table table){
-        addTable();
         table.remove();
         table.reset();
+        type = getUnit().type;
+        unit = getUnit();
+        addTable();
+        //addWeapon();
     }
-    
+
+    public void addBars(){
+        bars.clear();
+        bars.add(
+            new SBar(
+                () -> Core.bundle.format("shar-stat.health", Mathf.round(getUnit().health,1)),
+                () -> Pal.health,
+                () -> Mathf.clamp(getUnit().health / getUnit().type.health)
+            ),
+            new SBar(
+                () -> Core.bundle.format("shar-stat.shield", Mathf.round(getUnit().shield,1)),
+                () -> Pal.surge,
+                () -> {
+                    float max1 = ((ShieldRegenFieldAbility)content.units().copy().filter(ut -> ut.abilities.find(abil -> abil instanceof ShieldRegenFieldAbility) != null).sort(ut -> ((ShieldRegenFieldAbility)ut.abilities.find(abil -> abil instanceof ShieldRegenFieldAbility)).max).peek().abilities.find(abil -> abil instanceof ShieldRegenFieldAbility)).max;
+                    float max2 = 0f;
+                    if(getUnit().type.abilities.find(abil -> abil instanceof ForceFieldAbility) != null) max2 = ((ForceFieldAbility) getUnit().type.abilities.find(abil -> abil instanceof ForceFieldAbility)).max;
+                    return Mathf.clamp(getUnit().shield / Math.max(max1, max2));
+                }
+            )
+        );
+        if(getUnit() instanceof Payloadc) bars.add(new SBar(
+                () -> Core.bundle.format("shar-stat.payloadCapacity", Mathf.round(((Payloadc)getUnit()).payloadUsed()), Mathf.round(getUnit().type().payloadCapacity)),
+                () -> Pal.items,
+                () -> Mathf.clamp(((Payloadc)getUnit()).payloadUsed() / getUnit().type().payloadCapacity)
+        ));
+        bars.add(new Stack(){{
+            add(new Table(t -> {
+                t.defaults().width(23 * 8f);
+                t.defaults().height(4f * 8f);
+                t.top();
+                t.add(new SBar(
+                        () -> Core.bundle.format("shar-stat.itemCapacity", getUnit().stack.amount, getUnit().type.itemCapacity),
+                        () -> getUnit().stack.item == null || getUnit().stack.amount <= 0 ? Pal.items : getUnit().stack.item.color.cpy().lerp(Color.white, 0.15f),
+                        () -> Mathf.clamp(getUnit().stack.amount / (getUnit().type.itemCapacity * 1f))
+                )).growX().left();
+            }));
+            add(new Table(t -> {
+                t.left();
+                t.add(new Image(){{
+                    update(() -> setDrawable(getUnit().stack.item == null || getUnit().stack.amount <= 0 ? Core.atlas.find("clear") : getUnit().stack.item.icon(Cicon.small)));
+                }}).size(30f).scaling(Scaling.bounded).padBottom(4 * 8f).padRight(6 * 8f);
+                t.pack();
+            }));
+        }});
+    }
+
+    public void addWeapon(){
+        weapon = new Table(tx -> {
+            tx.defaults().minSize(24 * 8f);
+            tx.left();
+            tx.table(scene.getStyle(Button.ButtonStyle.class).up, tt -> {
+                tt.defaults().minSize(8 * 8f);
+                tt.left();
+                tt.top();
+                int amount = 0;
+                if(type != null) amount = type.weapons.size;
+
+                for(int r = 0; r < amount; r++){
+                    Weapon weapon = type.weapons.get(r);
+                    WeaponMount mount = unit.mounts[r];
+                    TextureRegion region = !weapon.name.equals("") && weapon.outlineRegion.found() ? weapon.outlineRegion : type.icon(Cicon.full);
+                    if(type.weapons.size > 1 && r % 3 == 0) tt.row();
+                    else if(r % 3 == 0) tt.row();
+                    tt.table(weapontable -> {
+                        weapontable.left();
+                        weapontable.add(new Stack(){{
+                            add(new Table(o -> {
+                                o.left();
+                                o.image(region).size(60).scaling(Scaling.bounded);
+                            }));
+
+                            add(new Table(h -> {
+                                h.add(new Stack(){{
+                                    add(new Table(e -> {
+                                        e.defaults().growX().height(9).width(42f).padRight(2*8).padTop(8*2f);
+                                        Bar reloadBar = new Bar(
+                                                () -> "",
+                                                () -> Pal.accent.cpy().lerp(Color.orange, mount.reload / weapon.reload),
+                                                () -> mount.reload / weapon.reload);
+                                        e.add(reloadBar);
+                                        e.pack();
+                                    }));
+                                }}).padTop(2*8).padLeft(2*8);
+                                h.pack();
+                            }));
+                        }}).left();
+                    }).left();
+                    tt.center();
+                }
+            }).padRight(24 * 8f);
+        });
+    }
     public void addTable(){
+
         Vars.ui.hudGroup.addChild(new Table(table -> {
-            Unit unit = getUnit();
-            table.update(() -> {
-                if(getUnit() != unit || getUnit().type == null) reset(table);
-            });
             table.left();
+            addBars();
             table.table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
                 t.table(Tex.underline2, tt -> {
                     tt.top();
@@ -61,7 +161,7 @@ public class HudUi {
                             Label label = new Label(() -> (int)(getUnit().type == null ? 0 : getUnit().type.armor) + "");
                             label.setColor(Pal.surge);
                             label.setSize(0.6f);
-                            temp.add(label).center().padLeft(getUnit().type == null ? 0 : getUnit().type.armor < 10 ? 8f : 0f);
+                            temp.add(label).center().padLeft(getUnit().type == null ? 8f : getUnit().type.armor < 10 ? 8f : 0f);
                             temp.pack();
                         }));
                     }}).growX().left().padRight(3 * 8f);
@@ -76,82 +176,24 @@ public class HudUi {
                     tt.defaults().width(23 * 8f);
                     tt.defaults().height(4f * 8f);
                     tt.top();
-
-                    tt.add(new SBar(
-                            () -> Core.bundle.format("shar-stat.health", Mathf.round(getUnit().health,1)),
-                            () -> Pal.health,
-                            () -> Mathf.clamp(getUnit().health / getUnit().type.health)
-                    )).growX().left();
-                    tt.row();
-                    tt.add(new SBar(
-                            () -> Core.bundle.format("shar-stat.shield", Mathf.round(getUnit().shield,1)),
-                            () -> Pal.surge,
-                            () -> {
-                                float max1 = ((ShieldRegenFieldAbility)content.units().copy().filter(ut -> ut.abilities.find(abil -> abil instanceof ShieldRegenFieldAbility) != null).sort(ut -> ((ShieldRegenFieldAbility)ut.abilities.find(abil -> abil instanceof ShieldRegenFieldAbility)).max).peek().abilities.find(abil -> abil instanceof ShieldRegenFieldAbility)).max;
-                                float max2 = 0f;
-                                if(getUnit().type.abilities.find(abil -> abil instanceof ForceFieldAbility) != null) max2 = ((ForceFieldAbility) getUnit().type.abilities.find(abil -> abil instanceof ForceFieldAbility)).max;
-                                return Mathf.clamp(getUnit().shield / Math.max(max1, max2));
-                            }
-                    )).growX().left();
-                    tt.row();
-                    if(getUnit() instanceof Payloadc) tt.add(new SBar(
-                            () -> Core.bundle.format("shar-stat.payloadCapacity", Mathf.round(((Payloadc)getUnit()).payloadUsed()), Mathf.round(getUnit().type().payloadCapacity)),
-                            () -> Pal.items,
-                            () -> Mathf.clamp(((Payloadc)getUnit()).payloadUsed() / getUnit().type().payloadCapacity)
-                    )).growX().left();
-
+                    for(Element bar : bars){
+                        tt.add(bar).growX().left();
+                        tt.row();
+                    }
                 });
-            });
+            }).padRight(24 * 8f);
             table.row();
-            UnitType type = getUnit().type;
-            table.left();
-            try{
-                table.table(tx -> {
-                    tx.defaults().minSize(24 * 8f);
-                    tx.left();
-                    tx.table(scene.getStyle(Button.ButtonStyle.class).up, tt -> {
-                        tt.defaults().minSize(8 * 8f);
-                        tt.left();
-                        tt.top();
+            table.update(() -> {
+                type = getUnit().type;
+                unit = getUnit();
 
-                        for(int r = 0; r < type.weapons.size; r++){
-                            final int i = r;
-                            Weapon weapon = type.weapons.get(i);
-                            WeaponMount mount = getUnit().mounts[i];
-                            TextureRegion region = !weapon.name.equals("") && weapon.outlineRegion.found() ? weapon.outlineRegion : type.icon(Cicon.full);
-                            if(type.weapons.size > 1 && i % 3 == 0) tt.row();
-                            else if(i % 3 == 0) tt.row();
-                            tt.table(weapontable -> {
-                                weapontable.left();
-                                weapontable.add(new Stack(){{
-                                    add(new Table(o -> {
-                                        o.left();
-                                        o.image(region).size(60).scaling(Scaling.bounded);
-                                    }));
+                table.removeChild(weapon);
+                table.removeChild(weapon);
+                addWeapon();
+                table.row();
 
-                                    add(new Table(h -> {
-                                        h.add(new Stack(){{
-                                            add(new Table(e -> {
-                                                e.defaults().growX().height(9).width(42f).padRight(2*8).padTop(8*2f);
-                                                Bar reloadBar = new Bar(
-                                                        () -> "",
-                                                        () -> Pal.accent.cpy().lerp(Color.orange, mount.reload / weapon.reload),
-                                                        () -> mount.reload / weapon.reload);
-                                                e.add(reloadBar);
-                                                e.pack();
-                                            }));
-                                        }}).padTop(2*8).padLeft(2*8);
-                                        h.pack();
-                                    }));
-                                }}).left();
-                            }).left();
-                            tt.center();
-                        }
-                    });
-                });
-            }catch(Throwable err){
-                Log.info(err);
-            }
+                table.add(weapon);
+            });
 
             table.fillParent = true;
             table.visibility = () ->
