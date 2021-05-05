@@ -5,8 +5,10 @@ import mindustry.game.EventType.*;
 import mindustry.mod.Mod;
 
 public class Main extends Mod {
+    public static Setting settingAdder = new Setting();
     public Main(){
         Events.on(ClientLoadEvent.class, e -> {
+            settingAdder.init();
             new HudUi().addTable();
         });
 

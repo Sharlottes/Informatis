@@ -139,7 +139,7 @@ public class HudUi {
         weapon = new Table(tx -> {
             tx.defaults().minSize(12 * 8f);
             tx.left();
-            tx.table(scene.getStyle(Button.ButtonStyle.class).up, tt -> {
+            if(Core.settings.getBool("weaponui")) tx.table(scene.getStyle(Button.ButtonStyle.class).up, tt -> {
                 tt.defaults().minSize(4 * 8f);
                 tt.left();
                 tt.top();
@@ -180,7 +180,7 @@ public class HudUi {
                 }
             }).padRight(24 * 8f);
             tx.row();
-            tx.table(scene.getStyle(Button.ButtonStyle.class).up, t1 -> t1.table(tt -> {
+            if(Core.settings.getBool("commandedunitui")) tx.table(scene.getStyle(Button.ButtonStyle.class).up, t1 -> t1.table(tt -> {
                 tt.defaults().minSize(4 * 8f);
                 tt.left();
                 tt.top();
@@ -242,7 +242,6 @@ public class HudUi {
         });
     }
     public void addTable(){
-
         Vars.ui.hudGroup.addChild(new Table(table -> {
             table.left();
             addBars();
