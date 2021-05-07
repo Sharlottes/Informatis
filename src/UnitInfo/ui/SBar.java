@@ -18,7 +18,7 @@ public class SBar extends Element{
     private String name = "";
     private float value, lastValue, blink;
     private Color blinkColor = new Color();
-
+    private boolean valid = true;
 
     public SBar(String name, Color color, Floatp fraction){
         this.fraction = fraction;
@@ -45,6 +45,26 @@ public class SBar extends Element{
             }
         });
     }
+
+    public SBar(Prov<String> name, Prov<Color> color, Floatp fraction, Boolp valid){
+        this.fraction = fraction;
+        try{
+            lastValue = value = Mathf.clamp(fraction.get());
+        }catch(Exception e){ //getting the fraction may involve referring to invalid data
+            lastValue = value = 0f;
+        }
+        update(() -> {
+            try{
+                this.valid = valid.get();
+                this.name = name.get();
+                this.blinkColor.set(color.get());
+                setColor(color.get());
+            }catch(Exception e){ //getting the fraction may involve referring to invalid data
+                this.name = "";
+            }
+        });
+    }
+
 
     public SBar(){
 
@@ -83,7 +103,7 @@ public class SBar extends Element{
 
     @Override
     public void draw(){
-        if(fraction == null) return;
+        if(fraction == null || !valid) return;
 
         float computed;
         try{

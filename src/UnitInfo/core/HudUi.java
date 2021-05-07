@@ -2,6 +2,7 @@ package UnitInfo.core;
 
 import UnitInfo.ui.SBar;
 import arc.Core;
+import arc.Events;
 import arc.graphics.Color;
 import arc.graphics.g2d.TextureRegion;
 import arc.math.Mathf;
@@ -22,6 +23,7 @@ import mindustry.content.Items;
 import mindustry.entities.abilities.ForceFieldAbility;
 import mindustry.entities.abilities.ShieldRegenFieldAbility;
 import mindustry.entities.units.WeaponMount;
+import mindustry.game.EventType;
 import mindustry.gen.*;
 import mindustry.graphics.Pal;
 import mindustry.type.AmmoTypes;
@@ -29,10 +31,10 @@ import mindustry.type.UnitType;
 import mindustry.type.Weapon;
 import mindustry.ui.Bar;
 import mindustry.ui.Cicon;
+import mindustry.ui.Styles;
 
 import static arc.Core.scene;
-import static mindustry.Vars.content;
-import static mindustry.Vars.player;
+import static mindustry.Vars.*;
 
 public class HudUi {
     Seq<Element> bars = new Seq<>();
@@ -102,23 +104,34 @@ public class HudUi {
                 () -> Pal.powerBar.cpy().lerp(Pal.surge.cpy().mul(Pal.lighterOrange), Mathf.absin(Time.time, 7f / (1f + Mathf.clamp(Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == getUnit()) / (getUnit().type().commandLimit * 1f))), 1f)),
                 () -> Mathf.clamp(Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == getUnit()) / (getUnit().type().commandLimit * 1f))
         ));
+        bars.add(new SBar(
+                () -> Core.bundle.format("shar-stat.payloadCapacity", Mathf.round(Mathf.sqrt(((Payloadc)getUnit()).payloadUsed())) + "²", Mathf.round(Mathf.sqrt(getUnit().type().payloadCapacity)) + "²"),
+                () -> Pal.items,
+                () -> Mathf.clamp(((Payloadc)getUnit()).payloadUsed() / getUnit().type().payloadCapacity),
+                () -> getUnit() instanceof Payloadc
+        ));
         bars.add(new Stack(){{
             add(new Table(t -> {
                 t.defaults().width(23 * 8f);
                 t.defaults().height(4f * 8f);
                 t.top();
                 t.add(new SBar(
-                        () -> Vars.state.rules.unitAmmo ? Core.bundle.format("shar-stat.ammos", getUnit().ammo, getUnit().type.ammoCapacity) : Core.bundle.format("shar-stat.infinityAmmos"),
+                        () -> Core.bundle.format("shar-stat.ammos", getUnit().ammo, getUnit().type.ammoCapacity),
                         () -> player.dead() || player.unit() instanceof BlockUnitc ? Pal.ammo : getUnit().type.ammoType.color,
-                        () -> Vars.state.rules.unitAmmo ? getUnit().ammof() : 1f
+                        () -> getUnit().ammof(),
+                        () -> Vars.state.rules.unitAmmo
                 )).growX().left();
             }));
             add(new Table(t -> {
                 t.left();
                 t.add(new Image(){{
                     update(() -> {
+                        if(!Vars.state.rules.unitAmmo){
+                            setDrawable(Core.atlas.find("clear"));
+                            return;
+                        }
                         TextureRegion region = Items.copper.icon(Cicon.small);
-                        if(getUnit().type != null){
+                        if( getUnit().type != null){
                             if(getUnit().type.ammoType == AmmoTypes.thorium) region = Items.thorium.icon(Cicon.small);
                             if(getUnit().type.ammoType == AmmoTypes.power || getUnit().type.ammoType == AmmoTypes.powerLow || getUnit().type.ammoType == AmmoTypes.powerHigh) region = Icon.powerSmall.getRegion();
                         }
@@ -128,60 +141,17 @@ public class HudUi {
                 t.pack();
             }));
         }});
-        bars.add(new SBar(
-                () -> Core.bundle.format("shar-stat.payloadCapacity", Mathf.round(((Payloadc)getUnit()).payloadUsed()), Mathf.round(getUnit().type().payloadCapacity)),
-                () -> Pal.items,
-                () -> Mathf.clamp(((Payloadc)getUnit()).payloadUsed() / getUnit().type().payloadCapacity)
-        ));
     }
 
     public void addWeapon(){
         weapon = new Table(tx -> {
             tx.defaults().minSize(12 * 8f);
             tx.left();
-            if(Core.settings.getBool("weaponui")) tx.table(scene.getStyle(Button.ButtonStyle.class).up, tt -> {
-                tt.defaults().minSize(4 * 8f);
-                tt.left();
-                tt.top();
-                int amount = 0;
-                if(type != null) amount = type.weapons.size;
 
-                for(int r = 0; r < amount; r++){
-                    Weapon weapon = type.weapons.get(r);
-                    WeaponMount mount = unit.mounts[r];
-                    TextureRegion region = !weapon.name.equals("") && weapon.outlineRegion.found() ? weapon.outlineRegion : type.icon(Cicon.full);
-                    if(type.weapons.size > 1 && r % 3 == 0) tt.row();
-                    else if(r % 3 == 0) tt.row();
-                    tt.table(weapontable -> {
-                        weapontable.left();
-                        weapontable.add(new Stack(){{
-                            add(new Table(o -> {
-                                o.left();
-                                o.image(region).size(30).scaling(Scaling.bounded);
-                            }));
-
-                            add(new Table(h -> {
-                                h.add(new Stack(){{
-                                    add(new Table(e -> {
-                                        e.defaults().growX().height(9).width(21f).padRight(2*8).padTop(8*2f);
-                                        Bar reloadBar = new Bar(
-                                                () -> "",
-                                                () -> Pal.accent.cpy().lerp(Color.orange, mount.reload / weapon.reload),
-                                                () -> mount.reload / weapon.reload);
-                                        e.add(reloadBar);
-                                        e.pack();
-                                    }));
-                                }}).padTop(2*8).padLeft(2*8);
-                                h.pack();
-                            }));
-                        }}).left();
-                    }).left();
-                    tt.center();
-                }
-            }).padRight(24 * 8f);
-            tx.row();
-            if(Core.settings.getBool("commandedunitui")) tx.table(scene.getStyle(Button.ButtonStyle.class).up, t1 -> t1.table(tt -> {
-                tt.defaults().minSize(4 * 8f);
+            if(Core.settings.getBool("commandedunitui") && Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == getUnit()) != 0) tx.table(scene.getStyle(Button.ButtonStyle.class).up, t1 -> t1.table(tt -> {
+                tt.defaults().width(24/3f * 8f);
+                tt.defaults().minHeight(12/3f * 8f);
+                //tt.defaults().minSize(4 * 8f);
                 tt.left();
                 tt.top();
                 int amount = 0;
@@ -225,9 +195,20 @@ public class HudUi {
                                         }));
                                         add(new Table(t -> {
                                             t.left();
-                                            t.add(new Image(){{
-                                                update(() -> setDrawable(unit.stack.item == null || unit.stack.amount <= 0 ? Core.atlas.find("clear") : unit.stack.item.icon(Cicon.small)));
-                                            }}).size(30f).scaling(Scaling.bounded).padBottom(4 * 8f).padLeft(2 * 8f);
+                                            t.add(new Stack(){{
+                                                add(new Table(tt -> {
+                                                    tt.add(new Image(){{
+                                                        update(() -> setDrawable(unit.stack.item == null || unit.stack.amount <= 0 ? Core.atlas.find("clear") : unit.stack.item.icon(Cicon.small)));
+                                                    }}).size(2.5f * 8f).scaling(Scaling.bounded).padBottom(4 * 8f).padLeft(2 * 8f);
+                                                }));
+                                                Table table = new Table(tt -> {
+                                                    Label label = new Label(() -> unit.stack.item == null || unit.stack.amount <= 0 ? "" : unit.stack.amount + "");
+
+                                                    tt.add(label).padBottom(1 * 8f).padLeft(2 * 8f);
+                                                    tt.pack();
+                                                });
+                                                add(table);
+                                            }});
                                             t.pack();
                                         }));
                                     }})));
@@ -239,33 +220,90 @@ public class HudUi {
                     tt.center();
                 }
             })).padRight(24 * 8f);
+            tx.row();
+            if(Core.settings.getBool("weaponui") && type != null && type.weapons.size != 0) tx.table(scene.getStyle(Button.ButtonStyle.class).up, tt -> {
+
+                tt.defaults().width(24/3f * 8f);
+                tt.defaults().minHeight(12/3f * 8f);
+                //tt.defaults().minSize(4 * 8f);
+                tt.left();
+                tt.top();
+                int amount = 0;
+                if(type != null) amount = type.weapons.size;
+
+                for(int r = 0; r < amount; r++){
+                    Weapon weapon = type.weapons.get(r);
+                    WeaponMount mount = unit.mounts[r];
+                    TextureRegion region = !weapon.name.equals("") && weapon.outlineRegion.found() ? weapon.outlineRegion : type.icon(Cicon.full);
+                    if(type.weapons.size > 1 && r % 3 == 0) tt.row();
+                    else if(r % 3 == 0) tt.row();
+                    tt.table(weapontable -> {
+                        weapontable.left();
+                        weapontable.add(new Stack(){{
+                            add(new Table(o -> {
+                                o.left();
+                                o.image(region).size(6 * 8f).scaling(Scaling.bounded);
+                            }));
+
+                            add(new Table(h -> {
+                                h.add(new Stack(){{
+                                    add(new Table(e -> {
+                                        e.defaults().growX().height(9).width(31.5f).padTop(9*2f);
+                                        Bar reloadBar = new Bar(
+                                                () -> "",
+                                                () -> Pal.accent.cpy().lerp(Color.orange, mount.reload / weapon.reload),
+                                                () -> mount.reload / weapon.reload);
+                                        e.add(reloadBar);
+                                        e.pack();
+                                    }));
+                                }}).padLeft(8f);
+                                h.pack();
+                            }));
+                        }}).left();
+                    }).left();
+                    tt.center();
+                }
+            }).padRight(24 * 8f);
         });
     }
     public void addTable(){
-        Vars.ui.hudGroup.addChild(new Table(table -> {
+        ui.hudGroup.addChild(new Table(table -> {
             table.left();
             addBars();
             table.table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
                 t.table(Tex.underline2, tt -> {
                     tt.top();
                     tt.add(new Stack(){{
-                        add(new Table(temp -> {
-                            temp.left();
-                            temp.add(new Image(Icon.defense)).center();
+                        add(new Table(ttt -> {
+                            ttt.add(new Image(){{
+                                update(() -> setDrawable(getUnit().type == null ? Core.atlas.find("clear") : getUnit().type.icon(Cicon.large)));
+                            }});
                         }));
-                        add(new Table(temp -> {
-                            temp.left();
-                            Label label = new Label(() -> (int)(getUnit().type == null ? 0 : getUnit().type.armor) + "");
-                            label.setColor(Pal.surge);
-                            label.setSize(0.6f);
-                            temp.add(label).center().padLeft(getUnit().type == null ? 8f : getUnit().type.armor < 10 ? 8f : 0f);
-                            temp.pack();
+                        add(new Table(ttt -> {
+                            ttt.top().left();
+                            ttt.add(new Stack(){{
+                                add(new Table(temp -> {
+                                    temp.left();
+                                    temp.add(new Image(Icon.defense)).center();
+                                }));
+                                add(new Table(temp -> {
+                                    temp.left();
+                                    Label label = new Label(() -> (int)(getUnit().type == null ? 0 : getUnit().type.armor) + "");
+                                    label.setColor(Pal.surge);
+                                    label.setSize(0.6f);
+                                    temp.add(label).center().padLeft(getUnit().type == null ? 8f : getUnit().type.armor < 10 ? 8f : 0f);
+                                    temp.pack();
+                                }));
+                            }}).growX().left().padLeft(5 * 8f);
                         }));
-                    }}).growX().left().padRight(3 * 8f);
+                    }}).left();
                     tt.add(new Label(() ->{
                         if(getUnit() != null && getUnit().type != null) return "[accent]" + getUnit().type.localizedName + "[]";
                         return "";
                     })).center();
+                    tt.button("?", Styles.clearPartialt, () -> {
+                        if(getUnit().type != null) ui.content.show(getUnit().type);
+                    }).right().size(8 * 5).padTop(-5).padRight(-5).grow().name("unitinfo");
                 });
                 t.defaults().size(25 * 8f);
                 t.row();
@@ -299,7 +337,7 @@ public class HudUi {
 
             table.fillParent = true;
             table.visibility = () ->
-                    Vars.ui.hudfrag.shown && !Vars.ui.minimapfrag.shown()
+                    ui.hudfrag.shown && !ui.minimapfrag.shown()
                             && (!Vars.mobile ||
                             !(getUnit().isBuilding() || Vars.control.input.block != null || !Vars.control.input.selectRequests.isEmpty()
                                     && !(Vars.control.input.lastSchematic != null && !Vars.control.input.selectRequests.isEmpty())));
