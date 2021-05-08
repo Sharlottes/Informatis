@@ -14,8 +14,11 @@ public class Setting {
 
         addGraphicSetting("weaponui");
         addGraphicSetting("commandedunitui");
+        Vars.ui.settings.graphics.sliderPref("uiopacity", 50, 0, 100, 5, s -> s + "%");
+
         Core.settings.defaults("weaponui", true);
         Core.settings.defaults("commandedunitui", true);
+
 
         Core.settings.put("uiscalechanged", tmp);
     }
