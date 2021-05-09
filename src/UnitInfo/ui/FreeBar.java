@@ -19,6 +19,7 @@ public class FreeBar {
 
     public void draw(Unit unit){
         if(unit.dead()) return;
+
         float height = 2f;
 
         if(Float.isNaN(value)) value = 0;
@@ -44,45 +45,60 @@ public class FreeBar {
                         shadowx - width / 2, shadowy + i * -height));
             }
         }
-        Draw.color(Pal.health.cpy().a((settings.getInt("baropacity") / 100f)));
-        float topWidth = - width / 2 + width * Mathf.clamp(unit.healthf());
-        for(int i : Mathf.signs) {
-            Fill.poly(FloatSeq.with(
-                    x - (width / 2 + height), y,
-                    x - width / 2, y + i * height,
-                    x + topWidth, y + i * height,
-                    x - (width / 2 + height) + (width + 2 * height) * Mathf.clamp(unit.healthf()), y,
-                    x + topWidth, y + i * -height,
-                    x - width / 2, y + i * -height));
+
+        {
+            Draw.color(Pal.health.cpy().a((settings.getInt("baropacity") / 100f)));
+            float topWidth = - width / 2 + width * Mathf.clamp(unit.healthf());
+            float moser = topWidth + height;
+            if(unit.health <= 0) moser = (width / 2 + height) * (2 * Mathf.clamp(unit.healthf()) - 1);
+
+            for(int i : Mathf.signs) {
+                Fill.poly(FloatSeq.with(
+                        x - (width / 2 + height), y,
+                        x - width / 2, y + i * height,
+                        x + topWidth, y + i * height,
+                        x + moser, y,
+                        x + topWidth, y + i * -height,
+                        x - width / 2, y + i * -height));
+            }
         }
-        if(Vars.state.rules.unitAmmo){
+
+        if(Vars.state.rules.unitAmmo)
+        {
+            float topWidth = - width / 2 + width * Mathf.clamp(unit.ammof());
+            float moser = topWidth + height;
+            if(unit.ammo <= 0) moser = (width / 2 + height) * (2 * Mathf.clamp(unit.ammof()) - 1);
+
             Draw.color((unit.dead() || unit instanceof BlockUnitc ? Pal.ammo : unit.type.ammoType.color).cpy().a((settings.getInt("baropacity") / 100f)));
-            topWidth = - width / 2 + width * Mathf.clamp(unit.ammof());
-    
             Fill.poly(FloatSeq.with(
                     x - (width / 2 + height), y,
                     x - width / 2, y + height,
                     x + topWidth, y + height,
-                    x - (width / 2 + height) + (width + 2 * height) * Mathf.clamp(unit.ammof()), y,
+                    x + moser, y,
                     x + topWidth, y - height,
                     x - width / 2, y - height));
         }
 
-        float max1 = ((ShieldRegenFieldAbility)content.units().copy().filter(ut -> ut.abilities.find(abil -> abil instanceof ShieldRegenFieldAbility) != null).sort(ut -> ((ShieldRegenFieldAbility)ut.abilities.find(abil -> abil instanceof ShieldRegenFieldAbility)).max).peek().abilities.find(abil -> abil instanceof ShieldRegenFieldAbility)).max;
-        float max2 = 0f;
-        if(unit.type.abilities.find(abil -> abil instanceof ForceFieldAbility) != null) max2 = ((ForceFieldAbility) unit.type.abilities.find(abil -> abil instanceof ForceFieldAbility)).max;
-        float max = Mathf.clamp(unit.shield / Math.max(max1, max2));
-        
-        Draw.color(Pal.surge.cpy().a((settings.getInt("baropacity") / 100f)));
-        topWidth = - width / 2 + width * max;
+        {
+            float max1 = ((ShieldRegenFieldAbility)content.units().copy().filter(ut -> ut.abilities.find(abil -> abil instanceof ShieldRegenFieldAbility) != null).sort(ut -> ((ShieldRegenFieldAbility)ut.abilities.find(abil -> abil instanceof ShieldRegenFieldAbility)).max).peek().abilities.find(abil -> abil instanceof ShieldRegenFieldAbility)).max;
+            float max2 = 0f;
+            if(unit.type.abilities.find(abil -> abil instanceof ForceFieldAbility) != null) max2 = ((ForceFieldAbility) unit.type.abilities.find(abil -> abil instanceof ForceFieldAbility)).max;
+            float max = Mathf.clamp(unit.shield / Math.max(max1, max2));
 
-        Fill.poly(FloatSeq.with(
-                x - (width / 2 + height), y,
-                x - width / 2, y - height,
-                x + topWidth, y - height,
-                x - (width / 2 + height) + (width + 2 * height) * max, y,
-                x + topWidth, y + height,
-                x - width / 2, y + height));
+            float topWidth = - width / 2 + width * max;
+            float moser = topWidth + height;
+            if(unit.shield <= 0) moser = (width / 2 + height) * (2 * max - 1);
+
+            Draw.color(Pal.surge.cpy().a((settings.getInt("baropacity") / 100f)));
+            Fill.poly(FloatSeq.with(
+                    x - (width / 2 + height), y,
+                    x - width / 2, y - height,
+                    x + topWidth, y - height,
+                    x + moser, y,
+                    x + topWidth, y + height,
+                    x - width / 2, y + height));
+        }
+
         Draw.reset();
     }
 }
