@@ -1,19 +1,30 @@
 package UnitInfo.core;
 
+import UnitInfo.ui.FreeBar;
+import arc.Core;
 import arc.Events;
+import arc.math.geom.Rect;
 import mindustry.game.EventType.*;
+import mindustry.gen.Groups;
 import mindustry.mod.Mod;
 
 public class Main extends Mod {
     public static Setting settingAdder = new Setting();
+
     public Main(){
         Events.on(ClientLoadEvent.class, e -> {
             settingAdder.init();
-            new HudUi().addTable();
+            HudUi hud = new HudUi();
+            hud.addTable();
         });
 
         Events.on(WorldLoadEvent.class, e -> {
-            new HudUi().addTable();
+            HudUi hud = new HudUi();
+            hud.addTable();
+        });
+        Events.run(Trigger.draw, () -> {
+            if(Core.settings.getBool("unithealthui"))
+                Groups.unit.each(unit -> new FreeBar().draw(unit));
         });
     }
 

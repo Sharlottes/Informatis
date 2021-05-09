@@ -1,12 +1,13 @@
 package UnitInfo.core;
 
+import UnitInfo.ui.FreeBar;
 import UnitInfo.ui.SBar;
 import arc.Core;
 import arc.func.Func;
 import arc.graphics.Color;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.TextureRegion;
+import arc.graphics.g2d.*;
 import arc.math.Mathf;
+import arc.math.geom.Rect;
 import arc.scene.Element;
 import arc.scene.style.TransformDrawable;
 import arc.scene.ui.*;
@@ -302,7 +303,7 @@ public class HudUi {
                 t.top();
                 t.add(new SBar(
                         () -> Core.bundle.format("shar-stat.ammos", getUnit().ammo, getUnit().type.ammoCapacity),
-                        () -> player.dead() || player.unit() instanceof BlockUnitc ? Pal.ammo : getUnit().type.ammoType.color,
+                        () -> getUnit().dead() || getUnit() instanceof BlockUnitc ? Pal.ammo : getUnit().type.ammoType.color,
                         () -> getUnit().ammof(),
                         () -> Vars.state.rules.unitAmmo
                 )).growX().left();
@@ -506,7 +507,7 @@ public class HudUi {
                             ttt.add(new Image(){{
                                 update(() -> {
                                     TextureRegion region = Core.atlas.find("clear");
-                                    if(getUnit() instanceof BlockUnitUnit && getUnit().type != null && ((BlockUnitUnit)getUnit()).tile() instanceof Turret.TurretBuild) region = ((BlockUnitUnit)getUnit()).tile().block.icon(Cicon.large);
+                                    if(getUnit() instanceof BlockUnitUnit && getUnit().type != null) region = ((BlockUnitUnit)getUnit()).tile().block.icon(Cicon.large);
                                     else if(getUnit() != null && getUnit().type != null) region = getUnit().type.icon(Cicon.large);
                                     setDrawable(region);
                                 });
@@ -604,11 +605,6 @@ public class HudUi {
                             && (!Vars.mobile ||
                             !(getUnit().isBuilding() || Vars.control.input.block != null || !Vars.control.input.selectRequests.isEmpty()
                                     && !(Vars.control.input.lastSchematic != null && !Vars.control.input.selectRequests.isEmpty())));
-        }){
-            @Override
-            public void draw() {
-                super.draw();
-            }
-        });
+        }));
     }
 }
