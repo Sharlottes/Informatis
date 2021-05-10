@@ -1,19 +1,19 @@
 package UnitInfo.core;
 
-import UnitInfo.ui.FreeBar;
 import UnitInfo.ui.SBar;
 import arc.Core;
+import arc.Events;
 import arc.func.Func;
 import arc.graphics.Color;
 import arc.graphics.g2d.*;
 import arc.math.Mathf;
-import arc.math.geom.Rect;
 import arc.scene.Element;
 import arc.scene.style.TransformDrawable;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.Stack;
 import arc.scene.ui.layout.Table;
 import arc.scene.utils.Elem;
+import arc.struct.ObjectMap;
 import arc.struct.Seq;
 import arc.util.*;
 import mindustry.Vars;
@@ -32,8 +32,10 @@ import mindustry.world.blocks.defense.turrets.LiquidTurret;
 import mindustry.world.blocks.defense.turrets.PowerTurret;
 import mindustry.world.blocks.defense.turrets.Turret;
 import mindustry.world.blocks.power.ConditionalConsumePower;
+import mindustry.world.blocks.storage.CoreBlock;
 import mindustry.world.consumers.ConsumePower;
 import mindustry.world.consumers.ConsumeType;
+import mindustry.game.EventType.*;
 
 import static arc.Core.scene;
 import static arc.Core.settings;
@@ -42,6 +44,7 @@ import static mindustry.Vars.*;
 public class HudUi {
     Seq<Element> bars = new Seq<>();
     Table weapon = new Table();
+    Table core = new Table();
     @Nullable UnitType type;
     @Nullable Unit unit;
     Element image;
@@ -49,21 +52,18 @@ public class HudUi {
     float heat;
     float heat2;
 
+    float notifDuration = 4 * 60f;
+    float[] coreAttackTime = {0};
+    float[] coreAttackOpacity = {0};
+
+    ObjectMap<Building, Boolean> cores = new ObjectMap<>();
+
     public Unit getUnit(){
         Seq<Unit> units = Groups.unit.intersect(Core.input.mouseWorldX(), Core.input.mouseWorldY(), 4, 4);
         if(units.size <= 0) return player.unit();
         Unit unit = units.peek();
         if(unit == null) return player.unit();
         else return unit;
-    }
-    
-    public void reset(Table table){
-        table.remove();
-        table.reset();
-        type = getUnit().type;
-        unit = getUnit();
-        addTable();
-        //addWeapon();
     }
 
     public void addBars(){
@@ -228,8 +228,7 @@ public class HudUi {
                             float amount = (float) (((Math.round(entity.power.status * v * 10) / 10.0) * 60) / max);
                             //float amount = Mathf.zero(cons.requestedPower(entity)) && entity.power.graph.getPowerProduced() + entity.power.graph.getBatteryStored() > 0f ? 1f : entity.power.status;
 
-                            float finalAmount = amount;
-                            imaget = new PrograssedReqImage(Icon.power.getRegion(), () -> finalAmount >= 0.99f, amount);
+                            imaget = new PrograssedReqImage(Icon.power.getRegion(), () -> amount >= 0.99f, amount);
                             if(amount >= 0.999f) imaget = new Image(Icon.power.getRegion());
                         }
 
@@ -252,9 +251,7 @@ public class HudUi {
                 t.left();
 
                 t.add(new Image(){{
-                    update(() -> {
-                        setDrawable(getUnit().stack.item == null || getUnit().stack.amount <= 0 ? Core.atlas.find("clear") : getUnit().stack.item.icon(Cicon.small));
-                    });
+                    update(() -> setDrawable(getUnit().stack.item == null || getUnit().stack.amount <= 0 ? Core.atlas.find("clear") : getUnit().stack.item.icon(Cicon.small)));
                 }
 
                     @Override
@@ -384,11 +381,11 @@ public class HudUi {
                                             add(new Table(t -> {
                                                 t.left();
                                                 t.add(new Stack(){{
-                                                    add(new Table(tt -> {
+                                                    add(new Table(tt ->
                                                         tt.add(new Image(){{
                                                             update(() -> setDrawable(unit.stack.item == null || unit.stack.amount <= 0 ? Core.atlas.find("clear") : unit.stack.item.icon(Cicon.small)));
-                                                        }}).size(2.5f * 8f).scaling(Scaling.bounded).padBottom(4 * 8f).padLeft(2 * 8f);
-                                                    }));
+                                                        }}).size(2.5f * 8f).scaling(Scaling.bounded).padBottom(4 * 8f).padLeft(2 * 8f)
+                                                    ));
                                                     Table table = new Table(tt -> {
                                                         Label label = new Label(() -> unit.stack.item == null || unit.stack.amount <= 0 ? "" : unit.stack.amount + "");
 
@@ -505,16 +502,14 @@ public class HudUi {
 
                 t.table(Tex.underline2, tt -> {
                     Stack stack = new Stack(){{
-                        add(new Table(ttt -> {
-                            ttt.add(new Image(){{
-                                update(() -> {
-                                    TextureRegion region = Core.atlas.find("clear");
-                                    if(getUnit() instanceof BlockUnitUnit && getUnit().type != null) region = ((BlockUnitUnit)getUnit()).tile().block.icon(Cicon.large);
-                                    else if(getUnit() != null && getUnit().type != null) region = getUnit().type.icon(Cicon.large);
-                                    setDrawable(region);
-                                });
-                            }});
-                        }));
+                        add(new Table(ttt -> ttt.add(new Image(){{
+                            update(() -> {
+                                TextureRegion region = Core.atlas.find("clear");
+                                if(getUnit() instanceof BlockUnitUnit && getUnit().type != null) region = ((BlockUnitUnit)getUnit()).tile().block.icon(Cicon.large);
+                                else if(getUnit() != null && getUnit().type != null) region = getUnit().type.icon(Cicon.large);
+                                setDrawable(region);
+                            });
+                        }})));
                         add(new Table(ttt -> {
                             ttt.top().left();
                             ttt.add(new Stack(){{
@@ -599,7 +594,7 @@ public class HudUi {
                     else heat2 = 0f;
                 }
                 heat += Time.delta;
-                if (heat >= 16 && unittemp != getUnit()) {
+                if (heat >= 6 && unittemp != getUnit()) {
                     heat = 0f;
                     type = getUnit().type;
                     unit = getUnit();
@@ -614,11 +609,140 @@ public class HudUi {
             });
 
             table.fillParent = true;
-            table.visibility = () ->
+            table.visibility = () -> Core.settings.getBool("unitui") && (
                     ui.hudfrag.shown && !ui.minimapfrag.shown()
                             && (!Vars.mobile ||
                             !(getUnit().isBuilding() || Vars.control.input.block != null || !Vars.control.input.selectRequests.isEmpty()
-                                    && !(Vars.control.input.lastSchematic != null && !Vars.control.input.selectRequests.isEmpty())));
+                                    && !(Vars.control.input.lastSchematic != null && !Vars.control.input.selectRequests.isEmpty()))));
+        }));
+    }
+
+    public void addCore(){
+        core = new Table(tx -> {
+            tx.update(() -> {
+                Groups.build.each(b -> {
+                    if(b instanceof CoreBlock.CoreBuild && player != null && player.team() == b.team()) cores.put(b, false);
+                });
+            });
+            //tx.defaults().minSize(12 * 8f);
+            tx.left();
+            tx.add(new Table(tt -> {
+                tt.defaults().minWidth(24/3f * 8f).maxWidth(24/3f * 8f * 3f).height(12/3f * 8f).left().top();
+
+                int amount = 0;
+                int row = 0;
+                if(Vars.player.unit() != null) amount = Vars.player.unit().team().cores().size;
+                for(int r = 0; r < amount; r++){
+                    CoreBlock.CoreBuild core = Vars.player.unit().team().cores().get(r);
+                    TextureRegion region = core.block.icon(Cicon.full);
+
+                    if(amount > 1 && r % 4 == 0) {
+                        tt.row();
+                        row++;
+                    }
+                    else if(r % 4 == 0){
+                        tt.row();
+                        row++;
+                    }
+                    tt.table(coretable -> {
+                        coretable.center();
+                        coretable.add(new Stack(){{
+                            add(new Table(o -> {
+                                o.left();
+                                o.add(new Image(region)).size(6 * 8f).scaling(Scaling.bounded);
+                            }));
+
+                            add(new Table(h -> {
+                                h.add(new Stack(){{
+                                    add(new Table(e -> {
+                                        e.defaults().growX().height(9).width(6f * 8f).padTop(6 * 8f);
+                                        Bar healthBar = new Bar(
+                                                () -> "",
+                                                () -> Pal.health,
+                                                core::healthf);
+                                        e.add(healthBar);
+                                        e.pack();
+                                    }));
+
+                                    add(new Table(e -> {
+                                        e.defaults().growX().height(9).width(6f * 8f).padLeft(4 * 8f).padBottom(6 * 8f).top().right();
+                                        e.add(new Image(Icon.warning.getRegion())).size(2.5f * 8f).scaling(Scaling.bounded).top().right().color(Tmp.c1.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f)));
+
+                                        Events.run(Trigger.teamCoreDamage, () -> {
+                                            coreAttackTime[0] = notifDuration;
+                                        });
+
+                                        e.top().visible(() -> {
+                                            if(state.isMenu() || !state.teams.get(player.team()).hasCore()){
+                                                coreAttackTime[0] = 0f;
+                                                return false;
+                                            }
+
+                                            e.color.a = coreAttackOpacity[0];
+                                            if(coreAttackTime[0] > 0){
+                                                coreAttackOpacity[0] = Mathf.lerpDelta(coreAttackOpacity[0], 1f, 0.1f);
+                                            }else{
+                                                coreAttackOpacity[0] = Mathf.lerpDelta(coreAttackOpacity[0], 0f, 0.1f);
+                                            }
+
+                                            coreAttackTime[0] -= Time.delta;
+                                            return coreAttackOpacity[0] > 0;
+                                        });
+                                        e.pack();
+                                    }));
+                                }});
+                                h.pack();
+                            }));
+                        }}).center();
+                        coretable.row();
+                        coretable.center();
+                        coretable.label(() -> "(" + (int)core.x / 8 + ", " + (int)core.y / 8 + ")");
+                    }).left().padTop(36f * row);
+                    tt.center();
+                }
+            }){
+                @Override
+                protected void drawBackground(float x, float y) {
+                    if(getBackground() == null) return;
+                    Color color = this.color;
+                    Draw.color(color.r, color.g, color.b, (settings.getInt("coreuiopacity") / 100f) * this.parentAlpha);
+                    getBackground().draw(x, y, width, height);
+                }
+            }).padRight(36 * 8f);
+            tx.setColor(tx.color.cpy().a(1f));
+        });
+    }
+
+
+    public void addCoreTable(){
+        ui.hudGroup.addChild(new Table(table -> {
+            table.top().left();
+
+            table.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
+                t.defaults().minSize(10 * 8f);
+
+                t.update(() -> {
+                        t.clearChildren();
+                        addCore();
+                        t.add(core);
+
+                });
+            }){
+                @Override
+                protected void drawBackground(float x, float y) {
+                    if(getBackground() == null) return;
+                    Color color = this.color;
+                    Draw.color(color.r, color.g, color.b, (settings.getInt("coreuiopacity") / 100f) * this.parentAlpha);
+                    getBackground().draw(x, y, width, height);
+                }
+            }).padLeft(48 * 8f);
+
+            table.fillParent = true;
+            table.visibility = () -> Core.settings.getBool("coreui") && (
+                    ui.hudfrag.shown && !ui.minimapfrag.shown()
+                            && (!Vars.mobile ||
+                            !(Vars.control.input.block != null || !Vars.control.input.selectRequests.isEmpty()
+                                    && !(Vars.control.input.lastSchematic != null && !Vars.control.input.selectRequests.isEmpty()))));
         }));
     }
 }
