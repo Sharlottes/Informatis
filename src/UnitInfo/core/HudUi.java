@@ -13,6 +13,7 @@ import arc.scene.style.TransformDrawable;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.Stack;
 import arc.scene.ui.layout.Table;
+import arc.scene.utils.Elem;
 import arc.struct.Seq;
 import arc.util.*;
 import mindustry.Vars;
@@ -500,9 +501,10 @@ public class HudUi {
             table.left();
             addBars();
             table.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
+                t.defaults().width(25 * 8f);
+
                 t.table(Tex.underline2, tt -> {
-                    tt.top();
-                    tt.add(new Stack(){{
+                    Stack stack = new Stack(){{
                         add(new Table(ttt -> {
                             ttt.add(new Image(){{
                                 update(() -> {
@@ -531,7 +533,7 @@ public class HudUi {
                                     Label label = new Label(() -> (int)(getUnit().type == null ? 0 : getUnit().type.armor) + "");
                                     label.setColor(Pal.surge);
                                     label.setSize(0.6f);
-                                    temp.add(label).center().padLeft(getUnit().type == null ? 8f : getUnit().type.armor < 10 ? 8f : 0f);
+                                    temp.add(label).center().padLeft(getUnit().type == null || getUnit().type.armor < 10 ? -4f : 0f);
                                     temp.pack();
                                 }){
                                     @Override
@@ -542,25 +544,37 @@ public class HudUi {
                                 });
                             }}).growX().left().padLeft(5 * 8f);
                         }));
-                    }}).left();
-                    tt.add(new Label(() ->{
+                    }};
+
+                    Label label = new Label(() ->{
                         String name = "";
                         if(getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit)getUnit()).tile() instanceof Turret.TurretBuild) name = "[accent]" + ((BlockUnitUnit)getUnit()).tile().block.localizedName + "[]";
                         else if(getUnit() != null && getUnit().type != null) name = "[accent]" + getUnit().type.localizedName + "[]";
 
                         return name;
-                    })).center();
-                    tt.button("?", Styles.clearPartialt, () -> {
+                    });
+
+                    TextButton button = Elem.newButton("?", Styles.clearPartialt, () -> {
                         if(getUnit().type != null && getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit)getUnit()).tile() instanceof Turret.TurretBuild) ui.content.show(((BlockUnitUnit)getUnit()).tile().block);
                         else if(getUnit().type != null) ui.content.show(getUnit().type);
-                    }).right().size(8 * 5).padTop(-5).padRight(-5).grow().name("info");
+                    });
+
+                    tt.top();
+                    tt.table(ttt -> { //unit icon/armor
+                        ttt.add(stack);
+                    }).left();
+                    tt.table(ttt -> {  //unit name
+                        ttt.defaults().width(12 * 8f);
+                        ttt.add(label).padLeft(24f);
+                    }).center();
+                    tt.table(ttt -> { //unit info
+                        ttt.defaults().size(5 * 8f);
+                        ttt.add(button).padLeft(-24f);
+                    }).right();
                 });
-                t.defaults().size(25 * 8f);
                 t.row();
                 t.table(tt -> {
-                    tt.defaults().width(23 * 8f);
-                    tt.defaults().height(4f * 8f);
-                    tt.top();
+                    tt.defaults().width(23 * 8f).height(4f * 8f).top();
                     for(Element bar : bars){
                         tt.add(bar).growX().left();
                         tt.row();
