@@ -7,14 +7,12 @@ import arc.graphics.Color;
 import arc.graphics.g2d.*;
 import arc.math.Mathf;
 import arc.scene.Element;
-import arc.scene.style.TextureRegionDrawable;
 import arc.scene.style.TransformDrawable;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.Scl;
 import arc.scene.ui.layout.Stack;
 import arc.scene.ui.layout.Table;
 import arc.scene.utils.Elem;
-import arc.struct.ObjectMap;
 import arc.struct.Seq;
 import arc.util.*;
 import mindustry.Vars;
@@ -24,6 +22,7 @@ import mindustry.content.Liquids;
 import mindustry.entities.abilities.ForceFieldAbility;
 import mindustry.entities.abilities.ShieldRegenFieldAbility;
 import mindustry.entities.units.WeaponMount;
+import mindustry.game.SpawnGroup;
 import mindustry.gen.*;
 import mindustry.graphics.Pal;
 import mindustry.type.*;
@@ -37,6 +36,8 @@ import mindustry.world.blocks.storage.CoreBlock;
 import mindustry.world.consumers.ConsumePower;
 import mindustry.world.consumers.ConsumeType;
 
+import java.util.Objects;
+
 import static arc.Core.scene;
 import static arc.Core.settings;
 import static mindustry.Vars.*;
@@ -45,6 +46,9 @@ public class HudUi {
     Seq<Element> bars = new Seq<>();
     Table weapon = new Table();
     Table core = new Table();
+    Table wave = new Table();
+    Table waveTable;
+
     @Nullable UnitType type;
     @Nullable Unit unit;
     Element image;
@@ -52,6 +56,8 @@ public class HudUi {
     float heat;
     float heat2;
     float scrollPos;
+    int maxwave;
+    int coreamount;
 
     public Unit getUnit(){
         Seq<Unit> units = Groups.unit.intersect(Core.input.mouseWorldX(), Core.input.mouseWorldY(), 4, 4);
@@ -629,14 +635,14 @@ public class HudUi {
             tx.add(new Table(tt -> {
                 tt.defaults().maxWidth(24/3f * 3f).left().top();
 
-                int amount = 0;
                 int row = 0;
-                if(Vars.player.unit() != null) amount = Vars.player.unit().team().cores().size;
-                for(int r = 0; r < amount; r++){
+                if(Vars.player.unit() == null) return;
+                coreamount = Vars.player.unit().team().cores().size;
+                for(int r = 0; r < coreamount; r++){
                     CoreBlock.CoreBuild core = Vars.player.unit().team().cores().get(r);
                     TextureRegion region = core.block.icon(Cicon.full);
 
-                    if(amount > 1 && r % 4 == 0) {
+                    if(coreamount > 1 && r % 4 == 0) {
                         tt.row();
                         row++;
                     }
@@ -686,25 +692,37 @@ public class HudUi {
         });
     }
 
-
     public void addCoreTable(){
+        ScrollPane pane = new ScrollPane(new Image(Core.atlas.find("clear")), Styles.smallPane);
+        pane.setScrollingDisabled(true, false);
+        pane.setScrollYForce(scrollPos);
+        pane.update(() -> {
+            if(pane.hasScroll()){
+                Element result = Core.scene.hit(Core.input.mouseX(), Core.input.mouseY(), true);
+                if(result == null || !result.isDescendantOf(pane)){
+                    Core.scene.setScrollFocus(null);
+                }
+            }
+
+            scrollPos = pane.getScrollY();
+
+            if(coreamount == Vars.player.unit().team().cores().size || !Core.settings.getBool("coreui")) return;
+            pane.clearChildren();
+            pane.removeChild(core);
+            addCore();
+            pane.setWidget(core);
+        });
+        pane.setOverscroll(false, false);
+
         ui.hudGroup.addChild(new Table(table -> {
-            table.top().left();
+            table.top().right();
 
             table.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
-                ScrollPane pane = new ScrollPane(new Image(Core.atlas.find("clear")), Styles.smallPane);
-                pane.setScrollingDisabled(true, false);
-                pane.setScrollYForce(scrollPos);
-                pane.update(() -> {
-                    scrollPos = pane.getScrollY();
-                    if(!Core.settings.getBool("coreui")) return;
-                    pane.clearChildren();
-                    pane.removeChild(core);
-                    addCore();
-                    pane.setWidget(core);
+                t.update(() -> {
+                    if(coreamount == Vars.player.unit().team().cores().size || !Core.settings.getBool("coreui")) return;
+                    t.clearChildren();
+                    t.add(pane).maxHeight(Scl.scl(24 * 8f));
                 });
-                pane.setOverscroll(false, false);
-                t.add(pane).maxHeight(Scl.scl(12 * 8f));
             }){
                 @Override
                 protected void drawBackground(float x, float y) {
@@ -713,7 +731,7 @@ public class HudUi {
                     Draw.color(color.r, color.g, color.b, (settings.getInt("coreuiopacity") / 100f) * this.parentAlpha);
                     getBackground().draw(x, y, width, height);
                 }
-            }).padLeft(48 * 8f);
+            }).padRight(24 * 8f);
 
 
             table.fillParent = true;
@@ -723,5 +741,141 @@ public class HudUi {
                             !(Vars.control.input.block != null || !Vars.control.input.selectRequests.isEmpty()
                                     && !(Vars.control.input.lastSchematic != null && !Vars.control.input.selectRequests.isEmpty()))));
         }));
+    }
+
+    public void getWave(Table table){
+        int winWave = state.isCampaign() && state.rules.winWave > 0 ? state.rules.winWave : Integer.MAX_VALUE;
+        maxwave = settings.getInt("wavemax");
+
+        for(int i = state.wave - 1; i <= Math.min(state.wave + maxwave, winWave - 2); i++){
+            final int j = i;
+            if(state.rules.spawns.find(g -> g.getSpawned(j) > 0) != null) table.table(Tex.underline, t -> {
+                t.add(new Table(tt -> {
+                    tt.left();
+                    tt.add(new Label(() -> "[#" + Pal.accent.toString() + "]" + j + "[]"));
+                })).width(32f);
+
+                t.table(tx -> {
+                    int row = 0;
+                    for(SpawnGroup group : state.rules.spawns){
+                        if(group.getSpawned(j) <= 0) continue;
+                        row ++;
+                        tx.add(new Table(tt -> {
+                            tt.right();
+                            tt.add(new Stack(){{
+                                add(new Table(ttt -> {
+                                    ttt.add(new Image(group.type.icon(Cicon.large)));
+                                }));
+
+                                add(new Table(ttt -> {
+                                    ttt.bottom().left();
+                                    ttt.add(new Label(() -> group.getSpawned(j) + ""));
+                                    ttt.pack();
+                                }));
+                            }});
+
+                        })).width(Cicon.large.size + 8f);
+                        if(row % 4 == 0) tx.row();
+                    /*
+                    if(group.effect == StatusEffects.boss && group.getSpawned(i) > 0){
+                        int diff = (i + 2) - state.wave;
+
+                        //increments at which to warn about incoming guardian
+                        if(diff == 1 || diff == 2 || diff == 5 || diff == 10){
+                            showToast(Icon.warning, Core.bundle.format("wave.guardianwarn" + (diff == 1 ? ".one" : ""), diff));
+                        }
+
+                        break outer;
+                    }
+                    */
+                    }
+                });
+            });
+            table.row();
+        }
+    }
+    public void addWave(){
+        wave = new Table(tx -> {
+            tx.left();
+            tx.add(new Table(tt -> {
+                tt.defaults().left().top().minSize(0f);
+                tt.table(this::getWave).left();
+
+                tt.update(() -> {
+                    if(maxwave == settings.getInt("wavemax") || !Core.settings.getBool("waveui")) return;
+                    tt.clearChildren();
+                    getWave(tt);
+                });
+            }){
+                @Override
+                protected void drawBackground(float x, float y) {
+                    if(getBackground() == null) return;
+                    Color color = this.color;
+                    Draw.color(color.r, color.g, color.b, (settings.getInt("waveuiopacity") / 100f) * this.parentAlpha);
+                    getBackground().draw(x, y, width, height);
+                }
+            }).padLeft(6 * 8f);
+            tx.setColor(tx.color.cpy().a(1f));
+        });
+    }
+
+    public void addWaveTable(){
+        waveTable = new Table(table -> {
+            table.name = "wave";
+            table.top().left();
+
+            ScrollPane pane = new ScrollPane(new Image(Core.atlas.find("clear")), Styles.smallPane);
+            pane.setScrollingDisabled(true, false);
+            pane.setScrollYForce(scrollPos);
+            pane.update(() -> {
+                if(pane.hasScroll()){
+                    Element result = Core.scene.hit(Core.input.mouseX(), Core.input.mouseY(), true);
+                    if(result == null || !result.isDescendantOf(pane)){
+                        Core.scene.setScrollFocus(null);
+                    }
+                }
+
+                scrollPos = pane.getScrollY();
+
+                if(maxwave == settings.getInt("wavemax") || !Core.settings.getBool("waveui")) return;
+                pane.clearChildren();
+                addWave();
+                pane.setWidget(wave);
+            });
+            pane.setOverscroll(false, false);
+
+            table.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
+                t.update(() -> {
+                    if(Vars.state.isMenu() || Vars.state.isEditor()) {
+                        waveTable = null;
+                        t.clearChildren();
+                    }
+                    if(maxwave == settings.getInt("wavemax") || !Core.settings.getBool("waveui")) return;
+                    t.clearChildren();
+                    if(t.getChildren().size < 1) t.add(pane).maxHeight(Scl.scl(24 * 8f));
+
+                    if(t.getChildren().size > 1) {
+                        while(t.getChildren().size == 1) t.getChildren().pop();
+                    }
+                });
+            }){
+                @Override
+                protected void drawBackground(float x, float y) {
+                    if(getBackground() == null) return;
+                    Color color = this.color;
+                    Draw.color(color.r, color.g, color.b, (settings.getInt("waveuiopacity") / 100f) * this.parentAlpha);
+                    getBackground().draw(x, y, width, height);
+                }
+            }).padLeft(56 * 8f);
+
+
+            table.fillParent = true;
+            table.visibility = () ->Core.settings.getBool("waveui") && (
+                    ui.hudfrag.shown && !ui.minimapfrag.shown()
+                            && (!Vars.mobile ||
+                            !(Vars.control.input.block != null || !Vars.control.input.selectRequests.isEmpty()
+                                    && !(Vars.control.input.lastSchematic != null && !Vars.control.input.selectRequests.isEmpty()))));
+        });
+        ui.hudGroup.addChild(waveTable);
     }
 }

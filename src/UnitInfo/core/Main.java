@@ -3,12 +3,6 @@ package UnitInfo.core;
 import UnitInfo.ui.FreeBar;
 import arc.Core;
 import arc.Events;
-import arc.graphics.Color;
-import arc.graphics.g2d.Draw;
-import arc.math.Angles;
-import arc.math.Mathf;
-import arc.util.Time;
-import arc.util.Tmp;
 import mindustry.Vars;
 import mindustry.game.EventType.*;
 import mindustry.gen.Groups;
@@ -18,20 +12,18 @@ public class Main extends Mod {
     public static Setting settingAdder = new Setting();
 
     public Main(){
-        float[] unitFade = {0};
-
         Events.on(ClientLoadEvent.class, e -> {
-            settingAdder.init();
             HudUi hud = new HudUi();
+            settingAdder.init();
             hud.addTable();
             hud.addCoreTable();
         });
 
         Events.on(WorldLoadEvent.class, e -> {
             HudUi hud = new HudUi();
-            hud.addTable();
-            hud.addCoreTable();
+            hud.addWaveTable();
         });
+
         Events.run(Trigger.draw, () -> {
             if(Core.settings.getBool("unithealthui"))
                 Groups.unit.each(unit -> new FreeBar().draw(unit));
