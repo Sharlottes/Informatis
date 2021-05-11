@@ -2,14 +2,15 @@ package UnitInfo.core;
 
 import UnitInfo.ui.SBar;
 import arc.Core;
-import arc.Events;
 import arc.func.Func;
 import arc.graphics.Color;
 import arc.graphics.g2d.*;
 import arc.math.Mathf;
 import arc.scene.Element;
+import arc.scene.style.TextureRegionDrawable;
 import arc.scene.style.TransformDrawable;
 import arc.scene.ui.*;
+import arc.scene.ui.layout.Scl;
 import arc.scene.ui.layout.Stack;
 import arc.scene.ui.layout.Table;
 import arc.scene.utils.Elem;
@@ -35,7 +36,6 @@ import mindustry.world.blocks.power.ConditionalConsumePower;
 import mindustry.world.blocks.storage.CoreBlock;
 import mindustry.world.consumers.ConsumePower;
 import mindustry.world.consumers.ConsumeType;
-import mindustry.game.EventType.*;
 
 import static arc.Core.scene;
 import static arc.Core.settings;
@@ -51,12 +51,7 @@ public class HudUi {
 
     float heat;
     float heat2;
-
-    float notifDuration = 4 * 60f;
-    float[] coreAttackTime = {0};
-    float[] coreAttackOpacity = {0};
-
-    ObjectMap<Building, Boolean> cores = new ObjectMap<>();
+    float scrollPos;
 
     public Unit getUnit(){
         Seq<Unit> units = Groups.unit.intersect(Core.input.mouseWorldX(), Core.input.mouseWorldY(), 4, 4);
@@ -182,7 +177,8 @@ public class HudUi {
             {{
                 left();
                 update(() -> {
-                    if(!(getUnit() instanceof BlockUnitUnit) || (
+
+                    if(!Core.settings.getBool("unitui") || !(getUnit() instanceof BlockUnitUnit) || (
                             !(((BlockUnitUnit)getUnit()).tile() instanceof ItemTurret.ItemTurretBuild)
                             && !(((BlockUnitUnit)getUnit()).tile() instanceof LiquidTurret.LiquidTurretBuild)
                             && !(((BlockUnitUnit)getUnit()).tile() instanceof PowerTurret.PowerTurretBuild)
@@ -251,7 +247,10 @@ public class HudUi {
                 t.left();
 
                 t.add(new Image(){{
-                    update(() -> setDrawable(getUnit().stack.item == null || getUnit().stack.amount <= 0 ? Core.atlas.find("clear") : getUnit().stack.item.icon(Cicon.small)));
+                    update(() -> {
+                        if(!Core.settings.getBool("unitui")) return;
+                        setDrawable(getUnit().stack.item == null || getUnit().stack.amount <= 0 ? Core.atlas.find("clear") : getUnit().stack.item.icon(Cicon.small));
+                    });
                 }
 
                     @Override
@@ -310,6 +309,8 @@ public class HudUi {
                 t.left();
                 t.add(new Image(){{
                     update(() -> {
+                        if(!Core.settings.getBool("unitui")) return;
+
                         if(!Vars.state.rules.unitAmmo){
                             setDrawable(Core.atlas.find("clear"));
                             return;
@@ -383,7 +384,10 @@ public class HudUi {
                                                 t.add(new Stack(){{
                                                     add(new Table(tt ->
                                                         tt.add(new Image(){{
-                                                            update(() -> setDrawable(unit.stack.item == null || unit.stack.amount <= 0 ? Core.atlas.find("clear") : unit.stack.item.icon(Cicon.small)));
+                                                            update(() -> {
+                                                                if(!Core.settings.getBool("weaponui")) return;
+                                                                setDrawable(unit.stack.item == null || unit.stack.amount <= 0 ? Core.atlas.find("clear") : unit.stack.item.icon(Cicon.small));
+                                                            });
                                                         }}).size(2.5f * 8f).scaling(Scaling.bounded).padBottom(4 * 8f).padLeft(2 * 8f)
                                                     ));
                                                     Table table = new Table(tt -> {
@@ -504,6 +508,7 @@ public class HudUi {
                     Stack stack = new Stack(){{
                         add(new Table(ttt -> ttt.add(new Image(){{
                             update(() -> {
+                                if(!Core.settings.getBool("unitui")) return;
                                 TextureRegion region = Core.atlas.find("clear");
                                 if(getUnit() instanceof BlockUnitUnit && getUnit().type != null) region = ((BlockUnitUnit)getUnit()).tile().block.icon(Cicon.large);
                                 else if(getUnit() != null && getUnit().type != null) region = getUnit().type.icon(Cicon.large);
@@ -588,6 +593,7 @@ public class HudUi {
             table.row();
             Unit unittemp = getUnit();
             table.update(() -> {
+                if(!Core.settings.getBool("unitui")) return;
                 if(getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit) getUnit()).tile() instanceof Turret.TurretBuild){
                     Turret.TurretBuild entity = ((Turret.TurretBuild)((BlockUnitUnit) getUnit()).tile());
                     if(entity.charging) heat2 += Time.delta;
@@ -619,15 +625,9 @@ public class HudUi {
 
     public void addCore(){
         core = new Table(tx -> {
-            tx.update(() -> {
-                Groups.build.each(b -> {
-                    if(b instanceof CoreBlock.CoreBuild && player != null && player.team() == b.team()) cores.put(b, false);
-                });
-            });
-            //tx.defaults().minSize(12 * 8f);
             tx.left();
             tx.add(new Table(tt -> {
-                tt.defaults().minWidth(24/3f * 8f).maxWidth(24/3f * 8f * 3f).height(12/3f * 8f).left().top();
+                tt.defaults().maxWidth(24/3f * 3f).left().top();
 
                 int amount = 0;
                 int row = 0;
@@ -663,33 +663,6 @@ public class HudUi {
                                         e.add(healthBar);
                                         e.pack();
                                     }));
-
-                                    add(new Table(e -> {
-                                        e.defaults().growX().height(9).width(6f * 8f).padLeft(4 * 8f).padBottom(6 * 8f).top().right();
-                                        e.add(new Image(Icon.warning.getRegion())).size(2.5f * 8f).scaling(Scaling.bounded).top().right().color(Tmp.c1.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f)));
-
-                                        Events.run(Trigger.teamCoreDamage, () -> {
-                                            coreAttackTime[0] = notifDuration;
-                                        });
-
-                                        e.top().visible(() -> {
-                                            if(state.isMenu() || !state.teams.get(player.team()).hasCore()){
-                                                coreAttackTime[0] = 0f;
-                                                return false;
-                                            }
-
-                                            e.color.a = coreAttackOpacity[0];
-                                            if(coreAttackTime[0] > 0){
-                                                coreAttackOpacity[0] = Mathf.lerpDelta(coreAttackOpacity[0], 1f, 0.1f);
-                                            }else{
-                                                coreAttackOpacity[0] = Mathf.lerpDelta(coreAttackOpacity[0], 0f, 0.1f);
-                                            }
-
-                                            coreAttackTime[0] -= Time.delta;
-                                            return coreAttackOpacity[0] > 0;
-                                        });
-                                        e.pack();
-                                    }));
                                 }});
                                 h.pack();
                             }));
@@ -697,7 +670,7 @@ public class HudUi {
                         coretable.row();
                         coretable.center();
                         coretable.label(() -> "(" + (int)core.x / 8 + ", " + (int)core.y / 8 + ")");
-                    }).left().padTop(36f * row);
+                    }).left();
                     tt.center();
                 }
             }){
@@ -708,7 +681,7 @@ public class HudUi {
                     Draw.color(color.r, color.g, color.b, (settings.getInt("coreuiopacity") / 100f) * this.parentAlpha);
                     getBackground().draw(x, y, width, height);
                 }
-            }).padRight(36 * 8f);
+            }).padLeft(6 * 8f);
             tx.setColor(tx.color.cpy().a(1f));
         });
     }
@@ -719,14 +692,19 @@ public class HudUi {
             table.top().left();
 
             table.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
-                t.defaults().minSize(10 * 8f);
-
-                t.update(() -> {
-                        t.clearChildren();
-                        addCore();
-                        t.add(core);
-
+                ScrollPane pane = new ScrollPane(new Image(Core.atlas.find("clear")), Styles.smallPane);
+                pane.setScrollingDisabled(true, false);
+                pane.setScrollYForce(scrollPos);
+                pane.update(() -> {
+                    scrollPos = pane.getScrollY();
+                    if(!Core.settings.getBool("coreui")) return;
+                    pane.clearChildren();
+                    pane.removeChild(core);
+                    addCore();
+                    pane.setWidget(core);
                 });
+                pane.setOverscroll(false, false);
+                t.add(pane).maxHeight(Scl.scl(12 * 8f));
             }){
                 @Override
                 protected void drawBackground(float x, float y) {
@@ -736,6 +714,7 @@ public class HudUi {
                     getBackground().draw(x, y, width, height);
                 }
             }).padLeft(48 * 8f);
+
 
             table.fillParent = true;
             table.visibility = () -> Core.settings.getBool("coreui") && (

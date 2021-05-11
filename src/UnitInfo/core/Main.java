@@ -36,8 +36,7 @@ public class Main extends Mod {
             if(Core.settings.getBool("unithealthui"))
                 Groups.unit.each(unit -> new FreeBar().draw(unit));
         });
-
-        Events.run(Trigger.teamCoreDamage, () -> {
+        /*
             unitFade[0] = Mathf.lerpDelta(unitFade[0], Mathf.num( Vars.player.unit() != null), 0.1f);
             for(int i = 0; i < 4; i++){
                 float rot = i * 90f + 45f + (-Time.time) % 360f;
@@ -46,7 +45,7 @@ public class Main extends Mod {
                 Draw.rect("select-arrow", Vars.player.unit().x + Angles.trnsx(rot, length), Vars.player.unit().y + Angles.trnsy(rot, length), length / 1.9f, length / 1.9f, rot - 135f);
                 Draw.reset();
             }
-        });
+        */
     }
 
     @Override

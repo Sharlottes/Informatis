@@ -21,7 +21,7 @@ public class Setting {
         Vars.ui.settings.graphics.sliderPref("uiopacity", 50, 0, 100, 5, s -> s + "%");
         Vars.ui.settings.graphics.sliderPref("baropacity", 50, 0, 100, 5, s -> s + "%");
 
-        Core.settings.defaults("coreui", true);
+        Core.settings.defaults("coreui", false);
         Core.settings.defaults("unitui", true);
         Core.settings.defaults("weaponui", true);
         Core.settings.defaults("commandedunitui", true);
