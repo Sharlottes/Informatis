@@ -14,8 +14,6 @@ public class Main extends Mod {
     @Override
     public void init(){
         Events.on(ClientLoadEvent.class, e -> {
-            hud.reset();
-
             hud = new HudUi();
             settingAdder.init();
             hud.addTable();
@@ -23,8 +21,6 @@ public class Main extends Mod {
         });
 
         Events.on(ResetEvent.class, e -> {
-            hud.reset();
-
             hud = new HudUi();
             hud.addWaveTable();
         });
