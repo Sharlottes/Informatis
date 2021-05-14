@@ -3,29 +3,29 @@ package UnitInfo.core;
 import UnitInfo.ui.FreeBar;
 import arc.Core;
 import arc.Events;
-import mindustry.Vars;
 import mindustry.game.EventType.*;
 import mindustry.gen.Groups;
 import mindustry.mod.Mod;
 
 public class Main extends Mod {
     public static Setting settingAdder = new Setting();
+    public static HudUi hud = new HudUi();
 
-    public Main(){
+    @Override
+    public void init(){
         Events.on(ClientLoadEvent.class, e -> {
-            HudUi hud = new HudUi();
+            hud.reset();
+
+            hud = new HudUi();
             settingAdder.init();
             hud.addTable();
             hud.addCoreTable();
         });
 
-        Events.on(WorldLoadEvent.class, e -> {
-            HudUi hud = new HudUi();
-            hud.addWaveTable();
-        });
-
         Events.on(ResetEvent.class, e -> {
-            HudUi hud = new HudUi();
+            hud.reset();
+
+            hud = new HudUi();
             hud.addWaveTable();
         });
 
@@ -43,10 +43,6 @@ public class Main extends Mod {
                 Draw.reset();
             }
         */
-    }
-
-    @Override
-    public void init(){
     }
 
     @Override

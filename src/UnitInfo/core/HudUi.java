@@ -59,6 +59,19 @@ public class HudUi {
     int maxwave;
     int coreamount;
 
+    public void reset(){
+        bars.each(bar -> {
+            weapon = new Table();
+            core = new Table();
+            wave = new Table();
+            waveTable = new Table();
+
+            bar.visible = false;
+            bar.clear();
+            bar.remove();
+        });
+    }
+
     public Unit getUnit(){
         Seq<Unit> units = Groups.unit.intersect(Core.input.mouseWorldX(), Core.input.mouseWorldY(), 4, 4);
         if(units.size <= 0) return player.unit();
