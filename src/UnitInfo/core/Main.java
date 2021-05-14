@@ -24,6 +24,11 @@ public class Main extends Mod {
             hud.addWaveTable();
         });
 
+        Events.on(ResetEvent.class, e -> {
+            HudUi hud = new HudUi();
+            hud.addWaveTable();
+        });
+
         Events.run(Trigger.draw, () -> {
             if(Core.settings.getBool("unithealthui"))
                 Groups.unit.each(unit -> new FreeBar().draw(unit));
