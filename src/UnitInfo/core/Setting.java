@@ -20,23 +20,13 @@ public class Setting {
     public void addGraphicSetting(String key){
         ui.settings.graphics.checkPref(key, Core.settings.getBool(key));
     }
-
-    public void init(){
-        boolean tmp = Core.settings.getBool("uiscalechanged", false);
-        Core.settings.put("uiscalechanged", false);
-
-        addGraphicSetting("coreui");
-        addGraphicSetting("waveui");
-        addGraphicSetting("unitui");
-        addGraphicSetting("weaponui");
-        addGraphicSetting("commandedunitui");
-        addGraphicSetting("unithealthui");
-        SettingsDialog.SettingsTable.Setting waveSetting = new SettingsDialog.SettingsTable.Setting() {
-            public int def;
+    public void addGraphicTypeSetting(String key, int defs, String dialogs, String invalid){
+        ui.settings.graphics.pref(new SettingsDialog.SettingsTable.Setting() {
+            public final int def;
             {
-                def = 100;
-                name = "wavemax";
-                title = Core.bundle.get("setting.wavemax.name");
+                def = defs;
+                name = key;
+                title = Core.bundle.get("setting." + key + ".name", key);
 
                 Core.settings.defaults(name, def);
             }
@@ -70,7 +60,7 @@ public class Setting {
                             };
                         }});
                     }else{
-                        BaseDialog dialog = new BaseDialog("@editmaxwave");
+                        BaseDialog dialog = new BaseDialog(dialogs);
                         dialog.setFillParent(false);
                         TextArea a = dialog.cont.add(new TextArea(message.toString().replace("\r", "\n"))).size(140f, 80f).get();
                         a.setMaxLength(String.valueOf(Integer.MAX_VALUE).length());
@@ -80,7 +70,7 @@ public class Setting {
                                 label.setText(title + ": " + Integer.parseInt(a.getText()));
                             } catch(Throwable e) {
                                 Log.info(e);
-                                ui.showErrorMessage("@invalid");
+                                ui.showErrorMessage(invalid);
 
                                 Core.settings.put(name, def);
                                 label.setText(title + ": " + def);
@@ -100,9 +90,21 @@ public class Setting {
                 }).left().padTop(3.0F);
                 settingsTable.row();
             }
-        };
+        });
+    }
 
-        ui.settings.graphics.pref(waveSetting);
+    public void init(){
+        boolean tmp = Core.settings.getBool("uiscalechanged", false);
+        Core.settings.put("uiscalechanged", false);
+
+        addGraphicSetting("coreui");
+        addGraphicSetting("waveui");
+        addGraphicSetting("unitui");
+        addGraphicSetting("weaponui");
+        addGraphicSetting("commandedunitui");
+        addGraphicSetting("unithealthui");
+        addGraphicTypeSetting("wavemax", 100, "@editmaxwave","@invalid");
+
         ui.settings.graphics.sliderPref("coreuiopacity", 50, 0, 100, 5, s -> s + "%");
         ui.settings.graphics.sliderPref("waveuiopacity", 50, 0, 100, 5, s -> s + "%");
         ui.settings.graphics.sliderPref("uiopacity", 50, 0, 100, 5, s -> s + "%");

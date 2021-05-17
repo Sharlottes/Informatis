@@ -1,11 +1,15 @@
 package UnitInfo.core;
 
+import UnitInfo.ui.FreeBar;
 import UnitInfo.ui.SBar;
 import arc.Core;
+import arc.Events;
 import arc.func.Func;
 import arc.graphics.Color;
 import arc.graphics.g2d.*;
+import arc.math.Angles;
 import arc.math.Mathf;
+import arc.math.geom.Vec2;
 import arc.scene.Element;
 import arc.scene.style.TransformDrawable;
 import arc.scene.ui.*;
@@ -22,6 +26,7 @@ import mindustry.content.Liquids;
 import mindustry.entities.abilities.ForceFieldAbility;
 import mindustry.entities.abilities.ShieldRegenFieldAbility;
 import mindustry.entities.units.WeaponMount;
+import mindustry.game.EventType;
 import mindustry.game.SpawnGroup;
 import mindustry.gen.*;
 import mindustry.graphics.Pal;
@@ -35,8 +40,6 @@ import mindustry.world.blocks.power.ConditionalConsumePower;
 import mindustry.world.blocks.storage.CoreBlock;
 import mindustry.world.consumers.ConsumePower;
 import mindustry.world.consumers.ConsumeType;
-
-import java.util.Objects;
 
 import static arc.Core.scene;
 import static arc.Core.settings;
@@ -57,20 +60,11 @@ public class HudUi {
     float heat2;
     float scrollPos;
     int maxwave;
+    int savedwave;
     int coreamount;
+    float unitFade;
 
-    public void reset(){
-        bars.each(bar -> {
-            weapon = new Table();
-            core = new Table();
-            wave = new Table();
-            waveTable = new Table();
-
-            bar.visible = false;
-            bar.clear();
-            bar.remove();
-        });
-    }
+    Unit unit2;
 
     public Unit getUnit(){
         Seq<Unit> units = Groups.unit.intersect(Core.input.mouseWorldX(), Core.input.mouseWorldY(), 4, 4);
@@ -516,7 +510,35 @@ public class HudUi {
             tx.setColor(tx.color.cpy().a(1f));
         });
     }
+
+
+    float hh;
     public void addTable(){
+        Events.run(EventType.Trigger.draw, () -> {
+            Unit unit = getUnit();
+            unitFade = Mathf.lerpDelta(unitFade, Mathf.num(unit != null), 0.1f);
+            if(unit == null) return;
+            if(unit2 == null || (unit2.x == 0f && unit2.y == 0f)) unit2 = unit;
+
+            Tmp.v1.set(unit2).lerp(unit, Mathf.clamp(Time.delta%60));
+            if(Tmp.v1.x == unit.x && Tmp.v1.y == unit.y){
+                hh += Time.delta;
+                unit2 = unit;
+            }
+
+            Log.info("from: (" + unit2.x + ", " + unit2.y + ")" + unit2);
+            Log.info("to: (" + unit.x + ", " + unit.y + ")" + unit);
+            Log.info("tmp: (" + Tmp.v1.x + ", " + Tmp.v1.y + ")" + Tmp.v1);
+
+            for(int i = 0; i < 4; i++){
+                float rot = i * 90f + 45f + (-Time.time) % 360f;
+                float length = unit.hitSize * 1.5f + (unitFade * 2.5f);
+                Draw.color(Tmp.c1.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f)));
+                Draw.rect("select-arrow", Tmp.v1.x + Angles.trnsx(rot, length), Tmp.v1.y + Angles.trnsy(rot, length), length / 1.9f, length / 1.9f, rot - 135f);
+                Draw.reset();
+            }
+        });
+
         ui.hudGroup.addChild(new Table(table -> {
             table.left();
             addBars();
@@ -759,13 +781,12 @@ public class HudUi {
     public void getWave(Table table){
         int winWave = state.isCampaign() && state.rules.winWave > 0 ? state.rules.winWave : Integer.MAX_VALUE;
         maxwave = settings.getInt("wavemax");
-
         for(int i = state.wave - 1; i <= Math.min(state.wave + maxwave, winWave - 2); i++){
             final int j = i;
             if(state.rules.spawns.find(g -> g.getSpawned(j) > 0) != null) table.table(Tex.underline, t -> {
                 t.add(new Table(tt -> {
                     tt.left();
-                    tt.add(new Label(() -> "[#" + Pal.accent.toString() + "]" + j + "[]"));
+                    tt.add(new Label(() -> "[#" + Pal.accent.toString() + "]" + (j + 1) + "[]"));
                 })).width(32f);
 
                 t.table(tx -> {
@@ -883,11 +904,18 @@ public class HudUi {
 
 
             table.fillParent = true;
-            table.visibility = () ->Core.settings.getBool("waveui") && (
+            table.visibility = () ->Core.settings.getBool("waveui") &&  (
                     ui.hudfrag.shown && !ui.minimapfrag.shown()
                             && (!Vars.mobile ||
                             !(Vars.control.input.block != null || !Vars.control.input.selectRequests.isEmpty()
                                     && !(Vars.control.input.lastSchematic != null && !Vars.control.input.selectRequests.isEmpty()))));
+        });
+
+        waveTable.update(() -> {
+           if(Vars.state.isMenu()) {
+               ui.hudGroup.removeChild(waveTable); //h
+               Log.info(savedwave + ", " + state.wave);
+           }
         });
         ui.hudGroup.addChild(waveTable);
     }
