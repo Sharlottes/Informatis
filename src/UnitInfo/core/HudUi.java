@@ -23,6 +23,7 @@ import mindustry.Vars;
 import mindustry.ai.types.FormationAI;
 import mindustry.content.Items;
 import mindustry.content.Liquids;
+import mindustry.content.StatusEffects;
 import mindustry.entities.abilities.ForceFieldAbility;
 import mindustry.entities.abilities.ShieldRegenFieldAbility;
 import mindustry.entities.units.WeaponMount;
@@ -802,22 +803,20 @@ public class HudUi {
                                     ttt.add(new Label(() -> group.getSpawned(j) + ""));
                                     ttt.pack();
                                 }));
+
+                                add(new Table(ttt -> {
+                                    ttt.top().right();
+                                    Image image = new Image(Icon.warning.getRegion());
+                                    image.update(() -> image.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f))));
+                                    ttt.add(image).size(12f);
+                                    ttt.check("h", c->{});
+                                    ttt.pack();
+                                    ttt.visible(() -> group.effect == StatusEffects.boss && group.getSpawned(j) > 0);
+                                }));
                             }});
 
                         })).width(Cicon.large.size + 8f);
                         if(row % 4 == 0) tx.row();
-                    /*
-                    if(group.effect == StatusEffects.boss && group.getSpawned(i) > 0){
-                        int diff = (i + 2) - state.wave;
-
-                        //increments at which to warn about incoming guardian
-                        if(diff == 1 || diff == 2 || diff == 5 || diff == 10){
-                            showToast(Icon.warning, Core.bundle.format("wave.guardianwarn" + (diff == 1 ? ".one" : ""), diff));
-                        }
-
-                        break outer;
-                    }
-                    */
                     }
                 });
             });
