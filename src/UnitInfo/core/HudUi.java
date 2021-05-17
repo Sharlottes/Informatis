@@ -526,10 +526,6 @@ public class HudUi {
                 unit2 = unit;
             }
 
-            Log.info("from: (" + unit2.x + ", " + unit2.y + ")" + unit2);
-            Log.info("to: (" + unit.x + ", " + unit.y + ")" + unit);
-            Log.info("tmp: (" + Tmp.v1.x + ", " + Tmp.v1.y + ")" + Tmp.v1);
-
             for(int i = 0; i < 4; i++){
                 float rot = i * 90f + 45f + (-Time.time) % 360f;
                 float length = unit.hitSize * 1.5f + (unitFade * 2.5f);
