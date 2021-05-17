@@ -112,8 +112,8 @@ public class HudUi {
 
         bars.add(new Stack(){{
             add(new Table(t -> {
-                t.defaults().width(23 * 8f);
-                t.defaults().height(4f * 8f);
+                t.defaults().width(Scl.scl(23 * 8f));
+                t.defaults().height(Scl.scl(4f * 8f));
                 t.top();
                 t.add(new SBar(
                         () -> {
@@ -272,7 +272,7 @@ public class HudUi {
                         if(getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit)getUnit()).tile() instanceof ItemTurret.ItemTurretBuild) return;
                         super.draw();
                     }
-                }).size(30f).scaling(Scaling.bounded).padBottom(4 * 8f).padRight(6 * 8f);
+                }).size(Scl.scl(30f)).scaling(Scaling.bounded).padBottom(Scl.scl(4 * 8f)).padRight(Scl.scl(6 * 8f));
                 t.pack();
             }));
         }});
@@ -309,8 +309,8 @@ public class HudUi {
         ));
         bars.add(new Stack(){{
             add(new Table(t -> {
-                t.defaults().width(23 * 8f);
-                t.defaults().height(4f * 8f);
+                t.defaults().width(Scl.scl(23 * 8f));
+                t.defaults().height(Scl.scl(4f * 8f));
                 t.top();
                 t.add(new SBar(
                         () -> Core.bundle.format("shar-stat.ammos", getUnit().ammo, getUnit().type.ammoCapacity),
@@ -336,7 +336,7 @@ public class HudUi {
                         }
                         setDrawable(region);
                     });
-                }}).size(30f).scaling(Scaling.bounded).padBottom(4 * 8f).padRight(6 * 8f);
+                }}).size(Scl.scl(30f)).scaling(Scaling.bounded).padBottom(Scl.scl(4 * 8f)).padRight(Scl.scl(6 * 8f));
                 t.pack();
             }));
         }});
@@ -344,13 +344,13 @@ public class HudUi {
 
     public void addWeapon(){
         weapon = new Table(tx -> {
-            tx.defaults().minSize(12 * 8f);
+            tx.defaults().minSize(Scl.scl(12 * 8f));
             tx.left();
 
             if(settings.getBool("commandedunitui") && Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == getUnit()) != 0)
                 tx.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, t1 -> t1.table(tt -> {
-                    tt.defaults().width(24/3f * 8f);
-                    tt.defaults().minHeight(12/3f * 8f);
+                    tt.defaults().width(Scl.scl(24/3f * 8f));
+                    tt.defaults().minHeight(Scl.scl(12/3f * 8f));
                     tt.left();
                     tt.top();
 
@@ -368,13 +368,13 @@ public class HudUi {
                             unittable.add(new Stack(){{
                                 add(new Table(o -> {
                                     o.left();
-                                    o.image(region).size(30).scaling(Scaling.bounded);
+                                    o.image(region).size(Scl.scl(30)).scaling(Scaling.bounded);
                                 }));
 
                                 add(new Table(h -> {
                                     h.add(new Stack(){{
                                         add(new Table(e -> {
-                                            e.defaults().growX().height(9).width(42f).padRight(2*8).padTop(8*2f);
+                                            e.defaults().growX().height(Scl.scl(9)).width(Scl.scl(42f)).padRight(Scl.scl(2*8)).padTop(Scl.scl(8*2f));
                                             e.left();
                                             Bar healthBar = new Bar(
                                                     () -> "",
@@ -385,7 +385,7 @@ public class HudUi {
                                         }));
                                         add(new Table(e -> e.add(new Stack(){{
                                             add(new Table(t -> {
-                                                t.defaults().growX().height(9).width(42f).padRight(2*8).padTop(8*5f);
+                                                t.defaults().growX().height(Scl.scl(9)).width(Scl.scl(42f)).padRight(Scl.scl(2*8)).padTop(Scl.scl(8*5f));
                                                 t.left();
                                                 t.add(new Bar(
                                                         () -> "",
@@ -402,12 +402,12 @@ public class HudUi {
                                                                 if(!Core.settings.getBool("weaponui")) return;
                                                                 setDrawable(unit.stack.item == null || unit.stack.amount <= 0 ? Core.atlas.find("clear") : unit.stack.item.icon(Cicon.small));
                                                             });
-                                                        }}).size(2.5f * 8f).scaling(Scaling.bounded).padBottom(4 * 8f).padLeft(2 * 8f)
+                                                        }}).size(Scl.scl(2.5f * 8f)).scaling(Scaling.bounded).padBottom(Scl.scl(4 * 8f)).padLeft(Scl.scl(2 * 8f))
                                                     ));
                                                     Table table = new Table(tt -> {
                                                         Label label = new Label(() -> unit.stack.item == null || unit.stack.amount <= 0 ? "" : unit.stack.amount + "");
 
-                                                        tt.add(label).padBottom(1 * 8f).padLeft(2 * 8f);
+                                                        tt.add(label).padBottom(Scl.scl(1 * 8f)).padLeft(Scl.scl(2 * 8f));
                                                         tt.pack();
                                                     });
                                                     add(table);
@@ -415,7 +415,7 @@ public class HudUi {
                                                 t.pack();
                                             }));
                                         }})));
-                                    }}).padTop(2*8).padRight(2*8);
+                                    }}).padTop(Scl.scl(2*8)).padRight(Scl.scl(2*8));
                                     h.pack();
                                 }));
                             }}).left();
@@ -430,12 +430,12 @@ public class HudUi {
                         Draw.color(color.r, color.g, color.b, (settings.getInt("uiopacity") / 100f) * this.parentAlpha);
                         getBackground().draw(x, y, width, height);
                     }
-                }).padRight(24 * 8f);
+                }).padRight(Scl.scl(24 * 8f));
             tx.row();
             if(settings.getBool("weaponui") && type != null && type.weapons.size != 0) tx.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, tt -> {
 
-                tt.defaults().width(24/3f * 8f);
-                tt.defaults().minHeight(12/3f * 8f);
+                tt.defaults().width(Scl.scl(24/3f * 8f));
+                tt.defaults().minHeight(Scl.scl(12/3f * 8f));
                 tt.left();
                 tt.top();
 
@@ -478,13 +478,13 @@ public class HudUi {
                                         y += recoil;
                                         if(getDrawable() != null) getDrawable().draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
                                     }
-                                }).size(6 * 8f).scaling(Scaling.bounded);
+                                }).size(Scl.scl(6 * 8f)).scaling(Scaling.bounded);
                             }));
 
                             add(new Table(h -> {
                                 h.add(new Stack(){{
                                     add(new Table(e -> {
-                                        e.defaults().growX().height(9).width(31.5f).padTop(9*2f);
+                                        e.defaults().growX().height(Scl.scl(9)).width(Scl.scl(31.5f)).padTop(Scl.scl(9*2f));
                                         Bar reloadBar = new Bar(
                                                 () -> "",
                                                 () -> Pal.accent.cpy().lerp(Color.orange, mount.reload / weapon.reload),
@@ -492,7 +492,7 @@ public class HudUi {
                                         e.add(reloadBar);
                                         e.pack();
                                     }));
-                                }}).padLeft(8f);
+                                }}).padLeft(Scl.scl(8f));
                                 h.pack();
                             }));
                         }}).left();
@@ -507,7 +507,7 @@ public class HudUi {
                     Draw.color(color.r, color.g, color.b, (settings.getInt("uiopacity") / 100f) * this.parentAlpha);
                     getBackground().draw(x, y, width, height);
                 }
-            }).padRight(24 * 8f);
+            }).padRight(Scl.scl(24 * 8f));
             tx.setColor(tx.color.cpy().a(1f));
         });
     }
@@ -540,7 +540,7 @@ public class HudUi {
             table.left();
             addBars();
             table.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
-                t.defaults().width(25 * 8f);
+                t.defaults().width(Scl.scl(25 * 8f));
 
                 t.table(Tex.underline2, tt -> {
                     Stack stack = new Stack(){{
@@ -571,7 +571,7 @@ public class HudUi {
                                     Label label = new Label(() -> (int)(getUnit().type == null ? 0 : getUnit().type.armor) + "");
                                     label.setColor(Pal.surge);
                                     label.setSize(0.6f);
-                                    temp.add(label).center().padLeft(getUnit().type == null || getUnit().type.armor < 10 ? -4f : 0f);
+                                    temp.add(label).center().padLeft(getUnit().type == null || getUnit().type.armor < Scl.scl(10) ? Scl.scl(-4f) : Scl.scl(0f));
                                     temp.pack();
                                 }){
                                     @Override
@@ -580,7 +580,7 @@ public class HudUi {
                                         super.draw();
                                     }
                                 });
-                            }}).growX().left().padLeft(5 * 8f);
+                            }}).growX().left().padLeft(Scl.scl(5 * 8f));
                         }));
                     }};
 
@@ -602,17 +602,17 @@ public class HudUi {
                         ttt.add(stack);
                     }).left();
                     tt.table(ttt -> {  //unit name
-                        ttt.defaults().width(12 * 8f);
-                        ttt.add(label).padLeft(24f);
+                        ttt.defaults().width(Scl.scl(12 * 8f));
+                        ttt.add(label).padLeft(Scl.scl(24f));
                     }).center();
                     tt.table(ttt -> { //unit info
-                        ttt.defaults().size(5 * 8f);
-                        ttt.add(button).padLeft(-24f);
+                        ttt.defaults().size(Scl.scl(5 * 8f));
+                        ttt.add(button).padLeft(Scl.scl(-24f));
                     }).right();
                 });
                 t.row();
                 t.table(tt -> {
-                    tt.defaults().width(23 * 8f).height(4f * 8f).top();
+                    tt.defaults().width(Scl.scl(23 * 8f)).height(Scl.scl(4f * 8f)).top();
                     for(Element bar : bars){
                         tt.add(bar).growX().left();
                         tt.row();
@@ -627,7 +627,7 @@ public class HudUi {
                     Draw.color(color.r, color.g, color.b, (settings.getInt("uiopacity") / 100f) * this.parentAlpha);
                     getBackground().draw(x, y, width, height);
                 }
-            }).padRight(24 * 8f);
+            }).padRight(Scl.scl(24 * 8f));
             table.row();
             Unit unittemp = getUnit();
             table.update(() -> {
@@ -665,7 +665,7 @@ public class HudUi {
         core = new Table(tx -> {
             tx.left();
             tx.add(new Table(tt -> {
-                tt.defaults().maxWidth(24/3f * 3f).left().top();
+                tt.defaults().maxWidth(Scl.scl(24/3f * 3f)).left().top();
 
                 int row = 0;
                 if(Vars.player.unit() == null) return;
@@ -687,13 +687,13 @@ public class HudUi {
                         coretable.add(new Stack(){{
                             add(new Table(o -> {
                                 o.left();
-                                o.add(new Image(region)).size(6 * 8f).scaling(Scaling.bounded);
+                                o.add(new Image(region)).size(Scl.scl(6 * 8f)).scaling(Scaling.bounded);
                             }));
 
                             add(new Table(h -> {
                                 h.add(new Stack(){{
                                     add(new Table(e -> {
-                                        e.defaults().growX().height(9).width(6f * 8f).padTop(6 * 8f);
+                                        e.defaults().growX().height(Scl.scl(9)).width(Scl.scl(6f * 8f)).padTop(Scl.scl(6 * 8f));
                                         Bar healthBar = new Bar(
                                                 () -> "",
                                                 () -> Pal.health,
@@ -719,7 +719,7 @@ public class HudUi {
                     Draw.color(color.r, color.g, color.b, (settings.getInt("coreuiopacity") / 100f) * this.parentAlpha);
                     getBackground().draw(x, y, width, height);
                 }
-            }).padLeft(6 * 8f);
+            }).padLeft(Scl.scl(6 * 8f));
             tx.setColor(tx.color.cpy().a(1f));
         });
     }
@@ -907,10 +907,7 @@ public class HudUi {
         });
 
         waveTable.update(() -> {
-           if(Vars.state.isMenu()) {
-               ui.hudGroup.removeChild(waveTable); //h
-               Log.info(savedwave + ", " + state.wave);
-           }
+           if(Vars.state.isMenu()) ui.hudGroup.removeChild(waveTable); //h
         });
         ui.hudGroup.addChild(waveTable);
     }
