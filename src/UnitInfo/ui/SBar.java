@@ -7,6 +7,7 @@ import arc.math.*;
 import arc.math.geom.*;
 import arc.scene.*;
 import arc.scene.style.*;
+import arc.scene.ui.layout.Scl;
 import arc.util.pooling.*;
 import mindustry.gen.*;
 import mindustry.ui.Fonts;
@@ -149,7 +150,7 @@ public class SBar extends Element{
         Font font = Fonts.outline;
         GlyphLayout lay = Pools.obtain(GlyphLayout.class, GlyphLayout::new);
         lay.setText(font, name);
-
+        font.getData().setScale(Scl.scl());
         font.setColor(Color.white);
         font.draw(name, x + width / 2f - lay.width / 2f, y + height / 2f + lay.height / 2f + 1);
 

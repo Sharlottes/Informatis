@@ -2,17 +2,18 @@ package UnitInfo.core;
 
 import arc.Core;
 import arc.Input;
+import arc.graphics.Color;
+import arc.scene.ui.Dialog;
 import arc.scene.ui.Label;
 import arc.scene.ui.SettingsDialog;
 import arc.scene.ui.TextArea;
 import arc.scene.ui.layout.Scl;
 import arc.scene.ui.layout.Table;
+import arc.util.Align;
 import arc.util.Log;
 import mindustry.Vars;
 import mindustry.gen.Icon;
 import mindustry.ui.dialogs.BaseDialog;
-
-import java.util.Objects;
 
 import static mindustry.Vars.ui;
 
@@ -20,7 +21,7 @@ public class Setting {
     public void addGraphicSetting(String key){
         ui.settings.graphics.checkPref(key, Core.settings.getBool(key));
     }
-    public void addGraphicTypeSetting(String key, int defs, String dialogs, String invalid){
+    public void addGraphicTypeSetting(String key, int defs, String dialogs, String invalid, int warnMax){
         ui.settings.graphics.pref(new SettingsDialog.SettingsTable.Setting() {
             public final int def;
             {
@@ -46,10 +47,38 @@ public class Setting {
                             accepted = str -> {
 
                                 try {
-                                    int number = 0;
-                                    if(!str.isEmpty() || !(Objects.equals(str, ""))) number = Integer.parseInt(str);
-                                    Core.settings.put(name, number);
-                                    label.setText(title + ": " + number);
+                                    int number = Integer.parseInt(str);
+                                    if(number >= warnMax){
+                                        String name1 = name;
+                                        String title1 = title;
+                                        new Dialog(""){{
+                                            setFillParent(true);
+                                            cont.margin(15f);
+                                            cont.add("@warn");
+                                            cont.row();
+                                            cont.image().width(300f).pad(2).height(4f).color(Color.scarlet);
+                                            cont.row();
+                                            cont.add("@warning").pad(2f).growX().wrap().get().setAlignment(Align.center);
+                                            cont.row();
+                                            cont.table(t -> {
+                                                t.button("@yes", () -> {
+                                                    this.hide();
+                                                    Core.settings.put(name1, number);
+                                                    label.setText(title1 + ": " + number);
+                                                }).size(120, 50);
+                                                t.button("@no", () -> {
+                                                    this.hide();
+                                                    Core.settings.put(name1, def);
+                                                    label.setText(title1 + ": " + Core.settings.getInt(name1));
+                                                }).size(120, 50);
+                                            }).pad(5);
+                                            closeOnBack();
+                                        }}.show();
+                                    }
+                                    else {
+                                        Core.settings.put(name, number);
+                                        label.setText(title + ": " + number);
+                                    }
                                 } catch(Throwable e) {
                                     Log.info(e);
                                     ui.showErrorMessage("@invalid");
@@ -66,8 +95,37 @@ public class Setting {
                         a.setMaxLength(String.valueOf(Integer.MAX_VALUE).length());
                         dialog.buttons.button("@ok", () -> {
                             try {
-                                Core.settings.put(name, Integer.parseInt(a.getText()));
-                                label.setText(title + ": " + Integer.parseInt(a.getText()));
+                                int number = Integer.parseInt(a.getText());
+                                if(number >= warnMax){
+                                    String name1 = name;
+                                    String title1 = title;
+                                    new Dialog(""){{
+                                        setFillParent(true);
+                                        cont.margin(15f);
+                                        cont.add("@warn");
+                                        cont.row();
+                                        cont.image().width(300f).pad(2).height(4f).color(Color.scarlet);
+                                        cont.row();
+                                        cont.add("@warning").pad(2f).growX().wrap().get().setAlignment(Align.center);
+                                        cont.row();
+                                        cont.table(t -> {
+                                            t.button("@yes", () -> {
+                                                this.hide();
+                                                Core.settings.put(name1, number);
+                                                label.setText(title1 + ": " + number);
+                                            }).size(120, 50);
+                                            t.button("@no", () -> {
+                                                this.hide();
+                                                Core.settings.put(name1, def);
+                                                label.setText(title1 + ": " + Core.settings.getInt(name1));
+                                            }).size(120, 50);
+                                        }).pad(5);
+                                        closeOnBack();
+                                    }}.show();
+                                }else {
+                                    Core.settings.put(name, number);
+                                    label.setText(title + ": " + number);
+                                }
                             } catch(Throwable e) {
                                 Log.info(e);
                                 ui.showErrorMessage(invalid);
@@ -97,20 +155,31 @@ public class Setting {
         boolean tmp = Core.settings.getBool("uiscalechanged", false);
         Core.settings.put("uiscalechanged", false);
 
+        addGraphicSetting("scan");
+        addGraphicSetting("range");
+        addGraphicSetting("select");
         addGraphicSetting("coreui");
         addGraphicSetting("waveui");
         addGraphicSetting("unitui");
         addGraphicSetting("weaponui");
         addGraphicSetting("commandedunitui");
         addGraphicSetting("unithealthui");
-        addGraphicTypeSetting("wavemax", 100, "@editmaxwave","@invalid");
+        addGraphicTypeSetting("wavemax", 100, "@editmaxwave","@invalid", 200);
+        addGraphicTypeSetting("rangemax", 10, "@editrange","@invalid", 1000);
 
+        ui.settings.graphics.sliderPref("coreuiscaling", 100, 0, 100, 5, s -> s + "%");
+        ui.settings.graphics.sliderPref("waveuiscaling", 100, 0, 100, 5, s -> s + "%");
+        ui.settings.graphics.sliderPref("uiscaling", 100, 0, 100, 5, s -> s + "%");
+        ui.settings.graphics.sliderPref("selectopacity", 50, 0, 100, 5, s -> s + "%");
         ui.settings.graphics.sliderPref("coreuiopacity", 50, 0, 100, 5, s -> s + "%");
         ui.settings.graphics.sliderPref("waveuiopacity", 50, 0, 100, 5, s -> s + "%");
         ui.settings.graphics.sliderPref("uiopacity", 50, 0, 100, 5, s -> s + "%");
         ui.settings.graphics.sliderPref("baropacity", 100, 0, 100, 5, s -> s + "%");
 
-        Core.settings.defaults("coreui", !Vars.mobile);
+        Core.settings.defaults("scan", true);
+        Core.settings.defaults("range", false);
+        Core.settings.defaults("select", true);
+        Core.settings.defaults("coreui", false);
         Core.settings.defaults("waveui", true);
         Core.settings.defaults("unitui", true);
         Core.settings.defaults("weaponui", true);

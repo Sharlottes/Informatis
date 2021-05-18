@@ -1,15 +1,33 @@
 package UnitInfo.ui;
 
+import UnitInfo.core.PrograssedReqImage;
+import arc.Core;
+import arc.func.Func;
+import arc.graphics.Color;
 import arc.graphics.g2d.*;
 import arc.math.*;
+import arc.scene.ui.Image;
 import arc.struct.FloatSeq;
 import arc.util.Log;
+import arc.util.Tmp;
 import mindustry.Vars;
+import mindustry.content.Liquids;
 import mindustry.entities.abilities.ForceFieldAbility;
 import mindustry.entities.abilities.ShieldRegenFieldAbility;
 import mindustry.gen.*;
+import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
+import mindustry.type.Item;
+import mindustry.type.Liquid;
+import mindustry.ui.Cicon;
+import mindustry.ui.MultiReqImage;
+import mindustry.ui.ReqImage;
+import mindustry.world.blocks.defense.Wall;
+import mindustry.world.blocks.defense.turrets.*;
+import mindustry.world.blocks.power.ConditionalConsumePower;
+import mindustry.world.consumers.ConsumePower;
+import mindustry.world.consumers.ConsumeType;
 
 import static arc.Core.settings;
 import static mindustry.Vars.content;
@@ -99,6 +117,98 @@ public class FreeBar {
                     x - width / 2, y + height));
         }
 
+        Draw.reset();
+    }
+
+    public void draw(Building build){
+        if(build.dead()
+            || (!(build instanceof BaseTurret.BaseTurretBuild) && !(build instanceof Wall.WallBuild))) return;
+
+        float height = 2f;
+
+        if(Float.isNaN(value)) value = 0;
+        if(Float.isInfinite(value)) value = 1f;
+        value = Mathf.lerpDelta(value, Mathf.clamp(build.healthf()), 0.15f);
+
+        Draw.z(Layer.flyingUnit + 1);
+        Draw.color(0.1f, 0.1f, 0.1f, (settings.getInt("baropacity") / 100f));
+        float width = build.block.size * 8 / 2f + 4f;
+
+        float x = build.x;
+        float y = build.y - 8;
+        for(int i : Mathf.signs) {
+            for(int ii = 0; ii < 2; ii++){
+                float shadowx = x + ii * 0.25f;
+                float shadowy = y - ii * 0.5f;
+                Fill.poly(FloatSeq.with(
+                        shadowx - (width / 2 + height), shadowy,
+                        shadowx - width / 2, shadowy + i * height,
+                        shadowx + width / 2, shadowy + i * height,
+                        shadowx + (width / 2 + height), shadowy,
+                        shadowx + width / 2, shadowy + i * -height,
+                        shadowx - width / 2, shadowy + i * -height));
+            }
+        }
+
+        {
+            Draw.color(Pal.health.cpy().a((settings.getInt("baropacity") / 100f)));
+            float topWidth = - width / 2 + width * Mathf.clamp(build.healthf());
+            float moser = topWidth + height;
+            if(build.health <= 0) moser = (width / 2 + height) * (2 * Mathf.clamp(build.healthf()) - 1);
+
+            for(int i : Mathf.signs) {
+                Fill.poly(FloatSeq.with(
+                        x - (width / 2 + height), y,
+                        x - width / 2, y + i * height,
+                        x + topWidth, y + i * height,
+                        x + moser, y,
+                        x + topWidth, y + i * -height,
+                        x - width / 2, y + i * -height));
+            }
+        }
+        float h = 0;
+        Color color = Pal.ammo;
+        if(build instanceof ItemTurret.ItemTurretBuild) {
+             h = ((ItemTurret.ItemTurretBuild) build).totalAmmo / (((ItemTurret) build.block).maxAmmo * 1f);
+             if(((ItemTurret.ItemTurretBuild) build).hasAmmo()) color = ((ItemTurret) build.block).ammoTypes.findKey(((ItemTurret.ItemTurretBuild) build).peekAmmo(), true).color;
+        }
+        else if(build instanceof LiquidTurret.LiquidTurretBuild){
+            LiquidTurret.LiquidTurretBuild entity = (LiquidTurret.LiquidTurretBuild) build;
+            Func<Building, Liquid> current;
+            current = entity1 -> entity1.liquids == null ? Liquids.water : entity1.liquids.current();
+
+            h = entity.liquids == null ? 0f : entity.liquids.get(current.get(entity)) / entity.block.liquidCapacity;
+            color = current.get(entity).color;
+        }
+        else if(build instanceof PowerTurret.PowerTurretBuild){
+            PowerTurret.PowerTurretBuild entity = (PowerTurret.PowerTurretBuild) build;
+            ConsumePower cons = entity.block.consumes.getPower();
+
+            double max = (Math.round(cons.usage * 10) / 10.0) * 60;
+            double v = (Math.round(((ConditionalConsumePower)entity.block.consumes.get(ConsumeType.power)).requestedPower(entity) * 10) / 10.0);
+
+            h = entity.power.status;
+            color = Pal.powerBar;
+        }
+
+        if(Core.settings.getBool("range") && build instanceof BaseTurret.BaseTurretBuild) {
+            Drawf.dashCircle(build.x, build.y, ((BaseTurret.BaseTurretBuild) build).range(), build.team.color);
+        }
+
+        if(build instanceof Turret.TurretBuild) {
+            float topWidth = - width / 2 + width * Mathf.clamp(h);
+            float moser = topWidth + height;
+            if(h <= 0) moser = (width / 2 + height) * (2 * h - 1);
+
+            Draw.color(Tmp.c1.set(color).a(settings.getInt("baropacity") / 100f));
+            Fill.poly(FloatSeq.with(
+                    x - (width / 2 + height), y,
+                    x - width / 2, y + height,
+                    x + topWidth, y + height,
+                    x + moser, y,
+                    x + topWidth, y - height,
+                    x - width / 2, y - height));
+        }
         Draw.reset();
     }
 }
