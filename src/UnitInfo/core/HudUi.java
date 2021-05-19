@@ -209,7 +209,7 @@ public class HudUi {
                             imaget = itemReq;
 
                             if(((ItemTurret.ItemTurretBuild)((BlockUnitUnit) getUnit()).tile()).hasAmmo())
-                                imaget = new Image(((ItemTurret) ((BlockUnitUnit) getUnit()).tile().block).ammoTypes.findKey(((ItemTurret.ItemTurretBuild)((BlockUnitUnit) getUnit()).tile()).peekAmmo(), true).icon(Cicon.small));
+                                imaget = new Image(((ItemTurret) ((BlockUnitUnit) getUnit()).tile().block).ammoTypes.findKey(((ItemTurret.ItemTurretBuild)((BlockUnitUnit) getUnit()).tile()).peekAmmo(), true).icon(Cicon.small)).setScaling(Scaling.fit);
 
                         }
                         else if(((BlockUnitUnit)getUnit()).tile() instanceof LiquidTurret.LiquidTurretBuild){
@@ -223,7 +223,7 @@ public class HudUi {
                             imaget = liquidReq;
 
                             if(((LiquidTurret.LiquidTurretBuild)((BlockUnitUnit) getUnit()).tile()).hasAmmo())
-                                imaget = new Image(current.get(entity).icon(Cicon.small));
+                                imaget = new Image(current.get(entity).icon(Cicon.small)).setScaling(Scaling.fit);
                         }
                         else if(((BlockUnitUnit)getUnit()).tile() instanceof PowerTurret.PowerTurretBuild){
                             PowerTurret.PowerTurretBuild entity = ((PowerTurret.PowerTurretBuild)((BlockUnitUnit)getUnit()).tile());
@@ -237,7 +237,7 @@ public class HudUi {
                             //float amount = Mathf.zero(cons.requestedPower(entity)) && entity.power.graph.getPowerProduced() + entity.power.graph.getBatteryStored() > 0f ? 1f : entity.power.status;
 
                             imaget = new PrograssedReqImage(Icon.power.getRegion(), () -> amount >= 0.99f, amount);
-                            if(amount >= 0.999f) imaget = new Image(Icon.power.getRegion());
+                            if(amount >= 0.999f) imaget = new Image(Icon.power.getRegion()).setScaling(Scaling.fit);
                         }
 
                         if(image != null){
@@ -270,7 +270,7 @@ public class HudUi {
                         if(getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit)getUnit()).tile() instanceof ItemTurret.ItemTurretBuild) return;
                         super.draw();
                     }
-                }).size(Scl.scl(30f * (settings.getInt("uiscaling") / 100f))).scaling(Scaling.bounded).padBottom(Scl.scl(4 * 8f * (settings.getInt("uiscaling") / 100f))).padRight(Scl.scl(6 * 8f * (settings.getInt("uiscaling") / 100f)));
+                }.setScaling(Scaling.fit)).size(Scl.scl(30f * (settings.getInt("uiscaling") / 100f))).scaling(Scaling.fit).padBottom(Scl.scl(4 * 8f * (settings.getInt("uiscaling") / 100f))).padRight(Scl.scl(6 * 8f * (settings.getInt("uiscaling") / 100f)));
                 t.pack();
             }));
         }});
@@ -334,7 +334,7 @@ public class HudUi {
                         }
                         setDrawable(region);
                     });
-                }}).size(Scl.scl(30f * (settings.getInt("uiscaling") / 100f))).scaling(Scaling.bounded).padBottom(Scl.scl(4 * 8f * (settings.getInt("uiscaling") / 100f))).padRight(Scl.scl(6 * 8f * (settings.getInt("uiscaling") / 100f)));
+                }}.setScaling(Scaling.fit)).size(Scl.scl(30f * (settings.getInt("uiscaling") / 100f))).scaling(Scaling.fit).padBottom(Scl.scl(4 * 8f * (settings.getInt("uiscaling") / 100f))).padRight(Scl.scl(6 * 8f * (settings.getInt("uiscaling") / 100f)));
                 t.pack();
             }));
         }});
@@ -366,7 +366,7 @@ public class HudUi {
                             unittable.add(new Stack(){{
                                 add(new Table(o -> {
                                     o.left();
-                                    o.image(region).size(Scl.scl(30 * (settings.getInt("uiscaling") / 100f))).scaling(Scaling.bounded);
+                                    o.image(region).size(Scl.scl(30 * (settings.getInt("uiscaling") / 100f))).scaling(Scaling.fit);
                                 }));
 
                                 add(new Table(h -> {
@@ -400,7 +400,7 @@ public class HudUi {
                                                                 if(!Core.settings.getBool("weaponui")) return;
                                                                 setDrawable(unit.stack.item == null || unit.stack.amount <= 0 ? Core.atlas.find("clear") : unit.stack.item.icon(Cicon.small));
                                                             });
-                                                        }}).size(Scl.scl(2.5f * 8f * (settings.getInt("uiscaling") / 100f))).scaling(Scaling.bounded).padBottom(Scl.scl(4 * 8f * (settings.getInt("uiscaling") / 100f))).padLeft(Scl.scl(2 * 8f * (settings.getInt("uiscaling") / 100f)))
+                                                        }}.setScaling(Scaling.fit)).size(Scl.scl(2.5f * 8f * (settings.getInt("uiscaling") / 100f))).scaling(Scaling.fit).padBottom(Scl.scl(4 * 8f * (settings.getInt("uiscaling") / 100f))).padLeft(Scl.scl(2 * 8f * (settings.getInt("uiscaling") / 100f)))
                                                     ));
                                                     Table table = new Table(tt -> {
                                                         Label label = new Label(() -> unit.stack.item == null || unit.stack.amount <= 0 ? "" : unit.stack.amount + "");
@@ -476,7 +476,7 @@ public class HudUi {
                                         y += recoil;
                                         if(getDrawable() != null) getDrawable().draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
                                     }
-                                }).size(Scl.scl(6 * 8f * (settings.getInt("uiscaling") / 100f))).scaling(Scaling.bounded);
+                                }.setScaling(Scaling.fit)).size(Scl.scl(6 * 8f * (settings.getInt("uiscaling") / 100f))).scaling(Scaling.fit);
                             }));
 
                             add(new Table(h -> {
@@ -539,7 +539,7 @@ public class HudUi {
             table.left();
             addBars();
             table.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
-                t.defaults().width(Scl.scl(25 * 8f * (settings.getInt("uiscaling") / 100f)));
+                t.defaults().width(Scl.scl(25 * 8f * (settings.getInt("uiscaling") / 100f))).scaling(Scaling.bounded);
 
                 t.table(Tex.underline2, tt -> {
                     Stack stack = new Stack(){{
@@ -551,13 +551,13 @@ public class HudUi {
                                 else if(getUnit() != null && getUnit().type != null) region = getUnit().type.icon(Cicon.large);
                                 setDrawable(region);
                             });
-                        }})));
+                        }}.setScaling(Scaling.fit)).size(4f * 8f)));
                         add(new Table(ttt -> {
                             ttt.top().left();
                             ttt.add(new Stack(){{
                                 add(new Table(temp -> {
                                     temp.left();
-                                    temp.add(new Image(Icon.defense)).center();
+                                    temp.add(new Image(Icon.defense).setScaling(Scaling.fit)).center();
                                 }){
                                     @Override
                                     public void draw() {
@@ -584,7 +584,7 @@ public class HudUi {
                         }));
                     }};
 
-                    Label label = new Label(() ->{
+                    Label label = new Label(() -> {
                         String name = "";
                         if(getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit)getUnit()).tile() instanceof Turret.TurretBuild) name = "[accent]" + ((BlockUnitUnit)getUnit()).tile().block.localizedName + "[]";
                         else if(getUnit() != null && getUnit().type != null) name = "[accent]" + getUnit().type.localizedName + "[]";
@@ -687,7 +687,7 @@ public class HudUi {
                         coretable.add(new Stack(){{
                             add(new Table(o -> {
                                 o.left();
-                                o.add(new Image(region)).size(Scl.scl(6 * 8f * (settings.getInt("coreuiscaling") / 100f))).scaling(Scaling.bounded);
+                                o.add(new Image(region).setScaling(Scaling.fit)).size(Scl.scl(6 * 8f * (settings.getInt("coreuiscaling") / 100f))).scaling(Scaling.fit);
                             }));
 
                             add(new Table(h -> {
@@ -727,7 +727,7 @@ public class HudUi {
     }
 
     public void addCoreTable(){
-        ScrollPane pane = new ScrollPane(new Image(Core.atlas.find("clear")), Styles.smallPane);
+        ScrollPane pane = new ScrollPane(new Image(Core.atlas.find("clear")).setScaling(Scaling.fit), Styles.smallPane);
         pane.setScrollingDisabled(true, false);
         pane.setScrollYForce(scrollPos);
         pane.update(() -> {
@@ -800,7 +800,7 @@ public class HudUi {
                             tt.add(new Stack(){{
                                 add(new Table(ttt -> {
                                     ttt.center();
-                                    ttt.add(new Image(group.type.icon(Cicon.large)));
+                                    ttt.add(new Image(group.type.icon(Cicon.large)).setScaling(Scaling.fit));
                                     ttt.pack();
                                 }));
 
@@ -814,7 +814,7 @@ public class HudUi {
 
                                 add(new Table(ttt -> {
                                     ttt.top().right();
-                                    Image image = new Image(Icon.warning.getRegion());
+                                    Image image = new Image(Icon.warning.getRegion()).setScaling(Scaling.fit);
                                     image.update(() -> image.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f))));
                                     ttt.add(image).size(Scl.scl(12f * (settings.getInt("waveuiscaling") / 100f)));
                                     ttt.visible(() -> group.effect == StatusEffects.boss && group.getSpawned(j) > 0);
@@ -860,7 +860,7 @@ public class HudUi {
             table.name = "wave";
             table.top().left();
 
-            ScrollPane pane = new ScrollPane(new Image(Core.atlas.find("clear")), Styles.smallPane);
+            ScrollPane pane = new ScrollPane(new Image(Core.atlas.find("clear")).setScaling(Scaling.fit), Styles.smallPane);
             pane.setScrollingDisabled(true, false);
             pane.setScrollYForce(scrollPos);
             pane.update(() -> {
