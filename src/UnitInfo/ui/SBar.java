@@ -12,6 +12,8 @@ import arc.util.pooling.*;
 import mindustry.gen.*;
 import mindustry.ui.Fonts;
 
+import static arc.Core.settings;
+
 public class SBar extends Element{
     private static Rect scissor = new Rect();
 
@@ -149,10 +151,11 @@ public class SBar extends Element{
 
         Font font = Fonts.outline;
         GlyphLayout lay = Pools.obtain(GlyphLayout.class, GlyphLayout::new);
+        font.getData().setScale(Scl.scl() * (settings.getInt("uiscaling") / 100f));
         lay.setText(font, name);
-        font.getData().setScale(Scl.scl());
         font.setColor(Color.white);
         font.draw(name, x + width / 2f - lay.width / 2f, y + height / 2f + lay.height / 2f + 1);
+        font.getData().setScale(Scl.scl());
 
         Pools.free(lay);
     }

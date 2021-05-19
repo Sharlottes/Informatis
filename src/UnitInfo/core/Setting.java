@@ -165,7 +165,7 @@ public class Setting {
         addGraphicSetting("commandedunitui");
         addGraphicSetting("unithealthui");
         addGraphicTypeSetting("wavemax", 100, "@editmaxwave","@invalid", 200);
-        addGraphicTypeSetting("rangemax", 10, "@editrange","@invalid", 1000);
+        addGraphicTypeSetting("rangemax", 10, "@editrange","@invalid", 100);
 
         ui.settings.graphics.sliderPref("coreuiscaling", 100, 0, 100, 5, s -> s + "%");
         ui.settings.graphics.sliderPref("waveuiscaling", 100, 0, 100, 5, s -> s + "%");

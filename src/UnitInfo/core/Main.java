@@ -50,7 +50,7 @@ public class Main extends Mod {
                 Groups.unit.each(unit -> new FreeBar().draw(unit));
 
             if(Core.settings.getBool("scan")){
-                float range = settings.getInt("wavemax");
+                float range = settings.getInt("rangemax") * 8f;
 
                 for(Team team : Team.all) {
                     indexer.eachBlock(team, Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, b -> true, b -> new FreeBar().draw(b));

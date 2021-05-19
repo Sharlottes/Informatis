@@ -614,6 +614,8 @@ public class HudUi {
                 t.table(tt -> {
                     tt.defaults().width(Scl.scl(23 * 8f * (settings.getInt("uiscaling") / 100f))).height(Scl.scl(4f * 8f * (settings.getInt("uiscaling") / 100f))).top();
                     for(Element bar : bars){
+                        bar.setWidth(bar.getWidth() * (settings.getInt("uiscaling") / 100f));
+                        bar.setHeight(bar.getHeight() * (settings.getInt("uiscaling") / 100f));
                         tt.add(bar).growX().left();
                         tt.row();
                     }
