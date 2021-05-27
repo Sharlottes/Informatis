@@ -29,6 +29,7 @@ import mindustry.game.EventType;
 import mindustry.game.SpawnGroup;
 import mindustry.gen.*;
 import mindustry.graphics.Pal;
+import mindustry.input.DesktopInput;
 import mindustry.type.*;
 import mindustry.ui.*;
 import mindustry.world.blocks.defense.turrets.ItemTurret;
@@ -47,23 +48,29 @@ import static mindustry.Vars.*;
 public class HudUi {
     Seq<Element> bars = new Seq<>();
     Table weapon = new Table();
-    Table core = new Table();
-    Table wave = new Table();
-    Table waveTable;
+    Table mainTable = new Table();
+    Table baseTable = new Table();
+    Table unitTable = new Table();
+    Table waveTable = new Table();
+    Table coreTable = new Table();
 
     @Nullable UnitType type;
     @Nullable Unit unit;
     Element image;
 
+    int uiIndex = 0;
+
     float heat;
     float heat2;
-    float scrollPos;
+    float coreScrollPos;
+    float waveScrollPos;
     int maxwave;
-    int savedwave;
     int coreamount;
     float unitFade;
 
     Unit unit2;
+
+    boolean panFix = false;
 
     public Unit getUnit(){
         Seq<Unit> units = Groups.unit.intersect(Core.input.mouseWorldX(), Core.input.mouseWorldY(), 4, 4);
@@ -71,6 +78,93 @@ public class HudUi {
         Unit unit = units.peek();
         if(unit == null) return player.unit();
         else return unit;
+    }
+
+    public void setDraw(){
+        Events.run(EventType.Trigger.draw, () -> {
+            if(!Core.settings.getBool("select")) return;
+            Unit unit = getUnit();
+            unitFade = Mathf.lerpDelta(unitFade, Mathf.num(unit != null), 0.1f);
+            if(unit == null) return;
+            if(unit2 == null || (unit2.x == 0f && unit2.y == 0f)) unit2 = unit;
+
+            Tmp.v1.set(unit2).lerp(unit, Mathf.clamp(Time.delta%60));
+            if(Tmp.v1.x == unit.x && Tmp.v1.y == unit.y){
+                hh += Time.delta;
+                unit2 = unit;
+            }
+
+            for(int i = 0; i < 4; i++){
+                float rot = i * 90f + 45f + (-Time.time) % 360f;
+                float length = unit.hitSize * 1.5f + (unitFade * 2.5f);
+                Draw.color(Tmp.c1.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f)).a(settings.getInt("uiopacity") / 100f));
+                Draw.rect("select-arrow", Tmp.v1.x + Angles.trnsx(rot, length), Tmp.v1.y + Angles.trnsy(rot, length), length / 1.9f, length / 1.9f, rot - 135f);
+                Draw.reset();
+            }
+        });
+    }
+
+    public void addTable(){
+        mainTable = new Table(table -> {
+            table.left();
+            table.table(t -> {
+                Button[] buttons = {null, null, null};
+                buttons[0] = t.button(Icon.units, Styles.clearToggleTransi, () -> {
+                    uiIndex = 0;
+                    buttons[0].setChecked(true);
+                    buttons[1].setChecked(false);
+                    buttons[2].setChecked(false);
+                    addCoreTable();
+                    addWaveTable();
+                    addBars();
+                    addWeapon();
+                    addUnitTable();
+                    table.removeChild(baseTable);
+                    baseTable = table.table(tt -> tt.stack(unitTable, waveTable, coreTable).align(Align.left).left()).get();
+                }).size(5*8f).get();
+                t.row();
+                buttons[1] = t.button(Icon.fileText, Styles.clearToggleTransi, () -> {
+                    uiIndex = 1;
+                    buttons[0].setChecked(false);
+                    buttons[1].setChecked(true);
+                    buttons[2].setChecked(false);
+                    addCoreTable();
+                    addWaveTable();
+                    addBars();
+                    addWeapon();
+                    addUnitTable();
+                    table.removeChild(baseTable);
+                    baseTable = table.table(tt -> tt.stack(unitTable, waveTable, coreTable).align(Align.left).left()).get();
+                }).size(5*8f).get();
+                t.row();
+                buttons[2] = t.button(Icon.commandRally, Styles.clearToggleTransi, () -> {
+                    uiIndex = 2;
+                    buttons[0].setChecked(false);
+                    buttons[1].setChecked(false);
+                    buttons[2].setChecked(true);
+                    addCoreTable();
+                    addWaveTable();
+                    addBars();
+                    addWeapon();
+                    addUnitTable();
+                    table.removeChild(baseTable);
+                    baseTable = table.table(tt -> tt.stack(unitTable, waveTable, coreTable).align(Align.left).left()).get();
+                }).size(5*8f).get();
+            });
+
+            baseTable = table.table(tt -> {
+                tt.stack(unitTable, waveTable, coreTable).align(Align.left).left();
+                tt.visible(() -> settings.getBool("infoui"));
+            }).get();
+
+            table.fillParent = true;
+            table.visibility = () -> (
+                    ui.hudfrag.shown && !ui.minimapfrag.shown()
+                            && (!Vars.mobile ||
+                            !(getUnit().isBuilding() || Vars.control.input.block != null || !Vars.control.input.selectRequests.isEmpty()
+                                    && !(Vars.control.input.lastSchematic != null && !Vars.control.input.selectRequests.isEmpty()))));
+        });
+        ui.hudGroup.addChild(mainTable);
     }
 
     public void addBars(){
@@ -189,8 +283,7 @@ public class HudUi {
             {{
                 left();
                 update(() -> {
-
-                    if(!Core.settings.getBool("unitui") || !(getUnit() instanceof BlockUnitUnit) || (
+                    if(!(getUnit() instanceof BlockUnitUnit) || (
                             !(((BlockUnitUnit)getUnit()).tile() instanceof ItemTurret.ItemTurretBuild)
                             && !(((BlockUnitUnit)getUnit()).tile() instanceof LiquidTurret.LiquidTurretBuild)
                             && !(((BlockUnitUnit)getUnit()).tile() instanceof PowerTurret.PowerTurretBuild)
@@ -260,7 +353,6 @@ public class HudUi {
 
                 t.add(new Image(){{
                     update(() -> {
-                        if(!Core.settings.getBool("unitui")) return;
                         setDrawable(getUnit().stack.item == null || getUnit().stack.amount <= 0 ? Core.atlas.find("clear") : getUnit().stack.item.icon(Cicon.small));
                     });
                 }
@@ -321,8 +413,6 @@ public class HudUi {
                 t.left();
                 t.add(new Image(){{
                     update(() -> {
-                        if(!Core.settings.getBool("unitui")) return;
-
                         if(!Vars.state.rules.unitAmmo){
                             setDrawable(Core.atlas.find("clear"));
                             return;
@@ -512,30 +602,9 @@ public class HudUi {
 
 
     float hh;
-    public void addTable(){
-        Events.run(EventType.Trigger.draw, () -> {
-            if(!Core.settings.getBool("select")) return;
-            Unit unit = getUnit();
-            unitFade = Mathf.lerpDelta(unitFade, Mathf.num(unit != null), 0.1f);
-            if(unit == null) return;
-            if(unit2 == null || (unit2.x == 0f && unit2.y == 0f)) unit2 = unit;
-
-            Tmp.v1.set(unit2).lerp(unit, Mathf.clamp(Time.delta%60));
-            if(Tmp.v1.x == unit.x && Tmp.v1.y == unit.y){
-                hh += Time.delta;
-                unit2 = unit;
-            }
-
-            for(int i = 0; i < 4; i++){
-                float rot = i * 90f + 45f + (-Time.time) % 360f;
-                float length = unit.hitSize * 1.5f + (unitFade * 2.5f);
-                Draw.color(Tmp.c1.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f)).a(settings.getInt("coreuiopacity") / 100f));
-                Draw.rect("select-arrow", Tmp.v1.x + Angles.trnsx(rot, length), Tmp.v1.y + Angles.trnsy(rot, length), length / 1.9f, length / 1.9f, rot - 135f);
-                Draw.reset();
-            }
-        });
-
-        ui.hudGroup.addChild(new Table(table -> {
+    public void addUnitTable(){
+        if(uiIndex != 0) return;
+        unitTable = new Table(table -> {
             table.left();
             addBars();
             table.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
@@ -545,13 +614,12 @@ public class HudUi {
                     Stack stack = new Stack(){{
                         add(new Table(ttt -> ttt.add(new Image(){{
                             update(() -> {
-                                if(!Core.settings.getBool("unitui")) return;
                                 TextureRegion region = Core.atlas.find("clear");
                                 if(getUnit() instanceof BlockUnitUnit && getUnit().type != null) region = ((BlockUnitUnit)getUnit()).tile().block.icon(Cicon.large);
                                 else if(getUnit() != null && getUnit().type != null) region = getUnit().type.icon(Cicon.large);
                                 setDrawable(region);
                             });
-                        }}.setScaling(Scaling.fit)).size(4f * 8f)));
+                        }}.setScaling(Scaling.fit)).size(Scl.scl(4f * 8f * (settings.getInt("uiscaling") / 100f)))));
                         add(new Table(ttt -> {
                             ttt.top().left();
                             ttt.add(new Stack(){{
@@ -591,6 +659,7 @@ public class HudUi {
 
                         return name;
                     });
+
                     label.setFontScale(Scl.scl() * (settings.getInt("uiscaling") / 100f));
                     TextButton button = Elem.newButton("?", Styles.clearPartialt, () -> {
                         if(getUnit().type != null && getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit)getUnit()).tile() instanceof Turret.TurretBuild) ui.content.show(((BlockUnitUnit)getUnit()).tile().block);
@@ -631,21 +700,18 @@ public class HudUi {
                 }
             }).padRight(Scl.scl(24 * 8f * (settings.getInt("uiscaling") / 100f)));
             table.row();
-            Unit unittemp = getUnit();
             table.update(() -> {
-                if(!Core.settings.getBool("unitui")) return;
                 if(getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit) getUnit()).tile() instanceof Turret.TurretBuild){
                     Turret.TurretBuild entity = ((Turret.TurretBuild)((BlockUnitUnit) getUnit()).tile());
                     if(entity.charging) heat2 += Time.delta;
                     else heat2 = 0f;
                 }
                 heat += Time.delta;
-                if (heat >= 6 && unittemp != getUnit()) {
+                if (heat >= 6) {
                     heat = 0f;
                     type = getUnit().type;
                     unit = getUnit();
 
-                    table.removeChild(weapon);
                     table.removeChild(weapon);
                     addWeapon();
                     table.row();
@@ -655,131 +721,118 @@ public class HudUi {
             });
 
             table.fillParent = true;
-            table.visibility = () -> Core.settings.getBool("unitui") && (
-                    ui.hudfrag.shown && !ui.minimapfrag.shown()
-                            && (!Vars.mobile ||
-                            !(getUnit().isBuilding() || Vars.control.input.block != null || !Vars.control.input.selectRequests.isEmpty()
-                                    && !(Vars.control.input.lastSchematic != null && !Vars.control.input.selectRequests.isEmpty()))));
-        }));
-    }
-
-    public void addCore(){
-        core = new Table(tx -> {
-            tx.left();
-            tx.add(new Table(tt -> {
-                tt.defaults().maxWidth(Scl.scl(24/3f * 3f * (settings.getInt("coreuiscaling") / 100f))).left().top();
-
-                int row = 0;
-                if(Vars.player.unit() == null) return;
-                coreamount = Vars.player.unit().team().cores().size;
-                for(int r = 0; r < coreamount; r++){
-                    CoreBlock.CoreBuild core = Vars.player.unit().team().cores().get(r);
-                    TextureRegion region = core.block.icon(Cicon.full);
-
-                    if(coreamount > 1 && r % 4 == 0) {
-                        tt.row();
-                        row++;
-                    }
-                    else if(r % 4 == 0){
-                        tt.row();
-                        row++;
-                    }
-                    tt.table(coretable -> {
-                        coretable.center();
-                        coretable.add(new Stack(){{
-                            add(new Table(o -> {
-                                o.left();
-                                o.add(new Image(region).setScaling(Scaling.fit)).size(Scl.scl(6 * 8f * (settings.getInt("coreuiscaling") / 100f))).scaling(Scaling.fit);
-                            }));
-
-                            add(new Table(h -> {
-                                h.add(new Stack(){{
-                                    add(new Table(e -> {
-                                        e.defaults().growX().height(Scl.scl(9 * (settings.getInt("coreuiscaling") / 100f))).width(Scl.scl(6f * 8f * (settings.getInt("coreuiscaling") / 100f))).padTop(Scl.scl(6 * 8f * (settings.getInt("coreuiscaling") / 100f)));
-                                        Bar healthBar = new Bar(
-                                                () -> "",
-                                                () -> Pal.health,
-                                                core::healthf);
-                                        e.add(healthBar);
-                                        e.pack();
-                                    }));
-                                }});
-                                h.pack();
-                            }));
-                        }}).center();
-                        coretable.row();
-                        coretable.center();
-                        Label label = new Label(() -> "(" + (int)core.x / 8 + ", " + (int)core.y / 8 + ")");
-                        label.setFontScale(Scl.scl());
-                        coretable.add(label);
-                    }).left();
-                    tt.center();
-                }
-            }){
-                @Override
-                protected void drawBackground(float x, float y) {
-                    if(getBackground() == null) return;
-                    Color color = this.color;
-                    Draw.color(color.r, color.g, color.b, (settings.getInt("coreuiopacity") / 100f) * this.parentAlpha);
-                    getBackground().draw(x, y, width, height);
-                }
-            }).padLeft(Scl.scl(6 * 8f * (settings.getInt("coreuiscaling") / 100f)));
-            tx.setColor(tx.color.cpy().a(1f));
+            table.visibility = () -> uiIndex == 0;
         });
     }
 
+    public void setCore(Table table){
+        table.add(new Table(t -> {
+            if(Vars.player.unit() == null) return;
+            coreamount = Vars.player.unit().team().cores().size;
+            for(int r = 0; r < coreamount; r++){
+                CoreBlock.CoreBuild core = Vars.player.unit().team().cores().get(r);
+                TextureRegion region = core.block.icon(Cicon.full);
+
+                if(coreamount > 1 && r % 3 == 0) t.row();
+                else if(r % 3 == 0) t.row();
+
+                t.table(tt -> {
+                    tt.left();
+                    tt.add(new Stack(){{
+                        add(new Table(tt -> {
+                            tt.add(new Stack(){{
+                                add(new Table(s -> {
+                                    s.left();
+                                    s.add(new Image(region).setScaling(Scaling.fit)).size(Scl.scl(6 * 8f * (settings.getInt("uiscaling") / 100f))).scaling(Scaling.fit);
+                                }));
+
+                                add(new Table(s -> {
+                                    s.add(new Stack(){{
+                                        add(new Table(e -> {
+                                            e.defaults().growX().height(Scl.scl(9 * (settings.getInt("uiscaling") / 100f))).width(Scl.scl(6f * 8f * (settings.getInt("uiscaling") / 100f))).padTop(Scl.scl(6 * 8f * (settings.getInt("coreuiscaling") / 100f)));
+                                            Bar healthBar = new Bar(
+                                                    () -> "",
+                                                    () -> Pal.health,
+                                                    core::healthf);
+                                            e.add(healthBar);
+                                            e.pack();
+                                        }));
+                                    }});
+                                    s.pack();
+                                }));
+                            }});
+                            tt.row();
+                            Label label = new Label(() -> "(" + (int)core.x / 8 + ", " + (int)core.y / 8 + ")");
+                            label.setFontScale(Scl.scl() * (settings.getInt("uiscaling") / 100f));
+                            tt.add(label);
+                        }));
+
+                        add(new Table(tt -> { //unit info
+                            tt.center();
+                            TextButton button = new TextButton("?", Styles.clearPartialt);
+                            button.changed(() -> {
+                                if(!settings.getBool("panfix")) {
+                                    if(control.input instanceof DesktopInput) ((DesktopInput) control.input).panning = true;
+                                    Core.camera.position.set(core.x, core.y);
+                                }
+                                else panFix = !panFix;
+                            });
+                            tt.update(() -> {
+                                if(!settings.getBool("panfix")) return;
+                                button.setChecked(panFix);
+                                if(control.input instanceof DesktopInput) ((DesktopInput) control.input).panning = true;
+                                Core.camera.position.set(core.x, core.y);
+                            });
+                            tt.add(button).size(Scl.scl(3 * 8f * (settings.getInt("uiscaling") / 100f))).center().padBottom(2 * 6f);
+                            tt.pack();
+                        }));
+                    }});
+                }).left();
+            }
+        }));
+    }
+    int coreAmount;
     public void addCoreTable(){
-        ScrollPane pane = new ScrollPane(new Image(Core.atlas.find("clear")).setScaling(Scaling.fit), Styles.smallPane);
-        pane.setScrollingDisabled(true, false);
-        pane.setScrollYForce(scrollPos);
-        pane.update(() -> {
-            if(pane.hasScroll()){
+        if(uiIndex != 2) return;
+        ScrollPane corePane = new ScrollPane(new Table(tx -> tx.table(this::setCore).left()), Styles.smallPane);
+        corePane.setScrollingDisabled(true, false);
+        corePane.setScrollYForce(coreScrollPos);
+        corePane.update(() -> {
+            if(corePane.hasScroll()){
                 Element result = Core.scene.hit(Core.input.mouseX(), Core.input.mouseY(), true);
-                if(result == null || !result.isDescendantOf(pane)){
+                if(result == null || !result.isDescendantOf(corePane)){
                     Core.scene.setScrollFocus(null);
                 }
             }
 
-            scrollPos = pane.getScrollY();
-
-            if(coreamount == Vars.player.unit().team().cores().size || !Core.settings.getBool("coreui")) return;
-            pane.clearChildren();
-            pane.removeChild(core);
-            addCore();
-            pane.setWidget(core);
+            coreScrollPos = corePane.getScrollY();
+            if(Vars.player != null && coreAmount != Vars.player.team().cores().size) {
+                    corePane.setWidget(new Table(tx -> tx.table(this::setCore).left()));
+                    coreAmount = Vars.player.team().cores().size;
+            };
         });
-        pane.setOverscroll(false, false);
+        corePane.setOverscroll(false, false);
 
-        ui.hudGroup.addChild(new Table(table -> {
-            table.top().right();
-
+        coreTable = new Table(table -> {
             table.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
-                t.update(() -> {
-                    if(coreamount == Vars.player.unit().team().cores().size || !Core.settings.getBool("coreui")) return;
-                    t.clearChildren();
-                    t.add(pane).maxHeight(Scl.scl(24 * 8f * (settings.getInt("coreuiscaling") / 100f)));
-                });
+                t.defaults().minWidth(Scl.scl(25 * 8f * (settings.getInt("uiscaling") / 100f))).scaling(Scaling.fit).left();
+                t.add(corePane).maxHeight(Scl.scl(32 * 8f * (settings.getInt("uiscaling") / 100f)));
             }){
                 @Override
                 protected void drawBackground(float x, float y) {
                     if(getBackground() == null) return;
-                    Color color = this.color;
-                    Draw.color(color.r, color.g, color.b, (settings.getInt("coreuiopacity") / 100f) * this.parentAlpha);
+                    Draw.color(color.r, color.g, color.b, (settings.getInt("uiopacity") / 100f) * this.parentAlpha);
                     getBackground().draw(x, y, width, height);
+                    Draw.reset();
                 }
-            }).padRight(Scl.scl(24 * 8f * (settings.getInt("coreuiscaling") / 100f)));
-
+            }).padRight(Scl.scl(39 * 8f * (settings.getInt("uiscaling") / 100f)));
 
             table.fillParent = true;
-            table.visibility = () -> Core.settings.getBool("coreui") && (
-                    ui.hudfrag.shown && !ui.minimapfrag.shown()
-                            && (!Vars.mobile ||
-                            !(Vars.control.input.block != null || !Vars.control.input.selectRequests.isEmpty()
-                                    && !(Vars.control.input.lastSchematic != null && !Vars.control.input.selectRequests.isEmpty()))));
-        }));
+            table.visibility = () -> uiIndex == 2;
+        });
     }
 
-    public void getWave(Table table){
+    public void setWave(Table table){
         int winWave = state.isCampaign() && state.rules.winWave > 0 ? state.rules.winWave : Integer.MAX_VALUE;
         maxwave = settings.getInt("wavemax");
         for(int i = state.wave - 1; i <= Math.min(state.wave + maxwave, winWave - 2); i++){
@@ -788,9 +841,9 @@ public class HudUi {
                 t.add(new Table(tt -> {
                     tt.left();
                     Label label = new Label(() -> "[#" + Pal.accent.toString() + "]" + (j + 1) + "[]");
-                    label.setFontScale(Scl.scl() * (settings.getInt("waveuiscaling") / 100f));
+                    label.setFontScale(Scl.scl() * (settings.getInt("uiscaling") / 100f));
                     tt.add(label);
-                })).width(Scl.scl(32f * (settings.getInt("waveuiscaling") / 100f)));
+                })).width(Scl.scl(32f * (settings.getInt("uiscaling") / 100f)));
 
                 t.table(tx -> {
                     int row = 0;
@@ -809,7 +862,7 @@ public class HudUi {
                                 add(new Table(ttt -> {
                                     ttt.bottom().left();
                                     Label label = new Label(() -> group.getSpawned(j) + "");
-                                    label.setFontScale(Scl.scl() * (settings.getInt("waveuiscaling") / 100f));
+                                    label.setFontScale(Scl.scl() * (settings.getInt("uiscaling") / 100f));
                                     ttt.add(label);
                                     ttt.pack();
                                 }));
@@ -818,13 +871,13 @@ public class HudUi {
                                     ttt.top().right();
                                     Image image = new Image(Icon.warning.getRegion()).setScaling(Scaling.fit);
                                     image.update(() -> image.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f))));
-                                    ttt.add(image).size(Scl.scl(12f * (settings.getInt("waveuiscaling") / 100f)));
+                                    ttt.add(image).size(Scl.scl(12f * (settings.getInt("uiscaling") / 100f)));
                                     ttt.visible(() -> group.effect == StatusEffects.boss && group.getSpawned(j) > 0);
                                     ttt.pack();
                                 }));
                             }});
 
-                        })).width(Scl.scl((Cicon.large.size + 8f) * (settings.getInt("waveuiscaling") / 100f)));
+                        })).width(Scl.scl((Cicon.large.size + 8f) * (settings.getInt("uiscaling") / 100f)));
                         if(row % 4 == 0) tx.row();
                     }
                 });
@@ -832,92 +885,39 @@ public class HudUi {
             table.row();
         }
     }
-    public void addWave(){
-        wave = new Table(tx -> {
-            tx.left();
-            tx.add(new Table(tt -> {
-                tt.defaults().left().top().minSize(0f);
-                tt.table(this::getWave).left();
-
-                tt.update(() -> {
-                    if(maxwave == settings.getInt("wavemax") || !Core.settings.getBool("waveui")) return;
-                    tt.clearChildren();
-                    getWave(tt);
-                });
-            }){
-                @Override
-                protected void drawBackground(float x, float y) {
-                    if(getBackground() == null) return;
-                    Color color = this.color;
-                    Draw.color(color.r, color.g, color.b, (settings.getInt("waveuiopacity") / 100f) * this.parentAlpha);
-                    getBackground().draw(x, y, width, height);
-                }
-            }).padLeft(Scl.scl(6 * 8f * (settings.getInt("waveuiscaling") / 100f)));
-            tx.setColor(tx.color.cpy().a(1f));
-        });
-    }
 
     public void addWaveTable(){
-        waveTable = new Table(table -> {
-            table.name = "wave";
-            table.top().left();
-
-            ScrollPane pane = new ScrollPane(new Image(Core.atlas.find("clear")).setScaling(Scaling.fit), Styles.smallPane);
-            pane.setScrollingDisabled(true, false);
-            pane.setScrollYForce(scrollPos);
-            pane.update(() -> {
-                if(pane.hasScroll()){
-                    Element result = Core.scene.hit(Core.input.mouseX(), Core.input.mouseY(), true);
-                    if(result == null || !result.isDescendantOf(pane)){
-                        Core.scene.setScrollFocus(null);
-                    }
+        if(uiIndex != 1) return;
+        ScrollPane wavePane = new ScrollPane(new Image(Core.atlas.find("clear")).setScaling(Scaling.fit), Styles.smallPane);
+        wavePane.setScrollingDisabled(true, false);
+        wavePane.setScrollYForce(waveScrollPos);
+        wavePane.update(() -> {
+            if(wavePane.hasScroll()){
+                Element result = Core.scene.hit(Core.input.mouseX(), Core.input.mouseY(), true);
+                if(result == null || !result.isDescendantOf(wavePane)){
+                    Core.scene.setScrollFocus(null);
                 }
-
-                scrollPos = pane.getScrollY();
-
-                if(maxwave == settings.getInt("wavemax") || !Core.settings.getBool("waveui")) return;
-                pane.clearChildren();
-                addWave();
-                pane.setWidget(wave);
-            });
-            pane.setOverscroll(false, false);
-
+            }
+            waveScrollPos = wavePane.getScrollY();
+            wavePane.setWidget(new Table(tx -> tx.table(this::setWave).left()));
+        });
+        wavePane.setOverscroll(false, false);
+        waveTable = new Table(table -> {
             table.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
-                t.update(() -> {
-                    if(Vars.state.isMenu() || Vars.state.isEditor()) {
-                        waveTable = null;
-                        t.clearChildren();
-                    }
-                    if(maxwave == settings.getInt("wavemax") || !Core.settings.getBool("waveui")) return;
-                    t.clearChildren();
-                    if(t.getChildren().size < 1) t.add(pane).maxHeight(Scl.scl(24 * 8f * (settings.getInt("waveuiscaling") / 100f)));
-
-                    if(t.getChildren().size > 1) {
-                        while(t.getChildren().size == 1) t.getChildren().pop();
-                    }
-                });
+                t.defaults().minWidth(Scl.scl(25 * 8f * (settings.getInt("uiscaling") / 100f))).scaling(Scaling.fit).left();
+                t.add(wavePane).maxHeight(Scl.scl(32 * 8f * (settings.getInt("uiscaling") / 100f)));
             }){
                 @Override
                 protected void drawBackground(float x, float y) {
                     if(getBackground() == null) return;
-                    Color color = this.color;
-                    Draw.color(color.r, color.g, color.b, (settings.getInt("waveuiopacity") / 100f) * this.parentAlpha);
+                    Draw.color(color.r, color.g, color.b, (settings.getInt("uiopacity") / 100f) * this.parentAlpha);
                     getBackground().draw(x, y, width, height);
+                    Draw.reset();
                 }
-            }).padTop(Scl.scl(16 * 8f * (settings.getInt("waveuiscaling") / 100f)));
-
+            }).padRight(Scl.scl(39 * 8f * (settings.getInt("uiscaling") / 100f)));
 
             table.fillParent = true;
-            table.visibility = () -> Core.settings.getBool("waveui") &&  (
-                    ui.hudfrag.shown && !ui.minimapfrag.shown()
-                            && (!Vars.mobile ||
-                            !(Vars.control.input.block != null || !Vars.control.input.selectRequests.isEmpty()
-                                    && !(Vars.control.input.lastSchematic != null && !Vars.control.input.selectRequests.isEmpty()))));
+            table.visibility = () -> uiIndex == 1;
         });
-
-        waveTable.update(() -> {
-           if(Vars.state.isMenu()) ui.hudGroup.removeChild(waveTable); //h
-        });
-        ui.hudGroup.addChild(waveTable);
     }
 }

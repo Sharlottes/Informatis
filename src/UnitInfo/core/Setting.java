@@ -11,6 +11,7 @@ import arc.scene.ui.layout.Scl;
 import arc.scene.ui.layout.Table;
 import arc.util.Align;
 import arc.util.Log;
+import arc.util.Scaling;
 import mindustry.Vars;
 import mindustry.gen.Icon;
 import mindustry.ui.dialogs.BaseDialog;
@@ -155,33 +156,27 @@ public class Setting {
         boolean tmp = Core.settings.getBool("uiscalechanged", false);
         Core.settings.put("uiscalechanged", false);
 
+        addGraphicSetting("panfix");
         addGraphicSetting("scan");
         addGraphicSetting("range");
         addGraphicSetting("select");
-        addGraphicSetting("coreui");
-        addGraphicSetting("waveui");
-        addGraphicSetting("unitui");
+        addGraphicSetting("infoui");
         addGraphicSetting("weaponui");
         addGraphicSetting("commandedunitui");
         addGraphicSetting("unithealthui");
         addGraphicTypeSetting("wavemax", 100, "@editmaxwave","@invalid", 200);
         addGraphicTypeSetting("rangemax", 10, "@editrange","@invalid", 100);
 
-        ui.settings.graphics.sliderPref("coreuiscaling", 100, 0, 100, 5, s -> s + "%");
-        ui.settings.graphics.sliderPref("waveuiscaling", 100, 0, 100, 5, s -> s + "%");
-        ui.settings.graphics.sliderPref("uiscaling", 100, 0, 100, 5, s -> s + "%");
         ui.settings.graphics.sliderPref("selectopacity", 50, 0, 100, 5, s -> s + "%");
-        ui.settings.graphics.sliderPref("coreuiopacity", 50, 0, 100, 5, s -> s + "%");
-        ui.settings.graphics.sliderPref("waveuiopacity", 50, 0, 100, 5, s -> s + "%");
-        ui.settings.graphics.sliderPref("uiopacity", 50, 0, 100, 5, s -> s + "%");
         ui.settings.graphics.sliderPref("baropacity", 100, 0, 100, 5, s -> s + "%");
+        ui.settings.graphics.sliderPref("uiopacity", 50, 0, 100, 5, s -> s + "%");
+        ui.settings.graphics.sliderPref("uiscaling", 100, 0, 100, 5, s -> s + "%");
 
+        Core.settings.defaults("panfix", false);
         Core.settings.defaults("scan", true);
         Core.settings.defaults("range", false);
         Core.settings.defaults("select", true);
-        Core.settings.defaults("coreui", false);
-        Core.settings.defaults("waveui", true);
-        Core.settings.defaults("unitui", true);
+        Core.settings.defaults("infoui", true);
         Core.settings.defaults("weaponui", true);
         Core.settings.defaults("commandedunitui", true);
         Core.settings.defaults("unithealthui", true);

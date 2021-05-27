@@ -30,8 +30,11 @@ public class Main extends Mod {
         Events.on(ClientLoadEvent.class, e -> {
             hud = new HudUi();
             settingAdder.init();
-            hud.addTable();
             hud.addCoreTable();
+            hud.addWaveTable();
+            hud.addUnitTable();
+            hud.addTable();
+            hud.setDraw();
         });
 
         Events.on(WorldLoadEvent.class, e -> {
