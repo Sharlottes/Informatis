@@ -160,7 +160,6 @@ public class Setting {
         addGraphicSetting("panfix");
         addGraphicSetting("scan");
         addGraphicSetting("range");
-        addGraphicSetting("select");
         addGraphicSetting("infoui");
         addGraphicSetting("weaponui");
         addGraphicSetting("commandedunitui");
@@ -168,7 +167,6 @@ public class Setting {
         addGraphicTypeSetting("wavemax", 100, "@editmaxwave","@invalid", 200);
         addGraphicTypeSetting("rangemax", 10, "@editrange","@invalid", 100);
 
-        ui.settings.graphics.sliderPref("selectopacity", 50, 0, 100, 5, s -> s + "%");
         ui.settings.graphics.sliderPref("baropacity", 100, 0, 100, 5, s -> s + "%");
         ui.settings.graphics.sliderPref("uiopacity", 50, 0, 100, 5, s -> s + "%");
         ui.settings.graphics.sliderPref("uiscaling", 100, 0, 100, 5, s -> s + "%");
@@ -177,7 +175,6 @@ public class Setting {
         Core.settings.defaults("panfix", false);
         Core.settings.defaults("scan", true);
         Core.settings.defaults("range", false);
-        Core.settings.defaults("select", true);
         Core.settings.defaults("infoui", true);
         Core.settings.defaults("weaponui", true);
         Core.settings.defaults("commandedunitui", true);

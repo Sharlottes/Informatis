@@ -81,30 +81,6 @@ public class HudUi {
         else return unit;
     }
 
-    public void setDraw(){
-        Events.run(EventType.Trigger.draw, () -> {
-            if(!Core.settings.getBool("select")) return;
-            Unit unit = getUnit();
-            unitFade = Mathf.lerpDelta(unitFade, Mathf.num(unit != null), 0.1f);
-            if(unit == null) return;
-            if(unit2 == null || (unit2.x == 0f && unit2.y == 0f)) unit2 = unit;
-
-            Tmp.v1.set(unit2).lerp(unit, Mathf.clamp(Time.delta%60));
-            if(Tmp.v1.x == unit.x && Tmp.v1.y == unit.y){
-                hh += Time.delta;
-                unit2 = unit;
-            }
-
-            for(int i = 0; i < 4; i++){
-                float rot = i * 90f + 45f + (-Time.time) % 360f;
-                float length = unit.hitSize * 1.5f + (unitFade * 2.5f);
-                Draw.color(Tmp.c1.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f)).a(settings.getInt("uiopacity") / 100f));
-                Draw.rect("select-arrow", Tmp.v1.x + Angles.trnsx(rot, length), Tmp.v1.y + Angles.trnsy(rot, length), length / 1.9f, length / 1.9f, rot - 135f);
-                Draw.reset();
-            }
-        });
-    }
-
     public void addTable(){
         mainTable = new Table(table -> {
             table.left();

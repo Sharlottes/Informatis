@@ -36,7 +36,6 @@ public class Main extends Mod {
             hud.addWaveTable();
             hud.addUnitTable();
             hud.addTable();
-            hud.setDraw();
         });
 
         Events.on(WorldLoadEvent.class, e -> {
