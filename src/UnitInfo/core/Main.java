@@ -11,6 +11,7 @@ import arc.struct.Seq;
 import arc.util.Time;
 import arc.util.Tmp;
 import mindustry.Vars;
+import mindustry.content.Fx;
 import mindustry.game.EventType.*;
 import mindustry.game.Team;
 import mindustry.gen.Building;
@@ -20,6 +21,7 @@ import mindustry.mod.Mod;
 
 import static arc.Core.settings;
 import static mindustry.Vars.indexer;
+import static mindustry.Vars.mobile;
 
 public class Main extends Mod {
     public static Setting settingAdder = new Setting();
@@ -58,14 +60,16 @@ public class Main extends Mod {
                 for(Team team : Team.all) {
                     indexer.eachBlock(team, Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, b -> true, b -> new FreeBar().draw(b));
                 }
-                for(int i : Mathf.signs) {
-                    Draw.color(Tmp.c1.set(Pal.accent).lerp(Pal.surge, Mathf.absin(4 + i, 1f)).a(0.5f + Mathf.absin(3 + i, 0.5f)));
-                    Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.1f, i * Time.time % 360);
-                    Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.1f, 90 + i * Time.time % 360);
-                    Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.1f, 180 + i * Time.time % 360);
-                    Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.1f, 270 + i * Time.time % 360);
-                }
+                    Draw.color(Tmp.c1.set(Pal.accent).a(0.75f + Mathf.absin(3, 0.25f)));
+                    Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.15f, Time.time % 360);
+                    Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.15f, 90 + Time.time % 360);
+                    Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.15f, 180 + Time.time % 360);
+                    Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.15f, 270 + Time.time % 360);
+
                 Draw.reset();
+            }
+            if(!mobile){
+                Fx.mine.at(Core.input.mouseWorldX(), Core.input.mouseWorldY(), Tmp.c2.set(Color.red).shiftHue(Time.time * 1.5f));
             }
         });
     }

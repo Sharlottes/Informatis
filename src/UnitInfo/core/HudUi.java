@@ -67,6 +67,7 @@ public class HudUi {
     int maxwave;
     int coreamount;
     float unitFade;
+    float a;
 
     Unit unit2;
 
@@ -107,6 +108,18 @@ public class HudUi {
     public void addTable(){
         mainTable = new Table(table -> {
             table.left();
+
+            Label label = new Label("");
+            label.setColor(Pal.stat);
+            label.update(() -> {
+                a = Mathf.lerpDelta(a, 0f, 0.025f);
+                label.color.a = a;
+            });
+            label.setStyle(Styles.outlineLabel);
+            label.getStyle().background = Styles.black8;
+
+            Table labelTable = new Table(t -> t.add(label).scaling(Scaling.fit).left().padRight(40 * 8f));
+
             table.table(t -> {
                 Button[] buttons = {null, null, null};
                 buttons[0] = t.button(Icon.units, Styles.clearToggleTransi, () -> {
@@ -114,13 +127,16 @@ public class HudUi {
                     buttons[0].setChecked(true);
                     buttons[1].setChecked(false);
                     buttons[2].setChecked(false);
+                    label.setText(Core.bundle.get("hud.unit"));
                     addCoreTable();
                     addWaveTable();
                     addBars();
                     addWeapon();
                     addUnitTable();
                     table.removeChild(baseTable);
-                    baseTable = table.table(tt -> tt.stack(unitTable, waveTable, coreTable).align(Align.left).left()).get();
+                    labelTable.setPosition(buttons[uiIndex].x, buttons[uiIndex].y);
+                    baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
+                    a = 1f;
                 }).size(5*8f).get();
                 t.row();
                 buttons[1] = t.button(Icon.fileText, Styles.clearToggleTransi, () -> {
@@ -128,13 +144,16 @@ public class HudUi {
                     buttons[0].setChecked(false);
                     buttons[1].setChecked(true);
                     buttons[2].setChecked(false);
+                    label.setText(Core.bundle.get("hud.wave"));
                     addCoreTable();
                     addWaveTable();
                     addBars();
                     addWeapon();
                     addUnitTable();
                     table.removeChild(baseTable);
-                    baseTable = table.table(tt -> tt.stack(unitTable, waveTable, coreTable).align(Align.left).left()).get();
+                    labelTable.setPosition(buttons[uiIndex].x, buttons[uiIndex].y);
+                    baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
+                    a = 1f;
                 }).size(5*8f).get();
                 t.row();
                 buttons[2] = t.button(Icon.commandRally, Styles.clearToggleTransi, () -> {
@@ -142,20 +161,19 @@ public class HudUi {
                     buttons[0].setChecked(false);
                     buttons[1].setChecked(false);
                     buttons[2].setChecked(true);
+                    label.setText(Core.bundle.get("hud.core"));
                     addCoreTable();
                     addWaveTable();
                     addBars();
                     addWeapon();
                     addUnitTable();
                     table.removeChild(baseTable);
-                    baseTable = table.table(tt -> tt.stack(unitTable, waveTable, coreTable).align(Align.left).left()).get();
+                    labelTable.setPosition(buttons[uiIndex].x, buttons[uiIndex].y);
+                    baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
+                    a = 1f;
                 }).size(5*8f).get();
             });
-
-            baseTable = table.table(tt -> {
-                tt.stack(unitTable, waveTable, coreTable).align(Align.left).left();
-                tt.visible(() -> settings.getBool("infoui"));
-            }).get();
+            baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
 
             table.fillParent = true;
             table.visibility = () -> (
@@ -767,7 +785,7 @@ public class HudUi {
                             tt.add(label);
                         }));
 
-                        add(new Table(tt -> { //unit info
+                        add(new Table(tt -> {
                             tt.center();
                             TextButton button = new TextButton("?", Styles.clearPartialt);
                             button.changed(() -> {
@@ -901,6 +919,7 @@ public class HudUi {
             waveScrollPos = wavePane.getScrollY();
             wavePane.setWidget(new Table(tx -> tx.table(this::setWave).left()));
         });
+
         wavePane.setOverscroll(false, false);
         waveTable = new Table(table -> {
             table.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
