@@ -37,6 +37,8 @@ public class Setting {
 
             @Override
             public void add(SettingsDialog.SettingsTable settingsTable) {
+                String settingTitle = title;
+                String settingName = name;
                 Label label = new Label(title + ": " + def);
 
                 Table button = new Table(t -> t.button(Icon.pencil, () -> {
@@ -50,8 +52,6 @@ public class Setting {
                                 try {
                                     int number = Integer.parseInt(str);
                                     if(number >= warnMax){
-                                        String name1 = name;
-                                        String title1 = title;
                                         new Dialog(""){{
                                             setFillParent(true);
                                             cont.margin(15f);
@@ -64,28 +64,28 @@ public class Setting {
                                             cont.table(t -> {
                                                 t.button("@yes", () -> {
                                                     this.hide();
-                                                    Core.settings.put(name1, number);
-                                                    label.setText(title1 + ": " + number);
+                                                    Core.settings.put(settingName, number);
+                                                    label.setText(settingTitle + ": " + number);
                                                 }).size(120, 50);
                                                 t.button("@no", () -> {
                                                     this.hide();
-                                                    Core.settings.put(name1, def);
-                                                    label.setText(title1 + ": " + Core.settings.getInt(name1));
+                                                    Core.settings.put(settingName, def);
+                                                    label.setText(settingTitle + ": " + Core.settings.getInt(settingName));
                                                 }).size(120, 50);
                                             }).pad(5);
                                             closeOnBack();
                                         }}.show();
                                     }
                                     else {
-                                        Core.settings.put(name, number);
-                                        label.setText(title + ": " + number);
+                                        Core.settings.put(settingName, number);
+                                        label.setText(settingTitle + ": " + number);
                                     }
                                 } catch(Throwable e) {
                                     Log.info(e);
                                     ui.showErrorMessage("@invalid");
 
-                                    Core.settings.put(name, def);
-                                    label.setText(title + ": " + def);
+                                    Core.settings.put(settingName, def);
+                                    label.setText(settingTitle + ": " + def);
                                 }
                             };
                         }});
