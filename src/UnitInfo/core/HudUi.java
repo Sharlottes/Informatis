@@ -38,6 +38,7 @@ import mindustry.world.blocks.power.ConditionalConsumePower;
 import mindustry.world.blocks.storage.CoreBlock;
 import mindustry.world.consumers.ConsumePower;
 import mindustry.world.consumers.ConsumeType;
+import mindustry.world.meta.Stat;
 
 import static arc.Core.scene;
 import static arc.Core.settings;
@@ -865,7 +866,13 @@ public class HudUi {
                         if(sameTypeKey != null) groups.increment(sameTypeKey, sameTypeKey.getSpawned(j));
                         else groups.put(group, group.getSpawned(j));
                     }
-                    Seq<SpawnGroup> groupSorted = groups.keys().toArray().copy().sort(g -> Vars.content.units().size - g.type.id);
+                    Seq<SpawnGroup> groupSorted = groups.keys().toArray().copy().sort((g1, g2) -> {
+                        int boss = Boolean.compare(g1.effect != StatusEffects.boss, g2.effect != StatusEffects.boss);
+                        if(boss != 0) return boss;
+                        int hitSize = Float.compare(-g2.type.hitSize, -g2.type.hitSize);
+                        if(hitSize != 0) return hitSize;
+                        return Integer.compare(-g1.type.id, -g2.type.id);
+                    });
                     ObjectIntMap<SpawnGroup> groupsTmp = new ObjectIntMap<>();
                     groupSorted.each(g -> groupsTmp.put(g, groups.get(g)));
 
