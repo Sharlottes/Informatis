@@ -67,7 +67,7 @@ public class Main extends Mod {
 
                 Draw.reset();
             }
-            if(!mobile){
+            if(!mobile && !Vars.state.isPaused()){
                 Fx.mine.at(Core.input.mouseWorldX(), Core.input.mouseWorldY(), Tmp.c2.set(Color.red).shiftHue(Time.time * 1.5f));
             }
         });

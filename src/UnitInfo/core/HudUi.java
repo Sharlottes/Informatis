@@ -2,11 +2,9 @@ package UnitInfo.core;
 
 import UnitInfo.ui.SBar;
 import arc.Core;
-import arc.Events;
 import arc.func.Func;
 import arc.graphics.Color;
 import arc.graphics.g2d.*;
-import arc.math.Angles;
 import arc.math.Mathf;
 import arc.scene.Element;
 import arc.scene.style.TransformDrawable;
@@ -15,6 +13,7 @@ import arc.scene.ui.layout.Scl;
 import arc.scene.ui.layout.Stack;
 import arc.scene.ui.layout.Table;
 import arc.scene.utils.Elem;
+import arc.struct.ObjectIntMap;
 import arc.struct.Seq;
 import arc.util.*;
 import mindustry.Vars;
@@ -25,7 +24,6 @@ import mindustry.content.StatusEffects;
 import mindustry.entities.abilities.ForceFieldAbility;
 import mindustry.entities.abilities.ShieldRegenFieldAbility;
 import mindustry.entities.units.WeaponMount;
-import mindustry.game.EventType;
 import mindustry.game.SpawnGroup;
 import mindustry.gen.*;
 import mindustry.graphics.Pal;
@@ -66,10 +64,7 @@ public class HudUi {
     float waveScrollPos;
     int maxwave;
     int coreamount;
-    float unitFade;
     float a;
-
-    Unit unit2;
 
     boolean panFix = false;
 
@@ -855,15 +850,28 @@ public class HudUi {
             if(state.rules.spawns.find(g -> g.getSpawned(j) > 0) != null) table.table(Tex.underline, t -> {
                 t.add(new Table(tt -> {
                     tt.left();
-                    Label label = new Label(() -> "[#" + Pal.accent.toString() + "]" + (j + 1) + "[]");
+                    Label label = new Label(() -> "[#" + Pal.accent.toString() + "]" + j + "[]");
                     label.setFontScale(Scl.scl() * (settings.getInt("uiscaling") / 100f));
                     tt.add(label);
                 })).width(Scl.scl(32f * (settings.getInt("uiscaling") / 100f)));
 
                 t.table(tx -> {
                     int row = 0;
-                    for(SpawnGroup group : state.rules.spawns){
+                    ObjectIntMap<SpawnGroup> groups = new ObjectIntMap<>();
+
+                    for(SpawnGroup group : state.rules.spawns) {
                         if(group.getSpawned(j) <= 0) continue;
+                        SpawnGroup sameTypeKey = groups.keys().toArray().find(g -> g.type == group.type && g.effect != StatusEffects.boss);
+                        if(sameTypeKey != null) groups.increment(sameTypeKey, sameTypeKey.getSpawned(j));
+                        else groups.put(group, group.getSpawned(j));
+                    }
+                    Seq<SpawnGroup> groupSorted = groups.keys().toArray().copy().sort(g -> Vars.content.units().size - g.type.id);
+                    ObjectIntMap<SpawnGroup> groupsTmp = new ObjectIntMap<>();
+                    groupSorted.each(g -> groupsTmp.put(g, groups.get(g)));
+
+                    for(SpawnGroup group : groupsTmp.keys()){
+                        int amount = groupsTmp.get(group);
+                        if(amount <= 0) continue; //is this even possible?
                         row ++;
                         tx.add(new Table(tt -> {
                             tt.right();
@@ -876,7 +884,7 @@ public class HudUi {
 
                                 add(new Table(ttt -> {
                                     ttt.bottom().left();
-                                    Label label = new Label(() -> group.getSpawned(j) + "");
+                                    Label label = new Label(() -> amount + "");
                                     label.setFontScale(Scl.scl() * (settings.getInt("uiscaling") / 100f));
                                     ttt.add(label);
                                     ttt.pack();
@@ -887,7 +895,7 @@ public class HudUi {
                                     Image image = new Image(Icon.warning.getRegion()).setScaling(Scaling.fit);
                                     image.update(() -> image.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f))));
                                     ttt.add(image).size(Scl.scl(12f * (settings.getInt("uiscaling") / 100f)));
-                                    ttt.visible(() -> group.effect == StatusEffects.boss && group.getSpawned(j) > 0);
+                                    ttt.visible(() -> group.effect == StatusEffects.boss);
                                     ttt.pack();
                                 }));
                             }});
