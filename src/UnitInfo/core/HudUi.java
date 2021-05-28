@@ -782,6 +782,10 @@ public class HudUi {
                             tt.center();
                             TextButton button = new TextButton("?", Styles.clearPartialt);
                             button.changed(() -> {
+                                if(mobile) {
+                                    Core.camera.position.set(core.x, core.y);
+                                    return;
+                                }
                                 if(!settings.getBool("panfix")) {
                                     if(control.input instanceof DesktopInput) ((DesktopInput) control.input).panning = true;
                                     Core.camera.position.set(core.x, core.y);
@@ -789,7 +793,7 @@ public class HudUi {
                                 else panFix = !panFix;
                             });
                             tt.update(() -> {
-                                if(!settings.getBool("panfix")) return;
+                                if(mobile || !settings.getBool("panfix")) return;
                                 button.setChecked(panFix);
                                 if(control.input instanceof DesktopInput) ((DesktopInput) control.input).panning = true;
                                 Core.camera.position.set(core.x, core.y);
@@ -869,7 +873,7 @@ public class HudUi {
                     Seq<SpawnGroup> groupSorted = groups.keys().toArray().copy().sort((g1, g2) -> {
                         int boss = Boolean.compare(g1.effect != StatusEffects.boss, g2.effect != StatusEffects.boss);
                         if(boss != 0) return boss;
-                        int hitSize = Float.compare(-g2.type.hitSize, -g2.type.hitSize);
+                        int hitSize = Float.compare(-g1.type.hitSize, -g2.type.hitSize);
                         if(hitSize != 0) return hitSize;
                         return Integer.compare(-g1.type.id, -g2.type.id);
                     });
