@@ -151,7 +151,7 @@ public class SBar extends Element{
 
         Font font = Fonts.outline;
         GlyphLayout lay = Pools.obtain(GlyphLayout.class, GlyphLayout::new);
-        font.getData().setScale(Scl.scl() * (settings.getInt("uiscaling") / 100f));
+        font.getData().setScale(Scl.scl());
         lay.setText(font, name);
         font.setColor(Color.white);
         font.draw(name, x + width / 2f - lay.width / 2f, y + height / 2f + lay.height / 2f + 1);
