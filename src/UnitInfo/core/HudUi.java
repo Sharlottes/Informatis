@@ -59,6 +59,8 @@ public class HudUi {
     @Nullable Unit unit;
     Element image;
 
+    Color lastItemColor = Pal.items;
+
     int uiIndex = 0;
 
     float heat;
@@ -267,23 +269,24 @@ public class HudUi {
                         () -> {
                             if(getUnit() instanceof BlockUnitUnit){
                                 if(((BlockUnitUnit)getUnit()).tile() instanceof ItemTurret.ItemTurretBuild) {
-                                    if(((ItemTurret.ItemTurretBuild)((BlockUnitUnit) getUnit()).tile()).hasAmmo()) return ((ItemTurret) ((BlockUnitUnit) getUnit()).tile().block).ammoTypes.findKey(((ItemTurret.ItemTurretBuild)((BlockUnitUnit) getUnit()).tile()).peekAmmo(), true).color;
-                                    else return Pal.ammo;
+                                    if(((ItemTurret.ItemTurretBuild)((BlockUnitUnit) getUnit()).tile()).hasAmmo()) lastItemColor = ((ItemTurret) ((BlockUnitUnit) getUnit()).tile().block).ammoTypes.findKey(((ItemTurret.ItemTurretBuild)((BlockUnitUnit) getUnit()).tile()).peekAmmo(), true).color;
+                                    else lastItemColor = Pal.ammo;
                                 }
                                 else if(((BlockUnitUnit)getUnit()).tile() instanceof LiquidTurret.LiquidTurretBuild){
                                     LiquidTurret.LiquidTurretBuild entity = ((LiquidTurret.LiquidTurretBuild)((BlockUnitUnit)getUnit()).tile());
                                     Func<Building, Liquid> current;
                                     current = entity1 -> entity1.liquids == null ? Liquids.water : entity1.liquids.current();
 
-                                    return current.get(entity).color;
+                                    lastItemColor = current.get(entity).color;
                                 }
                                 else if(((BlockUnitUnit)getUnit()).tile() instanceof PowerTurret.PowerTurretBuild){
-                                    return Pal.powerBar;
+                                    lastItemColor = Pal.powerBar;
                                 }
                             }
-                            else if(getUnit().stack.item == null || getUnit().stack.amount <= 0) return Pal.items;
+                            else if(getUnit().stack.item != null && getUnit().stack.amount > 0)
+                                lastItemColor = getUnit().stack.item.color.cpy().lerp(Color.white, 0.15f);
 
-                            return getUnit().stack.item.color.cpy().lerp(Color.white, 0.15f);
+                            return lastItemColor;
                         },
                         () -> {
                             if(getUnit() instanceof BlockUnitUnit) {
@@ -358,7 +361,6 @@ public class HudUi {
                             double max = (Math.round(cons.usage * 10) / 10.0) * 60;
                             double v = (Math.round(((ConditionalConsumePower)entity.block.consumes.get(ConsumeType.power)).requestedPower(entity) * 10) / 10.0);
                             float amount = (float) (((Math.round(entity.power.status * v * 10) / 10.0) * 60) / max);
-                            //float amount = Mathf.zero(cons.requestedPower(entity)) && entity.power.graph.getPowerProduced() + entity.power.graph.getBatteryStored() > 0f ? 1f : entity.power.status;
 
                             imaget = new PrograssedReqImage(Icon.power.getRegion(), () -> amount >= 0.99f, amount);
                             if(amount >= 0.999f) imaget = new Image(Icon.power.getRegion()).setScaling(Scaling.fit);

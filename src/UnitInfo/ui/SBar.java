@@ -149,7 +149,7 @@ public class SBar extends Element{
         }
 
         Draw.color(color, blinkColor, blink);
-        float topWidthReal = width * computed;
+        float topWidthReal = width * (Math.min(value, computed));
 
         if(topWidthReal > Core.atlas.find("unitinfo-bar-top").width){
             top.draw(x, y, topWidthReal, height);
