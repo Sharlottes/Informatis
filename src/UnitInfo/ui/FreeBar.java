@@ -18,6 +18,7 @@ import mindustry.gen.*;
 import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
+import mindustry.graphics.Trail;
 import mindustry.type.Item;
 import mindustry.type.Liquid;
 import mindustry.ui.Cicon;

@@ -10,6 +10,7 @@ import arc.scene.style.*;
 import arc.scene.ui.layout.Scl;
 import arc.util.pooling.*;
 import mindustry.gen.*;
+import mindustry.graphics.Pal;
 import mindustry.ui.Fonts;
 
 import static arc.Core.settings;
@@ -128,12 +129,12 @@ public class SBar extends Element{
         if(Float.isInfinite(computed)) computed = 1f;
 
         blink = Mathf.lerpDelta(blink, 0f, 0.2f);
-        value = Mathf.lerpDelta(value, computed, 0.15f);
+        value = Mathf.lerpDelta(value, computed, 0.05f);
 
         NinePatchDrawable bar = (NinePatchDrawable) drawable("unitinfo-barS");
         Draw.colorl(0.1f);
         bar.draw(x, y, width, height);
-        Draw.color(color, blinkColor, blink);
+        Draw.color(color.cpy().mul(Pal.lightishGray), blinkColor, blink);
 
         NinePatchDrawable top = (NinePatchDrawable) drawable("unitinfo-barS-top");
         float topWidth = width * value;
@@ -142,6 +143,18 @@ public class SBar extends Element{
             top.draw(x, y, topWidth, height);
         }else{
             if(ScissorStack.push(scissor.set(x, y, topWidth, height))){
+                top.draw(x, y, Core.atlas.find("unitinfo-bar-top").width, height);
+                ScissorStack.pop();
+            }
+        }
+
+        Draw.color(color, blinkColor, blink);
+        float topWidthReal = width * computed;
+
+        if(topWidthReal > Core.atlas.find("unitinfo-bar-top").width){
+            top.draw(x, y, topWidthReal, height);
+        }else{
+            if(ScissorStack.push(scissor.set(x, y, topWidthReal, height))){
                 top.draw(x, y, Core.atlas.find("unitinfo-bar-top").width, height);
                 ScissorStack.pop();
             }

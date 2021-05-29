@@ -167,13 +167,14 @@ public class Setting {
         addGraphicTypeSetting("wavemax", 100, "@editmaxwave","@invalid", 200);
         addGraphicTypeSetting("rangemax", 10, "@editrange","@invalid", 100);
 
-        ui.settings.graphics.sliderPref("selectopacity", 50, 0, 100, 5, s -> s + "%");
+        ui.settings.graphics.sliderPref("selectopacity", 25, 0, 100, 5, s -> s + "%");
         ui.settings.graphics.sliderPref("baropacity", 100, 0, 100, 5, s -> s + "%");
         ui.settings.graphics.sliderPref("uiopacity", 50, 0, 100, 5, s -> s + "%");
 
+        Core.settings.defaults("select", false);
         Core.settings.defaults("gaycursor", true);
         Core.settings.defaults("panfix", false);
-        Core.settings.defaults("scan", true);
+        Core.settings.defaults("scan", false);
         Core.settings.defaults("range", false);
         Core.settings.defaults("infoui", true);
         Core.settings.defaults("weaponui", true);
