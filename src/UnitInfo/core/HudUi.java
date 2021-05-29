@@ -2,9 +2,11 @@ package UnitInfo.core;
 
 import UnitInfo.ui.SBar;
 import arc.Core;
+import arc.Events;
 import arc.func.Func;
 import arc.graphics.Color;
 import arc.graphics.g2d.*;
+import arc.math.Angles;
 import arc.math.Mathf;
 import arc.scene.Element;
 import arc.scene.style.TransformDrawable;
@@ -24,6 +26,7 @@ import mindustry.content.StatusEffects;
 import mindustry.entities.abilities.ForceFieldAbility;
 import mindustry.entities.abilities.ShieldRegenFieldAbility;
 import mindustry.entities.units.WeaponMount;
+import mindustry.game.EventType;
 import mindustry.game.SpawnGroup;
 import mindustry.gen.*;
 import mindustry.graphics.Pal;
@@ -74,6 +77,21 @@ public class HudUi {
         Unit unit = units.peek();
         if(unit == null) return player.unit();
         else return unit;
+    }
+
+    public void setDraw(){
+        Events.run(EventType.Trigger.draw, () -> {
+            if(!Core.settings.getBool("select")) return;
+            Unit unit = getUnit();
+
+            for(int i = 0; i < 4; i++){
+                float rot = i * 90f + 45f + (-Time.time) % 360f;
+                float length = unit.hitSize * 1.5f + 2.5f;
+                Draw.color(Tmp.c1.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f)).a(settings.getInt("uiopacity") / 100f));
+                Draw.rect("select-arrow", unit.x + Angles.trnsx(rot, length), unit.y + Angles.trnsy(rot, length), length / 1.9f, length / 1.9f, rot - 135f);
+                Draw.reset();
+            }
+        });
     }
 
     public void addTable(){

@@ -159,6 +159,7 @@ public class Setting {
         addGraphicSetting("panfix");
         addGraphicSetting("scan");
         addGraphicSetting("range");
+        addGraphicSetting("select");
         addGraphicSetting("infoui");
         addGraphicSetting("weaponui");
         addGraphicSetting("commandedunitui");
@@ -166,6 +167,7 @@ public class Setting {
         addGraphicTypeSetting("wavemax", 100, "@editmaxwave","@invalid", 200);
         addGraphicTypeSetting("rangemax", 10, "@editrange","@invalid", 100);
 
+        ui.settings.graphics.sliderPref("selectopacity", 50, 0, 100, 5, s -> s + "%");
         ui.settings.graphics.sliderPref("baropacity", 100, 0, 100, 5, s -> s + "%");
         ui.settings.graphics.sliderPref("uiopacity", 50, 0, 100, 5, s -> s + "%");
 
