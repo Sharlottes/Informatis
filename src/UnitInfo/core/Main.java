@@ -17,9 +17,8 @@ import mindustry.gen.Groups;
 import mindustry.graphics.Pal;
 import mindustry.mod.Mod;
 
-import static arc.Core.settings;
-import static mindustry.Vars.indexer;
-import static mindustry.Vars.mobile;
+import static arc.Core.*;
+import static mindustry.Vars.*;
 
 public class Main extends Mod {
     public static Setting settingAdder = new Setting();

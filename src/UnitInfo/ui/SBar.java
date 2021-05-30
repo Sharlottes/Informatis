@@ -1,4 +1,5 @@
 package UnitInfo.ui;
+
 import arc.*;
 import arc.func.*;
 import arc.graphics.*;
@@ -7,13 +8,10 @@ import arc.math.*;
 import arc.math.geom.*;
 import arc.scene.*;
 import arc.scene.style.*;
-import arc.scene.ui.layout.Scl;
+import arc.scene.ui.layout.*;
 import arc.util.pooling.*;
-import mindustry.gen.*;
-import mindustry.graphics.Pal;
-import mindustry.ui.Fonts;
-
-import static arc.Core.settings;
+import mindustry.graphics.*;
+import mindustry.ui.*;
 
 public class SBar extends Element{
     private static Rect scissor = new Rect();
@@ -69,11 +67,6 @@ public class SBar extends Element{
         });
     }
 
-
-    public SBar(){
-
-    }
-
     public void reset(float value){
         this.value = lastValue = blink = value;
     }
@@ -92,7 +85,7 @@ public class SBar extends Element{
     }
 
     public Drawable drawable(String name){
-        Drawable out = null;
+        Drawable out;
 
         TextureAtlas.AtlasRegion region = Core.atlas.find(name);
 
