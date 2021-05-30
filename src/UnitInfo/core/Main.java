@@ -7,15 +7,12 @@ import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Lines;
 import arc.math.Mathf;
-import arc.struct.Seq;
 import arc.util.Time;
 import arc.util.Tmp;
 import mindustry.Vars;
 import mindustry.content.Fx;
-import mindustry.content.UnitTypes;
 import mindustry.game.EventType.*;
 import mindustry.game.Team;
-import mindustry.gen.Building;
 import mindustry.gen.Groups;
 import mindustry.graphics.Pal;
 import mindustry.mod.Mod;
@@ -36,13 +33,15 @@ public class Main extends Mod {
             hud.addCoreTable();
             hud.addWaveTable();
             hud.addUnitTable();
+            hud.addTileTable();
             hud.addTable();
-            hud.setDraw();
+            hud.setEvent();
         });
 
         Events.on(WorldLoadEvent.class, e -> {
             hud = new HudUi();
             hud.addWaveTable();
+            hud.addTileTable();
         });
 
         Events.on(WaveEvent.class, e -> {
@@ -50,6 +49,8 @@ public class Main extends Mod {
             hud = new HudUi();
             hud.addWaveTable();
         });
+
+
 
         Events.run(Trigger.draw, () -> {
             if(Core.settings.getBool("unithealthui"))

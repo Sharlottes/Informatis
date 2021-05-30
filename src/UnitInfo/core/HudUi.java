@@ -15,7 +15,9 @@ import arc.scene.ui.layout.Scl;
 import arc.scene.ui.layout.Stack;
 import arc.scene.ui.layout.Table;
 import arc.scene.utils.Elem;
+import arc.struct.IntMap;
 import arc.struct.ObjectIntMap;
+import arc.struct.ObjectMap;
 import arc.struct.Seq;
 import arc.util.*;
 import mindustry.Vars;
@@ -33,6 +35,9 @@ import mindustry.graphics.Pal;
 import mindustry.input.DesktopInput;
 import mindustry.type.*;
 import mindustry.ui.*;
+import mindustry.world.Block;
+import mindustry.world.Tile;
+import mindustry.world.blocks.ConstructBlock;
 import mindustry.world.blocks.defense.turrets.ItemTurret;
 import mindustry.world.blocks.defense.turrets.LiquidTurret;
 import mindustry.world.blocks.defense.turrets.PowerTurret;
@@ -41,6 +46,8 @@ import mindustry.world.blocks.power.ConditionalConsumePower;
 import mindustry.world.blocks.storage.CoreBlock;
 import mindustry.world.consumers.ConsumePower;
 import mindustry.world.consumers.ConsumeType;
+
+import java.time.LocalTime;
 
 import static arc.Core.scene;
 import static arc.Core.settings;
@@ -54,22 +61,23 @@ public class HudUi {
     Table unitTable = new Table();
     Table waveTable = new Table();
     Table coreTable = new Table();
+    Table tileTable = new Table();
+    float waveScrollPos;
+    float coreScrollPos;
+    float tileScrollPos, historyScrollPos;
+    IntMap<ObjectMap<EventType.BlockBuildBeginEvent, Block>> tileHistory = new IntMap<>();
+
 
     @Nullable UnitType type;
     @Nullable Unit unit;
     Element image;
-
     Color lastItemColor = Pal.items;
-
-    int uiIndex = 0;
-
     float heat;
     float heat2;
-    float coreScrollPos;
-    float waveScrollPos;
+    float a;
     int maxwave;
     int coreamount;
-    float a;
+    int uiIndex = 0;
 
     boolean panFix = false;
 
@@ -81,7 +89,11 @@ public class HudUi {
         else return unit;
     }
 
-    public void setDraw(){
+    public @Nullable Tile getTile(){
+        return Vars.world.tileWorld(Core.input.mouseWorldX(), Core.input.mouseWorldY());
+    };
+
+    public void setEvent(){
         Events.run(EventType.Trigger.draw, () -> {
             if(!Core.settings.getBool("select")) return;
             Unit unit = getUnit();
@@ -94,6 +106,28 @@ public class HudUi {
                 Draw.reset();
             }
         });
+
+
+        Events.on(EventType.BlockBuildBeginEvent.class, e -> {
+            if(!tileHistory.containsKey(e.tile.pos())) {
+                if(e.tile.build instanceof ConstructBlock.ConstructBuild) tileHistory.put(e.tile.pos(), ObjectMap.of(e, ((ConstructBlock.ConstructBuild) e.tile.build).cblock));
+                else tileHistory.put(e.tile.pos(), ObjectMap.of(e, e.tile.block()));
+                return;
+            }
+            ObjectMap<EventType.BlockBuildBeginEvent, Block> map = tileHistory.get(e.tile.pos());
+            if(e.breaking) {
+                if(e.tile.build instanceof ConstructBlock.ConstructBuild) map.put(e, ((ConstructBlock.ConstructBuild) e.tile.build).cblock);
+                else map.put(e, e.tile.block());
+                tileHistory.put(e.tile.pos(), map);
+            }
+            else Time.run(10, () -> {
+                if (e.tile.build instanceof ConstructBlock.ConstructBuild)
+                    map.put(e, ((ConstructBlock.ConstructBuild) e.tile.build).cblock);
+                else map.put(e, e.tile.block());
+                tileHistory.put(e.tile.pos(), map);
+            });
+        });
+
     }
 
     public void addTable(){
@@ -116,22 +150,24 @@ public class HudUi {
             Table labelTable = new Table(t -> t.add(label).scaling(Scaling.fit).left().padRight(40 * 8f));
 
             table.table(t -> {
-                Seq<Button> buttons = Seq.with(null, null, null, null);
+                Seq<Button> buttons = Seq.with(null, null, null, null, null);
                 buttons.items[0] = t.button(Icon.units, Styles.clearToggleTransi, () -> {
                     uiIndex = 0;
                     buttons.items[0].setChecked(true);
                     buttons.items[1].setChecked(false);
                     buttons.items[2].setChecked(false);
                     buttons.items[3].setChecked(false);
+                    buttons.items[4].setChecked(false);
                     label.setText(Core.bundle.get("hud.unit"));
-                    addCoreTable();
-                    addWaveTable();
                     addBars();
                     addWeapon();
                     addUnitTable();
+                    addWaveTable();
+                    addCoreTable();
+                    addTileTable();
                     table.removeChild(baseTable);
                     labelTable.setPosition(buttons.items[uiIndex].x, buttons.items[uiIndex].y);
-                    baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
+                    baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, tileTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
                     a = 1f;
                 }).size(5*8f).get();
                 t.row();
@@ -141,15 +177,17 @@ public class HudUi {
                     buttons.items[1].setChecked(true);
                     buttons.items[2].setChecked(false);
                     buttons.items[3].setChecked(false);
+                    buttons.items[4].setChecked(false);
                     label.setText(Core.bundle.get("hud.wave"));
-                    addCoreTable();
-                    addWaveTable();
                     addBars();
                     addWeapon();
                     addUnitTable();
+                    addWaveTable();
+                    addCoreTable();
+                    addTileTable();
                     table.removeChild(baseTable);
                     labelTable.setPosition(buttons.items[uiIndex].x, buttons.items[uiIndex].y);
-                    baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
+                    baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, tileTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
                     a = 1f;
                 }).size(5*8f).get();
                 t.row();
@@ -159,33 +197,57 @@ public class HudUi {
                     buttons.items[1].setChecked(false);
                     buttons.items[2].setChecked(true);
                     buttons.items[3].setChecked(false);
+                    buttons.items[4].setChecked(false);
                     label.setText(Core.bundle.get("hud.core"));
-                    addCoreTable();
-                    addWaveTable();
                     addBars();
                     addWeapon();
                     addUnitTable();
+                    addWaveTable();
+                    addCoreTable();
+                    addTileTable();
                     table.removeChild(baseTable);
                     labelTable.setPosition(buttons.items[uiIndex].x, buttons.items[uiIndex].y);
-                    baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
+                    baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, tileTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
                     a = 1f;
                 }).size(5*8f).get();
                 t.row();
-                buttons.items[3] = t.button(Icon.cancel, Styles.clearToggleTransi, () -> {
+                buttons.items[3] = t.button(Icon.grid, Styles.clearToggleTransi, () -> {
                     uiIndex = 3;
                     buttons.items[0].setChecked(false);
                     buttons.items[1].setChecked(false);
                     buttons.items[2].setChecked(false);
                     buttons.items[3].setChecked(true);
-                    label.setText(Core.bundle.get("hud.cancel"));
-                    addCoreTable();
-                    addWaveTable();
+                    buttons.items[4].setChecked(false);
+                    label.setText(Core.bundle.get("hud.tile"));
                     addBars();
                     addWeapon();
                     addUnitTable();
+                    addWaveTable();
+                    addCoreTable();
+                    addTileTable();
                     table.removeChild(baseTable);
                     labelTable.setPosition(buttons.items[uiIndex].x, buttons.items[uiIndex].y);
-                    baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
+                    baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, tileTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
+                    a = 1f;
+                }).size(5*8f).get();
+                t.row();
+                buttons.items[4] = t.button(Icon.cancel, Styles.clearToggleTransi, () -> {
+                    uiIndex = 4;
+                    buttons.items[0].setChecked(false);
+                    buttons.items[1].setChecked(false);
+                    buttons.items[2].setChecked(false);
+                    buttons.items[3].setChecked(false);
+                    buttons.items[4].setChecked(true);
+                    label.setText(Core.bundle.get("hud.cancel"));
+                    addBars();
+                    addWeapon();
+                    addUnitTable();
+                    addWaveTable();
+                    addCoreTable();
+                    addTileTable();
+                    table.removeChild(baseTable);
+                    labelTable.setPosition(buttons.items[uiIndex].x, buttons.items[uiIndex].y);
+                    baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, tileTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
                     a = 1f;
                 }).size(5*8f).get();
             });
@@ -758,6 +820,115 @@ public class HudUi {
         });
     }
 
+    public void setWave(Table table){
+        int winWave = state.isCampaign() && state.rules.winWave > 0 ? state.rules.winWave : Integer.MAX_VALUE;
+        maxwave = settings.getInt("wavemax");
+        for(int i = state.wave - 1; i <= Math.min(state.wave + maxwave, winWave - 2); i++){
+            final int j = i;
+            if(state.rules.spawns.find(g -> g.getSpawned(j) > 0) != null) table.table(Tex.underline, t -> {
+                t.add(new Table(tt -> {
+                    tt.left();
+                    Label label = new Label(() -> "[#" + Pal.accent.toString() + "]" + j + "[]");
+                    label.setFontScale(Scl.scl());
+                    tt.add(label);
+                })).width(Scl.scl(32f));
+
+                t.table(tx -> {
+                    int row = 0;
+                    ObjectIntMap<SpawnGroup> groups = new ObjectIntMap<>();
+
+                    for(SpawnGroup group : state.rules.spawns) {
+                        if(group.getSpawned(j) <= 0) continue;
+                        SpawnGroup sameTypeKey = groups.keys().toArray().find(g -> g.type == group.type && g.effect != StatusEffects.boss);
+                        if(sameTypeKey != null) groups.increment(sameTypeKey, sameTypeKey.getSpawned(j));
+                        else groups.put(group, group.getSpawned(j));
+                    }
+                    Seq<SpawnGroup> groupSorted = groups.keys().toArray().copy().sort((g1, g2) -> {
+                        int boss = Boolean.compare(g1.effect != StatusEffects.boss, g2.effect != StatusEffects.boss);
+                        if(boss != 0) return boss;
+                        int hitSize = Float.compare(-g1.type.hitSize, -g2.type.hitSize);
+                        if(hitSize != 0) return hitSize;
+                        return Integer.compare(-g1.type.id, -g2.type.id);
+                    });
+                    ObjectIntMap<SpawnGroup> groupsTmp = new ObjectIntMap<>();
+                    groupSorted.each(g -> groupsTmp.put(g, groups.get(g)));
+
+                    for(SpawnGroup group : groupsTmp.keys()){
+                        int amount = groupsTmp.get(group);
+                        if(amount <= 0) continue; //is this even possible?
+                        row ++;
+                        tx.add(new Table(tt -> {
+                            tt.right();
+                            tt.add(new Stack(){{
+                                add(new Table(ttt -> {
+                                    ttt.center();
+                                    ttt.add(new Image(group.type.icon(Cicon.large)).setScaling(Scaling.fit));
+                                    ttt.pack();
+                                }));
+
+                                add(new Table(ttt -> {
+                                    ttt.bottom().left();
+                                    Label label = new Label(() -> amount + "");
+                                    label.setFontScale(Scl.scl());
+                                    ttt.add(label);
+                                    ttt.pack();
+                                }));
+
+                                add(new Table(ttt -> {
+                                    ttt.top().right();
+                                    Image image = new Image(Icon.warning.getRegion()).setScaling(Scaling.fit);
+                                    image.update(() -> image.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f))));
+                                    ttt.add(image).size(Scl.scl(12f));
+                                    ttt.visible(() -> group.effect == StatusEffects.boss);
+                                    ttt.pack();
+                                }));
+                            }});
+
+                        })).width(Scl.scl((Cicon.large.size + 8f)));
+                        if(row % 4 == 0) tx.row();
+                    }
+                });
+            });
+            table.row();
+        }
+    }
+
+    public void addWaveTable(){
+        if(uiIndex != 1) return;
+        ScrollPane wavePane = new ScrollPane(new Image(Core.atlas.find("clear")).setScaling(Scaling.fit), Styles.smallPane);
+        wavePane.setScrollingDisabled(true, false);
+        wavePane.setScrollYForce(waveScrollPos);
+        wavePane.update(() -> {
+            if(wavePane.hasScroll()){
+                Element result = Core.scene.hit(Core.input.mouseX(), Core.input.mouseY(), true);
+                if(result == null || !result.isDescendantOf(wavePane)){
+                    Core.scene.setScrollFocus(null);
+                }
+            }
+            waveScrollPos = wavePane.getScrollY();
+            wavePane.setWidget(new Table(tx -> tx.table(this::setWave).left()));
+        });
+
+        wavePane.setOverscroll(false, false);
+        waveTable = new Table(table -> {
+            table.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
+                t.defaults().minWidth(Scl.scl(25 * 8f)).scaling(Scaling.fit).left();
+                t.add(wavePane).maxHeight(Scl.scl(32 * 8f));
+            }){
+                @Override
+                protected void drawBackground(float x, float y) {
+                    if(getBackground() == null) return;
+                    Draw.color(color.r, color.g, color.b, (settings.getInt("uiopacity") / 100f) * this.parentAlpha);
+                    getBackground().draw(x, y, width, height);
+                    Draw.reset();
+                }
+            }).padRight(Scl.scl(39 * 8f));
+
+            table.fillParent = true;
+            table.visibility = () -> uiIndex == 1;
+        });
+    }
+
     public void setCore(Table table){
         table.add(new Table(t -> {
             if(Vars.player.unit() == null) return;
@@ -869,100 +1040,88 @@ public class HudUi {
         });
     }
 
-    public void setWave(Table table){
-        int winWave = state.isCampaign() && state.rules.winWave > 0 ? state.rules.winWave : Integer.MAX_VALUE;
-        maxwave = settings.getInt("wavemax");
-        for(int i = state.wave - 1; i <= Math.min(state.wave + maxwave, winWave - 2); i++){
-            final int j = i;
-            if(state.rules.spawns.find(g -> g.getSpawned(j) > 0) != null) table.table(Tex.underline, t -> {
-                t.add(new Table(tt -> {
-                    tt.left();
-                    Label label = new Label(() -> "[#" + Pal.accent.toString() + "]" + j + "[]");
-                    label.setFontScale(Scl.scl());
-                    tt.add(label);
-                })).width(Scl.scl(32f));
+    public void setHistory(Table table){
+        if(getTile() == null || tileHistory.get(getTile().pos()) == null) return;
+        for(int i = 0; i < tileHistory.get(getTile().pos()).size; i++){
+            EventType.BlockBuildBeginEvent e = tileHistory.get(getTile().pos()).keys().toSeq().get(i);
+            Block destoryed = tileHistory.get(getTile().pos()).values().toSeq().get(i);
+            Player destroyer = e.unit.getPlayer();
+            boolean breaking = e.breaking;
 
-                t.table(tx -> {
-                    int row = 0;
-                    ObjectIntMap<SpawnGroup> groups = new ObjectIntMap<>();
-
-                    for(SpawnGroup group : state.rules.spawns) {
-                        if(group.getSpawned(j) <= 0) continue;
-                        SpawnGroup sameTypeKey = groups.keys().toArray().find(g -> g.type == group.type && g.effect != StatusEffects.boss);
-                        if(sameTypeKey != null) groups.increment(sameTypeKey, sameTypeKey.getSpawned(j));
-                        else groups.put(group, group.getSpawned(j));
-                    }
-                    Seq<SpawnGroup> groupSorted = groups.keys().toArray().copy().sort((g1, g2) -> {
-                        int boss = Boolean.compare(g1.effect != StatusEffects.boss, g2.effect != StatusEffects.boss);
-                        if(boss != 0) return boss;
-                        int hitSize = Float.compare(-g1.type.hitSize, -g2.type.hitSize);
-                        if(hitSize != 0) return hitSize;
-                        return Integer.compare(-g1.type.id, -g2.type.id);
-                    });
-                    ObjectIntMap<SpawnGroup> groupsTmp = new ObjectIntMap<>();
-                    groupSorted.each(g -> groupsTmp.put(g, groups.get(g)));
-
-                    for(SpawnGroup group : groupsTmp.keys()){
-                        int amount = groupsTmp.get(group);
-                        if(amount <= 0) continue; //is this even possible?
-                        row ++;
-                        tx.add(new Table(tt -> {
-                            tt.right();
-                            tt.add(new Stack(){{
-                                add(new Table(ttt -> {
-                                    ttt.center();
-                                    ttt.add(new Image(group.type.icon(Cicon.large)).setScaling(Scaling.fit));
-                                    ttt.pack();
-                                }));
-
-                                add(new Table(ttt -> {
-                                    ttt.bottom().left();
-                                    Label label = new Label(() -> amount + "");
-                                    label.setFontScale(Scl.scl());
-                                    ttt.add(label);
-                                    ttt.pack();
-                                }));
-
-                                add(new Table(ttt -> {
-                                    ttt.top().right();
-                                    Image image = new Image(Icon.warning.getRegion()).setScaling(Scaling.fit);
-                                    image.update(() -> image.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f))));
-                                    ttt.add(image).size(Scl.scl(12f));
-                                    ttt.visible(() -> group.effect == StatusEffects.boss);
-                                    ttt.pack();
-                                }));
-                            }});
-
-                        })).width(Scl.scl((Cicon.large.size + 8f)));
-                        if(row % 4 == 0) tx.row();
-                    }
-                });
+            table.table(Tex.underline, t -> {
+                if(destroyer != null) t.add(new Label(()-> "[stat]" + destroyer.name + "[]" + (breaking ? Core.bundle.format("shar-stat.break", destoryed) : Core.bundle.format("shar-stat.build", destoryed))));
             });
             table.row();
         }
     }
 
-    public void addWaveTable(){
-        if(uiIndex != 1) return;
-        ScrollPane wavePane = new ScrollPane(new Image(Core.atlas.find("clear")).setScaling(Scaling.fit), Styles.smallPane);
-        wavePane.setScrollingDisabled(true, false);
-        wavePane.setScrollYForce(waveScrollPos);
-        wavePane.update(() -> {
-            if(wavePane.hasScroll()){
+    public void setTile(Table table){
+        table.table(t -> {
+                Tile tile = getTile();
+            t.table(Tex.underline2, head -> {
+                head.table(image -> {
+                    image.left();
+                    if(tile == null) return;
+                    if(tile.floor().icon(Cicon.tiny) != Core.atlas.find("error")) image.image(tile.floor().icon(Cicon.tiny));
+                    if(tile.overlay().icon(Cicon.tiny) != Core.atlas.find("error")) image.image(tile.overlay().icon(Cicon.tiny));
+                    if(tile.block().icon(Cicon.tiny) != Core.atlas.find("error")) image.image(tile.block().icon(Cicon.tiny));
+                });
+                head.table(label -> {
+                    label.center();
+                    label.label(() -> tile == null ? "(null, null)" : "(" + tile.x + ", " + tile.y + ")");
+                });
+            });
+            t.row();
+            t.table(history -> {
+                ScrollPane historyPane = new ScrollPane(new Image(Core.atlas.find("clear")).setScaling(Scaling.fit), Styles.smallPane);
+                historyPane.setScrollingDisabled(true, false);
+                historyPane.setScrollYForce(historyScrollPos);
+                historyPane.update(() -> {
+                    if(historyPane.hasScroll()){
+                        Element result = Core.scene.hit(Core.input.mouseX(), Core.input.mouseY(), true);
+                        if(result == null || !result.isDescendantOf(historyPane)){
+                            Core.scene.setScrollFocus(null);
+                        }
+                    }
+                    historyScrollPos = historyPane.getScrollY();
+                    historyPane.setWidget(new Table(tx -> tx.table(this::setHistory).left()));
+                });
+
+                historyPane.setOverscroll(false, false);
+
+                history.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, h -> {
+                    h.defaults().minWidth(Scl.scl(25f * 8f)).scaling(Scaling.fit).left();
+                    h.update(() -> {
+                        h.clearChildren();
+                        h.table(this::setHistory);
+                    });
+                    //h.add(historyPane).maxHeight(Scl.scl(24 * 8f));
+                }));
+            });
+        });
+    }
+
+    public void addTileTable(){
+        if(uiIndex != 3) return;
+        ScrollPane tilePane = new ScrollPane(new Image(Core.atlas.find("clear")).setScaling(Scaling.fit), Styles.smallPane);
+        tilePane.setScrollingDisabled(true, false);
+        tilePane.setScrollYForce(tileScrollPos);
+        tilePane.update(() -> {
+            if(tilePane.hasScroll()){
                 Element result = Core.scene.hit(Core.input.mouseX(), Core.input.mouseY(), true);
-                if(result == null || !result.isDescendantOf(wavePane)){
+                if(result == null || !result.isDescendantOf(tilePane)){
                     Core.scene.setScrollFocus(null);
                 }
             }
-            waveScrollPos = wavePane.getScrollY();
-            wavePane.setWidget(new Table(tx -> tx.table(this::setWave).left()));
+            tileScrollPos = tilePane.getScrollY();
+            tilePane.setWidget(new Table(tx -> tx.table(this::setTile).left()));
         });
 
-        wavePane.setOverscroll(false, false);
-        waveTable = new Table(table -> {
+        tilePane.setOverscroll(false, false);
+        tileTable = new Table(table -> {
             table.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
                 t.defaults().minWidth(Scl.scl(25 * 8f)).scaling(Scaling.fit).left();
-                t.add(wavePane).maxHeight(Scl.scl(32 * 8f));
+                t.add(tilePane).maxHeight(Scl.scl(32 * 8f));
             }){
                 @Override
                 protected void drawBackground(float x, float y) {
@@ -974,7 +1133,7 @@ public class HudUi {
             }).padRight(Scl.scl(39 * 8f));
 
             table.fillParent = true;
-            table.visibility = () -> uiIndex == 1;
+            table.visibility = () -> uiIndex == 3;
         });
     }
 }
