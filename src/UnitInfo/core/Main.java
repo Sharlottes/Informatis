@@ -1,28 +1,21 @@
 package UnitInfo.core;
 
-import UnitInfo.ui.FreeBar;
-import arc.Core;
-import arc.Events;
-import arc.graphics.Color;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Lines;
-import arc.math.Mathf;
-import arc.struct.Seq;
-import arc.util.Time;
-import arc.util.Tmp;
-import mindustry.Vars;
-import mindustry.content.Fx;
-import mindustry.content.UnitTypes;
+import UnitInfo.ui.*;
+import arc.*;
+import arc.graphics.*;
+import arc.graphics.g2d.*;
+import arc.math.*;
+import arc.util.*;
+import mindustry.*;
+import mindustry.content.*;
 import mindustry.game.EventType.*;
-import mindustry.game.Team;
-import mindustry.gen.Building;
-import mindustry.gen.Groups;
-import mindustry.graphics.Pal;
-import mindustry.mod.Mod;
+import mindustry.game.*;
+import mindustry.gen.*;
+import mindustry.graphics.*;
+import mindustry.mod.*;
 
-import static arc.Core.settings;
-import static mindustry.Vars.indexer;
-import static mindustry.Vars.mobile;
+import static arc.Core.*;
+import static mindustry.Vars.*;
 
 public class Main extends Mod {
     public static Setting settingAdder = new Setting();

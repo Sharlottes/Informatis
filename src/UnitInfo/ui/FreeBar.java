@@ -1,37 +1,23 @@
 package UnitInfo.ui;
 
-import UnitInfo.core.PrograssedReqImage;
-import arc.Core;
-import arc.func.Func;
-import arc.graphics.Color;
+import arc.*;
+import arc.func.*;
+import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
-import arc.scene.ui.Image;
-import arc.struct.FloatSeq;
-import arc.util.Log;
-import arc.util.Tmp;
-import mindustry.Vars;
-import mindustry.content.Liquids;
-import mindustry.entities.abilities.ForceFieldAbility;
-import mindustry.entities.abilities.ShieldRegenFieldAbility;
+import arc.struct.*;
+import arc.util.*;
+import mindustry.*;
+import mindustry.content.*;
+import mindustry.entities.abilities.*;
 import mindustry.gen.*;
-import mindustry.graphics.Drawf;
-import mindustry.graphics.Layer;
-import mindustry.graphics.Pal;
-import mindustry.graphics.Trail;
-import mindustry.type.Item;
-import mindustry.type.Liquid;
-import mindustry.ui.Cicon;
-import mindustry.ui.MultiReqImage;
-import mindustry.ui.ReqImage;
-import mindustry.world.blocks.defense.Wall;
+import mindustry.graphics.*;
+import mindustry.type.*;
+import mindustry.world.blocks.defense.*;
 import mindustry.world.blocks.defense.turrets.*;
-import mindustry.world.blocks.power.ConditionalConsumePower;
-import mindustry.world.consumers.ConsumePower;
-import mindustry.world.consumers.ConsumeType;
 
-import static arc.Core.settings;
-import static mindustry.Vars.content;
+import static arc.Core.*;
+import static mindustry.Vars.*;
 
 public class FreeBar {
     public float value;
@@ -183,10 +169,6 @@ public class FreeBar {
         }
         else if(build instanceof PowerTurret.PowerTurretBuild){
             PowerTurret.PowerTurretBuild entity = (PowerTurret.PowerTurretBuild) build;
-            ConsumePower cons = entity.block.consumes.getPower();
-
-            double max = (Math.round(cons.usage * 10) / 10.0) * 60;
-            double v = (Math.round(((ConditionalConsumePower)entity.block.consumes.get(ConsumeType.power)).requestedPower(entity) * 10) / 10.0);
 
             h = entity.power.status;
             color = Pal.powerBar;

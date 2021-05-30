@@ -1,21 +1,15 @@
 package UnitInfo.core;
 
-import arc.Core;
-import arc.Input;
-import arc.graphics.Color;
-import arc.scene.ui.Dialog;
-import arc.scene.ui.Label;
-import arc.scene.ui.SettingsDialog;
-import arc.scene.ui.TextArea;
-import arc.scene.ui.layout.Scl;
-import arc.scene.ui.layout.Table;
-import arc.util.Align;
-import arc.util.Log;
-import mindustry.Vars;
-import mindustry.gen.Icon;
-import mindustry.ui.dialogs.BaseDialog;
+import arc.*;
+import arc.graphics.*;
+import arc.scene.ui.*;
+import arc.scene.ui.layout.*;
+import arc.util.*;
+import mindustry.*;
+import mindustry.gen.*;
+import mindustry.ui.dialogs.*;
 
-import static mindustry.Vars.ui;
+import static mindustry.Vars.*;
 
 public class Setting {
     public void addGraphicSetting(String key){
