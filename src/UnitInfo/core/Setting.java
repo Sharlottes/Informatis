@@ -149,6 +149,7 @@ public class Setting {
         boolean tmp = Core.settings.getBool("uiscalechanged", false);
         Core.settings.put("uiscalechanged", false);
 
+        addGraphicSetting("ssim");
         addGraphicSetting("gaycursor");
         addGraphicSetting("panfix");
         addGraphicSetting("scan");
@@ -165,6 +166,7 @@ public class Setting {
         ui.settings.graphics.sliderPref("baropacity", 100, 0, 100, 5, s -> s + "%");
         ui.settings.graphics.sliderPref("uiopacity", 50, 0, 100, 5, s -> s + "%");
 
+        Core.settings.defaults("ssim", false);
         Core.settings.defaults("select", false);
         Core.settings.defaults("gaycursor", true);
         Core.settings.defaults("panfix", false);

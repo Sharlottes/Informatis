@@ -84,12 +84,12 @@ public class SBar extends Element{
         return this;
     }
 
-    public Drawable drawable(String name){
+    public Drawable drawable(String name, int left, int right, int top, int bottom){
         Drawable out;
 
         TextureAtlas.AtlasRegion region = Core.atlas.find(name);
 
-        int[] splits = {10,10,9,9};
+        int[] splits = {left, right, top, bottom};
         NinePatch patch = new NinePatch(region, splits[0], splits[1], splits[2], splits[3]);
         int[] pads = region.pads;
         if(pads != null) patch.setPadding(pads[0], pads[1], pads[2], pads[3]);
@@ -101,6 +101,7 @@ public class SBar extends Element{
     @Override
     public void draw(){
         if(fraction == null || !valid) return;
+        boolean ssim = Core.settings.getBool("ssim");
 
         float computed;
         try{
@@ -124,19 +125,19 @@ public class SBar extends Element{
         blink = Mathf.lerpDelta(blink, 0f, 0.2f);
         value = Mathf.lerpDelta(value, computed, 0.05f);
 
-        NinePatchDrawable bar = (NinePatchDrawable) drawable("unitinfo-barS");
+        NinePatchDrawable bar = ssim ? (NinePatchDrawable) drawable("unitinfo-barSS", 14, 14, 19, 19) : (NinePatchDrawable) drawable("unitinfo-barS", 10, 10, 9, 9);
         Draw.colorl(0.1f);
         bar.draw(x, y, width, height);
         Draw.color(color.cpy().mul(Pal.lightishGray), blinkColor, blink);
 
-        NinePatchDrawable top = (NinePatchDrawable) drawable("unitinfo-barS-top");
+        NinePatchDrawable top = ssim ? (NinePatchDrawable) drawable("unitinfo-barSS-top", 14, 14, 19, 19) : (NinePatchDrawable) drawable("unitinfo-barS-top", 10, 10, 9, 9);
         float topWidth = width * value;
 
-        if(topWidth > Core.atlas.find("unitinfo-bar-top").width){
+        if(topWidth > (ssim ? Core.atlas.find("unitinfo-barSS-top").width : Core.atlas.find("unitinfo-barS-top").width)){
             top.draw(x, y, topWidth, height);
         }else{
             if(ScissorStack.push(scissor.set(x, y, topWidth, height))){
-                top.draw(x, y, Core.atlas.find("unitinfo-bar-top").width, height);
+                top.draw(x, y, (ssim ? Core.atlas.find("unitinfo-barSS-top").width : Core.atlas.find("unitinfo-barS-top").width), height);
                 ScissorStack.pop();
             }
         }
@@ -144,11 +145,11 @@ public class SBar extends Element{
         Draw.color(color, blinkColor, blink);
         float topWidthReal = width * (Math.min(value, computed));
 
-        if(topWidthReal > Core.atlas.find("unitinfo-bar-top").width){
+        if(topWidthReal > (ssim ? Core.atlas.find("unitinfo-barSS-top").width : Core.atlas.find("unitinfo-barS-top").width)){
             top.draw(x, y, topWidthReal, height);
         }else{
             if(ScissorStack.push(scissor.set(x, y, topWidthReal, height))){
-                top.draw(x, y, Core.atlas.find("unitinfo-bar-top").width, height);
+                top.draw(x, y, (ssim ? Core.atlas.find("unitinfo-barSS-top").width : Core.atlas.find("unitinfo-barS-top").width), height);
                 ScissorStack.pop();
             }
         }
