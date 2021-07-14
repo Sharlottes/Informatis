@@ -31,13 +31,8 @@ jar {
 
 
 dependencies {
-    implementation  'com.github.younggam:multi-lib:java-v1.1.0'
-
     compileOnly "com.github.Anuken.Arc:arc-core:$pMindustryVersion"
     compileOnly "com.github.Anuken.Mindustry:core:$pMindustryVersion"
-
-    compileOnly "com.github.Anuken.Mindustry:annotations:$pMindustryVersion"
-    annotationProcessor "com.github.Anuken.Mindustry:annotations:$pMindustryVersion"
 }
 
 task dexify(type: Jar) {
