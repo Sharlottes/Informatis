@@ -16,7 +16,7 @@ public class Setting {
         ui.settings.graphics.checkPref(key, Core.settings.getBool(key));
     }
     public void addGraphicTypeSetting(String key, int defs, String dialogs, String invalid, int warnMax){
-        ui.settings.graphics.pref(new SettingsDialog.SettingsTable.Setting() {
+        ui.settings.graphics.pref(new SettingsMenuDialog.SettingsTable.Setting() {
             public final int def;
             {
                 def = defs;
@@ -29,7 +29,7 @@ public class Setting {
             public final StringBuilder message = new StringBuilder();
 
             @Override
-            public void add(SettingsDialog.SettingsTable settingsTable) {
+            public void add(SettingsMenuDialog.SettingsTable settingsTable) {
                 String settingTitle = title;
                 String settingName = name;
                 Label label = new Label(title + ": " + def);
@@ -149,6 +149,8 @@ public class Setting {
         boolean tmp = Core.settings.getBool("uiscalechanged", false);
         Core.settings.put("uiscalechanged", false);
 
+        addGraphicSetting("pastwave");
+        addGraphicSetting("emptywave");
         addGraphicSetting("ssim");
         addGraphicSetting("gaycursor");
         addGraphicSetting("panfix");
@@ -166,6 +168,8 @@ public class Setting {
         ui.settings.graphics.sliderPref("baropacity", 100, 0, 100, 5, s -> s + "%");
         ui.settings.graphics.sliderPref("uiopacity", 50, 0, 100, 5, s -> s + "%");
 
+        Core.settings.defaults("pastwave", false);
+        Core.settings.defaults("emptywave", true);
         Core.settings.defaults("ssim", false);
         Core.settings.defaults("select", false);
         Core.settings.defaults("gaycursor", true);
@@ -176,7 +180,6 @@ public class Setting {
         Core.settings.defaults("weaponui", true);
         Core.settings.defaults("commandedunitui", true);
         Core.settings.defaults("unithealthui", true);
-
 
         Core.settings.put("uiscalechanged", tmp);
     }

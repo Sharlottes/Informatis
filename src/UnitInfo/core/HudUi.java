@@ -5,6 +5,7 @@ import arc.*;
 import arc.func.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
+import arc.input.KeyCode;
 import arc.math.*;
 import arc.scene.*;
 import arc.scene.style.*;
@@ -45,8 +46,7 @@ public class HudUi {
     Table tileTable = new Table();
     float waveScrollPos;
     float coreScrollPos;
-    float tileScrollPos, historyScrollPos;
-    IntMap<ObjectMap<EventType.BlockBuildBeginEvent, Block>> tileHistory = new IntMap<>();
+    float tileScrollPos;
 
 
     @Nullable UnitType type;
@@ -87,28 +87,6 @@ public class HudUi {
                 Draw.reset();
             }
         });
-
-
-        Events.on(EventType.BlockBuildBeginEvent.class, e -> {
-            if(!tileHistory.containsKey(e.tile.pos())) {
-                if(e.tile.build instanceof ConstructBlock.ConstructBuild) tileHistory.put(e.tile.pos(), ObjectMap.of(e, ((ConstructBlock.ConstructBuild) e.tile.build).cblock));
-                else tileHistory.put(e.tile.pos(), ObjectMap.of(e, e.tile.block()));
-                return;
-            }
-            ObjectMap<EventType.BlockBuildBeginEvent, Block> map = tileHistory.get(e.tile.pos());
-            if(e.breaking) {
-                if(e.tile.build instanceof ConstructBlock.ConstructBuild) map.put(e, ((ConstructBlock.ConstructBuild) e.tile.build).cblock);
-                else map.put(e, e.tile.block());
-                tileHistory.put(e.tile.pos(), map);
-            }
-            else Time.run(10, () -> {
-                if (e.tile.build instanceof ConstructBlock.ConstructBuild)
-                    map.put(e, ((ConstructBlock.ConstructBuild) e.tile.build).cblock);
-                else map.put(e, e.tile.block());
-                tileHistory.put(e.tile.pos(), map);
-            });
-        });
-
     }
 
     public void addTable(){
@@ -375,11 +353,11 @@ public class HudUi {
                         if(((BlockUnitUnit)getUnit()).tile() instanceof ItemTurret.ItemTurretBuild){
                             MultiReqImage itemReq = new MultiReqImage();
                             for(Item item : ((ItemTurret) ((BlockUnitUnit) getUnit()).tile().block).ammoTypes.keys())
-                                itemReq.add(new ReqImage(item.icon(Cicon.tiny), () -> ((ItemTurret.ItemTurretBuild)((BlockUnitUnit) getUnit()).tile()).hasAmmo()));
+                                itemReq.add(new ReqImage(item.uiIcon, () -> ((ItemTurret.ItemTurretBuild)((BlockUnitUnit) getUnit()).tile()).hasAmmo()));
                             imaget = itemReq;
 
                             if(((ItemTurret.ItemTurretBuild)((BlockUnitUnit) getUnit()).tile()).hasAmmo())
-                                imaget = new Image(((ItemTurret) ((BlockUnitUnit) getUnit()).tile().block).ammoTypes.findKey(((ItemTurret.ItemTurretBuild)((BlockUnitUnit) getUnit()).tile()).peekAmmo(), true).icon(Cicon.small)).setScaling(Scaling.fit);
+                                imaget = new Image(((ItemTurret) ((BlockUnitUnit) getUnit()).tile().block).ammoTypes.findKey(((ItemTurret.ItemTurretBuild)((BlockUnitUnit) getUnit()).tile()).peekAmmo(), true).uiIcon).setScaling(Scaling.fit);
 
                         }
                         else if(((BlockUnitUnit)getUnit()).tile() instanceof LiquidTurret.LiquidTurretBuild){
@@ -389,11 +367,11 @@ public class HudUi {
 
                             MultiReqImage liquidReq = new MultiReqImage();
                             for(Liquid liquid : ((LiquidTurret) ((BlockUnitUnit) getUnit()).tile().block).ammoTypes.keys())
-                                liquidReq.add(new ReqImage(liquid.icon(Cicon.tiny), () -> ((LiquidTurret.LiquidTurretBuild)((BlockUnitUnit) getUnit()).tile()).hasAmmo()));
+                                liquidReq.add(new ReqImage(liquid.uiIcon, () -> ((LiquidTurret.LiquidTurretBuild)((BlockUnitUnit) getUnit()).tile()).hasAmmo()));
                             imaget = liquidReq;
 
                             if(((LiquidTurret.LiquidTurretBuild)((BlockUnitUnit) getUnit()).tile()).hasAmmo())
-                                imaget = new Image(current.get(entity).icon(Cicon.small)).setScaling(Scaling.fit);
+                                imaget = new Image(current.get(entity).uiIcon).setScaling(Scaling.fit);
                         }
                         else if(((BlockUnitUnit)getUnit()).tile() instanceof PowerTurret.PowerTurretBuild){
                             PowerTurret.PowerTurretBuild entity = ((PowerTurret.PowerTurretBuild)((BlockUnitUnit)getUnit()).tile());
@@ -429,7 +407,7 @@ public class HudUi {
 
                 t.add(new Image(){{
                     update(() -> {
-                        setDrawable(getUnit().stack.item == null || getUnit().stack.amount <= 0 ? Core.atlas.find("clear") : getUnit().stack.item.icon(Cicon.small));
+                        setDrawable(getUnit().stack.item == null || getUnit().stack.amount <= 0 ? Core.atlas.find("clear") : getUnit().stack.item.uiIcon);
                     });
                 }
 
@@ -493,9 +471,9 @@ public class HudUi {
                             setDrawable(Core.atlas.find("clear"));
                             return;
                         }
-                        TextureRegion region = Items.copper.icon(Cicon.small);
+                        TextureRegion region = Items.copper.uiIcon;
                         if( getUnit().type != null){
-                            if(getUnit().type.ammoType == AmmoTypes.thorium) region = Items.thorium.icon(Cicon.small);
+                            if(getUnit().type.ammoType == AmmoTypes.thorium) region = Items.thorium.uiIcon;
                             if(getUnit().type.ammoType == AmmoTypes.power || getUnit().type.ammoType == AmmoTypes.powerLow || getUnit().type.ammoType == AmmoTypes.powerHigh) region = Icon.powerSmall.getRegion();
                         }
                         setDrawable(region);
@@ -524,7 +502,7 @@ public class HudUi {
                     units = Groups.unit.copy(units).filter(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == getUnit());
                     for(int r = 0; r < amount; r++){
                         Unit unit = units.get(r);
-                        TextureRegion region = unit.type.icon(Cicon.full);
+                        TextureRegion region = unit.type.uiIcon;
                         if(type.weapons.size > 1 && r % 3 == 0) tt.row();
                         else if(r % 3 == 0) tt.row();
                         tt.table(unittable -> {
@@ -564,7 +542,7 @@ public class HudUi {
                                                         tt.add(new Image(){{
                                                             update(() -> {
                                                                 if(!Core.settings.getBool("weaponui")) return;
-                                                                setDrawable(unit.stack.item == null || unit.stack.amount <= 0 ? Core.atlas.find("clear") : unit.stack.item.icon(Cicon.small));
+                                                                setDrawable(unit.stack.item == null || unit.stack.amount <= 0 ? Core.atlas.find("clear") : unit.stack.item.uiIcon);
                                                             });
                                                         }}.setScaling(Scaling.fit)).size(Scl.scl(2.5f * 8f)).scaling(Scaling.fit).padBottom(Scl.scl(4 * 8f)).padLeft(Scl.scl(2 * 8f))
                                                     ));
@@ -609,7 +587,7 @@ public class HudUi {
                 for(int r = 0; r < amount; r++){
                     Weapon weapon = type.weapons.get(r);
                     WeaponMount mount = unit.mounts[r];
-                    TextureRegion region = !weapon.name.equals("") && weapon.outlineRegion.found() ? weapon.outlineRegion : type.icon(Cicon.full);
+                    TextureRegion region = !weapon.name.equals("") && weapon.outlineRegion.found() ? weapon.outlineRegion : type.uiIcon;
                     if(type.weapons.size > 1 && r % 3 == 0) tt.row();
                     else if(r % 3 == 0) tt.row();
                     tt.table(weapontable -> {
@@ -691,8 +669,8 @@ public class HudUi {
                         add(new Table(ttt -> ttt.add(new Image(){{
                             update(() -> {
                                 TextureRegion region = Core.atlas.find("clear");
-                                if(getUnit() instanceof BlockUnitUnit && getUnit().type != null) region = ((BlockUnitUnit)getUnit()).tile().block.icon(Cicon.large);
-                                else if(getUnit() != null && getUnit().type != null) region = getUnit().type.icon(Cicon.large);
+                                if(getUnit() instanceof BlockUnitUnit && getUnit().type != null) region = ((BlockUnitUnit)getUnit()).tile().block.uiIcon;
+                                else if(getUnit() != null && getUnit().type != null) region = getUnit().type.uiIcon;
                                 setDrawable(region);
                             });
                         }}.setScaling(Scaling.fit)).size(Scl.scl(4f * 8f))));
@@ -804,71 +782,85 @@ public class HudUi {
     public void setWave(Table table){
         int winWave = state.isCampaign() && state.rules.winWave > 0 ? state.rules.winWave : Integer.MAX_VALUE;
         maxwave = settings.getInt("wavemax");
-        for(int i = state.wave - 1; i <= Math.min(state.wave + maxwave, winWave - 2); i++){
+        for(int i = settings.getBool("pastwave") ? 0 : state.wave - 1; i <= Math.min(state.wave + maxwave, winWave - 2); i++){
             final int j = i;
-            if(state.rules.spawns.find(g -> g.getSpawned(j) > 0) != null) table.table(Tex.underline, t -> {
-                t.add(new Table(tt -> {
-                    tt.left();
-                    Label label = new Label(() -> "[#" + Pal.accent.toString() + "]" + j + "[]");
-                    label.setFontScale(Scl.scl());
-                    tt.add(label);
-                })).width(Scl.scl(32f));
+            if(!settings.getBool("emptywave") && state.rules.spawns.find(g -> g.getSpawned(j) > 0) == null) continue;
+            table.table(t -> {
+                table.center();
+                final int jj = j+1;
+                Label label = new Label(() -> "[#" + (state.wave == j+1 ? Color.red.toString() : Pal.accent.toString()) + "]" + jj + "[]");
+                label.setFontScale(Scl.scl());
+                t.add(label);
+            }).size(Scl.scl(32f));
 
-                t.table(tx -> {
-                    int row = 0;
-                    ObjectIntMap<SpawnGroup> groups = new ObjectIntMap<>();
+            table.table(Tex.underline, tx -> {
+                if(settings.getBool("emptywave") && state.rules.spawns.find(g -> g.getSpawned(j) > 0) == null) {
+                    tx.center();
+                    tx.add("[lightgray]<Empty>[]");
+                    return;
+                }
+                int row = 0;
+                ObjectIntMap<SpawnGroup> groups = new ObjectIntMap<>();
 
-                    for(SpawnGroup group : state.rules.spawns) {
-                        if(group.getSpawned(j) <= 0) continue;
-                        SpawnGroup sameTypeKey = groups.keys().toArray().find(g -> g.type == group.type && g.effect != StatusEffects.boss);
-                        if(sameTypeKey != null) groups.increment(sameTypeKey, sameTypeKey.getSpawned(j));
-                        else groups.put(group, group.getSpawned(j));
-                    }
-                    Seq<SpawnGroup> groupSorted = groups.keys().toArray().copy().sort((g1, g2) -> {
-                        int boss = Boolean.compare(g1.effect != StatusEffects.boss, g2.effect != StatusEffects.boss);
-                        if(boss != 0) return boss;
-                        int hitSize = Float.compare(-g1.type.hitSize, -g2.type.hitSize);
-                        if(hitSize != 0) return hitSize;
-                        return Integer.compare(-g1.type.id, -g2.type.id);
-                    });
-                    ObjectIntMap<SpawnGroup> groupsTmp = new ObjectIntMap<>();
-                    groupSorted.each(g -> groupsTmp.put(g, groups.get(g)));
-
-                    for(SpawnGroup group : groupsTmp.keys()){
-                        int amount = groupsTmp.get(group);
-                        if(amount <= 0) continue; //is this even possible?
-                        row ++;
-                        tx.add(new Table(tt -> {
-                            tt.right();
-                            tt.add(new Stack(){{
-                                add(new Table(ttt -> {
-                                    ttt.center();
-                                    ttt.add(new Image(group.type.icon(Cicon.large)).setScaling(Scaling.fit));
-                                    ttt.pack();
-                                }));
-
-                                add(new Table(ttt -> {
-                                    ttt.bottom().left();
-                                    Label label = new Label(() -> amount + "");
-                                    label.setFontScale(Scl.scl());
-                                    ttt.add(label);
-                                    ttt.pack();
-                                }));
-
-                                add(new Table(ttt -> {
-                                    ttt.top().right();
-                                    Image image = new Image(Icon.warning.getRegion()).setScaling(Scaling.fit);
-                                    image.update(() -> image.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f))));
-                                    ttt.add(image).size(Scl.scl(12f));
-                                    ttt.visible(() -> group.effect == StatusEffects.boss);
-                                    ttt.pack();
-                                }));
-                            }});
-
-                        })).width(Scl.scl((Cicon.large.size + 8f)));
-                        if(row % 4 == 0) tx.row();
-                    }
+                for(SpawnGroup group : state.rules.spawns) {
+                    if(group.getSpawned(j) <= 0) continue;
+                    SpawnGroup sameTypeKey = groups.keys().toArray().find(g -> g.type == group.type && g.effect != StatusEffects.boss);
+                    if(sameTypeKey != null) groups.increment(sameTypeKey, sameTypeKey.getSpawned(j));
+                    else groups.put(group, group.getSpawned(j));
+                }
+                Seq<SpawnGroup> groupSorted = groups.keys().toArray().copy().sort((g1, g2) -> {
+                    int boss = Boolean.compare(g1.effect != StatusEffects.boss, g2.effect != StatusEffects.boss);
+                    if(boss != 0) return boss;
+                    int hitSize = Float.compare(-g1.type.hitSize, -g2.type.hitSize);
+                    if(hitSize != 0) return hitSize;
+                    return Integer.compare(-g1.type.id, -g2.type.id);
                 });
+                ObjectIntMap<SpawnGroup> groupsTmp = new ObjectIntMap<>();
+                groupSorted.each(g -> groupsTmp.put(g, groups.get(g)));
+
+                for(SpawnGroup group : groupsTmp.keys()){
+                    int amount = groupsTmp.get(group);
+                    row ++;
+
+                    tx.table(tt -> {
+                        tt.right();
+                        tt.add(new Stack(){{
+                            add(new Table(ttt -> {
+                                ttt.center();
+                                ttt.add(new Image(group.type.uiIcon).setScaling(Scaling.fit)).size(iconLarge);
+                                ttt.pack();
+                            }));
+
+                            add(new Table(ttt -> {
+                                ttt.bottom().left();
+                                Label label = new Label(() -> amount + "");
+                                label.setFontScale(Scl.scl());
+                                ttt.add(label);
+                                ttt.pack();
+                            }));
+
+                            add(new Table(ttt -> {
+                                ttt.top().right();
+                                Image image = new Image(Icon.warning.getRegion()).setScaling(Scaling.fit);
+                                image.update(() -> image.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f))));
+                                ttt.add(image).size(Scl.scl(12f));
+                                ttt.visible(() -> group.effect == StatusEffects.boss);
+                                ttt.pack();
+                            }));
+                        }}).pad(2f);
+                        tt.clicked(() -> {
+                            Log.info("clicked");
+                            if(Core.input.keyDown(KeyCode.shiftLeft) && Fonts.getUnicode(group.type.name) != 0){
+                                Core.app.setClipboardText((char)Fonts.getUnicode(group.type.name) + "");
+                                ui.showInfoFade("@copied");
+                            }else{
+                                ui.content.show(group.type);
+                            }
+                        });
+                        tt.addListener(new Tooltip(t -> t.background(Tex.button).add(group.type.localizedName)));
+                    });
+                    if(row % 4 == 0) tx.row();
+                }
             });
             table.row();
         }
@@ -916,7 +908,7 @@ public class HudUi {
             coreamount = Vars.player.unit().team().cores().size;
             for(int r = 0; r < coreamount; r++){
                 CoreBlock.CoreBuild core = Vars.player.unit().team().cores().get(r);
-                TextureRegion region = core.block.icon(Cicon.full);
+                TextureRegion region = core.block.uiIcon;
 
                 if(coreamount > 1 && r % 3 == 0) t.row();
                 else if(r % 3 == 0) t.row();
@@ -1021,21 +1013,6 @@ public class HudUi {
         });
     }
 
-    public void setHistory(Table table){
-        if(getTile() == null || tileHistory.get(getTile().pos()) == null) return;
-        for(int i = 0; i < tileHistory.get(getTile().pos()).size; i++){
-            EventType.BlockBuildBeginEvent e = tileHistory.get(getTile().pos()).keys().toSeq().get(i);
-            Block destoryed = tileHistory.get(getTile().pos()).values().toSeq().get(i);
-            Player destroyer = e.unit.getPlayer();
-            boolean breaking = e.breaking;
-
-            table.table(Tex.underline, t -> {
-                if(destroyer != null) t.add(new Label(()-> "[stat]" + destroyer.name + "[]" + (breaking ? Core.bundle.format("shar-stat.break", destoryed) : Core.bundle.format("shar-stat.build", destoryed))));
-            });
-            table.row();
-        }
-    }
-
     public void setTile(Table table){
         table.table(t -> {
                 Tile tile = getTile();
@@ -1043,41 +1020,14 @@ public class HudUi {
                 head.table(image -> {
                     image.left();
                     if(tile == null) return;
-                    if(tile.floor().icon(Cicon.tiny) != Core.atlas.find("error")) image.image(tile.floor().icon(Cicon.tiny));
-                    if(tile.overlay().icon(Cicon.tiny) != Core.atlas.find("error")) image.image(tile.overlay().icon(Cicon.tiny));
-                    if(tile.block().icon(Cicon.tiny) != Core.atlas.find("error")) image.image(tile.block().icon(Cicon.tiny));
+                    if(tile.floor().uiIcon != Core.atlas.find("error")) image.image(tile.floor().uiIcon);
+                    if(tile.overlay().uiIcon != Core.atlas.find("error")) image.image(tile.overlay().uiIcon);
+                    if(tile.block().uiIcon != Core.atlas.find("error")) image.image(tile.block().uiIcon);
                 });
                 head.table(label -> {
                     label.center();
                     label.label(() -> tile == null ? "(null, null)" : "(" + tile.x + ", " + tile.y + ")");
                 });
-            });
-            t.row();
-            t.table(history -> {
-                ScrollPane historyPane = new ScrollPane(new Image(Core.atlas.find("clear")).setScaling(Scaling.fit), Styles.smallPane);
-                historyPane.setScrollingDisabled(true, false);
-                historyPane.setScrollYForce(historyScrollPos);
-                historyPane.update(() -> {
-                    if(historyPane.hasScroll()){
-                        Element result = Core.scene.hit(Core.input.mouseX(), Core.input.mouseY(), true);
-                        if(result == null || !result.isDescendantOf(historyPane)){
-                            Core.scene.setScrollFocus(null);
-                        }
-                    }
-                    historyScrollPos = historyPane.getScrollY();
-                    historyPane.setWidget(new Table(tx -> tx.table(this::setHistory).left()));
-                });
-
-                historyPane.setOverscroll(false, false);
-
-                history.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, h -> {
-                    h.defaults().minWidth(Scl.scl(25f * 8f)).scaling(Scaling.fit).left();
-                    h.update(() -> {
-                        h.clearChildren();
-                        h.table(this::setHistory);
-                    });
-                    //h.add(historyPane).maxHeight(Scl.scl(24 * 8f));
-                }));
             });
         });
     }

@@ -1,14 +1,14 @@
-: del /q C:\Users\lg\AppData\Roaming\Mindustry\mods\UnitInfo.jar;
-: move C:\Users\lg\Documents\GitHub\UnitInfo\build\libs\UnitInfo.jar C:\Users\lg\AppData\Roaming\Mindustry\mods;
-: java -jar C:\Users\lg\Desktop\Mindustry.jar
+@rem put this project path into PATH_FROM
+setlocal
+set PATH_FROM=C:\Users\user\Documents\GitHub\UnitInfo
+@rem put your mindustry local path into PATH_TO
+setlocal
+set PATH_TO=C:\Users\user\AppData\Roaming\Mindustry
+@rem put your minudstry *jar* path into MINDUSTRY
+setlocal
+set MINDUSTRY=C:\Users\user\Downloads\Mindustry.jar
 
-
-: del D:\SteamLibrary\steamapps\common\Mindustry\saves\mods\CoreDesktop.jar
-del C:\Users\lg\AppData\Roaming\Mindustry\mods\UnitInfo.jar
-: xcopy D:\workspace\Java\Core\build\libs\CoreDesktop.jar D:\SteamLibrary\steamapps\common\Mindustry\saves\mods\ /k
-xcopy C:\Users\lg\Documents\GitHub\UnitInfo\build\libs\UnitInfo.jar C:\Users\lg\AppData\Roaming\Mindustry\mods\ /k
-del C:\Users\lg\Documents\GitHub\UnitInfo\build\libs\UnitInfo.jar
-: cd C:\Users\lg\AppData\Roaming\Mindustry\
-: java -jar Mindustry.jar
-: start /max steam://rungameid/1127400
-: java -jar D:\SteamLibrary\steamapps\common\Mindustry\jre\desktop.jar
+if exist %PATH_TO%\mods\UnitInfo.jar del %PATH_TO%\mods\UnitInfo.jar
+xcopy %PATH_FROM%\build\libs\UnitInfo.jar %PATH_TO%\mods\ /k
+del %PATH_FROM%\build\libs\UnitInfo.jar
+java -jar %MINDUSTRY%
