@@ -863,7 +863,52 @@ public class HudUi {
                             tt.addListener(listener1);
                             tt.update(() -> image.color.lerp(!listener1.isOver() ? Color.lightGray : Color.white, Mathf.clamp(0.4f * Time.delta)));
                         }
-                        tt.addListener(new Tooltip(t -> t.background(Tex.button).add(group.type.localizedName)));
+                        tt.addListener(new Tooltip(t -> t.background(Tex.button).table(to -> {
+                            to.left();
+                            to.table(Tex.underline2, tot -> tot.add("[stat]" + group.type.localizedName + "[]"));
+                            to.row();
+                            to.add(bundle.format("shar-stat-waveAmount", amount));
+                            to.row();
+                            to.add(bundle.format("shar-stat-waveShield", group.getShield(j)));
+                            to.row();
+                            if(group.effect != null) {
+                                if(group.effect == StatusEffects.none) return;
+                                Image status = new Image(group.effect.uiIcon).setScaling(Scaling.fit);
+                                if(group.effect == StatusEffects.boss){
+                                    status = new Image(Icon.warning.getRegion()).setScaling(Scaling.fit);
+                                    Image finalStatus = status;
+                                    status.update(() -> finalStatus.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f))));
+                                }
+                                Image finalStatus = status;
+                                to.table(tot -> {
+                                    tot.left();
+                                    tot.add(bundle.get("shar-stat.waveStatus"));
+                                    tot.add(finalStatus).size(8 * 3);
+                                    if(!mobile){
+                                        HandCursorListener listener = new HandCursorListener();
+                                        finalStatus.addListener(listener);
+                                        finalStatus.update(() -> finalStatus.color.lerp(!listener.isOver() ? Color.lightGray : Color.white, Mathf.clamp(0.4f * Time.delta)));
+                                    }
+                                    tot.add("[stat]" + group.effect.localizedName);
+                                }).size(iconMed);
+                                to.row();
+                            }
+                            if(group.items != null) {
+                                to.table(tot -> {
+                                    tot.left();
+                                    ItemStack stack = group.items;
+                                    tot.add(bundle.get("shar-stat.waveItem"));
+                                    tot.add(new ItemImage(stack)).size(8 * 3);
+                                    if(!mobile){
+                                        HandCursorListener listener = new HandCursorListener();
+                                        tot.addListener(listener);
+                                        tot.update(() -> tot.color.lerp(!listener.isOver() ? Color.lightGray : Color.white, Mathf.clamp(0.4f * Time.delta)));
+                                    }
+                                    tot.add("[stat]" + stack.item.localizedName);
+                                }).size(iconMed);
+                                to.row();
+                            }
+                        })));
                     });
                     if(row % 4 == 0) tx.row();
                 }
