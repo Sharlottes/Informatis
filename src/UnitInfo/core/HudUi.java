@@ -8,6 +8,8 @@ import arc.graphics.g2d.*;
 import arc.input.KeyCode;
 import arc.math.*;
 import arc.scene.*;
+import arc.scene.event.ClickListener;
+import arc.scene.event.HandCursorListener;
 import arc.scene.style.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
@@ -55,8 +57,11 @@ public class HudUi {
     float heat;
     float heat2;
     float a;
-    int maxwave;
     int uiIndex = 0;
+
+    //to update wave, core table
+    int maxwave;
+    int coreamount;
 
     public Unit getUnit(){
         Seq<Unit> units = Groups.unit.intersect(Core.input.mouseWorldX(), Core.input.mouseWorldY(), 4, 4);
@@ -489,15 +494,11 @@ public class HudUi {
 
     public void addWeapon(){
         weapon = new Table(tx -> {
-            tx.defaults().minSize(Scl.scl(12 * 8f));
-            tx.left();
+            tx.left().defaults().minSize(Scl.scl(12 * 8f));
 
             if(settings.getBool("commandedunitui") && Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == getUnit()) != 0)
                 tx.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, t1 -> t1.table(tt -> {
-                    tt.defaults().width(Scl.scl(24/3f * 8f));
-                    tt.defaults().minHeight(Scl.scl(12/3f * 8f));
-                    tt.left();
-                    tt.top();
+                    tt.left().top().defaults().width(Scl.scl(24/3f * 8f)).minHeight(Scl.scl(12/3f * 8f));
 
                     int amount = 0;
                     if(type != null) amount = Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == getUnit());
@@ -519,8 +520,7 @@ public class HudUi {
                                 add(new Table(h -> {
                                     h.add(new Stack(){{
                                         add(new Table(e -> {
-                                            e.defaults().growX().height(Scl.scl(9)).width(Scl.scl(42f)).padRight(Scl.scl(2*8)).padTop(Scl.scl(8*2f));
-                                            e.left();
+                                            e.left().defaults().growX().height(Scl.scl(9)).width(Scl.scl(42f)).padRight(Scl.scl(2*8)).padTop(Scl.scl(8*2f));
                                             Bar healthBar = new Bar(
                                                     () -> "",
                                                     () -> Pal.health,
@@ -528,38 +528,38 @@ public class HudUi {
                                             e.add(healthBar).left();
                                             e.pack();
                                         }));
-                                        add(new Table(e -> e.add(new Stack(){{
-                                            add(new Table(t -> {
-                                                t.defaults().growX().height(Scl.scl(9)).width(Scl.scl(42f)).padRight(Scl.scl(2*8)).padTop(Scl.scl(8*5f));
-                                                t.left();
-                                                t.add(new Bar(
-                                                        () -> "",
-                                                        () -> unit.stack.item == null || unit.stack.amount <= 0 ? Pal.items : unit.stack.item.color.cpy().lerp(Color.white, 0.15f),
-                                                        () -> Mathf.clamp(unit.stack.amount / (unit.type.itemCapacity * 1f))
-                                                )).growX().left();
-                                            }));
-                                            add(new Table(t -> {
-                                                t.left();
-                                                t.add(new Stack(){{
-                                                    add(new Table(tt ->
-                                                        tt.add(new Image(){{
-                                                            update(() -> {
-                                                                if(!Core.settings.getBool("weaponui")) return;
-                                                                setDrawable(unit.stack.item == null || unit.stack.amount <= 0 ? Core.atlas.find("clear") : unit.stack.item.uiIcon);
-                                                            });
-                                                        }}.setScaling(Scaling.fit)).size(Scl.scl(2.5f * 8f)).scaling(Scaling.fit).padBottom(Scl.scl(4 * 8f)).padLeft(Scl.scl(2 * 8f))
-                                                    ));
-                                                    Table table = new Table(tt -> {
-                                                        Label label = new Label(() -> unit.stack.item == null || unit.stack.amount <= 0 ? "" : unit.stack.amount + "");
-                                                        label.setFontScale(Scl.scl());
-                                                        tt.add(label).padBottom(Scl.scl(1 * 8f)).padLeft(Scl.scl(2 * 8f));
-                                                        tt.pack();
-                                                    });
-                                                    add(table);
-                                                }});
-                                                t.pack();
-                                            }));
-                                        }})));
+                                        add(new Table(e -> {
+                                            e.add(new Stack(){{
+                                                add(new Table(t -> {
+                                                    t.left().defaults().growX().height(Scl.scl(9)).width(Scl.scl(42f)).padRight(Scl.scl(2*8)).padTop(Scl.scl(8*5f));
+                                                    t.add(new Bar(
+                                                            () -> "",
+                                                            () -> unit.stack.item == null || unit.stack.amount <= 0 ? Pal.items : unit.stack.item.color.cpy().lerp(Color.white, 0.15f),
+                                                            () -> Mathf.clamp(unit.stack.amount / (unit.type.itemCapacity * 1f))
+                                                    )).growX().left();
+                                                }));
+                                                add(new Table(t -> {
+                                                    t.left();
+                                                    t.add(new Stack(){{
+                                                        add(new Table(tt ->
+                                                                tt.add(new Image(){{
+                                                                    update(() -> {
+                                                                        if(!Core.settings.getBool("weaponui")) return;
+                                                                        setDrawable(unit.stack.item == null || unit.stack.amount <= 0 ? Core.atlas.find("clear") : unit.stack.item.uiIcon);
+                                                                    });
+                                                                }}.setScaling(Scaling.fit)).size(Scl.scl(2.5f * 8f)).scaling(Scaling.fit).padBottom(Scl.scl(4 * 8f)).padLeft(Scl.scl(2 * 8f))
+                                                        ));
+                                                        add(new Table(tt -> {
+                                                            Label label = new Label(() -> unit.stack.item == null || unit.stack.amount <= 0 ? "" : unit.stack.amount + "");
+                                                            label.setFontScale(Scl.scl());
+                                                            tt.add(label).padBottom(Scl.scl(1 * 8f)).padLeft(Scl.scl(2 * 8f));
+                                                            tt.pack();
+                                                        }));
+                                                    }});
+                                                    t.pack();
+                                                }));
+                                            }});
+                                        }));
                                     }}).padTop(Scl.scl(2*8)).padRight(Scl.scl(2*8));
                                     h.pack();
                                 }));
@@ -825,10 +825,11 @@ public class HudUi {
 
                     tx.table(tt -> {
                         tt.right();
+                        Image image = new Image(group.type.uiIcon).setScaling(Scaling.fit);
                         tt.add(new Stack(){{
                             add(new Table(ttt -> {
                                 ttt.center();
-                                ttt.add(new Image(group.type.uiIcon).setScaling(Scaling.fit)).size(iconLarge);
+                                ttt.add(image).size(iconLarge);
                                 ttt.pack();
                             }));
 
@@ -857,6 +858,11 @@ public class HudUi {
                                 ui.content.show(group.type);
                             }
                         });
+                        if(!mobile){
+                            HandCursorListener listener1 = new HandCursorListener();
+                            tt.addListener(listener1);
+                            tt.update(() -> image.color.lerp(!listener1.isOver() ? Color.lightGray : Color.white, Mathf.clamp(0.4f * Time.delta)));
+                        }
                         tt.addListener(new Tooltip(t -> t.background(Tex.button).add(group.type.localizedName)));
                     });
                     if(row % 4 == 0) tx.row();
@@ -879,10 +885,11 @@ public class HudUi {
                 }
             }
             waveScrollPos = wavePane.getScrollY();
-            wavePane.setWidget(new Table(tx -> tx.table(this::setWave).left()));
+            if(maxwave != settings.getInt("wavemax"))
+                wavePane.setWidget(new Table(tx -> tx.table(this::setWave).left()));
         });
-
         wavePane.setOverscroll(false, false);
+        wavePane.setWidget(new Table(tx -> tx.table(this::setWave).left()));
         waveTable = new Table(table -> {
             table.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
                 t.defaults().minWidth(Scl.scl(25 * 8f)).scaling(Scaling.fit).left();
@@ -905,23 +912,32 @@ public class HudUi {
     public void setCore(Table table){
         table.add(new Table(t -> {
             if(Vars.player.unit() == null) return;
-
-            for(int r = 0; r < Vars.player.unit().team().cores().size; r++){
+            coreamount = Vars.player.unit().team().cores().size;
+            for(int r = 0; r < coreamount; r++){
                 CoreBlock.CoreBuild core = Vars.player.unit().team().cores().get(r);
 
-                if(Vars.player.unit().team().cores().size > 1 && r % 3 == 0) t.row();
+                if(coreamount > 1 && r % 3 == 0) t.row();
                 else if(r % 3 == 0) t.row();
 
                 t.table(tt -> {
                     tt.add(new Stack(){{
                         add(new Table(s -> {
                             s.left();
-                            Image image = new Image(core.block.uiIcon).setScaling(Scaling.fit);
+                            Image image = new Image(core.block.uiIcon);
                             image.clicked(() -> {
                                 if(control.input instanceof DesktopInput) ((DesktopInput) control.input).panning = true;
                                 Core.camera.position.set(core.x, core.y);
                             });
-                            s.add(image).size(Scl.scl(6 * 8f)).scaling(Scaling.fit);
+                            if(!mobile){
+                                HandCursorListener listener1 = new HandCursorListener();
+                                image.addListener(listener1);
+                                image.update(() -> image.color.lerp(!listener1.isOver() ? Color.lightGray : Color.white, Mathf.clamp(0.4f * Time.delta)));
+                            }
+                            image.addListener(new Tooltip(t -> t.background(Tex.button).add(new Label(() -> {
+                                String color = Tmp.c1.set(Color.green).lerp(Color.red, 1 - core.healthf()).toString();
+                                return "([#" + color + "]" + Strings.fixed(core.health, 2) + "[]/" + Strings.fixed(core.block.health, 2) + ")";
+                            }))));
+                            s.add(image).size(iconLarge).scaling(Scaling.fit);
                         }));
 
                         add(new Table(s -> {
@@ -951,12 +967,11 @@ public class HudUi {
                     Core.scene.setScrollFocus(null);
                 }
             }
-
             coreScrollPos = corePane.getScrollY();
-            if(Vars.player != null) corePane.setWidget(new Table(tx -> tx.table(this::setCore).left()));
+            if(coreamount != Vars.player.unit().team().cores().size && Vars.player != null) corePane.setWidget(new Table(tx -> tx.table(this::setCore).left()));
         });
         corePane.setOverscroll(false, false);
-
+        if(Vars.player != null) corePane.setWidget(new Table(tx -> tx.table(this::setCore).left()));
         coreTable = new Table(table -> {
             table.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
                 t.defaults().minWidth(Scl.scl(25 * 8f)).scaling(Scaling.fit).left();
