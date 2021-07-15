@@ -14,12 +14,12 @@ import mindustry.graphics.*;
 import mindustry.ui.*;
 
 public class SBar extends Element{
-    private static Rect scissor = new Rect();
+    private static final Rect scissor = new Rect();
 
     private Floatp fraction;
     private String name = "";
     private float value, lastValue, blink;
-    private Color blinkColor = new Color();
+    private final Color blinkColor = new Color();
     private boolean valid = true;
 
     public SBar(String name, Color color, Floatp fraction){

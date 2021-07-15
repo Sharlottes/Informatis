@@ -153,7 +153,6 @@ public class Setting {
         addGraphicSetting("emptywave");
         addGraphicSetting("ssim");
         addGraphicSetting("gaycursor");
-        addGraphicSetting("panfix");
         addGraphicSetting("scan");
         addGraphicSetting("range");
         addGraphicSetting("select");
@@ -172,8 +171,7 @@ public class Setting {
         Core.settings.defaults("emptywave", true);
         Core.settings.defaults("ssim", false);
         Core.settings.defaults("select", false);
-        Core.settings.defaults("gaycursor", true);
-        Core.settings.defaults("panfix", false);
+        Core.settings.defaults("gaycursor", false);
         Core.settings.defaults("scan", false);
         Core.settings.defaults("range", false);
         Core.settings.defaults("infoui", true);

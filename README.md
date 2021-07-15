@@ -24,10 +24,6 @@ shows block, tile, overlay tile with its location.
 ### hidden
 hide.
 
-## Setting
-can toggle display on/off ingame, set some ui opacity etc.
-- [ ] separate setting because it's too many
-
 ## additional things
 ### magic cursor
 r a i n b o w (can toggle on setting)
@@ -35,6 +31,14 @@ r a i n b o w (can toggle on setting)
 ### block scanner
 scan turret range and hp by circle and bar. (can toggle on setting)
 - [ ] add filter setting to make scanner can scan not only turrret, wall but also another blocks.
-### unit hp bar
+
+### rendered block info
+- [ ] shows every blocks' status(even enemy), some info bars. (suggestion by @nichrosia)
+
+### rendered unit info
 shows every units' hp, ammo, shield by bar under each unit.
 - [ ] show more detail info as number
+
+## Setting
+can toggle display on/off ingame, set some ui opacity etc.
+- [ ] separate setting because it's too many

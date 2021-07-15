@@ -26,7 +26,6 @@ import mindustry.input.*;
 import mindustry.type.*;
 import mindustry.ui.*;
 import mindustry.world.*;
-import mindustry.world.blocks.ConstructBlock;
 import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.blocks.power.*;
 import mindustry.world.blocks.storage.*;
@@ -57,10 +56,7 @@ public class HudUi {
     float heat2;
     float a;
     int maxwave;
-    int coreamount;
     int uiIndex = 0;
-
-    boolean panFix = false;
 
     public Unit getUnit(){
         Seq<Unit> units = Groups.unit.intersect(Core.input.mouseWorldX(), Core.input.mouseWorldY(), 4, 4);
@@ -265,7 +261,7 @@ public class HudUi {
                         () -> {
                             if(getUnit() instanceof BlockUnitUnit){
                                 if(((BlockUnitUnit)getUnit()).tile() instanceof ItemTurret.ItemTurretBuild) {
-                                    return Core.bundle.format("shar-stat.itemAmmo", ((ItemTurret.ItemTurretBuild) ((BlockUnitUnit)getUnit()).tile()).totalAmmo, ((ItemTurret)((BlockUnitUnit)getUnit()).tile().block).maxAmmo);
+                                    return bundle.format("shar-stat.itemAmmo", ((ItemTurret.ItemTurretBuild) ((BlockUnitUnit)getUnit()).tile()).totalAmmo, ((ItemTurret)((BlockUnitUnit)getUnit()).tile().block).maxAmmo);
 
                                 }
                                 else if(((BlockUnitUnit)getUnit()).tile() instanceof LiquidTurret.LiquidTurretBuild){
@@ -273,19 +269,17 @@ public class HudUi {
                                     Func<Building, Liquid> current;
                                     current = entity1 -> entity1.liquids == null ? Liquids.water : entity1.liquids.current();
 
-                                    return Core.bundle.format("shar-stat.liquidAmmo", entity == null || entity.liquids == null ? 0 : Mathf.round(entity.liquids.get(current.get(entity)) * 10) / 10.0 + " / " + Mathf.round(entity.block.liquidCapacity));
+                                    return bundle.format("shar-stat.liquidAmmo", entity == null || entity.liquids == null ? 0 : Mathf.round(entity.liquids.get(current.get(entity)) * 10) / 10.0 + " / " + Mathf.round(entity.block.liquidCapacity));
                                 }
                                 else if(((BlockUnitUnit)getUnit()).tile() instanceof PowerTurret.PowerTurretBuild){
-
                                     PowerTurret.PowerTurretBuild entity = ((PowerTurret.PowerTurretBuild)((BlockUnitUnit)getUnit()).tile());
-                                    ConsumePower cons = entity.block.consumes.getPower();
-                                    double max = (Math.round(cons.usage * 10) / 10.0) * 60;
-                                    double v = (Math.round(((ConditionalConsumePower)entity.block.consumes.get(ConsumeType.power)).requestedPower(entity) * 10) / 10.0);
-                                    return Core.bundle.format("shar-stat.power", (Math.round(entity.power.status * v * 10) / 10.0) * 60, max);
+                                    float max = entity.block.consumes.getPower().usage;
+                                    float v = entity.power.status * entity.power.graph.getLastScaledPowerIn();
+                                    return bundle.format("shar-stat.power", (int)(Math.min(v,max) * 60), (int)(max * 60));
                                 }
                             }
 
-                            return Core.bundle.format("shar-stat.itemCapacity", getUnit().stack.amount, getUnit().type.itemCapacity);
+                            return bundle.format("shar-stat.itemCapacity", getUnit().stack.amount, getUnit().type.itemCapacity);
                         },
                         () -> {
                             if(getUnit() instanceof BlockUnitUnit){
@@ -322,12 +316,10 @@ public class HudUi {
                                     return entity == null || entity.liquids == null ? 0f : entity.liquids.get(current.get(entity)) / entity.block.liquidCapacity;
                                 }
                                 else if(((BlockUnitUnit)getUnit()).tile() instanceof PowerTurret.PowerTurretBuild){
-                                    PowerTurret.PowerTurretBuild entity = ((PowerTurret.PowerTurretBuild)((BlockUnitUnit)getUnit()).tile());
-                                    ConsumePower cons = entity.block.consumes.getPower();
-
-                                    double max = (Math.round(cons.usage * 10) / 10.0) * 60;
-                                    double v = (Math.round(((ConditionalConsumePower)entity.block.consumes.get(ConsumeType.power)).requestedPower(entity) * 10) / 10.0);
-                                    return (float) (((Math.round(entity.power.status * v * 10) / 10.0) * 60) / max);
+                                    Building entity = ((BlockUnitUnit)getUnit()).tile();
+                                    float max = entity.block.consumes.getPower().usage;
+                                    float v = entity.power.status * entity.power.graph.getLastScaledPowerIn();
+                                    return v/max;
                                 }
                             }
                             return Mathf.clamp(getUnit().stack.amount / (getUnit().type.itemCapacity * 1f));
@@ -374,28 +366,39 @@ public class HudUi {
                                 imaget = new Image(current.get(entity).uiIcon).setScaling(Scaling.fit);
                         }
                         else if(((BlockUnitUnit)getUnit()).tile() instanceof PowerTurret.PowerTurretBuild){
-                            PowerTurret.PowerTurretBuild entity = ((PowerTurret.PowerTurretBuild)((BlockUnitUnit)getUnit()).tile());
-                            ConsumePower cons = entity.block.consumes.getPower();
+                            imaget = new ReqImage(Icon.power.getRegion(), () -> ((BlockUnitUnit)getUnit()).tile().power.status * ((BlockUnitUnit)getUnit()).tile().power.graph.getLastScaledPowerIn() > 0f){
+                                {
+                                    {
+                                    add(new Image(Icon.power.getRegion()));
+                                    add(new Element(){
+                                        @Override
+                                        public void draw(){
+                                            Building entity = ((BlockUnitUnit)getUnit()).tile();
+                                            float max = entity.block.consumes.getPower().usage;
+                                            float v = entity.power.status * entity.power.graph.getLastScaledPowerIn();
 
-
-
-                            double max = (Math.round(cons.usage * 10) / 10.0) * 60;
-                            double v = (Math.round(((ConditionalConsumePower)entity.block.consumes.get(ConsumeType.power)).requestedPower(entity) * 10) / 10.0);
-                            float amount = (float) (((Math.round(entity.power.status * v * 10) / 10.0) * 60) / max);
-
-                            imaget = new PrograssedReqImage(Icon.power.getRegion(), () -> amount >= 0.99f, amount);
-                            if(amount >= 0.999f) imaget = new Image(Icon.power.getRegion()).setScaling(Scaling.fit);
+                                            Lines.stroke(Scl.scl(2f), Pal.removeBack);
+                                            Draw.alpha(1 - v/max);
+                                            Lines.line(x, y - 2f + height, x + width, y - 2f);
+                                            Draw.color(Pal.remove);
+                                            Draw.alpha(1 - v/max);
+                                            Lines.line(x, y + height, x + width, y);
+                                            Draw.reset();
+                                        }
+                                    });
+                                }}
+                            };
                         }
 
                         if(image != null){
                             if(imaget.getClass() != image.getClass() || imaget.getClass() == Image.class){
                                 clearChildren();
-                                add(imaget).size(Cicon.small.size).padBottom(2 * 8f).padRight(3 * 8f);
+                                add(imaget).size(iconSmall).padBottom(2 * 8f).padRight(3 * 8f);
                                 image = imaget;
                             }
                         }
                         else {
-                            add(imaget).size(Cicon.small.size).padBottom(2 * 8f).padRight(3 * 8f);
+                            add(imaget).size(iconSmall).padBottom(2 * 8f).padRight(3 * 8f);
                             image = imaget;
                         }
                     }
@@ -446,7 +449,7 @@ public class HudUi {
 
         ));
         bars.add(new SBar(
-                () -> Core.bundle.format("shar-stat.payloadCapacity", Mathf.round(Mathf.sqrt(((Payloadc)getUnit()).payloadUsed())) + "²", Mathf.round(Mathf.sqrt(getUnit().type().payloadCapacity)) + "²"),
+                () -> Core.bundle.format("shar-stat.payloadCapacity", Mathf.round(Mathf.sqrt(((Payloadc)getUnit()).payloadUsed())), Mathf.round(Mathf.sqrt(getUnit().type().payloadCapacity))),
                 () -> Pal.items,
                 () -> Mathf.clamp(((Payloadc)getUnit()).payloadUsed() / getUnit().type().payloadCapacity),
                 () -> getUnit() instanceof Payloadc
@@ -472,7 +475,7 @@ public class HudUi {
                             return;
                         }
                         TextureRegion region = Items.copper.uiIcon;
-                        if( getUnit().type != null){
+                        if(getUnit().type != null){
                             if(getUnit().type.ammoType == AmmoTypes.thorium) region = Items.thorium.uiIcon;
                             if(getUnit().type.ammoType == AmmoTypes.power || getUnit().type.ammoType == AmmoTypes.powerLow || getUnit().type.ammoType == AmmoTypes.powerHigh) region = Icon.powerSmall.getRegion();
                         }
@@ -654,8 +657,6 @@ public class HudUi {
         });
     }
 
-
-    float hh;
     public void addUnitTable(){
         if(uiIndex != 0) return;
         unitTable = new Table(table -> {
@@ -849,7 +850,6 @@ public class HudUi {
                             }));
                         }}).pad(2f);
                         tt.clicked(() -> {
-                            Log.info("clicked");
                             if(Core.input.keyDown(KeyCode.shiftLeft) && Fonts.getUnicode(group.type.name) != 0){
                                 Core.app.setClipboardText((char)Fonts.getUnicode(group.type.name) + "");
                                 ui.showInfoFade("@copied");
@@ -905,74 +905,40 @@ public class HudUi {
     public void setCore(Table table){
         table.add(new Table(t -> {
             if(Vars.player.unit() == null) return;
-            coreamount = Vars.player.unit().team().cores().size;
-            for(int r = 0; r < coreamount; r++){
-                CoreBlock.CoreBuild core = Vars.player.unit().team().cores().get(r);
-                TextureRegion region = core.block.uiIcon;
 
-                if(coreamount > 1 && r % 3 == 0) t.row();
+            for(int r = 0; r < Vars.player.unit().team().cores().size; r++){
+                CoreBlock.CoreBuild core = Vars.player.unit().team().cores().get(r);
+
+                if(Vars.player.unit().team().cores().size > 1 && r % 3 == 0) t.row();
                 else if(r % 3 == 0) t.row();
 
                 t.table(tt -> {
-                    tt.left();
                     tt.add(new Stack(){{
-                        add(new Table(tt -> {
-                            tt.add(new Stack(){{
-                                add(new Table(s -> {
-                                    s.left();
-                                    s.add(new Image(region).setScaling(Scaling.fit)).size(Scl.scl(6 * 8f)).scaling(Scaling.fit);
-                                }));
-
-                                add(new Table(s -> {
-                                    s.add(new Stack(){{
-                                        add(new Table(e -> {
-                                            e.defaults().growX().height(Scl.scl(9)).width(Scl.scl(6f * 8f)).padTop(Scl.scl(6 * 8f * (settings.getInt("coreuiscaling") / 100f)));
-                                            Bar healthBar = new Bar(
-                                                    () -> "",
-                                                    () -> Pal.health,
-                                                    core::healthf);
-                                            e.add(healthBar);
-                                            e.pack();
-                                        }));
-                                    }});
-                                    s.pack();
-                                }));
-                            }});
-                            tt.row();
-                            Label label = new Label(() -> "(" + (int)core.x / 8 + ", " + (int)core.y / 8 + ")");
-                            label.setFontScale(Scl.scl());
-                            tt.add(label);
-                        }));
-
-                        add(new Table(tt -> {
-                            tt.center();
-                            TextButton button = new TextButton("?", Styles.clearPartialt);
-                            button.changed(() -> {
-                                if(mobile) {
-                                    Core.camera.position.set(core.x, core.y);
-                                    return;
-                                }
-                                if(!settings.getBool("panfix")) {
-                                    if(control.input instanceof DesktopInput) ((DesktopInput) control.input).panning = true;
-                                    Core.camera.position.set(core.x, core.y);
-                                }
-                                else panFix = !panFix;
-                            });
-                            tt.update(() -> {
-                                if(mobile || !settings.getBool("panfix")) return;
-                                button.setChecked(panFix);
+                        add(new Table(s -> {
+                            s.left();
+                            Image image = new Image(core.block.uiIcon).setScaling(Scaling.fit);
+                            image.clicked(() -> {
                                 if(control.input instanceof DesktopInput) ((DesktopInput) control.input).panning = true;
                                 Core.camera.position.set(core.x, core.y);
                             });
-                            tt.add(button).size(Scl.scl(3 * 8f)).center().padBottom(2 * 6f);
-                            tt.pack();
+                            s.add(image).size(Scl.scl(6 * 8f)).scaling(Scaling.fit);
+                        }));
+
+                        add(new Table(s -> {
+                            s.bottom().defaults().growX().height(Scl.scl(9)).pad(4);
+                            s.add(new Bar(() -> "", () -> Pal.health, core::healthf));
+                            s.pack();
                         }));
                     }});
-                }).left();
+                    tt.row();
+                    Label label = new Label(() -> "(" + (int)core.x / 8 + ", " + (int)core.y / 8 + ")");
+                    label.setFontScale(Scl.scl());
+                    tt.add(label);
+                });
             }
         }));
     }
-    int coreAmount;
+
     public void addCoreTable(){
         if(uiIndex != 2) return;
         ScrollPane corePane = new ScrollPane(new Table(tx -> tx.table(this::setCore).left()), Styles.smallPane);
@@ -987,10 +953,7 @@ public class HudUi {
             }
 
             coreScrollPos = corePane.getScrollY();
-            if(Vars.player != null && coreAmount != Vars.player.team().cores().size) {
-                    corePane.setWidget(new Table(tx -> tx.table(this::setCore).left()));
-                    coreAmount = Vars.player.team().cores().size;
-            };
+            if(Vars.player != null) corePane.setWidget(new Table(tx -> tx.table(this::setCore).left()));
         });
         corePane.setOverscroll(false, false);
 
