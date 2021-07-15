@@ -14,8 +14,8 @@ shows unit amount for each waves. modifiable showed max wave on graphic setting.
 
 ### Core Status
 shows core hp and location. you can move screen to click core icon.
-- [ ] remove "?" button
-- [ ] fix health bar position
+- [x] remove "?" button
+- [x] fix health bar position
 
 ### Tile Status
 shows block, tile, overlay tile with its location.
