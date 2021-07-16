@@ -1,26 +1,26 @@
 # Unit Information
-The mod displays some more unit, wave, core, tile status.
+This mod displays some more information about units, waves, cores and tiles.
 
-## ingame display
-displays on left side, you can change status display by button.
+## Ingame Display
+The display is located at the left side, although it is entirely possible to change it's location by pressing a button.
 
-### Unit Status
-shows unit name, armor, health, shield, items, commanded units, weapons, ammo and payload amount as possible as.
+### Unit Info
+Shows unit's name, the amount of armor, health, shields, ammo; transported items, controlled units, it's weapons and payload if possible.
 - [x] shrink size
     - [x] remove command part
     
 ### Wave Status
-shows unit amount for each waves. modifiable showed max wave on graphic setting. 
+Shows the amount of unit relative for each wave. There is a setting to modify it. 
 - [x] fix padding bug
-- [x] shows current, empty, previous wave too
+- [x] shows not only current, but next and previous waves as well
 
 ### Core Status
-shows core hp and location. you can move screen to click core icon.
+Shows core's health and coordinates. You can move the screen to click the core.
 - [x] remove "?" button
 - [x] fix health bar position
 
 ### Tile Status
-shows block, tile, overlay tile with its location.
+Shows blocks, tiles, or overlay tiles and their respective location.
 - [ ] add more info...
 
 ### hidden
@@ -28,18 +28,18 @@ shows nothing
 
 ## additional things
 ### magic cursor
-r a i n b o w (can toggle on setting)
+r a i n b o w (toggleable throuh settings)
 
 ### block scanner
-scan turret range and hp by circle and bar. (can toggle on setting)
+Scans turret stats and outputs the info in a circle or linear view. (can toggle on setting)
 - [ ] add filter setting to make scanner can scan not only turrret, wall but also another blocks.
 
 ### rendered block info
-shows every blocks' status(even enemy), some info bars. (suggestion by @nichrosia)
+Shows the information about any block (even if it's not in the same team), some info bars. (suggestion by @nichrosia)
 - [ ] make it
 
 ### rendered unit info
-shows every units' hp, ammo, shield by bar under each unit.
+Shows health, ammo and shields under any unit.
 
 ## Setting
 can toggle display on/off ingame, set some ui opacity etc.
