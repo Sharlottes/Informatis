@@ -13,6 +13,8 @@ import mindustry.ui.Styles;
 import mindustry.ui.dialogs.*;
 import sun.tools.jconsole.Tab;
 
+import java.util.Iterator;
+
 import static arc.Core.bundle;
 import static arc.Core.settings;
 import static mindustry.Vars.*;
@@ -22,14 +24,16 @@ public class Setting {
     public static SettingsMenuDialog.SettingsTable opacityTable = new SettingsMenuDialog.SettingsTable();
     public static SettingsMenuDialog.SettingsTable scanTable = new SettingsMenuDialog.SettingsTable();
 
-    public void addGraphicCheckSetting(String key){
-        ui.settings.graphics.checkPref(key, Core.settings.getBool(key));
+    public void addGraphicCheckSetting(String key, boolean def){
+        ui.settings.graphics.checkPref(key, def);
     }
     public void addGraphicSlideSetting(String key, int def, int min, int max, int step, SettingsMenuDialog.StringProcessor s, Seq<SettingsMenuDialog.SettingsTable.Setting> list){
         list.add(new SettingsMenuDialog.SettingsTable.Setting() {
             {
                 name = key;
                 title = bundle.get("setting." + key + ".name");
+
+                Core.settings.defaults(name, def);
             }
 
             @Override
@@ -56,13 +60,14 @@ public class Setting {
                 table.row();
             }
         });
-        settings.defaults(key, def);
     }
     public void addGraphicCheckSetting(String key, boolean def, Seq<SettingsMenuDialog.SettingsTable.Setting> list){
         list.add(new SettingsMenuDialog.SettingsTable.Setting() {
             {
                 name = key;
                 title = bundle.get("setting." + key + ".name");
+
+                Core.settings.defaults(name, def);
             }
 
             @Override
@@ -80,7 +85,6 @@ public class Setting {
                 table.row();
             }
         });
-        settings.defaults(key, def);
     }
 
     public void addGraphicTypeSetting(String key, int defs, String dialogs, String invalid, int warnMax, Seq<SettingsMenuDialog.SettingsTable.Setting> list){
@@ -218,29 +222,38 @@ public class Setting {
             {
                 name = key;
                 title = Core.bundle.get("setting." + key + ".name");
+
+                Core.settings.defaults(name, 1);
             }
 
-            public void rebuild() {
+            public Table rebuild() {
                 table.clearChildren();
 
-                for(SettingsMenuDialog.SettingsTable.Setting setting : list){
+                Iterator var1 = list.iterator();
+
+                while(var1.hasNext()) {
+                    SettingsMenuDialog.SettingsTable.Setting setting = (SettingsMenuDialog.SettingsTable.Setting)var1.next();
                     setting.add(table);
                 }
+                table.button(Core.bundle.get("settings.reset", "Reset to Defaults"), () -> {
+                    Iterator var2 = list.iterator();
 
-                table.button(bundle.get("settings.reset", "Reset to Defaults"), () -> {
-                    for(SettingsMenuDialog.SettingsTable.Setting setting : list){
-                        if(setting.name == null || setting.title == null) continue;
-                        settings.put(setting.name, settings.getDefault(setting.name));
+                    while(var1.hasNext()) {
+                        SettingsMenuDialog.SettingsTable.Setting setting = (SettingsMenuDialog.SettingsTable.Setting)var1.next();
+                        if (setting.name != null && setting.title != null) {
+                            Core.settings.put(setting.name, Core.settings.getDefault(setting.name));
+                        }
                     }
                     rebuild();
-                }).margin(14).width(240f).pad(6);
+                }).margin(14.0F).width(240.0F).pad(6.0F);
+
+                return table;
             }
 
             @Override
             public void add(SettingsMenuDialog.SettingsTable settingsTable) {
                 settingsTable.table(Core.scene.getStyle(Button.ButtonStyle.class).up, t->{
-                    rebuild();
-                    t.add(table);
+                    t.add(rebuild());
                     t.row();
                 });
                 settingsTable.row();
@@ -249,9 +262,6 @@ public class Setting {
     }
 
     public void init(){
-        boolean tmp = Core.settings.getBool("uiscalechanged", false);
-        Core.settings.put("uiscalechanged", false);
-
         Seq<SettingsMenuDialog.SettingsTable.Setting> waveSeq = new Seq<>();
         addGraphicCheckSetting("pastwave", false, waveSeq);
         addGraphicCheckSetting("emptywave", true, waveSeq);
@@ -270,20 +280,11 @@ public class Setting {
         addGraphicSlideSetting("uiopacity", 50, 0, 100, 5, s -> s + "%", opacitySeq);
         addGraphicDialogSetting("opacitysetting", opacitySeq, opacityTable);
 
-        addGraphicCheckSetting("infoui");
-        addGraphicCheckSetting("weaponui");
-        addGraphicCheckSetting("select");
-        addGraphicCheckSetting("unithealthui");
-        addGraphicCheckSetting("ssim");
-        addGraphicCheckSetting("gaycursor");
-
-        Core.settings.defaults("infoui", true);
-        Core.settings.defaults("weaponui", true);
-        Core.settings.defaults("select", false);
-        Core.settings.defaults("unithealthui", true);
-        Core.settings.defaults("ssim", false);
-        Core.settings.defaults("gaycursor", false);
-
-        Core.settings.put("uiscalechanged", tmp);
+        addGraphicCheckSetting("infoui", true);
+        addGraphicCheckSetting("weaponui", true);
+        addGraphicCheckSetting("select", false);
+        addGraphicCheckSetting("unithealthui", true);
+        addGraphicCheckSetting("ssim", false);
+        addGraphicCheckSetting("gaycursor", false);
     }
 }
