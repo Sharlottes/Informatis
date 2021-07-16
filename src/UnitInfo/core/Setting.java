@@ -8,10 +8,10 @@ import arc.scene.ui.layout.*;
 import arc.struct.Seq;
 import arc.util.*;
 import mindustry.*;
+import mindustry.game.Team;
 import mindustry.gen.*;
 import mindustry.ui.Styles;
 import mindustry.ui.dialogs.*;
-import sun.tools.jconsole.Tab;
 
 import java.util.Iterator;
 
@@ -40,6 +40,7 @@ public class Setting {
             public void add(SettingsMenuDialog.SettingsTable table){
                 Slider slider = new Slider(min, max, step, false);
 
+                slider.addListener(new Tooltip(t -> t.background(Tex.button).table(to -> to.add("[lightgray]" + Core.bundle.get("setting." + key + ".description") + "[]"))));
                 slider.setValue(settings.getInt(name));
 
                 Label value = new Label("");
@@ -73,6 +74,7 @@ public class Setting {
             @Override
             public void add(SettingsMenuDialog.SettingsTable table) {
                 CheckBox box = new CheckBox(title);
+                box.addListener(new Tooltip(t -> t.background(Tex.button).table(to -> to.add("[lightgray]" + Core.bundle.get("setting." + key + ".description") + "[]"))));
 
                 box.update(() -> box.setChecked(settings.getBool(name)));
 
@@ -207,10 +209,11 @@ public class Setting {
                     }
                 }).size(40f));
 
-                settingsTable.table((t) -> {
+                settingsTable.table(t -> {
                     t.left().defaults().left();
                     t.add(label).minWidth(label.getPrefWidth() / Scl.scl(1.0F) + 50.0F);
                     t.add(button).size(40F);
+                    t.addListener(new Tooltip(tt -> tt.background(Tex.button).table(to -> to.add("[lightgray]" + Core.bundle.get("setting." + key + ".description") + "[]"))));
                 }).left().padTop(3.0F);
                 settingsTable.row();
             }
@@ -218,7 +221,7 @@ public class Setting {
     }
 
     public void addGraphicDialogSetting(String key, Seq<SettingsMenuDialog.SettingsTable.Setting> list, SettingsMenuDialog.SettingsTable table){
-        ui.settings.graphics.pref(new SettingsMenuDialog.SettingsTable.Setting() {
+    ui.settings.graphics.pref(new SettingsMenuDialog.SettingsTable.Setting() {
             {
                 name = key;
                 title = Core.bundle.get("setting." + key + ".name");
@@ -238,7 +241,7 @@ public class Setting {
                 table.button(Core.bundle.get("settings.reset", "Reset to Defaults"), () -> {
                     Iterator var2 = list.iterator();
 
-                    while(var1.hasNext()) {
+                    while(var2.hasNext()) {
                         SettingsMenuDialog.SettingsTable.Setting setting = (SettingsMenuDialog.SettingsTable.Setting)var1.next();
                         if (setting.name != null && setting.title != null) {
                             Core.settings.put(setting.name, Core.settings.getDefault(setting.name));

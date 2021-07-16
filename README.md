@@ -45,6 +45,6 @@ shows every units' hp, ammo, shield by bar under each unit.
 
 ## Setting
 can toggle display on/off ingame, set some ui opacity etc.
-- [ ] improve setting ui
+- [x] improve setting ui
     - [x] separate setting because it's too many
-    - [ ] add its description
+    - [x] add its description
