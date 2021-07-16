@@ -158,7 +158,6 @@ public class Setting {
         addGraphicSetting("select");
         addGraphicSetting("infoui");
         addGraphicSetting("weaponui");
-        addGraphicSetting("commandedunitui");
         addGraphicSetting("unithealthui");
         addGraphicTypeSetting("wavemax", 100, "@editmaxwave","@invalid", 200);
         addGraphicTypeSetting("rangemax", 10, "@editrange","@invalid", 100);
