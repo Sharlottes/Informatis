@@ -67,23 +67,6 @@ public class SBar extends Element{
         });
     }
 
-    public void reset(float value){
-        this.value = lastValue = blink = value;
-    }
-
-    public void set(Prov<String> name, Floatp fraction, Color color){
-        this.fraction = fraction;
-        this.lastValue = fraction.get();
-        this.blinkColor.set(color);
-        setColor(color);
-        update(() -> this.name = name.get());
-    }
-
-    public SBar blink(Color color){
-        blinkColor.set(color);
-        return this;
-    }
-
     public Drawable drawable(String name, int left, int right, int top, int bottom){
         Drawable out;
 
@@ -165,5 +148,6 @@ public class SBar extends Element{
         font.getData().setScale(Scl.scl());
 
         Pools.free(lay);
+        Draw.reset();
     }
 }

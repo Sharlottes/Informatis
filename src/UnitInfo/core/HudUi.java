@@ -8,6 +8,7 @@ import arc.graphics.g2d.*;
 import arc.input.KeyCode;
 import arc.math.*;
 import arc.scene.*;
+import arc.scene.event.ClickListener;
 import arc.scene.event.HandCursorListener;
 import arc.scene.style.*;
 import arc.scene.ui.*;
@@ -28,7 +29,9 @@ import mindustry.type.*;
 import mindustry.ui.*;
 import mindustry.world.*;
 import mindustry.world.blocks.defense.turrets.*;
+import mindustry.world.blocks.power.*;
 import mindustry.world.blocks.storage.*;
+import mindustry.world.consumers.*;
 
 import static arc.Core.*;
 import static mindustry.Vars.*;
@@ -70,7 +73,7 @@ public class HudUi {
 
     public @Nullable Tile getTile(){
         return Vars.world.tileWorld(Core.input.mouseWorldX(), Core.input.mouseWorldY());
-    }
+    };
 
     public void setEvent(){
         Events.run(EventType.Trigger.draw, () -> {
@@ -80,7 +83,7 @@ public class HudUi {
             for(int i = 0; i < 4; i++){
                 float rot = i * 90f + 45f + (-Time.time) % 360f;
                 float length = unit.hitSize * 1.5f + 2.5f;
-                Draw.color(Tmp.c1.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f)).a(settings.getInt("selectopacity") / 100f));
+                Draw.color(Tmp.c1.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f)).a(settings.getInt("uiopacity") / 100f));
                 Draw.rect("select-arrow", unit.x + Angles.trnsx(rot, length), unit.y + Angles.trnsy(rot, length), length / 1.9f, length / 1.9f, rot - 135f);
                 Draw.reset();
             }
@@ -411,7 +414,9 @@ public class HudUi {
                 t.left();
 
                 t.add(new Image(){{
-                    update(() -> setDrawable(getUnit().stack.item == null || getUnit().stack.amount <= 0 ? Core.atlas.find("clear") : getUnit().stack.item.uiIcon));
+                    update(() -> {
+                        setDrawable(getUnit().stack.item == null || getUnit().stack.amount <= 0 ? Core.atlas.find("clear") : getUnit().stack.item.uiIcon);
+                    });
                 }
 
                     @Override

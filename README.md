@@ -6,9 +6,8 @@ displays on left side, you can change status display by button.
 
 ### Unit Status
 shows unit name, armor, health, shield, items, commanded units, weapons, ammo and payload amount as possible as.
-- [ ] shrink size
+- [x] shrink size
     - [x] remove command part
-    - [ ] add scroll on weapon part
     
 ### Wave Status
 shows unit amount for each waves. modifiable showed max wave on graphic setting. 
@@ -41,7 +40,6 @@ shows every blocks' status(even enemy), some info bars. (suggestion by @nichrosi
 
 ### rendered unit info
 shows every units' hp, ammo, shield by bar under each unit.
-- [ ] show more detail info as number
 
 ## Setting
 can toggle display on/off ingame, set some ui opacity etc.

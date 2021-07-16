@@ -62,51 +62,49 @@ public class Main extends Mod {
             if(Core.settings.getBool("scan")){
                 float range = settings.getInt("rangemax") * 8f;
 
-                for(Team team : Team.all) {
+                for(Team team : Team.all)
                     indexer.eachBlock(team, Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, b -> true, b -> new FreeBar().draw(b));
-                }
-                    Draw.color(Tmp.c1.set(Pal.accent).a(0.75f + Mathf.absin(3, 0.25f)));
-                    Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.15f, Time.time % 360);
-                    Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.15f, 90 + Time.time % 360);
-                    Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.15f, 180 + Time.time % 360);
-                    Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.15f, 270 + Time.time % 360);
+
+                Draw.color(Tmp.c1.set(Pal.accent).a(0.75f + Mathf.absin(3, 0.25f)));
+                Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.15f, Time.time % 360);
+                Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.15f, 90 + Time.time % 360);
+                Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.15f, 180 + Time.time % 360);
+                Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.15f, 270 + Time.time % 360);
 
                 Draw.reset();
             }
-            if(!mobile && !Vars.state.isPaused() && settings.getBool("gaycursor")){
+            if(!mobile && !Vars.state.isPaused() && settings.getBool("gaycursor"))
                 Fx.mine.at(Core.input.mouseWorldX(), Core.input.mouseWorldY(), Tmp.c2.set(Color.red).shiftHue(Time.time * 1.5f));
-            }
+
             Groups.unit.each(unit -> {
                 Draw.color();
                 Tmp.c1.set(Color.white).lerp(Pal.heal, Mathf.clamp(unit.healTime - unit.hitTime));
                 Draw.mixcol(Tmp.c1, Math.max(unit.hitTime, Mathf.clamp(unit.healTime)));
-
-                if(unit.drownTime > 0 && unit.floorOn().isDeep()){
+                if(unit.drownTime > 0 && unit.floorOn().isDeep())
                     Draw.mixcol(unit.floorOn().mapColor, unit.drownTime * 0.8f);
-                }
+
                 //draw back items
                 if(unit.item() != null && unit.itemTime > 0.01f){
                     float size = (itemSize + Mathf.absin(Time.time, 5f, 1f)) * unit.itemTime;
 
                     Draw.mixcol(Pal.accent, Mathf.absin(Time.time, 5f, 0.1f));
                     Draw.rect(unit.item().fullIcon,
-                            unit.x + Angles.trnsx(unit.rotation + 180f, unit.type.itemOffsetY),
-                            unit.y + Angles.trnsy(unit.rotation + 180f, unit.type.itemOffsetY),
-                            size, size, unit.rotation);
+                        unit.x + Angles.trnsx(unit.rotation + 180f, unit.type.itemOffsetY),
+                        unit.y + Angles.trnsy(unit.rotation + 180f, unit.type.itemOffsetY),
+                        size, size, unit.rotation);
                     Draw.mixcol();
 
                     Lines.stroke(1f, Pal.accent);
                     Lines.circle(
-                            unit.x + Angles.trnsx(unit.rotation + 180f, unit.type.itemOffsetY),
-                            unit.y + Angles.trnsy(unit.rotation + 180f, unit.type.itemOffsetY),
-                            (3f + Mathf.absin(Time.time, 5f, 1f)) * unit.itemTime);
+                        unit.x + Angles.trnsx(unit.rotation + 180f, unit.type.itemOffsetY),
+                        unit.y + Angles.trnsy(unit.rotation + 180f, unit.type.itemOffsetY),
+                        (3f + Mathf.absin(Time.time, 5f, 1f)) * unit.itemTime);
 
                     if(!renderer.pixelator.enabled()){
                         Fonts.outline.draw(unit.stack.amount + "",
-                                unit.x + Angles.trnsx(unit.rotation + 180f, unit.type.itemOffsetY),
-                                unit.y + Angles.trnsy(unit.rotation + 180f, unit.type.itemOffsetY) - 3,
-                                Pal.accent, 0.25f * unit.itemTime / Scl.scl(1f), false, Align.center
-                        );
+                            unit.x + Angles.trnsx(unit.rotation + 180f, unit.type.itemOffsetY),
+                            unit.y + Angles.trnsy(unit.rotation + 180f, unit.type.itemOffsetY) - 3,
+                            Pal.accent, 0.25f * unit.itemTime / Scl.scl(1f), false, Align.center);
                     }
 
                     Draw.reset();
