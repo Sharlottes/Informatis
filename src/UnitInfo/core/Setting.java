@@ -2,26 +2,94 @@ package UnitInfo.core;
 
 import arc.*;
 import arc.graphics.*;
+import arc.scene.event.Touchable;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
+import arc.struct.Seq;
 import arc.util.*;
 import mindustry.*;
 import mindustry.gen.*;
+import mindustry.ui.Styles;
 import mindustry.ui.dialogs.*;
+import sun.tools.jconsole.Tab;
 
+import static arc.Core.bundle;
+import static arc.Core.settings;
 import static mindustry.Vars.*;
 
 public class Setting {
-    public void addGraphicSetting(String key){
+    public static SettingsMenuDialog.SettingsTable waveTable = new SettingsMenuDialog.SettingsTable();
+    public static SettingsMenuDialog.SettingsTable opacityTable = new SettingsMenuDialog.SettingsTable();
+    public static SettingsMenuDialog.SettingsTable scanTable = new SettingsMenuDialog.SettingsTable();
+
+    public void addGraphicCheckSetting(String key){
         ui.settings.graphics.checkPref(key, Core.settings.getBool(key));
     }
-    public void addGraphicTypeSetting(String key, int defs, String dialogs, String invalid, int warnMax){
-        ui.settings.graphics.pref(new SettingsMenuDialog.SettingsTable.Setting() {
+    public void addGraphicSlideSetting(String key, int def, int min, int max, int step, SettingsMenuDialog.StringProcessor s, Seq<SettingsMenuDialog.SettingsTable.Setting> list){
+        list.add(new SettingsMenuDialog.SettingsTable.Setting() {
+            {
+                name = key;
+                title = bundle.get("setting." + key + ".name");
+            }
+
+            @Override
+            public void add(SettingsMenuDialog.SettingsTable table){
+                Slider slider = new Slider(min, max, step, false);
+
+                slider.setValue(settings.getInt(name));
+
+                Label value = new Label("");
+                value.setStyle(Styles.outlineLabel);
+                value.touchable = Touchable.disabled;
+
+                slider.changed(() -> {
+                    settings.put(name, (int)slider.getValue());
+                    value.setText(title + ": " + s.get((int)slider.getValue()));
+                });
+
+                value.setAlignment(Align.center);
+                value.setWrap(true);
+
+                slider.change();
+
+                table.stack(slider, value).width(Math.min(Core.graphics.getWidth() / 1.2f, 460f)).left().padTop(4);
+                table.row();
+            }
+        });
+        settings.defaults(key, def);
+    }
+    public void addGraphicCheckSetting(String key, boolean def, Seq<SettingsMenuDialog.SettingsTable.Setting> list){
+        list.add(new SettingsMenuDialog.SettingsTable.Setting() {
+            {
+                name = key;
+                title = bundle.get("setting." + key + ".name");
+            }
+
+            @Override
+            public void add(SettingsMenuDialog.SettingsTable table) {
+                CheckBox box = new CheckBox(title);
+
+                box.update(() -> box.setChecked(settings.getBool(name)));
+
+                box.changed(() -> {
+                    settings.put(name, box.isChecked());
+                });
+
+                box.left();
+                table.add(box).left().padTop(3f);
+                table.row();
+            }
+        });
+        settings.defaults(key, def);
+    }
+
+    public void addGraphicTypeSetting(String key, int defs, String dialogs, String invalid, int warnMax, Seq<SettingsMenuDialog.SettingsTable.Setting> list){
+        list.add(new SettingsMenuDialog.SettingsTable.Setting() {
             public final int def;
             {
                 def = defs;
                 name = key;
-                title = Core.bundle.get("setting." + key + ".name", key);
+                title = Core.bundle.get("setting." + key + ".name");
 
                 Core.settings.defaults(name, def);
             }
@@ -145,38 +213,76 @@ public class Setting {
         });
     }
 
+    public void addGraphicDialogSetting(String key, Seq<SettingsMenuDialog.SettingsTable.Setting> list, SettingsMenuDialog.SettingsTable table){
+        ui.settings.graphics.pref(new SettingsMenuDialog.SettingsTable.Setting() {
+            {
+                name = key;
+                title = Core.bundle.get("setting." + key + ".name");
+            }
+
+            public void rebuild() {
+                table.clearChildren();
+
+                for(SettingsMenuDialog.SettingsTable.Setting setting : list){
+                    setting.add(table);
+                }
+
+                table.button(bundle.get("settings.reset", "Reset to Defaults"), () -> {
+                    for(SettingsMenuDialog.SettingsTable.Setting setting : list){
+                        if(setting.name == null || setting.title == null) continue;
+                        settings.put(setting.name, settings.getDefault(setting.name));
+                    }
+                    rebuild();
+                }).margin(14).width(240f).pad(6);
+            }
+
+            @Override
+            public void add(SettingsMenuDialog.SettingsTable settingsTable) {
+                settingsTable.table(Core.scene.getStyle(Button.ButtonStyle.class).up, t->{
+                    rebuild();
+                    t.add(table);
+                    t.row();
+                });
+                settingsTable.row();
+            }
+        });
+    }
+
     public void init(){
         boolean tmp = Core.settings.getBool("uiscalechanged", false);
         Core.settings.put("uiscalechanged", false);
 
-        addGraphicSetting("pastwave");
-        addGraphicSetting("emptywave");
-        addGraphicSetting("ssim");
-        addGraphicSetting("gaycursor");
-        addGraphicSetting("scan");
-        addGraphicSetting("range");
-        addGraphicSetting("select");
-        addGraphicSetting("infoui");
-        addGraphicSetting("weaponui");
-        addGraphicSetting("unithealthui");
-        addGraphicTypeSetting("wavemax", 100, "@editmaxwave","@invalid", 200);
-        addGraphicTypeSetting("rangemax", 10, "@editrange","@invalid", 100);
+        Seq<SettingsMenuDialog.SettingsTable.Setting> waveSeq = new Seq<>();
+        addGraphicCheckSetting("pastwave", false, waveSeq);
+        addGraphicCheckSetting("emptywave", true, waveSeq);
+        addGraphicTypeSetting("wavemax", 100, "@editmaxwave","@invalid", 200, waveSeq);
+        addGraphicDialogSetting("wavesetting", waveSeq, waveTable);
 
-        ui.settings.graphics.sliderPref("selectopacity", 25, 0, 100, 5, s -> s + "%");
-        ui.settings.graphics.sliderPref("baropacity", 100, 0, 100, 5, s -> s + "%");
-        ui.settings.graphics.sliderPref("uiopacity", 50, 0, 100, 5, s -> s + "%");
+        Seq<SettingsMenuDialog.SettingsTable.Setting> scanSeq = new Seq<>();
+        addGraphicCheckSetting("scan", false, scanSeq);
+        addGraphicCheckSetting("range", false, scanSeq);
+        addGraphicTypeSetting("rangemax", 10, "@editrange","@invalid", 100, scanSeq);
+        addGraphicDialogSetting("wavesetting", scanSeq, scanTable);
 
-        Core.settings.defaults("pastwave", false);
-        Core.settings.defaults("emptywave", true);
-        Core.settings.defaults("ssim", false);
-        Core.settings.defaults("select", false);
-        Core.settings.defaults("gaycursor", false);
-        Core.settings.defaults("scan", false);
-        Core.settings.defaults("range", false);
+        Seq<SettingsMenuDialog.SettingsTable.Setting> opacitySeq = new Seq<>();
+        addGraphicSlideSetting("selectopacity", 25, 0, 100, 5, s -> s + "%", opacitySeq);
+        addGraphicSlideSetting("baropacity", 100, 0, 100, 5, s -> s + "%", opacitySeq);
+        addGraphicSlideSetting("uiopacity", 50, 0, 100, 5, s -> s + "%", opacitySeq);
+        addGraphicDialogSetting("opacitysetting", opacitySeq, opacityTable);
+
+        addGraphicCheckSetting("infoui");
+        addGraphicCheckSetting("weaponui");
+        addGraphicCheckSetting("select");
+        addGraphicCheckSetting("unithealthui");
+        addGraphicCheckSetting("ssim");
+        addGraphicCheckSetting("gaycursor");
+
         Core.settings.defaults("infoui", true);
         Core.settings.defaults("weaponui", true);
-        Core.settings.defaults("commandedunitui", true);
+        Core.settings.defaults("select", false);
         Core.settings.defaults("unithealthui", true);
+        Core.settings.defaults("ssim", false);
+        Core.settings.defaults("gaycursor", false);
 
         Core.settings.put("uiscalechanged", tmp);
     }
