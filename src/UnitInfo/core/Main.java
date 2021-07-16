@@ -5,6 +5,7 @@ import arc.Core;
 import arc.Events;
 import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
 import arc.graphics.g2d.Lines;
 import arc.math.Angles;
 import arc.math.Mathf;
@@ -17,9 +18,11 @@ import mindustry.content.Fx;
 import mindustry.game.EventType.*;
 import mindustry.game.Team;
 import mindustry.gen.Groups;
+import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
 import mindustry.mod.Mod;
 import mindustry.ui.Fonts;
+import mindustry.world.Block;
 
 import static arc.Core.*;
 import static mindustry.Vars.*;
@@ -56,6 +59,23 @@ public class Main extends Mod {
 
 
         Events.run(Trigger.draw, () -> {
+            if(settings.getBool("blockstatus")) Groups.build.each(build -> {
+                if(Vars.player != null && Vars.player.team() == build.team) return;
+
+                Block block = build.block;
+                if(block.enableDrawStatus && block.consumes.any()){
+                    float multiplier = block.size > 1 ? 1 : 0.64f;
+                    float brcx = build.x + (block.size * tilesize / 2f) - (tilesize * multiplier / 2f);
+                    float brcy = build.y - (block.size * tilesize / 2f) + (tilesize * multiplier / 2f);
+
+                    Draw.z(Layer.power + 1);
+                    Draw.color(Pal.gray);
+                    Fill.square(brcx, brcy, 2.5f * multiplier, 45);
+                    Draw.color(build.status().color);
+                    Fill.square(brcx, brcy, 1.5f * multiplier, 45);
+                    Draw.color();
+                }
+            });
             if(Core.settings.getBool("unithealthui"))
                 Groups.unit.each(unit -> new FreeBar().draw(unit));
 
