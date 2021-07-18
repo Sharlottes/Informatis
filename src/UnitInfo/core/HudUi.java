@@ -18,6 +18,8 @@ import arc.util.*;
 import mindustry.*;
 import mindustry.ai.types.*;
 import mindustry.content.*;
+import mindustry.core.UI;
+import mindustry.ctype.UnlockableContent;
 import mindustry.entities.abilities.*;
 import mindustry.entities.units.*;
 import mindustry.game.*;
@@ -50,6 +52,7 @@ public class HudUi {
     @Nullable UnitType type;
     Element image;
     Color lastItemColor = Pal.items;
+    Color lastAmmoColor = Pal.ammo;
     float heat;
     float heat2;
     float a;
@@ -306,8 +309,23 @@ public class HudUi {
                                 return bundle.format("shar-stat.power", (int)(Math.min(v,max) * 60), (int)(max * 60));
                             }
                         }
+                        if(getUnit() instanceof Building && ((Building)getUnit()).block.hasItems) {
+                            if(getUnit() instanceof CoreBlock.CoreBuild || (getUnit() instanceof StorageBlock.StorageBuild && !((StorageBlock.StorageBuild)getUnit()).canPickup())) {
+                                CoreBlock.CoreBuild core = getUnit();
+                                if(getUnit() instanceof StorageBlock.StorageBuild) for(int i = 0; i < 4; i++) {
+                                    Building build = ((StorageBlock.StorageBuild) getUnit()).nearby(i);
+                                    if(build instanceof CoreBlock.CoreBuild){
+                                        core = (CoreBlock.CoreBuild) build;
+                                        break;
+                                    }
+                                }
+
+                                return bundle.format("shar-stat.itemCapacity", UI.formatAmount(((Building) getUnit()).items.total()), UI.formatAmount((long) (core.storageCapacity * content.items().count(UnlockableContent::unlockedNow) * 1f)));
+                            }
+                            else return bundle.format("shar-stat.itemCapacity", UI.formatAmount(((Building)getUnit()).items.total()), UI.formatAmount(((Building)getUnit()).block.itemCapacity));
+                        }
                         if(getUnit() instanceof Unit)
-                            return bundle.format("shar-stat.itemCapacity", ((Unit)getUnit()).stack().amount, ((Unit)getUnit()).type().itemCapacity);
+                            return bundle.format("shar-stat.itemCapacity", UI.formatAmount(((Unit)getUnit()).stack().amount), UI.formatAmount(((Unit)getUnit()).type().itemCapacity));
                         return "[lightgray]<Empty>[]";
                     },
                     () -> {
@@ -336,6 +354,8 @@ public class HudUi {
                                 lastItemColor = Pal.powerBar;
                             }
                         }
+                        if(getUnit() instanceof Building && ((Building)getUnit()).block.hasItems)
+                            return Pal.items;
                         else if(getUnit() instanceof Unit && ((Unit)getUnit()).stack().item != null && ((Unit)getUnit()).stack().amount > 0)
                             lastItemColor = ((Unit)getUnit()).stack().item.color.cpy().lerp(Color.white, 0.15f);
                         else lastItemColor = Color.clear;
@@ -372,6 +392,19 @@ public class HudUi {
                                 return v/max;
                             }
                         }
+                        if(getUnit() instanceof Building && ((Building)getUnit()).block.hasItems)
+                            if(getUnit() instanceof CoreBlock.CoreBuild  || (getUnit() instanceof StorageBlock.StorageBuild && !((StorageBlock.StorageBuild)getUnit()).canPickup())) {
+                                CoreBlock.CoreBuild core = getUnit();
+                                if(getUnit() instanceof StorageBlock.StorageBuild) for(int i = 0; i < 4; i++) {
+                                    Building build = ((StorageBlock.StorageBuild) getUnit()).nearby(i);
+                                    if(build instanceof CoreBlock.CoreBuild){
+                                        core = (CoreBlock.CoreBuild) build;
+                                        break;
+                                    }
+                                 }
+                                return Mathf.clamp(((CoreBlock.CoreBuild)getUnit()).items.total() / (core.storageCapacity * content.items().count(UnlockableContent::unlockedNow) * 1f));
+                            }
+                            else return Mathf.clamp(((Building)getUnit()).items.total() / (((Building)getUnit()).block.itemCapacity * 1f));
                         if(getUnit() instanceof Unit)
                             return Mathf.clamp(((Unit)getUnit()).stack().amount / (((Unit)getUnit()).type().itemCapacity * 1f));
                         return 0f;
@@ -427,17 +460,17 @@ public class HudUi {
                                     add(new Element(){
                                         @Override
                                         public void draw(){
-                                            Building entity = ((BlockUnitUnit)getUnit()).tile();
-                                            float max = entity.block.consumes.getPower().usage;
-                                            float v = entity.power.status * entity.power.graph.getLastScaledPowerIn();
+                                        Building entity = ((BlockUnitUnit)getUnit()).tile();
+                                        float max = entity.block.consumes.getPower().usage;
+                                        float v = entity.power.status * entity.power.graph.getLastScaledPowerIn();
 
-                                            Lines.stroke(Scl.scl(2f), Pal.removeBack);
-                                            Draw.alpha(1 - v/max);
-                                            Lines.line(x, y - 2f + height, x + width, y - 2f);
-                                            Draw.color(Pal.remove);
-                                            Draw.alpha(1 - v/max);
-                                            Lines.line(x, y + height, x + width, y);
-                                            Draw.reset();
+                                        Lines.stroke(Scl.scl(2f), Pal.removeBack);
+                                        Draw.alpha(1 - v/max);
+                                        Lines.line(x, y - 2f + height, x + width, y - 2f);
+                                        Draw.color(Pal.remove);
+                                        Draw.alpha(1 - v/max);
+                                        Lines.line(x, y + height, x + width, y);
+                                        Draw.reset();
                                         }
                                     });
                                 }}
@@ -574,23 +607,39 @@ public class HudUi {
                 }
 
         ));
-        if(getUnit() instanceof Unit)
-            bars.add(new SBar(
-                () -> Core.bundle.format("shar-stat.payloadCapacity", Mathf.round(Mathf.sqrt(((Payloadc)getUnit()).payloadUsed())), Mathf.round(Mathf.sqrt(((Unit)getUnit()).type().payloadCapacity))),
-                () -> Pal.items,
-                () -> Mathf.clamp(((Payloadc)getUnit()).payloadUsed() / ((Unit)getUnit()).type().payloadCapacity),
-                () -> getUnit() instanceof Payloadc));
+        bars.add(new SBar(
+            () -> {
+                if(getUnit() instanceof Payloadc) return Core.bundle.format("shar-stat.payloadCapacity", Mathf.round(Mathf.sqrt(((Payloadc)getUnit()).payloadUsed())), Mathf.round(Mathf.sqrt(((Unit)getUnit()).type().payloadCapacity)));
+                else return "[lightgray]<Empty>[]";
+            },
+            () -> {
+                if(getUnit() instanceof Payloadc) return Pal.items;
+                return Color.clear;
+            },
+            () -> {
+                if(getUnit() instanceof Payloadc) return Mathf.clamp(((Payloadc)getUnit()).payloadUsed() / ((Unit)getUnit()).type().payloadCapacity);
+                return 0f;
+            }));
 
         bars.add(new Stack(){{
             add(new Table(t -> {
                 t.defaults().width(Scl.scl(23 * 8f));
                 t.defaults().height(Scl.scl(4f * 8f));
                 t.top();
-                if(getUnit() instanceof Unit) t.add(new SBar(
-                        () -> Core.bundle.format("shar-stat.ammos", ((Unit)getUnit()).ammo(), ((Unit)getUnit()).type().ammoCapacity),
-                        () -> ((Unit)getUnit()).dead() || getUnit() instanceof BlockUnitc ? Pal.ammo : ((Unit)getUnit()).type().ammoType.color,
-                        () -> ((Unit)getUnit()).ammof(),
-                        () -> Vars.state.rules.unitAmmo
+                t.add(new SBar(
+                    () -> {
+                        if(state.rules.unitAmmo) return Core.bundle.format("shar-stat.ammos", ((Unit)getUnit()).ammo(), ((Unit)getUnit()).type().ammoCapacity);
+                        return "[lightgray]<Empty>[]";
+                    },
+                    () -> {
+                        if(getUnit() instanceof Unit) lastAmmoColor = ((Unit)getUnit()).type().ammoType.color;
+                        else lastAmmoColor = Color.clear;
+                        return lastAmmoColor;
+                    },
+                    () -> {
+                        if(getUnit() instanceof Unit) ((Unit)getUnit()).ammof();
+                        return 0f;
+                    }
                 )).growX().left();
             }));
             add(new Table(t -> {
@@ -711,10 +760,8 @@ public class HudUi {
                                     else if(getUnit() != null && ((Unit)getUnit()).type() != null)
                                         region = ((Unit)getUnit()).type().uiIcon;
                                 }
-                                else if(getUnit() instanceof Buildingc){
-                                    if(((Buildingc) getUnit()).block() != null) {
+                                else if(getUnit() instanceof Buildingc && ((Buildingc)getUnit()).block() != null) {
                                         region = ((Buildingc) getUnit()).block().uiIcon;
-                                    }
                                 }
                                 setDrawable(region);
                             });

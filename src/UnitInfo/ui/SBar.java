@@ -16,19 +16,10 @@ import mindustry.ui.*;
 public class SBar extends Element{
     private static final Rect scissor = new Rect();
 
-    private Floatp fraction;
+    private final Floatp fraction;
     private String name = "";
     private float value, lastValue, blink;
     private final Color blinkColor = new Color();
-    private boolean valid = true;
-
-    public SBar(String name, Color color, Floatp fraction){
-        this.fraction = fraction;
-        this.name = Core.bundle.get(name, name);
-        this.blinkColor.set(color);
-        lastValue = value = fraction.get();
-        setColor(color);
-    }
 
     public SBar(Prov<String> name, Prov<Color> color, Floatp fraction){
         this.fraction = fraction;
@@ -39,25 +30,6 @@ public class SBar extends Element{
         }
         update(() -> {
             try{
-                this.name = name.get();
-                this.blinkColor.set(color.get());
-                setColor(color.get());
-            }catch(Exception e){ //getting the fraction may involve referring to invalid data
-                this.name = "";
-            }
-        });
-    }
-
-    public SBar(Prov<String> name, Prov<Color> color, Floatp fraction, Boolp valid){
-        this.fraction = fraction;
-        try{
-            lastValue = value = Mathf.clamp(fraction.get());
-        }catch(Exception e){ //getting the fraction may involve referring to invalid data
-            lastValue = value = 0f;
-        }
-        update(() -> {
-            try{
-                this.valid = valid.get();
                 this.name = name.get();
                 this.blinkColor.set(color.get());
                 setColor(color.get());
@@ -83,6 +55,7 @@ public class SBar extends Element{
 
     @Override
     public void draw(){
+        boolean valid = true;
         if(fraction == null || !valid) return;
         boolean ssim = Core.settings.getBool("ssim");
 
