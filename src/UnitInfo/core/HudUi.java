@@ -220,59 +220,57 @@ public class HudUi {
 
     public void addBars(){
         bars.clear();
-        bars.add(
-            new SBar(
-                () -> {
-                    float hp = 0f;
-                    if(getUnit() instanceof Healthc) hp = Mathf.round(((Healthc)getUnit()).health(), 1);
-                    return Core.bundle.format("shar-stat.health", hp);
-                },
-                () -> Pal.health,
-                () -> {
-                    float hp = 0f;
-
-                    if(getUnit() instanceof Healthc) hp = ((Healthc)getUnit()).healthf();
-                    return Mathf.clamp(hp);
-                }
-            )
-        );
         bars.add(new SBar(
-                () -> {
-                    if(getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit)getUnit()).tile() instanceof Turret.TurretBuild) {
-                        float value = Mathf.clamp(((Turret.TurretBuild)((BlockUnitUnit)getUnit()).tile()).reload / ((Turret)((BlockUnitUnit)getUnit()).tile().block).reloadTime) * 100f;
-                        return Core.bundle.format("shar-stat.reload", Strings.fixed(value, (Math.abs((int)value - value) <= 0.001f ? 0 : Math.abs((int)(value * 10) - value * 10) <= 0.001f ? 1 : 2)));
-                    }
-                    if(getUnit() instanceof Turret.TurretBuild){
-                        float value = Mathf.clamp(((Turret.TurretBuild)getUnit()).reload / ((Turret)((Turret.TurretBuild)getUnit()).block).reloadTime) * 100f;
-                        return Core.bundle.format("shar-stat.reload", Strings.fixed(value, (Math.abs((int)value - value) <= 0.001f ? 0 : Math.abs((int)(value * 10) - value * 10) <= 0.001f ? 1 : 2)));
-                    }
-                    if(getUnit() instanceof Shieldc)
-                        return Core.bundle.format("shar-stat.shield", Strings.fixed(((Shieldc)getUnit()).shield(),1));
-                    return "[lightgray]<Empty>[]";
-                },
-                () ->{
-                    if(getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit)getUnit()).tile() instanceof Turret.TurretBuild)
-                        return Pal.accent.cpy().lerp(Color.orange, Mathf.clamp(((Turret.TurretBuild)((BlockUnitUnit)getUnit()).tile()).reload / ((Turret)((BlockUnitUnit)getUnit()).tile().block).reloadTime));
-                    if(getUnit() instanceof Turret.TurretBuild)
-                        return Pal.accent.cpy().lerp(Color.orange, Mathf.clamp(((Turret.TurretBuild)getUnit()).reload / ((Turret)((Turret.TurretBuild)getUnit()).block).reloadTime));
-                    if(getUnit() instanceof Shieldc)
-                        return Pal.surge;
-                    return Color.clear;
-                },
-                () -> {
-                    if(getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit)getUnit()).tile() instanceof Turret.TurretBuild)
-                        return Mathf.clamp(((Turret.TurretBuild)((BlockUnitUnit)getUnit()).tile()).reload / ((Turret)((BlockUnitUnit)getUnit()).tile().block).reloadTime);
-                    if(getUnit() instanceof Turret.TurretBuild)
-                        return Mathf.clamp(((Turret.TurretBuild)getUnit()).reload / ((Turret)((Turret.TurretBuild)getUnit()).block).reloadTime);
-                    if(getUnit() instanceof Shieldc) {
-                        float max1 = ((ShieldRegenFieldAbility)content.units().copy().filter(ut -> ut.abilities.find(abil -> abil instanceof ShieldRegenFieldAbility) != null).sort(ut -> ((ShieldRegenFieldAbility)ut.abilities.find(abil -> abil instanceof ShieldRegenFieldAbility)).max).peek().abilities.find(abil -> abil instanceof ShieldRegenFieldAbility)).max;
-                        float max2 = 0f;
-                        if(!(getUnit() instanceof Unit)) return 0f;
-                        if(((Unit)getUnit()).type().abilities.find(abil -> abil instanceof ForceFieldAbility) != null) max2 = ((ForceFieldAbility) ((Unit)getUnit()).type().abilities.find(abil -> abil instanceof ForceFieldAbility)).max;
-                        return Mathf.clamp(((Unit)getUnit()).shield() / Math.max(max1, max2));
-                    }
-                    return 0f;
+            () -> {
+                float hp = 0f;
+                if(getUnit() instanceof Healthc) hp = Mathf.round(((Healthc)getUnit()).health(), 1);
+                return Core.bundle.format("shar-stat.health", hp);
+            },
+            () -> Pal.health,
+            () -> {
+                float hp = 0f;
+
+                if(getUnit() instanceof Healthc) hp = ((Healthc)getUnit()).healthf();
+                return Mathf.clamp(hp);
+            }
+        ));
+        bars.add(new SBar(
+            () -> {
+                if(getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit)getUnit()).tile() instanceof Turret.TurretBuild) {
+                    float value = Mathf.clamp(((Turret.TurretBuild)((BlockUnitUnit)getUnit()).tile()).reload / ((Turret)((BlockUnitUnit)getUnit()).tile().block).reloadTime) * 100f;
+                    return Core.bundle.format("shar-stat.reload", Strings.fixed(value, (Math.abs((int)value - value) <= 0.001f ? 0 : Math.abs((int)(value * 10) - value * 10) <= 0.001f ? 1 : 2)));
                 }
+                if(getUnit() instanceof Turret.TurretBuild){
+                    float value = Mathf.clamp(((Turret.TurretBuild)getUnit()).reload / ((Turret)((Turret.TurretBuild)getUnit()).block).reloadTime) * 100f;
+                    return Core.bundle.format("shar-stat.reload", Strings.fixed(value, (Math.abs((int)value - value) <= 0.001f ? 0 : Math.abs((int)(value * 10) - value * 10) <= 0.001f ? 1 : 2)));
+                }
+                if(getUnit() instanceof Shieldc)
+                    return Core.bundle.format("shar-stat.shield", Strings.fixed(((Shieldc)getUnit()).shield(),1));
+                return "[lightgray]<Empty>[]";
+            },
+            () ->{
+                if(getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit)getUnit()).tile() instanceof Turret.TurretBuild)
+                    return Pal.accent.cpy().lerp(Color.orange, Mathf.clamp(((Turret.TurretBuild)((BlockUnitUnit)getUnit()).tile()).reload / ((Turret)((BlockUnitUnit)getUnit()).tile().block).reloadTime));
+                if(getUnit() instanceof Turret.TurretBuild)
+                    return Pal.accent.cpy().lerp(Color.orange, Mathf.clamp(((Turret.TurretBuild)getUnit()).reload / ((Turret)((Turret.TurretBuild)getUnit()).block).reloadTime));
+                if(getUnit() instanceof Shieldc)
+                    return Pal.surge;
+                return Color.clear;
+            },
+            () -> {
+                if(getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit)getUnit()).tile() instanceof Turret.TurretBuild)
+                    return Mathf.clamp(((Turret.TurretBuild)((BlockUnitUnit)getUnit()).tile()).reload / ((Turret)((BlockUnitUnit)getUnit()).tile().block).reloadTime);
+                if(getUnit() instanceof Turret.TurretBuild)
+                    return Mathf.clamp(((Turret.TurretBuild)getUnit()).reload / ((Turret)((Turret.TurretBuild)getUnit()).block).reloadTime);
+                if(getUnit() instanceof Shieldc) {
+                    float max1 = ((ShieldRegenFieldAbility)content.units().copy().filter(ut -> ut.abilities.find(abil -> abil instanceof ShieldRegenFieldAbility) != null).sort(ut -> ((ShieldRegenFieldAbility)ut.abilities.find(abil -> abil instanceof ShieldRegenFieldAbility)).max).peek().abilities.find(abil -> abil instanceof ShieldRegenFieldAbility)).max;
+                    float max2 = 0f;
+                    if(!(getUnit() instanceof Unit)) return 0f;
+                    if(((Unit)getUnit()).type().abilities.find(abil -> abil instanceof ForceFieldAbility) != null) max2 = ((ForceFieldAbility) ((Unit)getUnit()).type().abilities.find(abil -> abil instanceof ForceFieldAbility)).max;
+                    return Mathf.clamp(((Unit)getUnit()).shield() / Math.max(max1, max2));
+                }
+                return 0f;
+            }
         ));
         bars.add(new Stack(){{
             add(new Table(t -> {
@@ -521,8 +519,9 @@ public class HudUi {
                 t.add(new Image(){
                     {
                         update(() -> {
-                            if(getUnit() instanceof Unit && ((((Unit)getUnit()).stack().item == null || ((Unit)getUnit()).stack().amount <= 0)))
+                            if(getUnit() instanceof Unit && ((Unit)getUnit()).stack().item != null && ((Unit)getUnit()).stack.amount > 0)
                                 setDrawable(((Unit)getUnit()).stack().item.uiIcon);
+                            else setDrawable(Core.atlas.find("clear"));
                         });
                     }
                     @Override
