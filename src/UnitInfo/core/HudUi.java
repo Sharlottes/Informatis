@@ -568,12 +568,12 @@ public class HudUi {
         }});
         bars.add(new SBar(
                 () -> {
-                    if(getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit) getUnit()).tile() instanceof Turret.TurretBuild){
+                    if(getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit) getUnit()).tile() instanceof Turret.TurretBuild && ((Turret)(((BlockUnitUnit) getUnit()).tile()).block).chargeTime > 0f){
                         Turret.TurretBuild entity = ((Turret.TurretBuild)((BlockUnitUnit) getUnit()).tile());
                         float value = Mathf.clamp(heat2 / ((Turret)entity.block).chargeTime) * 100f;
                         return Core.bundle.format("shar-stat.charge", Strings.fixed(value, (Math.abs((int)value - value) <= 0.001f ? 0 : Math.abs((int)(value * 10) - value * 10) <= 0.001f ? 1 : 2)));
                     }
-                    if(getUnit() instanceof Turret.TurretBuild){
+                    if(getUnit() instanceof Turret.TurretBuild && ((Turret)((Turret.TurretBuild)getUnit()).block).chargeTime > 0f){
                         Turret.TurretBuild entity = getUnit();
                         float value = Mathf.clamp(heat2 / ((Turret)entity.block).chargeTime) * 100f;
                         return Core.bundle.format("shar-stat.charge", Strings.fixed(value, (Math.abs((int)value - value) <= 0.001f ? 0 : Math.abs((int)(value * 10) - value * 10) <= 0.001f ? 1 : 2)));
