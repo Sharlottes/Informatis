@@ -354,7 +354,7 @@ public class HudUi {
                                 lastItemColor = Pal.powerBar;
                             }
                         }
-                        if(getUnit() instanceof Building && ((Building)getUnit()).block.hasItems)
+                        else if(getUnit() instanceof Building && ((Building)getUnit()).block.hasItems)
                             return Pal.items;
                         else if(getUnit() instanceof Unit && ((Unit)getUnit()).stack().item != null && ((Unit)getUnit()).stack().amount > 0)
                             lastItemColor = ((Unit)getUnit()).stack().item.color.cpy().lerp(Color.white, 0.15f);
@@ -573,12 +573,12 @@ public class HudUi {
                         float value = Mathf.clamp(heat2 / ((Turret)entity.block).chargeTime) * 100f;
                         return Core.bundle.format("shar-stat.charge", Strings.fixed(value, (Math.abs((int)value - value) <= 0.001f ? 0 : Math.abs((int)(value * 10) - value * 10) <= 0.001f ? 1 : 2)));
                     }
-                    if(getUnit() instanceof Turret.TurretBuild && ((Turret)((Turret.TurretBuild)getUnit()).block).chargeTime > 0f){
+                    else if(getUnit() instanceof Turret.TurretBuild && ((Turret)((Turret.TurretBuild)getUnit()).block).chargeTime > 0f){
                         Turret.TurretBuild entity = getUnit();
                         float value = Mathf.clamp(heat2 / ((Turret)entity.block).chargeTime) * 100f;
                         return Core.bundle.format("shar-stat.charge", Strings.fixed(value, (Math.abs((int)value - value) <= 0.001f ? 0 : Math.abs((int)(value * 10) - value * 10) <= 0.001f ? 1 : 2)));
                     }
-                    if(getUnit() instanceof Unit)
+                    else if(getUnit() instanceof Unit && !(getUnit() instanceof BlockUnitUnit))
                         return Core.bundle.format("shar-stat.commandUnits", Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == getUnit()), ((Unit)getUnit()).type().commandLimit);
                     return "[lightgray]<Empty>[]";
                 },
@@ -587,10 +587,10 @@ public class HudUi {
                         Turret.TurretBuild entity = ((Turret.TurretBuild)((BlockUnitUnit) getUnit()).tile());
                         return Pal.surge.cpy().lerp(Pal.accent, heat2 / ((Turret)entity.block).chargeTime);
                     }
-                    if(getUnit() instanceof Turret.TurretBuild){
+                    else if(getUnit() instanceof Turret.TurretBuild){
                         return Pal.surge.cpy().lerp(Pal.accent, heat2 / ((Turret)((Turret.TurretBuild)getUnit()).block).chargeTime);
                     }
-                    if(getUnit() instanceof Unit)
+                    else if(getUnit() instanceof Unit)
                         return Pal.powerBar.cpy().lerp(Pal.surge.cpy().mul(Pal.lighterOrange), Mathf.absin(Time.time, 7f / (1f + Mathf.clamp(Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == getUnit()) / (((Unit)getUnit()).type().commandLimit * 1f))), 1f));
                     return Color.clear;
                 },
@@ -598,10 +598,10 @@ public class HudUi {
                     if(getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit) getUnit()).tile() instanceof Turret.TurretBuild){
                         return heat2 / ((Turret)(((BlockUnitUnit) getUnit()).tile()).block).chargeTime;
                     }
-                    if(getUnit() instanceof Turret.TurretBuild){
+                    else if(getUnit() instanceof Turret.TurretBuild){
                         return heat2 / ((Turret)((Turret.TurretBuild)getUnit()).block).chargeTime;
                     }
-                    if(getUnit() instanceof Unit)
+                    else if(getUnit() instanceof Unit)
                         return Mathf.clamp(Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == getUnit()) / (((Unit)getUnit()).type().commandLimit * 1f));
                     return 0f;
                 }
