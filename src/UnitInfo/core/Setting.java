@@ -8,6 +8,7 @@ import arc.scene.ui.layout.*;
 import arc.struct.Seq;
 import arc.util.*;
 import mindustry.*;
+import mindustry.core.Version;
 import mindustry.game.Team;
 import mindustry.gen.*;
 import mindustry.ui.Styles;
@@ -40,7 +41,7 @@ public class Setting {
             public void add(SettingsMenuDialog.SettingsTable table){
                 Slider slider = new Slider(min, max, step, false);
 
-                slider.addListener(new Tooltip(t -> t.background(Tex.button).table(to -> to.add("[lightgray]" + Core.bundle.get("setting." + key + ".description") + "[]"))));
+                if(Version.build <= 128) slider.addListener(new Tooltip(t -> t.background(Tex.button).table(to -> to.add("[lightgray]" + Core.bundle.get("setting." + key + ".description") + "[]"))));
                 slider.setValue(settings.getInt(name));
 
                 Label value = new Label("");
@@ -74,7 +75,7 @@ public class Setting {
             @Override
             public void add(SettingsMenuDialog.SettingsTable table) {
                 CheckBox box = new CheckBox(title);
-                box.addListener(new Tooltip(t -> t.background(Tex.button).table(to -> to.add("[lightgray]" + Core.bundle.get("setting." + key + ".description") + "[]"))));
+                if(Version.build <= 128) box.addListener(new Tooltip(t -> t.background(Tex.button).table(to -> to.add("[lightgray]" + Core.bundle.get("setting." + key + ".description") + "[]"))));
 
                 box.update(() -> box.setChecked(settings.getBool(name)));
 
@@ -213,7 +214,7 @@ public class Setting {
                     t.left().defaults().left();
                     t.add(label).minWidth(label.getPrefWidth() / Scl.scl(1.0F) + 50.0F);
                     t.add(button).size(40F);
-                    t.addListener(new Tooltip(tt -> tt.background(Tex.button).table(to -> to.add("[lightgray]" + Core.bundle.get("setting." + key + ".description") + "[]"))));
+                    if(Version.build <= 128) t.addListener(new Tooltip(tt -> tt.background(Tex.button).table(to -> to.add("[lightgray]" + Core.bundle.get("setting." + key + ".description") + "[]"))));
                 }).left().padTop(3.0F);
                 settingsTable.row();
             }
