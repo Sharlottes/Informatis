@@ -290,6 +290,9 @@ public class Setting {
         addGraphicCheckSetting("unithealthui", true);
         addGraphicCheckSetting("ssim", false);
         addGraphicCheckSetting("shar", false);
+        addGraphicCheckSetting("shar1", false);
+        addGraphicCheckSetting("shar2", false);
+        addGraphicCheckSetting("shar3", false);
         addGraphicCheckSetting("gaycursor", false);
     }
 }

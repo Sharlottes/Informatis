@@ -55,11 +55,12 @@ public class SBar extends Element{
 
     @Override
     public void draw(){
-        boolean valid = true;
-        if(fraction == null || !valid) return;
+        if(fraction == null) return;
         boolean ssim = Core.settings.getBool("ssim");
         boolean shar = Core.settings.getBool("shar");
-
+        boolean shar1 = Core.settings.getBool("shar1");
+        boolean shar2 = Core.settings.getBool("shar2");
+        boolean shar3 = Core.settings.getBool("shar3");
         float computed;
         try{
             computed = Mathf.clamp(fraction.get());
@@ -95,6 +96,22 @@ public class SBar extends Element{
             top = (NinePatchDrawable) drawable("unitinfo-barSSS-top", 25, 25, 17, 17);
             spriteWidth = Core.atlas.find("unitinfo-barSSS").width;
         }
+        else if(shar1){
+            bar = (NinePatchDrawable) drawable("unitinfo-barSSSS", 25, 25, 17, 17);
+            top = (NinePatchDrawable) drawable("unitinfo-barSSSS-top", 25, 25, 17, 17);
+            spriteWidth = Core.atlas.find("unitinfo-barSSSS").width;
+        }
+        else if(shar2){
+            bar = (NinePatchDrawable) drawable("unitinfo-barSSSSS", 27, 27, 16, 16);
+            top = (NinePatchDrawable) drawable("unitinfo-barSSSSS-top", 27, 27, 16, 16);
+            spriteWidth = Core.atlas.find("unitinfo-barSSSSS").width;
+        }
+        else if(shar3){
+            bar = (NinePatchDrawable) drawable("unitinfo-barSSSSSS", 32, 32, 16, 16);
+            top = (NinePatchDrawable) drawable("unitinfo-barSSSSSS-top", 32, 32, 16, 16);
+            spriteWidth = Core.atlas.find("unitinfo-barSSSSSS").width;
+        }
+
 
         Draw.colorl(0.1f);
         bar.draw(x, y, width, height);

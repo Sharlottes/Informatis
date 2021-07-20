@@ -2,7 +2,6 @@ package UnitInfo.core;
 
 import UnitInfo.ui.*;
 import arc.*;
-import arc.func.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.input.KeyCode;
@@ -25,6 +24,7 @@ import mindustry.input.*;
 import mindustry.type.*;
 import mindustry.ui.*;
 import mindustry.world.*;
+import mindustry.world.blocks.ConstructBlock;
 import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.blocks.storage.*;
 
@@ -68,7 +68,10 @@ public class HudUi {
         Seq<Unit> units = Groups.unit.intersect(Core.input.mouseWorldX(), Core.input.mouseWorldY(), 4, 4);
         if(units.size > 0) return (T) units.peek();
         if(getTile() != null && getTile().build != null) return (T) getTile().build;
-        else return (T) player.unit();
+        else {
+            if(player.unit() instanceof BlockUnitUnit && ((BlockUnitUnit)player.unit()).tile() != null) return (T)((BlockUnitUnit)player.unit()).tile();
+            return (T) player.unit();
+        }
     }
 
     public @Nullable Tile getTile(){
@@ -246,91 +249,24 @@ public class HudUi {
             add(new Table(){{
                 left();
                 update(() -> {
-                    if((!(getUnit() instanceof BlockUnitUnit) || (
-                        !(((BlockUnitUnit)getUnit()).tile() instanceof ItemTurret.ItemTurretBuild)
-                        && !(((BlockUnitUnit)getUnit()).tile() instanceof LiquidTurret.LiquidTurretBuild)
-                        && !(((BlockUnitUnit)getUnit()).tile() instanceof PowerTurret.PowerTurretBuild)))
-                    || (!(getUnit() instanceof Turret.TurretBuild) || (
+                    if(!(getUnit() instanceof Turret.TurretBuild) || (
                         !(getUnit() instanceof ItemTurret.ItemTurretBuild)
                             && !(getUnit() instanceof LiquidTurret.LiquidTurretBuild)
-                            && !(getUnit() instanceof PowerTurret.PowerTurretBuild)))){
+                            && !(getUnit() instanceof PowerTurret.PowerTurretBuild))){
                         clearChildren();
                         image = null;
                         return;
                     }
-
-                    if(getUnit() instanceof BlockUnitUnit){
-                        Element imaget = new Element();
-                        if(((BlockUnitUnit)getUnit()).tile() instanceof ItemTurret.ItemTurretBuild){
-                            MultiReqImage itemReq = new MultiReqImage();
-                            for(Item item : ((ItemTurret) ((BlockUnitUnit) getUnit()).tile().block).ammoTypes.keys())
-                                itemReq.add(new ReqImage(item.uiIcon, () -> ((ItemTurret.ItemTurretBuild)((BlockUnitUnit) getUnit()).tile()).hasAmmo()));
-                            imaget = itemReq;
-
-                            if(((ItemTurret.ItemTurretBuild)((BlockUnitUnit) getUnit()).tile()).hasAmmo())
-                                imaget = new Image(((ItemTurret) ((BlockUnitUnit) getUnit()).tile().block).ammoTypes.findKey(((ItemTurret.ItemTurretBuild)((BlockUnitUnit) getUnit()).tile()).peekAmmo(), true).uiIcon).setScaling(Scaling.fit);
-
-                        }
-                        else if(((BlockUnitUnit)getUnit()).tile() instanceof LiquidTurret.LiquidTurretBuild){
-                            LiquidTurret.LiquidTurretBuild entity = ((LiquidTurret.LiquidTurretBuild)((BlockUnitUnit)getUnit()).tile());
-                            Func<Building, Liquid> current;
-                            current = entity1 -> entity1.liquids == null ? Liquids.water : entity1.liquids.current();
-
-                            MultiReqImage liquidReq = new MultiReqImage();
-                            for(Liquid liquid : ((LiquidTurret) ((BlockUnitUnit) getUnit()).tile().block).ammoTypes.keys())
-                                liquidReq.add(new ReqImage(liquid.uiIcon, () -> ((LiquidTurret.LiquidTurretBuild)((BlockUnitUnit) getUnit()).tile()).hasAmmo()));
-                            imaget = liquidReq;
-
-                            if(((LiquidTurret.LiquidTurretBuild)((BlockUnitUnit) getUnit()).tile()).hasAmmo())
-                                imaget = new Image(current.get(entity).uiIcon).setScaling(Scaling.fit);
-                        }
-                        else if(((BlockUnitUnit)getUnit()).tile() instanceof PowerTurret.PowerTurretBuild){
-                            imaget = new ReqImage(Icon.power.getRegion(), () -> ((BlockUnitUnit)getUnit()).tile().power.status * ((BlockUnitUnit)getUnit()).tile().power.graph.getLastScaledPowerIn() > 0f){
-                                {
-                                    {
-                                    add(new Image(Icon.power.getRegion()));
-                                    add(new Element(){
-                                        @Override
-                                        public void draw(){
-                                        Building entity = ((BlockUnitUnit)getUnit()).tile();
-                                        float max = entity.block.consumes.getPower().usage;
-                                        float v = entity.power.status * entity.power.graph.getLastScaledPowerIn();
-
-                                        Lines.stroke(Scl.scl(2f), Pal.removeBack);
-                                        Draw.alpha(1 - v/max);
-                                        Lines.line(x, y - 2f + height, x + width, y - 2f);
-                                        Draw.color(Pal.remove);
-                                        Draw.alpha(1 - v/max);
-                                        Lines.line(x, y + height, x + width, y);
-                                        Draw.reset();
-                                        }
-                                    });
-                                }}
-                            };
-                        }
-
-                        if(image != null){
-                            if(imaget.getClass() != image.getClass() || imaget.getClass() == Image.class){
-                                clearChildren();
-                                add(imaget).size(iconSmall).padBottom(2 * 8f).padRight(3 * 8f);
-                                image = imaget;
-                            }
-                        }
-                        else {
-                            add(imaget).size(iconSmall).padBottom(2 * 8f).padRight(3 * 8f);
-                            image = imaget;
-                        }
-                    }
                     if(getUnit() instanceof Turret.TurretBuild){
                         Element imaget = new Element();
                         if(getUnit() instanceof ItemTurret.ItemTurretBuild){
-                            MultiReqImage itemReq = new MultiReqImage();
-                            for(Item item : ((ItemTurret) ((ItemTurret.ItemTurretBuild) getUnit()).block).ammoTypes.keys())
-                                itemReq.add(new ReqImage(item.uiIcon, () -> ((ItemTurret.ItemTurretBuild)getUnit()).hasAmmo()));
-                            imaget = itemReq;
-
-                            if(((ItemTurret.ItemTurretBuild)((BlockUnitUnit) getUnit()).tile()).hasAmmo())
-                                imaget = new Image(((ItemTurret) ((ItemTurret.ItemTurretBuild) getUnit()).block).ammoTypes.findKey(((ItemTurret.ItemTurretBuild) getUnit()).peekAmmo(), true).uiIcon).setScaling(Scaling.fit);
+                            ItemTurret.ItemTurretBuild turretBuild = getUnit();
+                            if(turretBuild.hasAmmo()) imaget = new Image(((ItemTurret)turretBuild.block).ammoTypes.findKey(turretBuild.peekAmmo(), true).uiIcon);
+                            else {MultiReqImage itemReq = new MultiReqImage();
+                                for(Item item : ((ItemTurret) turretBuild.block).ammoTypes.keys())
+                                    itemReq.add(new ReqImage(item.uiIcon, turretBuild::hasAmmo));
+                                imaget = itemReq;
+                            }
                         }
                         else if(getUnit() instanceof LiquidTurret.LiquidTurretBuild){
                             LiquidTurret.LiquidTurretBuild entity = getUnit();
@@ -391,7 +327,7 @@ public class HudUi {
                     }
                     @Override
                     public void draw() {
-                        if(getUnit() instanceof Building || (getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit)getUnit()).tile() instanceof Turret.TurretBuild)) return;
+                        if(getUnit() instanceof Building) return;
                         super.draw();
                     }
                 }.setScaling(Scaling.fit)).size(Scl.scl(30f)).padBottom(Scl.scl(4 * 8f)).padRight(Scl.scl(6 * 8f));
@@ -400,9 +336,9 @@ public class HudUi {
         }});
 
         bars.add(new SBar(
-                () -> strings.get(3),
-                () -> colors.get(3),
-                () -> numbers.get(3)
+            () -> strings.get(3),
+            () -> colors.get(3),
+            () -> numbers.get(3)
         ));
 
         bars.add(new SBar(
@@ -533,14 +469,10 @@ public class HudUi {
                         add(new Table(ttt -> ttt.add(new Image(){{
                             update(() -> {
                                 TextureRegion region = Core.atlas.find("clear");
-                                if(getUnit() instanceof Unit){
-                                    if(getUnit() instanceof BlockUnitUnit && ((Unit)getUnit()).type() != null)
-                                        region = ((BlockUnitUnit)getUnit()).tile().block.uiIcon;
-                                    else if(getUnit() != null && ((Unit)getUnit()).type() != null)
-                                        region = ((Unit)getUnit()).type().uiIcon;
-                                }
-                                else if(getUnit() instanceof Buildingc && ((Buildingc)getUnit()).block() != null) {
-                                        region = ((Buildingc) getUnit()).block().uiIcon;
+                                if(getUnit() instanceof Unit && ((Unit)getUnit()).type() != null) region = ((Unit)getUnit()).type().uiIcon;
+                                else if(getUnit() instanceof Building && ((Building)getUnit()).block() != null) {
+                                        if(getUnit() instanceof ConstructBlock.ConstructBuild) region = ((ConstructBlock.ConstructBuild) getUnit()).current.uiIcon;
+                                        else region = ((Building) getUnit()).block.uiIcon;
                                 }
                                 setDrawable(region);
                             });
@@ -553,7 +485,7 @@ public class HudUi {
                                 }){
                                     @Override
                                     public void draw() {
-                                        if(getUnit() instanceof Building || (getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit)getUnit()).tile() instanceof Turret.TurretBuild)) return;
+                                        if(getUnit() instanceof Building) return;
                                         super.draw();
                                     }
                                 });
@@ -566,7 +498,7 @@ public class HudUi {
                                 }){
                                     @Override
                                     public void draw() {
-                                        if(getUnit() instanceof Building || (getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit)getUnit()).tile() instanceof Turret.TurretBuild)) return;
+                                        if(getUnit() instanceof Building) return;
                                         super.draw();
                                     }
                                 });
@@ -575,22 +507,18 @@ public class HudUi {
                     }};
 
                     Label label = new Label(() -> {
-                        String name = "";
-                        if (getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit) getUnit()).tile() instanceof Turret.TurretBuild)
-                            name = "[accent]" + ((BlockUnitUnit) getUnit()).tile().block.localizedName + "[]";
-                        else if (getUnit() instanceof Unit && ((Unit) getUnit()).type() != null)
+                        String name = "";if (getUnit() instanceof Unit && ((Unit) getUnit()).type() != null)
                             name = "[accent]" + ((Unit) getUnit()).type().localizedName + "[]";
-                        else if (getUnit() instanceof Buildingc && ((Buildingc) getUnit()).block() != null) {
-                            name = "[accent]" + ((Buildingc) getUnit()).block().localizedName + "[]";
+                        else if (getUnit() instanceof Building && ((Building) getUnit()).block() != null) {
+                            if(getUnit() instanceof ConstructBlock.ConstructBuild) name = "[accent]" + ((ConstructBlock.ConstructBuild) getUnit()).current.localizedName + "[]";
+                            else name = "[accent]" + ((Building) getUnit()).block.localizedName + "[]";
                         }
                         return name;
                     });
 
                     label.setFontScale(Scl.scl());
                     TextButton button = Elem.newButton("?", Styles.clearPartialt, () -> {
-                        if (getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit) getUnit()).tile() instanceof Turret.TurretBuild)
-                            ui.content.show(((BlockUnitUnit) getUnit()).tile().block);
-                        else if (getUnit() instanceof Unit && ((Unit) getUnit()).type() != null)
+                        if (getUnit() instanceof Unit && ((Unit) getUnit()).type() != null)
                             ui.content.show(((Unit) getUnit()).type());
                         else if (getUnit() instanceof Buildingc && ((Buildingc) getUnit()).block() != null) {
                             ui.content.show(((Buildingc) getUnit()).block());
@@ -627,9 +555,8 @@ public class HudUi {
                 strings = info.returnStrings(getUnit());
                 numbers = info.returnNumbers(getUnit());
                 colors = info.returnColors(getUnit());
-                if(getUnit() instanceof BlockUnitUnit && ((BlockUnitUnit) getUnit()).tile() instanceof Turret.TurretBuild){
-                    Turret.TurretBuild entity = ((Turret.TurretBuild)((BlockUnitUnit) getUnit()).tile());
-                    if(entity.charging) heat2 += Time.delta;
+                if(getUnit() instanceof Turret.TurretBuild){
+                    if(((Turret.TurretBuild)getUnit()).charging) heat2 += Time.delta;
                     else heat2 = 0f;
                 }
                 heat += Time.delta;
