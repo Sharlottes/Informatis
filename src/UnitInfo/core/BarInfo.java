@@ -133,10 +133,10 @@ public class BarInfo {
         if(target instanceof Turret.TurretBuild){
             Turret turret = (Turret)((Turret.TurretBuild)target).block;
             if(turret.chargeTime > 0f) {
-                float value = Mathf.clamp(Main.hud.heat2 / turret.chargeTime) * 100f;
+                float value = Mathf.clamp(Main.hud.charge / turret.chargeTime) * 100f;
                 strings.set(3, Core.bundle.format("shar-stat.charge", Strings.fixed(value, (Math.abs((int)value - value) <= 0.001f ? 0 : Math.abs((int)(value * 10) - value * 10) <= 0.001f ? 1 : 2))));
-                colors.set(3, Pal.surge.cpy().lerp(Pal.accent, Main.hud.heat2 / turret.chargeTime));
-                numbers.set(3, Main.hud.heat2 / turret.chargeTime);
+                colors.set(3, Pal.surge.cpy().lerp(Pal.accent, Main.hud.charge / turret.chargeTime));
+                numbers.set(3, Main.hud.charge / turret.chargeTime);
             }
         }
         else if(target instanceof Unit && ((Unit) target).type != null) {

@@ -44,19 +44,17 @@ public class HudUi {
     float coreScrollPos;
     float tileScrollPos;
 
-
-    @Nullable UnitType type;
     Element image;
     Color lastItemColor = Pal.items;
     Color lastAmmoColor = Pal.ammo;
-    float heat;
-    float heat2;
+    float charge;
     float a;
     int uiIndex = 0;
 
-    //to update wave, core table
-    int maxwave;
+    //to update tables
+    int waveamount;
     int coreamount;
+    int weaponamount;
 
     BarInfo info = new BarInfo();
     Seq<String> strings = new Seq<>(new String[]{"","","","","",""});
@@ -381,68 +379,67 @@ public class HudUi {
     public void addWeapon(){
         weapon = new Table(tx -> {
             tx.left().defaults().minSize(Scl.scl(12 * 8f));
+            weaponamount = ((Unit)getUnit()).type.weapons.size;
+            tx.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, tt -> {
+                tt.left().top().defaults().width(Scl.scl(24/3f * 8f)).minHeight(Scl.scl(12/3f * 8f));
 
-            if(getUnit() instanceof Unit && settings.getBool("weaponui") && ((Unit)getUnit()).type != null && ((Unit)getUnit()).type.weapons.size != 0)
-                tx.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, tt -> {
-                    tt.left().top().defaults().width(Scl.scl(24/3f * 8f)).minHeight(Scl.scl(12/3f * 8f));
+                for(int r = 0; r < ((Unit)getUnit()).type.weapons.size; r++){
+                    Weapon weapon = ((Unit)getUnit()).type.weapons.get(r);
+                    WeaponMount mount = ((Unit)getUnit()).mounts[r];
+                    TextureRegion region = !weapon.name.equals("") && weapon.outlineRegion.found() ? weapon.outlineRegion : ((Unit)getUnit()).type.uiIcon;
+                    if(((Unit)getUnit()).type.weapons.size > 1 && r % 3 == 0) tt.row();
+                    else if(r % 3 == 0) tt.row();
+                    tt.table(weapontable -> {
+                        weapontable.left();
+                        weapontable.add(new Stack(){{
+                            add(new Table(o -> {
+                                o.left();
+                                o.add(new Image(region){
+                                    @Override
+                                    public void draw(){
+                                        validate();
 
-                    for(int r = 0; r < ((Unit)getUnit()).type.weapons.size; r++){
-                        Weapon weapon = ((Unit)getUnit()).type.weapons.get(r);
-                        WeaponMount mount = ((Unit)getUnit()).mounts[r];
-                        TextureRegion region = !weapon.name.equals("") && weapon.outlineRegion.found() ? weapon.outlineRegion : ((Unit)getUnit()).type.uiIcon;
-                        if(((Unit)getUnit()).type.weapons.size > 1 && r % 3 == 0) tt.row();
-                        else if(r % 3 == 0) tt.row();
-                        tt.table(weapontable -> {
-                            weapontable.left();
-                            weapontable.add(new Stack(){{
-                                add(new Table(o -> {
-                                    o.left();
-                                    o.add(new Image(region){
-                                        @Override
-                                        public void draw(){
-                                            validate();
+                                        float x = this.x;
+                                        float y = this.y;
+                                        float scaleX = this.scaleX;
+                                        float scaleY = this.scaleY;
+                                        Draw.color(color);
+                                        Draw.alpha(parentAlpha * color.a);
 
-                                            float x = this.x;
-                                            float y = this.y;
-                                            float scaleX = this.scaleX;
-                                            float scaleY = this.scaleY;
-                                            Draw.color(color);
-                                            Draw.alpha(parentAlpha * color.a);
-
-                                            if(getDrawable() instanceof TransformDrawable){
-                                                float rotation = getRotation();
-                                                if(scaleX != 1 || scaleY != 1 || rotation != 0){
-                                                    getDrawable().draw(x + imageX, y + imageY, originX - imageX, originY - imageY,
-                                                            imageWidth, imageHeight, scaleX, scaleY, rotation);
-                                                    return;
-                                                }
+                                        if(getDrawable() instanceof TransformDrawable){
+                                            float rotation = getRotation();
+                                            if(scaleX != 1 || scaleY != 1 || rotation != 0){
+                                                getDrawable().draw(x + imageX, y + imageY, originX - imageX, originY - imageY,
+                                                        imageWidth, imageHeight, scaleX, scaleY, rotation);
+                                                return;
                                             }
-
-                                            float recoil = -((mount.reload) / weapon.reload * weapon.recoil);
-                                            y += recoil;
-                                            if(getDrawable() != null) getDrawable().draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
                                         }
-                                    }.setScaling(Scaling.fit)).size(Scl.scl(6 * 8f)).scaling(Scaling.fit);
-                                }));
 
-                                add(new Table(h -> {
-                                    h.add(new Stack(){{
-                                        add(new Table(e -> {
-                                            e.defaults().growX().height(Scl.scl(9)).width(Scl.scl(31.5f)).padTop(Scl.scl(9*2f));
-                                            Bar reloadBar = new Bar(
-                                                    () -> "",
-                                                    () -> Pal.accent.cpy().lerp(Color.orange, mount.reload / weapon.reload),
-                                                    () -> mount.reload / weapon.reload);
-                                            e.add(reloadBar);
-                                            e.pack();
-                                        }));
-                                    }}).padLeft(Scl.scl(8f));
-                                    h.pack();
-                                }));
-                            }}).left();
-                        }).left();
-                        tt.center();
-                    }
+                                        float recoil = -((mount.reload) / weapon.reload * weapon.recoil);
+                                        y += recoil;
+                                        if(getDrawable() != null) getDrawable().draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
+                                    }
+                                }.setScaling(Scaling.fit)).size(Scl.scl(6 * 8f)).scaling(Scaling.fit);
+                            }));
+
+                            add(new Table(h -> {
+                                h.add(new Stack(){{
+                                    add(new Table(e -> {
+                                        e.defaults().growX().height(Scl.scl(9)).width(Scl.scl(31.5f)).padTop(Scl.scl(9*2f));
+                                        Bar reloadBar = new Bar(
+                                                () -> "",
+                                                () -> Pal.accent.cpy().lerp(Color.orange, mount.reload / weapon.reload),
+                                                () -> mount.reload / weapon.reload);
+                                        e.add(reloadBar);
+                                        e.pack();
+                                    }));
+                                }}).padLeft(Scl.scl(8f));
+                                h.pack();
+                            }));
+                        }}).left();
+                    }).left();
+                    tt.center();
+                }
             }){
                 @Override
                 protected void drawBackground(float x, float y) {
@@ -556,13 +553,13 @@ public class HudUi {
                 numbers = info.returnNumbers(getUnit());
                 colors = info.returnColors(getUnit());
                 if(getUnit() instanceof Turret.TurretBuild){
-                    if(((Turret.TurretBuild)getUnit()).charging) heat2 += Time.delta;
-                    else heat2 = 0f;
+                    if(((Turret.TurretBuild)getUnit()).charging) charge += Time.delta;
+                    else charge = 0f;
                 }
-                heat += Time.delta;
-                if (heat >= 6) {
-                    heat = 0f;
-                    if(getUnit() instanceof Unit) type = ((Unit)getUnit()).type();
+                if (settings.getBool("weaponui")
+                        && getUnit() instanceof Unit
+                        && ((Unit)getUnit()).type != null
+                        && weaponamount != ((Unit)getUnit()).type.weapons.size) {
                     table.removeChild(weapon);
                     addWeapon();
                     table.row();
@@ -577,8 +574,8 @@ public class HudUi {
 
     public void setWave(Table table){
         int winWave = state.isCampaign() && state.rules.winWave > 0 ? state.rules.winWave : Integer.MAX_VALUE;
-        maxwave = settings.getInt("wavemax");
-        for(int i = settings.getBool("pastwave") ? 0 : state.wave - 1; i <= Math.min(state.wave + maxwave, winWave - 2); i++){
+        waveamount = settings.getInt("wavemax");
+        for(int i = settings.getBool("pastwave") ? 0 : state.wave - 1; i <= Math.min(state.wave + waveamount, winWave - 2); i++){
             final int j = i;
             if(!settings.getBool("emptywave") && state.rules.spawns.find(g -> g.getSpawned(j) > 0) == null) continue;
             table.table(t -> {
@@ -725,7 +722,7 @@ public class HudUi {
                 }
             }
             waveScrollPos = wavePane.getScrollY();
-            if(maxwave != settings.getInt("wavemax"))
+            if(waveamount != settings.getInt("wavemax"))
                 wavePane.setWidget(new Table(tx -> tx.table(this::setWave).left()));
         });
         wavePane.setOverscroll(false, false);
