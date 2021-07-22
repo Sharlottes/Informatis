@@ -96,39 +96,12 @@ public class Main extends Mod {
             if(!mobile && !Vars.state.isPaused() && settings.getBool("gaycursor"))
                 Fx.mine.at(Core.input.mouseWorldX(), Core.input.mouseWorldY(), Tmp.c2.set(Color.red).shiftHue(Time.time * 1.5f));
 
-            Groups.unit.each(unit -> {
-                Draw.color();
-                Tmp.c1.set(Color.white).lerp(Pal.heal, Mathf.clamp(unit.healTime - unit.hitTime));
-                Draw.mixcol(Tmp.c1, Math.max(unit.hitTime, Mathf.clamp(unit.healTime)));
-                if(unit.drownTime > 0 && unit.floorOn().isDeep())
-                    Draw.mixcol(unit.floorOn().mapColor, unit.drownTime * 0.8f);
-
-                //draw back items
-                if(unit.item() != null && unit.itemTime > 0.01f){
-                    float size = (itemSize + Mathf.absin(Time.time, 5f, 1f)) * unit.itemTime;
-
-                    Draw.mixcol(Pal.accent, Mathf.absin(Time.time, 5f, 0.1f));
-                    Draw.rect(unit.item().fullIcon,
-                        unit.x + Angles.trnsx(unit.rotation + 180f, unit.type.itemOffsetY),
-                        unit.y + Angles.trnsy(unit.rotation + 180f, unit.type.itemOffsetY),
-                        size, size, unit.rotation);
-                    Draw.mixcol();
-
-                    Lines.stroke(1f, Pal.accent);
-                    Lines.circle(
-                        unit.x + Angles.trnsx(unit.rotation + 180f, unit.type.itemOffsetY),
-                        unit.y + Angles.trnsy(unit.rotation + 180f, unit.type.itemOffsetY),
-                        (3f + Mathf.absin(Time.time, 5f, 1f)) * unit.itemTime);
-
-                    if(!renderer.pixelator.enabled()){
-                        Fonts.outline.draw(unit.stack.amount + "",
-                            unit.x + Angles.trnsx(unit.rotation + 180f, unit.type.itemOffsetY),
-                            unit.y + Angles.trnsy(unit.rotation + 180f, unit.type.itemOffsetY) - 3,
-                            Pal.accent, 0.25f * unit.itemTime / Scl.scl(1f), false, Align.center);
-                    }
-
-                    Draw.reset();
-                }
+            if(!renderer.pixelator.enabled()) Groups.unit.each(unit -> unit.item() != null && unit.itemTime > 0.01f, unit -> {
+                Fonts.outline.draw(unit.stack.amount + "",
+                    unit.x + Angles.trnsx(unit.rotation + 180f, unit.type.itemOffsetY),
+                    unit.y + Angles.trnsy(unit.rotation + 180f, unit.type.itemOffsetY) - 3,
+                    Pal.accent, 0.25f * unit.itemTime / Scl.scl(1f), false, Align.center);
+                Draw.reset();
             });
         });
     }

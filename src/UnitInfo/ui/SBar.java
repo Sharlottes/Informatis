@@ -20,6 +20,9 @@ public class SBar extends Element{
     private String name = "";
     private float value, lastValue, blink;
     private final Color blinkColor = new Color();
+    NinePatchDrawable bar;
+    NinePatchDrawable top;
+    float spriteWidth;
 
     public SBar(Prov<String> name, Prov<Color> color, Floatp fraction){
         this.fraction = fraction;
@@ -37,55 +40,15 @@ public class SBar extends Element{
                 this.name = "";
             }
         });
-    }
-
-    public Drawable drawable(String name, int left, int right, int top, int bottom){
-        Drawable out;
-
-        TextureAtlas.AtlasRegion region = Core.atlas.find(name);
-
-        int[] splits = {left, right, top, bottom};
-        NinePatch patch = new NinePatch(region, splits[0], splits[1], splits[2], splits[3]);
-        int[] pads = region.pads;
-        if(pads != null) patch.setPadding(pads[0], pads[1], pads[2], pads[3]);
-        out = new ScaledNinePatchDrawable(patch, 1f);
-
-        return out;
-    }
-
-    @Override
-    public void draw(){
-        if(fraction == null) return;
         boolean ssim = Core.settings.getBool("ssim");
         boolean shar = Core.settings.getBool("shar");
         boolean shar1 = Core.settings.getBool("shar1");
         boolean shar2 = Core.settings.getBool("shar2");
         boolean shar3 = Core.settings.getBool("shar3");
-        float computed;
-        try{
-            computed = Mathf.clamp(fraction.get());
-        }catch(Exception e){ //getting the fraction may involve referring to invalid data
-            computed = 0f;
-        }
 
-        if(lastValue > computed){
-            blink = 1f;
-            lastValue = computed;
-        }
-
-        if(Float.isNaN(lastValue)) lastValue = 0;
-        if(Float.isInfinite(lastValue)) lastValue = 1f;
-        if(Float.isNaN(value)) value = 0;
-        if(Float.isInfinite(value)) value = 1f;
-        if(Float.isNaN(computed)) computed = 0;
-        if(Float.isInfinite(computed)) computed = 1f;
-
-        blink = Mathf.lerpDelta(blink, 0f, 0.2f);
-        value = Mathf.lerpDelta(value, computed, 0.05f);
-
-        NinePatchDrawable bar = (NinePatchDrawable) drawable("unitinfo-barS", 10, 10, 9, 9);
-        NinePatchDrawable top = (NinePatchDrawable) drawable("unitinfo-barS-top", 10, 10, 9, 9);
-        float spriteWidth = Core.atlas.find("unitinfo-barS").width;
+        bar = (NinePatchDrawable) drawable("unitinfo-barS", 10, 10, 9, 9);
+        top = (NinePatchDrawable) drawable("unitinfo-barS-top", 10, 10, 9, 9);
+        spriteWidth = Core.atlas.find("unitinfo-barS").width;
         if(ssim){
             bar = (NinePatchDrawable) drawable("unitinfo-barSS", 14, 14, 19, 19);
             top = (NinePatchDrawable) drawable("unitinfo-barSS-top", 14, 14, 19, 19);
@@ -112,13 +75,53 @@ public class SBar extends Element{
             spriteWidth = Core.atlas.find("unitinfo-barSSSSSS").width;
         }
 
+    }
+
+    public Drawable drawable(String name, int left, int right, int top, int bottom){
+        Drawable out;
+
+        TextureAtlas.AtlasRegion region = Core.atlas.find(name);
+
+        int[] splits = {left, right, top, bottom};
+        NinePatch patch = new NinePatch(region, splits[0], splits[1], splits[2], splits[3]);
+        int[] pads = region.pads;
+        if(pads != null) patch.setPadding(pads[0], pads[1], pads[2], pads[3]);
+        out = new ScaledNinePatchDrawable(patch, 1f);
+
+        return out;
+    }
+
+    @Override
+    public void draw(){
+        if(fraction == null) return;
+        float computed;
+        try{
+            computed = Mathf.clamp(fraction.get());
+        }catch(Exception e){ //getting the fraction may involve referring to invalid data
+            computed = 0f;
+        }
+
+        if(lastValue > computed){
+            blink = 1f;
+            lastValue = computed;
+        }
+
+        if(Float.isNaN(lastValue)) lastValue = 0;
+        if(Float.isInfinite(lastValue)) lastValue = 1f;
+        if(Float.isNaN(value)) value = 0;
+        if(Float.isInfinite(value)) value = 1f;
+        if(Float.isNaN(computed)) computed = 0;
+        if(Float.isInfinite(computed)) computed = 1f;
+
+        blink = Mathf.lerpDelta(blink, 0f, 0.2f);
+        value = Mathf.lerpDelta(value, computed, 0.05f);
 
         Draw.colorl(0.1f);
         bar.draw(x, y, width, height);
+
+
         Draw.color(color.cpy().mul(Pal.lightishGray), blinkColor, blink);
-
         float topWidth = width * value;
-
         if(topWidth > spriteWidth){
             top.draw(x, y, topWidth, height);
         }else{
@@ -130,7 +133,6 @@ public class SBar extends Element{
 
         Draw.color(color, blinkColor, blink);
         float topWidthReal = width * (Math.min(value, computed));
-
         if(topWidthReal > spriteWidth){
             top.draw(x, y, topWidthReal, height);
         }else{
@@ -141,7 +143,6 @@ public class SBar extends Element{
         }
 
         Draw.color();
-
         Font font = Fonts.outline;
         GlyphLayout lay = Pools.obtain(GlyphLayout.class, GlyphLayout::new);
         font.getData().setScale(Scl.scl());
