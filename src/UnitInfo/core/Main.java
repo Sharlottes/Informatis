@@ -9,20 +9,29 @@ import arc.graphics.g2d.Fill;
 import arc.graphics.g2d.Lines;
 import arc.math.Angles;
 import arc.math.Mathf;
+import arc.math.geom.Position;
 import arc.scene.ui.layout.Scl;
 import arc.util.Align;
+import arc.util.Log;
 import arc.util.Time;
 import arc.util.Tmp;
 import mindustry.Vars;
 import mindustry.content.Fx;
 import mindustry.game.EventType.*;
 import mindustry.game.Team;
+import mindustry.gen.Building;
 import mindustry.gen.Groups;
+import mindustry.gen.Teamc;
+import mindustry.gen.Unit;
+import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
+import mindustry.logic.Ranged;
 import mindustry.mod.Mod;
 import mindustry.ui.Fonts;
 import mindustry.world.Block;
+import mindustry.world.blocks.defense.turrets.BaseTurret;
+import mindustry.world.blocks.defense.turrets.Turret;
 
 import static arc.Core.*;
 import static mindustry.Vars.*;
@@ -90,45 +99,29 @@ public class Main extends Mod {
                 Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.15f, 90 + Time.time % 360);
                 Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.15f, 180 + Time.time % 360);
                 Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.15f, 270 + Time.time % 360);
-
                 Draw.reset();
             }
+
             if(!mobile && !Vars.state.isPaused() && settings.getBool("gaycursor"))
                 Fx.mine.at(Core.input.mouseWorldX(), Core.input.mouseWorldY(), Tmp.c2.set(Color.red).shiftHue(Time.time * 1.5f));
 
-            Groups.unit.each(unit -> {
-                Draw.color();
-                Tmp.c1.set(Color.white).lerp(Pal.heal, Mathf.clamp(unit.healTime - unit.hitTime));
-                Draw.mixcol(Tmp.c1, Math.max(unit.hitTime, Mathf.clamp(unit.healTime)));
-                if(unit.drownTime > 0 && unit.floorOn().isDeep())
-                    Draw.mixcol(unit.floorOn().mapColor, unit.drownTime * 0.8f);
+            if(!renderer.pixelator.enabled()) Groups.unit.each(unit -> unit.item() != null && unit.itemTime > 0.01f, unit -> {
+                Fonts.outline.draw(unit.stack.amount + "",
+                    unit.x + Angles.trnsx(unit.rotation + 180f, unit.type.itemOffsetY),
+                    unit.y + Angles.trnsy(unit.rotation + 180f, unit.type.itemOffsetY) - 3,
+                    Pal.accent, 0.25f * unit.itemTime / Scl.scl(1f), false, Align.center);
+                Draw.reset();
+            });
 
-                //draw back items
-                if(unit.item() != null && unit.itemTime > 0.01f){
-                    float size = (itemSize + Mathf.absin(Time.time, 5f, 1f)) * unit.itemTime;
-
-                    Draw.mixcol(Pal.accent, Mathf.absin(Time.time, 5f, 0.1f));
-                    Draw.rect(unit.item().fullIcon,
-                        unit.x + Angles.trnsx(unit.rotation + 180f, unit.type.itemOffsetY),
-                        unit.y + Angles.trnsy(unit.rotation + 180f, unit.type.itemOffsetY),
-                        size, size, unit.rotation);
-                    Draw.mixcol();
-
-                    Lines.stroke(1f, Pal.accent);
-                    Lines.circle(
-                        unit.x + Angles.trnsx(unit.rotation + 180f, unit.type.itemOffsetY),
-                        unit.y + Angles.trnsy(unit.rotation + 180f, unit.type.itemOffsetY),
-                        (3f + Mathf.absin(Time.time, 5f, 1f)) * unit.itemTime);
-
-                    if(!renderer.pixelator.enabled()){
-                        Fonts.outline.draw(unit.stack.amount + "",
-                            unit.x + Angles.trnsx(unit.rotation + 180f, unit.type.itemOffsetY),
-                            unit.y + Angles.trnsy(unit.rotation + 180f, unit.type.itemOffsetY) - 3,
-                            Pal.accent, 0.25f * unit.itemTime / Scl.scl(1f), false, Align.center);
-                    }
-
-                    Draw.reset();
-                }
+            if(settings.getBool("rangeNearby")) Groups.all.each(entityc ->
+                    (entityc instanceof BaseTurret.BaseTurretBuild || entityc instanceof Unit)
+                    && player != null && player.team() != ((Ranged) entityc).team(), entityc -> {
+                if(entityc instanceof Turret.TurretBuild
+                        && !(player.unit().isFlying() && ((Turret)((Turret.TurretBuild) entityc).block).targetAir || !(player.unit().isFlying()) && ((Turret)((Turret.TurretBuild) entityc).block).targetGround)) return;
+                float range = ((Ranged) entityc).range();
+                float margin = settings.getInt("rangeRadius") * tilesize;
+                if(Vars.player.dst((Position) entityc) <= range + margin)
+                    Drawf.dashCircle(((Ranged) entityc).x(), ((Ranged) entityc).y(), range, ((Ranged) entityc).team().color);
             });
         });
     }
