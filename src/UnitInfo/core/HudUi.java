@@ -782,49 +782,62 @@ public class HudUi {
     }
 
     public void setCore(Table table){
-        table.add(new Table(t -> {
-            if(Vars.player.unit() == null) return;
-            coreamount = Vars.player.unit().team().cores().size;
-            for(int r = 0; r < coreamount; r++){
-                CoreBlock.CoreBuild core = Vars.player.unit().team().cores().get(r);
+        table.table(t -> {
+            if (Vars.player.unit() == null) return;
 
-                if(coreamount > 1 && r % 3 == 0) t.row();
-                else if(r % 3 == 0) t.row();
-
-                t.table(tt -> {
-                    tt.add(new Stack(){{
-                        add(new Table(s -> {
-                            s.left();
-                            Image image = new Image(core.block.uiIcon);
-                            image.clicked(() -> {
-                                if(control.input instanceof DesktopInput) ((DesktopInput) control.input).panning = true;
-                                Core.camera.position.set(core.x, core.y);
-                            });
-                            if(!mobile){
-                                HandCursorListener listener1 = new HandCursorListener();
-                                image.addListener(listener1);
-                                image.update(() -> image.color.lerp(!listener1.isOver() ? Color.lightGray : Color.white, Mathf.clamp(0.4f * Time.delta)));
-                            }
-                            image.addListener(new Tooltip(t -> t.background(Tex.button).add(new Label(() -> {
-                                String color = Tmp.c1.set(Color.green).lerp(Color.red, 1 - core.healthf()).toString();
-                                return "([#" + color + "]" + Strings.fixed(core.health, 2) + "[]/" + Strings.fixed(core.block.health, 2) + ")";
-                            }))));
-                            s.add(image).size(iconLarge).scaling(Scaling.fit);
-                        }));
-
-                        add(new Table(s -> {
-                            s.bottom().defaults().growX().height(Scl.scl(9)).pad(4);
-                            s.add(new Bar(() -> "", () -> Pal.health, core::healthf));
-                            s.pack();
-                        }));
-                    }});
-                    tt.row();
-                    Label label = new Label(() -> "(" + (int)core.x / 8 + ", " + (int)core.y / 8 + ")");
-                    label.setFontScale(Scl.scl());
-                    tt.add(label);
+            for(int i = 0; i < coreItems.tables.size; i++){
+                int finalI = i;
+                t.table(Tex.underline2, head -> {
+                    head.table(label -> {
+                        label.center();
+                        label.label(() -> "[#" + coreItems.teams[finalI].color.toString() + "]" + coreItems.teams[finalI].name + "[]");
+                    });
                 });
+                t.row();
+                coreamount = coreItems.teams[i].cores().size;
+                for (int r = 0; r < coreamount; r++) {
+                    CoreBlock.CoreBuild core = coreItems.teams[i].cores().get(r);
+
+                    if (coreamount > 1 && r % 3 == 0) t.row();
+                    else if (r % 3 == 0) t.row();
+
+                    t.table(tt -> {
+                        tt.add(new Stack() {{
+                            add(new Table(s -> {
+                                s.left();
+                                Image image = new Image(core.block.uiIcon);
+                                image.clicked(() -> {
+                                    if (control.input instanceof DesktopInput)
+                                        ((DesktopInput) control.input).panning = true;
+                                    Core.camera.position.set(core.x, core.y);
+                                });
+                                if (!mobile) {
+                                    HandCursorListener listener1 = new HandCursorListener();
+                                    image.addListener(listener1);
+                                    image.update(() -> image.color.lerp(!listener1.isOver() ? Color.lightGray : Color.white, Mathf.clamp(0.4f * Time.delta)));
+                                }
+                                image.addListener(new Tooltip(t -> t.background(Tex.button).add(new Label(() -> {
+                                    String color = Tmp.c1.set(Color.green).lerp(Color.red, 1 - core.healthf()).toString();
+                                    return "([#" + color + "]" + Strings.fixed(core.health, 2) + "[]/" + Strings.fixed(core.block.health, 2) + ")";
+                                }))));
+                                s.add(image).size(iconLarge).scaling(Scaling.fit);
+                            }));
+
+                            add(new Table(s -> {
+                                s.bottom().defaults().growX().height(Scl.scl(9)).pad(4);
+                                s.add(new Bar(() -> "", () -> Pal.health, core::healthf));
+                                s.pack();
+                            }));
+                        }});
+                        tt.row();
+                        Label label = new Label(() -> "(" + (int) core.x / 8 + ", " + (int) core.y / 8 + ")");
+                        label.setFontScale(Scl.scl());
+                        tt.add(label);
+                    });
+                }
+                t.row();
             }
-        }));
+        });
     }
 
     public void addCoreTable(){
@@ -840,8 +853,8 @@ public class HudUi {
                 }
             }
             coreScrollPos = corePane.getScrollY();
-            if(coreamount != Vars.player.unit().team().cores().size && Vars.player != null) corePane.setWidget(new Table(tx -> tx.table(this::setCore).left()));
         });
+        corePane.setWidget(new Table(tx -> tx.table(this::setCore).left()));
         corePane.setOverscroll(false, false);
         if(Vars.player != null) corePane.setWidget(new Table(tx -> tx.table(this::setCore).left()));
         coreTable = new Table(table -> {
