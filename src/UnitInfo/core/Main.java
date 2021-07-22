@@ -22,6 +22,7 @@ import mindustry.game.Team;
 import mindustry.gen.Building;
 import mindustry.gen.Groups;
 import mindustry.gen.Teamc;
+import mindustry.gen.Unit;
 import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
@@ -30,6 +31,7 @@ import mindustry.mod.Mod;
 import mindustry.ui.Fonts;
 import mindustry.world.Block;
 import mindustry.world.blocks.defense.turrets.BaseTurret;
+import mindustry.world.blocks.defense.turrets.Turret;
 
 import static arc.Core.*;
 import static mindustry.Vars.*;
@@ -111,8 +113,11 @@ public class Main extends Mod {
                 Draw.reset();
             });
 
-            if(settings.getBool("rangeNearby")) Groups.all.each(entityc -> entityc instanceof BaseTurret.BaseTurretBuild ||
-            (!(entityc instanceof Building) && entityc instanceof Ranged && player != null && player.team() != ((Ranged) entityc).team()), entityc -> {
+            if(settings.getBool("rangeNearby")) Groups.all.each(entityc ->
+                    (entityc instanceof BaseTurret.BaseTurretBuild || entityc instanceof Unit)
+                    && player != null && player.team() != ((Ranged) entityc).team(), entityc -> {
+                if(entityc instanceof Turret.TurretBuild
+                        && !(player.unit().isFlying() && ((Turret)((Turret.TurretBuild) entityc).block).targetAir || !(player.unit().isFlying()) && ((Turret)((Turret.TurretBuild) entityc).block).targetGround)) return;
                 float range = ((Ranged) entityc).range();
                 float margin = settings.getInt("rangeRadius") * tilesize;
                 if(Vars.player.dst((Position) entityc) <= range + margin)

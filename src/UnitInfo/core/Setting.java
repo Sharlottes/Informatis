@@ -295,5 +295,6 @@ public class Setting {
         addGraphicCheckSetting("shar2", false);
         addGraphicCheckSetting("shar3", false);
         addGraphicCheckSetting("gaycursor", false);
+        addGraphicCheckSetting("allTeam", false);
     }
 }
