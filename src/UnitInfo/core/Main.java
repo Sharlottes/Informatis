@@ -19,6 +19,7 @@ import mindustry.Vars;
 import mindustry.content.Fx;
 import mindustry.game.EventType.*;
 import mindustry.game.Team;
+import mindustry.gen.Building;
 import mindustry.gen.Groups;
 import mindustry.gen.Teamc;
 import mindustry.graphics.Drawf;
@@ -28,6 +29,7 @@ import mindustry.logic.Ranged;
 import mindustry.mod.Mod;
 import mindustry.ui.Fonts;
 import mindustry.world.Block;
+import mindustry.world.blocks.defense.turrets.BaseTurret;
 
 import static arc.Core.*;
 import static mindustry.Vars.*;
@@ -109,7 +111,8 @@ public class Main extends Mod {
                 Draw.reset();
             });
 
-            if(settings.getBool("rangeNearby")) Groups.all.each(entityc -> entityc instanceof Ranged && player != null && player.team() != ((Ranged) entityc).team(), entityc -> {
+            if(settings.getBool("rangeNearby")) Groups.all.each(entityc -> entityc instanceof BaseTurret.BaseTurretBuild ||
+            (!(entityc instanceof Building) && entityc instanceof Ranged && player != null && player.team() != ((Ranged) entityc).team()), entityc -> {
                 float range = ((Ranged) entityc).range();
                 float margin = settings.getInt("rangeRadius") * tilesize;
                 if(Vars.player.dst((Position) entityc) <= range + margin)

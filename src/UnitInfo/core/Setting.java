@@ -274,7 +274,7 @@ public class Setting {
 
         Seq<SettingsMenuDialog.SettingsTable.Setting> scanSeq = new Seq<>();
         addGraphicCheckSetting("scan", false, scanSeq);
-        addGraphicCheckSetting("rangeNearby", true, scanSeq);
+        addGraphicCheckSetting("rangeNearby", false, scanSeq);
         addGraphicSlideSetting("rangeRadius", 5, 0, 20, 1, s -> s + "tiles", scanSeq);
         addGraphicTypeSetting("rangemax", 10, "@editrange","@invalid", 100, scanSeq);
         addGraphicDialogSetting("wavesetting", scanSeq, scanTable);

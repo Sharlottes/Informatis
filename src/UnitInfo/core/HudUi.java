@@ -54,7 +54,7 @@ public class HudUi {
     //to update tables
     int waveamount;
     int coreamount;
-    int weaponamount;
+    Teamc target;
 
     BarInfo info = new BarInfo();
     Seq<String> strings = new Seq<>(new String[]{"","","","","",""});
@@ -379,7 +379,7 @@ public class HudUi {
     public void addWeapon(){
         weapon = new Table(tx -> {
             tx.left().defaults().minSize(Scl.scl(12 * 8f));
-            weaponamount = ((Unit) getTarget()).type.weapons.size;
+            target = getTarget();
             tx.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, tt -> {
                 tt.left().top().defaults().width(Scl.scl(24/3f * 8f)).minHeight(Scl.scl(12/3f * 8f));
 
@@ -409,8 +409,10 @@ public class HudUi {
                                         if(getDrawable() instanceof TransformDrawable){
                                             float rotation = getRotation();
                                             if(scaleX != 1 || scaleY != 1 || rotation != 0){
-                                                getDrawable().draw(x + imageX, y + imageY, originX - imageX, originY - imageY,
-                                                        imageWidth, imageHeight, scaleX, scaleY, rotation);
+                                                getDrawable().draw(x + imageX, y + imageY,
+                                                    originX - imageX, originY - imageY,
+                                                        imageWidth, imageHeight,
+                                                        scaleX, scaleY, rotation);
                                                 return;
                                             }
                                         }
@@ -465,7 +467,7 @@ public class HudUi {
                     Stack stack = new Stack(){{
                         add(new Table(ttt -> ttt.add(new Image(){{
                             update(() -> {
-                                TextureRegion region = Core.atlas.find("clear");
+                                TextureRegion region = atlas.find("clear");
                                 if(getTarget() instanceof Unit && ((Unit) getTarget()).type() != null) region = ((Unit) getTarget()).type().uiIcon;
                                 else if(getTarget() instanceof Building && ((Building) getTarget()).block() != null) {
                                         if(getTarget() instanceof ConstructBlock.ConstructBuild) region = ((ConstructBlock.ConstructBuild) getTarget()).current.uiIcon;
@@ -479,29 +481,19 @@ public class HudUi {
                                 add(new Table(temp -> {
                                     Image image = new Image(Icon.defenseSmall);
                                     temp.add(image).center();
-                                }){
-                                    @Override
-                                    public void draw() {
-                                        if(getTarget() instanceof Building) return;
-                                        super.draw();
-                                    }
-                                });
+                                }));
+
                                 add(new Table(temp -> {
                                     Label label = new Label(() -> (getTarget() instanceof Unit && ((Unit) getTarget()).type() != null ? (int)((Unit) getTarget()).type().armor+"" : ""));
                                     label.setColor(Pal.surge);
                                     label.setFontScale(0.5f);
                                     temp.add(label).center();
                                     temp.pack();
-                                }){
-                                    @Override
-                                    public void draw() {
-                                        if(getTarget() instanceof Building) return;
-                                        super.draw();
-                                    }
-                                });
+                                }));
                             }}).padLeft(Scl.scl(2 * 8f)).padBottom(Scl.scl(2 * 8f));
                         }));
                     }};
+                    stack.visibility = () -> !(getTarget() == null || getTarget() instanceof Building);
 
                     Label label = new Label(() -> {
                         String name = "";if (getTarget() instanceof Unit && ((Unit) getTarget()).type() != null)
@@ -521,6 +513,7 @@ public class HudUi {
                             ui.content.show(((Buildingc) getTarget()).block());
                         }
                     });
+                    button.visibility = () -> getTarget() != null;
 
                     tt.top();
                     tt.add(stack);
@@ -559,7 +552,7 @@ public class HudUi {
                 if (settings.getBool("weaponui")
                         && getTarget() instanceof Unit
                         && ((Unit) getTarget()).type != null
-                        && weaponamount != ((Unit) getTarget()).type.weapons.size) {
+                        && target != getTarget()) {
                     table.removeChild(weapon);
                     addWeapon();
                     table.row();
