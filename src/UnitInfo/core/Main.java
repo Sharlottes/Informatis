@@ -9,8 +9,10 @@ import arc.graphics.g2d.Fill;
 import arc.graphics.g2d.Lines;
 import arc.math.Angles;
 import arc.math.Mathf;
+import arc.math.geom.Position;
 import arc.scene.ui.layout.Scl;
 import arc.util.Align;
+import arc.util.Log;
 import arc.util.Time;
 import arc.util.Tmp;
 import mindustry.Vars;
@@ -18,8 +20,11 @@ import mindustry.content.Fx;
 import mindustry.game.EventType.*;
 import mindustry.game.Team;
 import mindustry.gen.Groups;
+import mindustry.gen.Teamc;
+import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
+import mindustry.logic.Ranged;
 import mindustry.mod.Mod;
 import mindustry.ui.Fonts;
 import mindustry.world.Block;
@@ -90,9 +95,9 @@ public class Main extends Mod {
                 Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.15f, 90 + Time.time % 360);
                 Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.15f, 180 + Time.time % 360);
                 Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.15f, 270 + Time.time % 360);
-
                 Draw.reset();
             }
+
             if(!mobile && !Vars.state.isPaused() && settings.getBool("gaycursor"))
                 Fx.mine.at(Core.input.mouseWorldX(), Core.input.mouseWorldY(), Tmp.c2.set(Color.red).shiftHue(Time.time * 1.5f));
 
@@ -102,6 +107,13 @@ public class Main extends Mod {
                     unit.y + Angles.trnsy(unit.rotation + 180f, unit.type.itemOffsetY) - 3,
                     Pal.accent, 0.25f * unit.itemTime / Scl.scl(1f), false, Align.center);
                 Draw.reset();
+            });
+
+            if(settings.getBool("rangeNearby")) Groups.all.each(entityc -> entityc instanceof Ranged && player != null && player.team() != ((Ranged) entityc).team(), entityc -> {
+                float range = ((Ranged) entityc).range();
+                float margin = settings.getInt("rangeRadius") * tilesize;
+                if(Vars.player.dst((Position) entityc) <= range + margin)
+                    Drawf.dashCircle(((Ranged) entityc).x(), ((Ranged) entityc).y(), range, ((Ranged) entityc).team().color);
             });
         });
     }
