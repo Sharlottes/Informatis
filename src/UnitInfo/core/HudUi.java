@@ -104,6 +104,24 @@ public class HudUi {
         });
     }
 
+    public void reset(int index, Seq<Button> buttons, Label label, Table table, Table labelTable, String hud){
+        uiIndex = index;
+        buttons.each(b -> {
+            b.setChecked(buttons.indexOf(b) == index);
+        });
+        label.setText(Core.bundle.get(hud));
+        addBars();
+        addWeapon();
+        addUnitTable();
+        addWaveTable();
+        addCoreTable();
+        addTileTable();
+        addItemTable();
+        table.removeChild(baseTable);
+        labelTable.setPosition(buttons.items[uiIndex].x, buttons.items[uiIndex].y);
+        baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, tileTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
+        a = 1f;
+    }
     public void addTable(){
         mainTable = new Table(table -> {
             table.left();
@@ -125,139 +143,17 @@ public class HudUi {
 
             table.table(t -> {
                 Seq<Button> buttons = Seq.with(null, null, null, null, null, null);
-                buttons.items[0] = t.button(Icon.units, Styles.clearToggleTransi, () -> {
-                    uiIndex = 0;
-                    buttons.items[0].setChecked(true);
-                    buttons.items[1].setChecked(false);
-                    buttons.items[2].setChecked(false);
-                    buttons.items[3].setChecked(false);
-                    buttons.items[4].setChecked(false);
-                    buttons.items[5].setChecked(false);
-                    label.setText(Core.bundle.get("hud.unit"));
-                    addBars();
-                    addWeapon();
-                    addUnitTable();
-                    addWaveTable();
-                    addCoreTable();
-                    addTileTable();
-                    addItemTable();
-                    table.removeChild(baseTable);
-                    labelTable.setPosition(buttons.items[uiIndex].x, buttons.items[uiIndex].y);
-                    baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, tileTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
-                    a = 1f;
-                }).size(5*8f).get();
-                t.row();
-                buttons.items[1] = t.button(Icon.fileText, Styles.clearToggleTransi, () -> {
-                    uiIndex = 1;
-                    buttons.items[0].setChecked(false);
-                    buttons.items[1].setChecked(true);
-                    buttons.items[2].setChecked(false);
-                    buttons.items[3].setChecked(false);
-                    buttons.items[4].setChecked(false);
-                    buttons.items[5].setChecked(false);
-                    label.setText(Core.bundle.get("hud.wave"));
-                    addBars();
-                    addWeapon();
-                    addUnitTable();
-                    addWaveTable();
-                    addCoreTable();
-                    addTileTable();
-                    addItemTable();
-                    table.removeChild(baseTable);
-                    labelTable.setPosition(buttons.items[uiIndex].x, buttons.items[uiIndex].y);
-                    baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, tileTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
-                    a = 1f;
-                }).size(5*8f).get();
-                t.row();
-                buttons.items[2] = t.button(Icon.commandRally, Styles.clearToggleTransi, () -> {
-                    uiIndex = 2;
-                    buttons.items[0].setChecked(false);
-                    buttons.items[1].setChecked(false);
-                    buttons.items[2].setChecked(true);
-                    buttons.items[3].setChecked(false);
-                    buttons.items[4].setChecked(false);
-                    buttons.items[5].setChecked(false);
-                    label.setText(Core.bundle.get("hud.core"));
-                    addBars();
-                    addWeapon();
-                    addUnitTable();
-                    addWaveTable();
-                    addCoreTable();
-                    addTileTable();
-                    addItemTable();
-                    table.removeChild(baseTable);
-                    labelTable.setPosition(buttons.items[uiIndex].x, buttons.items[uiIndex].y);
-                    baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, tileTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
-                    a = 1f;
-                }).size(5*8f).get();
-                t.row();
-                buttons.items[3] = t.button(Icon.grid, Styles.clearToggleTransi, () -> {
-                    uiIndex = 3;
-                    buttons.items[0].setChecked(false);
-                    buttons.items[1].setChecked(false);
-                    buttons.items[2].setChecked(false);
-                    buttons.items[3].setChecked(true);
-                    buttons.items[4].setChecked(false);
-                    buttons.items[5].setChecked(false);
-                    label.setText(Core.bundle.get("hud.tile"));
-                    addBars();
-                    addWeapon();
-                    addUnitTable();
-                    addWaveTable();
-                    addCoreTable();
-                    addTileTable();
-                    addItemTable();
-                    table.removeChild(baseTable);
-                    labelTable.setPosition(buttons.items[uiIndex].x, buttons.items[uiIndex].y);
-                    baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, tileTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
-                    a = 1f;
-                }).size(5*8f).get();
-                t.row();
-                buttons.items[4] = t.button(Icon.copy, Styles.clearToggleTransi, () -> {
-                    uiIndex = 4;
-                    buttons.items[0].setChecked(false);
-                    buttons.items[1].setChecked(false);
-                    buttons.items[2].setChecked(false);
-                    buttons.items[3].setChecked(false);
-                    buttons.items[4].setChecked(true);
-                    buttons.items[5].setChecked(false);
-                    label.setText(Core.bundle.get("hud.item"));
-                    addBars();
-                    addWeapon();
-                    addUnitTable();
-                    addWaveTable();
-                    addCoreTable();
-                    addTileTable();
-                    addItemTable();
-                    table.removeChild(baseTable);
-                    labelTable.setPosition(buttons.items[uiIndex].x, buttons.items[uiIndex].y);
-                    baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, tileTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
-                    a = 1f;
-                }).size(5*8f).get();
-
-                t.row();
-                buttons.items[5] = t.button(Icon.cancel, Styles.clearToggleTransi, () -> {
-                    uiIndex = 5;
-                    buttons.items[0].setChecked(false);
-                    buttons.items[1].setChecked(false);
-                    buttons.items[2].setChecked(false);
-                    buttons.items[3].setChecked(false);
-                    buttons.items[4].setChecked(false);
-                    buttons.items[5].setChecked(true);
-                    label.setText(Core.bundle.get("hud.cancel"));
-                    addBars();
-                    addWeapon();
-                    addUnitTable();
-                    addWaveTable();
-                    addCoreTable();
-                    addTileTable();
-                    table.removeChild(baseTable);
-                    labelTable.setPosition(buttons.items[uiIndex].x, buttons.items[uiIndex].y);
-                    baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, tileTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
-                    a = 1f;
-                }).size(5*8f).get();
+                Seq<String> strs = Seq.with("hud.unit", "hud.wave", "hud.core", "hud.tile", "hud.item", "hud.cancel");
+                Seq<TextureRegionDrawable> icons = Seq.with(Icon.units, Icon.fileText, Icon.commandRally, Icon.grid, Icon.copy, Icon.cancel);
+                for(int i = 0; i < buttons.size; i++){
+                    int finalI = i;
+                    buttons.set(i, t.button(icons.get(i), Styles.clearToggleTransi, () -> {
+                        reset(finalI, buttons, label, table, labelTable, strs.get(finalI));
+                    }).size(5*8f).get());
+                    t.row();
+                }
             });
-            baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
+            baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, tileTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
             table.fillParent = true;
 
             table.visibility = () -> (ui.hudfrag.shown && !ui.minimapfrag.shown()
@@ -565,10 +461,22 @@ public class HudUi {
                     });
                     button.visibility = () -> getTarget() != null;
 
+                    ImageButton lockButton = Elem.newImageButton(Styles.clearPartiali, Icon.lock.tint(locked ? Pal.accent : Color.white), 3 * 8f, () -> {
+                        locked = !locked;
+                        if(locked) {
+                            lockedTarget = getTarget();
+                        }
+                        else lockedTarget = null;
+
+                    });
+
+                    lockButton.visibility = () -> getTarget() != null;
+
                     tt.top();
                     tt.add(stack);
                     tt.add(label);
                     tt.add(button).size(Scl.scl(5 * 8f));
+                    tt.add(lockButton).size(Scl.scl(3 * 8f));
                 });
                 t.row();
                 t.table(tt -> {
@@ -599,9 +507,7 @@ public class HudUi {
                     if(((Turret.TurretBuild) getTarget()).charging) charge += Time.delta;
                     else charge = 0f;
                 }
-                if (settings.getBool("weaponui")
-                        && getTarget() instanceof Unit
-                        && ((Unit) getTarget()).type != null
+                if (settings.getBool("weaponui") && getTarget() instanceof Unit && ((Unit) getTarget()).type != null
                         && target != getTarget()) {
                     table.removeChild(weapon);
                     addWeapon();
