@@ -280,14 +280,14 @@ public class Setting {
         addGraphicDialogSetting("wavesetting", scanSeq, scanTable);
 
         Seq<SettingsMenuDialog.SettingsTable.Setting> opacitySeq = new Seq<>();
-        addGraphicSlideSetting("selectopacity", 25, 0, 100, 5, s -> s + "%", opacitySeq);
-        addGraphicSlideSetting("baropacity", 100, 0, 100, 5, s -> s + "%", opacitySeq);
+        addGraphicSlideSetting("selectopacity", 50, 0, 100, 5, s -> s + "%", opacitySeq);
+        addGraphicSlideSetting("baropacity", 50, 0, 100, 5, s -> s + "%", opacitySeq);
         addGraphicSlideSetting("uiopacity", 50, 0, 100, 5, s -> s + "%", opacitySeq);
         addGraphicDialogSetting("opacitysetting", opacitySeq, opacityTable);
 
         addGraphicCheckSetting("infoui", true);
         addGraphicCheckSetting("weaponui", true);
-        addGraphicCheckSetting("select", false);
+        addGraphicCheckSetting("select", true);
         addGraphicCheckSetting("unithealthui", true);
         addGraphicCheckSetting("ssim", false);
         addGraphicCheckSetting("shar", false);
