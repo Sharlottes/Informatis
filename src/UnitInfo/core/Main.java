@@ -12,16 +12,13 @@ import arc.math.Mathf;
 import arc.math.geom.Position;
 import arc.scene.ui.layout.Scl;
 import arc.util.Align;
-import arc.util.Log;
 import arc.util.Time;
 import arc.util.Tmp;
 import mindustry.Vars;
 import mindustry.content.Fx;
 import mindustry.game.EventType.*;
 import mindustry.game.Team;
-import mindustry.gen.Building;
 import mindustry.gen.Groups;
-import mindustry.gen.Teamc;
 import mindustry.gen.Unit;
 import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
@@ -115,7 +112,7 @@ public class Main extends Mod {
 
             if(settings.getBool("rangeNearby")) Groups.all.each(entityc ->
                     (entityc instanceof BaseTurret.BaseTurretBuild || entityc instanceof Unit)
-                    && player != null && player.team() != ((Ranged) entityc).team(), entityc -> {
+                    && player != null && player.team() != ((Ranged) entityc).team() && ((Ranged) entityc).team() != Team.derelict, entityc -> {
                 if(entityc instanceof Turret.TurretBuild
                         && !(player.unit().isFlying() && ((Turret)((Turret.TurretBuild) entityc).block).targetAir || !(player.unit().isFlying()) && ((Turret)((Turret.TurretBuild) entityc).block).targetGround)) return;
                 float range = ((Ranged) entityc).range();

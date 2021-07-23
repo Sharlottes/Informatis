@@ -49,6 +49,8 @@ public class HudUi {
     Element image;
     Color lastItemColor = Pal.items;
     Color lastAmmoColor = Pal.ammo;
+    Teamc lockedTarget;
+    boolean locked = false;
     float charge;
     float a;
     int uiIndex = 0;
@@ -63,11 +65,12 @@ public class HudUi {
     Seq<Float> numbers = new Seq<>(new Float[]{0f,0f,0f,0f,0f,0f});
     Seq<Color> colors = new Seq<>(new Color[]{Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear});
 
-
     CoresItemsDisplay coreItems = new CoresItemsDisplay(Team.baseTeams);
+
 
     @SuppressWarnings("unchecked")
     public <T extends Teamc> T getTarget(){
+        if(locked && lockedTarget != null) return (T) lockedTarget;
         Seq<Unit> units = Groups.unit.intersect(Core.input.mouseWorldX(), Core.input.mouseWorldY(), 4, 4);
         if(units.size > 0) return (T) units.peek();
         if(getTile() != null && getTile().build != null) return (T) getTile().build;
@@ -520,27 +523,32 @@ public class HudUi {
                         }}.setScaling(Scaling.fit)).size(Scl.scl(4f * 8f))));
                         add(new Table(ttt -> {
                             ttt.add(new Stack(){{
-                                add(new Table(temp -> {
-                                    Image image = new Image(Icon.defenseSmall);
-                                    temp.add(image).center();
-                                }));
+                                add(new Table(temp -> temp.add(new Image(){{
+                                    update(()->{
+                                        TextureRegion region = atlas.find("clear");
+                                        if(getTarget() instanceof Unit && !((Unit) getTarget()).dead) region = Icon.defenseSmall.getRegion();
+                                        setDrawable(region);
+                                    });
+                                }}.setScaling(Scaling.fit))));
 
                                 add(new Table(temp -> {
-                                    Label label = new Label(() -> (getTarget() instanceof Unit && ((Unit) getTarget()).type() != null ? (int)((Unit) getTarget()).type().armor+"" : ""));
-                                    label.setColor(Pal.surge);
-                                    label.setFontScale(0.5f);
-                                    temp.add(label).center();
+                                    if(getTarget() instanceof Unit) {
+                                        Label label = new Label(() -> (getTarget() instanceof Unit && ((Unit) getTarget()).type() != null ? (int) ((Unit) getTarget()).type().armor + "" : ""));
+                                        label.setColor(Pal.surge);
+                                        label.setFontScale(0.5f);
+                                        temp.add(label).center();
+                                    }
                                     temp.pack();
                                 }));
                             }}).padLeft(Scl.scl(2 * 8f)).padBottom(Scl.scl(2 * 8f));
                         }));
                     }};
-                    stack.visibility = () -> !(getTarget() == null || getTarget() instanceof Building);
 
                     Label label = new Label(() -> {
-                        String name = "";if (getTarget() instanceof Unit && ((Unit) getTarget()).type() != null)
+                        String name = "";
+                        if(getTarget() instanceof Unit && ((Unit) getTarget()).type() != null)
                             name = "[accent]" + ((Unit) getTarget()).type().localizedName + "[]";
-                        else if (getTarget() instanceof Building && ((Building) getTarget()).block() != null) {
+                        else if(getTarget() instanceof Building && ((Building) getTarget()).block() != null) {
                             if(getTarget() instanceof ConstructBlock.ConstructBuild) name = "[accent]" + ((ConstructBlock.ConstructBuild) getTarget()).current.localizedName + "[]";
                             else name = "[accent]" + ((Building) getTarget()).block.localizedName + "[]";
                         }
