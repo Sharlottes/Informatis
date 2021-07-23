@@ -16,6 +16,7 @@ import arc.struct.*;
 import arc.util.*;
 import mindustry.*;
 import mindustry.content.*;
+import mindustry.core.Renderer;
 import mindustry.entities.units.*;
 import mindustry.game.*;
 import mindustry.gen.*;
@@ -50,6 +51,7 @@ public class HudUi {
     Color lastItemColor = Pal.items;
     Color lastAmmoColor = Pal.ammo;
     Teamc lockedTarget;
+    ImageButton lockButton;
     boolean locked = false;
     float charge;
     float a;
@@ -58,7 +60,6 @@ public class HudUi {
     //to update tables
     int waveamount;
     int coreamount;
-    Teamc target;
 
     BarInfo info = new BarInfo();
     Seq<String> strings = new Seq<>(new String[]{"","","","","",""});
@@ -92,7 +93,7 @@ public class HudUi {
             for(int i = 0; i < 4; i++){
                 float rot = i * 90f + 45f + (-Time.time) % 360f;
                 float length = (entity instanceof Unit ? ((Unit)entity).hitSize : entity instanceof Building ? ((Building)entity).block.size * tilesize : 0) * 1.5f + 2.5f;
-                Draw.color(Tmp.c1.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f)).a(settings.getInt("selectopacity") / 100f));
+                Draw.color(Tmp.c1.set(locked ? Color.orange : Color.darkGray).lerp(locked ? Color.scarlet : Color.gray, Mathf.absin(Time.time, 2f, 1f)).a(settings.getInt("selectopacity") / 100f));
                 Draw.rect("select-arrow", entity.x() + Angles.trnsx(rot, length), entity.y() + Angles.trnsy(rot, length), length / 1.9f, length / 1.9f, rot - 135f);
                 Draw.reset();
             }
@@ -102,13 +103,17 @@ public class HudUi {
             coreItems.resetUsed();
             coreItems.tables.each(Group::clear);
         });
+        Events.run(EventType.Trigger.update, ()->{
+            if((Core.input.keyDown(KeyCode.shiftRight) || Core.input.keyDown(KeyCode.shiftLeft)) && Core.input.keyTap(KeyCode.r)){
+                Log.info("locked");
+                lockButton.change();
+            }
+        });
     }
 
     public void reset(int index, Seq<Button> buttons, Label label, Table table, Table labelTable, String hud){
         uiIndex = index;
-        buttons.each(b -> {
-            b.setChecked(buttons.indexOf(b) == index);
-        });
+        buttons.each(b -> b.setChecked(buttons.indexOf(b) == index));
         label.setText(Core.bundle.get(hud));
         addBars();
         addWeapon();
@@ -320,7 +325,7 @@ public class HudUi {
     public void addWeapon(){
         weapon = new Table(tx -> {
             tx.left().defaults().minSize(Scl.scl(12 * 8f));
-            target = getTarget();
+
             tx.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, tt -> {
                 tt.left().top().defaults().width(Scl.scl(24/3f * 8f)).minHeight(Scl.scl(12/3f * 8f));
 
@@ -461,15 +466,15 @@ public class HudUi {
                     });
                     button.visibility = () -> getTarget() != null;
 
-                    ImageButton lockButton = Elem.newImageButton(Styles.clearPartiali, Icon.lock.tint(locked ? Pal.accent : Color.white), 3 * 8f, () -> {
+                    lockButton = Elem.newImageButton(Styles.clearPartiali, Icon.lock.tint(locked ? Pal.accent : Color.white), 3 * 8f, () -> {
                         locked = !locked;
-                        if(locked) {
-                            lockedTarget = getTarget();
-                        }
+                        if(locked) lockedTarget = getTarget();
                         else lockedTarget = null;
-
                     });
-
+                    button.update(()->{
+                        lockButton.getStyle().imageUp = Icon.lock.tint(locked ? Pal.accent : Color.white);
+                        lockButton.getStyle().imageDown = Icon.lock.tint(locked ? Pal.accent : Color.white);
+                    });
                     lockButton.visibility = () -> getTarget() != null;
 
                     tt.top();
@@ -507,9 +512,8 @@ public class HudUi {
                     if(((Turret.TurretBuild) getTarget()).charging) charge += Time.delta;
                     else charge = 0f;
                 }
-                if (settings.getBool("weaponui") && getTarget() instanceof Unit && ((Unit) getTarget()).type != null
-                        && target != getTarget()) {
-                    table.removeChild(weapon);
+                table.removeChild(weapon);
+                if(settings.getBool("weaponui") && getTarget() instanceof Unit && ((Unit) getTarget()).type != null) {
                     addWeapon();
                     table.row();
                     table.add(weapon);
