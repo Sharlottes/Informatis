@@ -110,16 +110,18 @@ public class Main extends Mod {
                 Draw.reset();
             });
 
-            if(settings.getBool("rangeNearby")) Groups.all.each(entityc ->
-                    (entityc instanceof BaseTurret.BaseTurretBuild || entityc instanceof Unit)
-                    && player != null && player.team() != ((Ranged) entityc).team() && ((Ranged) entityc).team() != Team.derelict, entityc -> {
-                if(entityc instanceof Turret.TurretBuild
-                        && !(player.unit().isFlying() && ((Turret)((Turret.TurretBuild) entityc).block).targetAir || !(player.unit().isFlying()) && ((Turret)((Turret.TurretBuild) entityc).block).targetGround)) return;
-                float range = ((Ranged) entityc).range();
-                float margin = settings.getInt("rangeRadius") * tilesize;
-                if(Vars.player.dst((Position) entityc) <= range + margin)
-                    Drawf.dashCircle(((Ranged) entityc).x(), ((Ranged) entityc).y(), range, ((Ranged) entityc).team().color);
-            });
+            if(settings.getBool("rangeNearby")) {
+                Groups.all.each(entityc ->
+                        (entityc instanceof BaseTurret.BaseTurretBuild || entityc instanceof Unit) && player != null
+                                && (settings.getBool("allTeamRange") || (player.team() != ((Ranged) entityc).team() && ((Ranged) entityc).team() != Team.derelict)), entityc -> {
+                    if(entityc instanceof Turret.TurretBuild
+                            && (settings.getBool("allTargetRange") || !(player.unit().isFlying() && ((Turret)((Turret.TurretBuild) entityc).block).targetAir || !(player.unit().isFlying()) && ((Turret)((Turret.TurretBuild) entityc).block).targetGround))) return;
+                    float range = ((Ranged) entityc).range();
+                    float margin = settings.getInt("rangeRadius") * tilesize;
+                    if(Vars.player.dst((Position) entityc) <= range + margin)
+                        Drawf.dashCircle(((Ranged) entityc).x(), ((Ranged) entityc).y(), range, ((Ranged) entityc).team().color);
+                });
+            }
         });
     }
 
@@ -127,6 +129,4 @@ public class Main extends Mod {
     public void loadContent(){
 
     }
-
-
 }

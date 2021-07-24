@@ -96,6 +96,7 @@ public class HudUi {
         });
         Events.on(EventType.ResetEvent.class, e -> {
             if(settings.getBool("allTeam")) coreItems.teams = Team.all;
+            else coreItems.teams = Team.baseTeams;
             coreItems.resetUsed();
             coreItems.tables.each(Group::clear);
         });
@@ -193,14 +194,14 @@ public class HudUi {
                         return;
                     }
                     if(getTarget() instanceof Turret.TurretBuild){
-                        Element imaget = new Element();
+                        Element image = new Element();
                         if(getTarget() instanceof ItemTurret.ItemTurretBuild){
                             ItemTurret.ItemTurretBuild turretBuild = getTarget();
-                            if(turretBuild.hasAmmo()) imaget = new Image(((ItemTurret)turretBuild.block).ammoTypes.findKey(turretBuild.peekAmmo(), true).uiIcon);
+                            if(turretBuild.hasAmmo()) image = new Image(((ItemTurret)turretBuild.block).ammoTypes.findKey(turretBuild.peekAmmo(), true).uiIcon);
                             else {MultiReqImage itemReq = new MultiReqImage();
                                 for(Item item : ((ItemTurret) turretBuild.block).ammoTypes.keys())
                                     itemReq.add(new ReqImage(item.uiIcon, turretBuild::hasAmmo));
-                                imaget = itemReq;
+                                image = itemReq;
                             }
                         }
                         else if(getTarget() instanceof LiquidTurret.LiquidTurretBuild){
@@ -208,13 +209,13 @@ public class HudUi {
                             MultiReqImage liquidReq = new MultiReqImage();
                             for(Liquid liquid : ((LiquidTurret) ((LiquidTurret.LiquidTurretBuild) getTarget()).block).ammoTypes.keys())
                                 liquidReq.add(new ReqImage(liquid.uiIcon, () -> ((LiquidTurret.LiquidTurretBuild) getTarget()).hasAmmo()));
-                            imaget = liquidReq;
+                            image = liquidReq;
 
                             if(((LiquidTurret.LiquidTurretBuild) getTarget()).hasAmmo())
-                                imaget = new Image(entity.liquids.current().uiIcon).setScaling(Scaling.fit);
+                                image = new Image(entity.liquids.current().uiIcon).setScaling(Scaling.fit);
                         }
                         else if(getTarget() instanceof PowerTurret.PowerTurretBuild){
-                            imaget = new Image(Icon.power.getRegion()){
+                            image = new Image(Icon.power.getRegion()){
                                 @Override
                                 public void draw(){
                                     Building entity = getTarget();
@@ -234,7 +235,7 @@ public class HudUi {
                         }
 
                         clearChildren();
-                        add(imaget).size(iconSmall).padBottom(2 * 8f).padRight(3 * 8f);
+                        add(image).size(iconSmall).padBottom(2 * 8f).padRight(3 * 8f);
                     }
                 });
                 pack();

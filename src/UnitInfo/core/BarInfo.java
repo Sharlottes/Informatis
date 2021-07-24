@@ -50,14 +50,12 @@ public class BarInfo {
         }
         
         
-        
         if(target instanceof Healthc) {
             strings.set(0, Core.bundle.format("shar-stat.health", Strings.fixed(((Healthc)target).health(), 1)));
             colors.set(0, Pal.health);
             numbers.set(0, ((Healthc) target).healthf());
         }
 
-        
         
         if(target instanceof Turret.TurretBuild){
             float value = Mathf.clamp(((Turret.TurretBuild)target).reload / ((Turret)((Turret.TurretBuild)target).block).reloadTime) * 100f;
@@ -129,8 +127,7 @@ public class BarInfo {
             numbers.set(2, ((Unit)target).stack().amount / (((Unit)target).type().itemCapacity * 1f));
         }
 
-        
-        
+
         if(target instanceof Turret.TurretBuild){
             Turret turret = (Turret)((Turret.TurretBuild)target).block;
             if(turret.chargeTime > 0f) {
@@ -147,7 +144,6 @@ public class BarInfo {
         }
 
 
-
         if(target instanceof Unit && target instanceof Payloadc && ((Unit) target).type != null){
             strings.set(4, Core.bundle.format("shar-stat.payloadCapacity", Mathf.round(Mathf.sqrt(((Payloadc)target).payloadUsed())), Mathf.round(Mathf.sqrt(((Unit)target).type().payloadCapacity))));
             colors.set(4, Pal.items);
@@ -159,7 +155,6 @@ public class BarInfo {
             colors.set(4, build.liquids.current().color);
             numbers.set(4, build.liquids.currentAmount()/build.block.liquidCapacity);
         }
-
 
 
         if(target instanceof Unit && state.rules.unitAmmo && ((Unit) target).type != null){
