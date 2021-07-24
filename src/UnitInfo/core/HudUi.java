@@ -6,6 +6,8 @@ import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.input.KeyCode;
 import arc.math.*;
+import arc.math.geom.Geometry;
+import arc.math.geom.Vec2;
 import arc.scene.*;
 import arc.scene.event.HandCursorListener;
 import arc.scene.style.*;
@@ -16,15 +18,19 @@ import arc.struct.*;
 import arc.util.*;
 import mindustry.*;
 import mindustry.content.*;
+import mindustry.entities.Predict;
+import mindustry.entities.Units;
 import mindustry.entities.units.*;
 import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.input.*;
+import mindustry.logic.Ranged;
 import mindustry.type.*;
 import mindustry.ui.*;
 import mindustry.world.*;
 import mindustry.world.blocks.ConstructBlock;
+import mindustry.world.blocks.ControlBlock;
 import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.blocks.storage.*;
 
@@ -67,6 +73,8 @@ public class HudUi {
     CoresItemsDisplay coreItems = new CoresItemsDisplay(Team.baseTeams);
 
 
+    @Nullable Teamc target;
+
     @SuppressWarnings("unchecked")
     public <T extends Teamc> T getTarget(){
         if(locked && lockedTarget != null) return (T) lockedTarget; //if there is locked target, return it first.
@@ -104,6 +112,60 @@ public class HudUi {
             if((Core.input.keyDown(KeyCode.shiftRight) || Core.input.keyDown(KeyCode.shiftLeft)) && Core.input.keyTap(KeyCode.r)){
                 lockButton.change();
             }
+            if(!settings.getBool("autoShooting")) return;
+            Unit unit = player.unit();
+            if(unit.type == null) return;
+            boolean omni = unit.type.omniMovement;
+            boolean validHealTarget = unit.type.canHeal && target instanceof Building && ((Building)target).isValid() && target.team() == unit.team && ((Building)target).damaged() && target.within(unit, unit.type.range);
+            boolean boosted = (unit instanceof Mechc && unit.isFlying());
+            if((unit.type != null && Units.invalidateTarget(target, unit, unit.type.range) && !validHealTarget) || state.isEditor()){
+                target = null;
+            }
+
+
+            float mouseAngle = unit.angleTo(unit.aimX(), unit.aimY());
+            boolean aimCursor = omni && player.shooting && unit.type.hasWeapons() && unit.type.faceTarget && !boosted && unit.type.rotateShooting;
+            if(aimCursor){
+                unit.lookAt(mouseAngle);
+            }else{
+                unit.lookAt(unit.prefRotation());
+            }
+
+            //update shooting if not building + not mining
+            if(!player.unit().activelyBuilding() && player.unit().mineTile == null){
+                //autofire targeting
+                if(input.keyDown(KeyCode.mouseLeft)) {
+                    player.shooting = !boosted;
+                    unit.aim(player.mouseX = Core.input.mouseWorldX(), player.mouseY = Core.input.mouseWorldY());
+                } else if(target == null){
+                    player.shooting = false;
+                    if(unit instanceof BlockUnitUnit){
+                        if(((BlockUnitUnit)unit).tile() instanceof ControlBlock && !((ControlBlock)((BlockUnitUnit)unit).tile()).shouldAutoTarget()){
+                            Building build = ((BlockUnitUnit)unit).tile();
+                            float range = build instanceof Ranged ? ((Ranged)build).range() : 0f;
+                            boolean targetGround = build instanceof Turret.TurretBuild && ((Turret) build.block).targetAir;
+                            boolean targetAir = build instanceof Turret.TurretBuild && ((Turret) build.block).targetGround;
+                            target = Units.closestTarget(build.team, build.x, build.y, range, u -> u.checkTarget(targetAir, targetGround), u -> targetGround);
+                        }
+                        else target = null;
+                    } else if(unit.type != null){
+                        float range = unit.hasWeapons() ? unit.range() : 0f;
+                        target = Units.closestTarget(unit.team, unit.x, unit.y, range, u -> u.checkTarget(unit.type.targetAir, unit.type.targetGround), u -> unit.type.targetGround);
+
+                        if(unit.type.canHeal && target == null){
+                            target = Geometry.findClosest(unit.x, unit.y, indexer.getDamaged(Team.sharded));
+                            if(target != null && !unit.within(target, range)){
+                                target = null;
+                            }
+                        }
+                    }
+                }else {
+                    player.shooting = !boosted;
+                    unit.rotation(Angles.angle(unit.x, unit.y, target.x(), target.y()));
+                    unit.aim(target.x(), target.y());
+                }
+            }
+            unit.controlWeapons(player.shooting && !boosted);
         });
     }
 

@@ -286,6 +286,7 @@ public class Setting {
         addGraphicSlideSetting("uiopacity", 50, 0, 100, 5, s -> s + "%", opacitySeq);
         addGraphicDialogSetting("opacitysetting", opacitySeq, opacityTable);
 
+        addGraphicCheckSetting("autoShooting", false);
         addGraphicCheckSetting("infoui", true);
         addGraphicCheckSetting("weaponui", true);
         addGraphicCheckSetting("select", true);
