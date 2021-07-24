@@ -51,6 +51,7 @@ public class HudUi {
     Teamc lockedTarget;
     ImageButton lockButton;
     boolean locked = false;
+
     float charge;
     float a;
     int uiIndex = 0;
@@ -59,7 +60,6 @@ public class HudUi {
     int waveamount;
     int coreamount;
 
-    BarInfo info = new BarInfo();
     Seq<String> strings = new Seq<>(new String[]{"","","","","",""});
     Seq<Float> numbers = new Seq<>(new Float[]{0f,0f,0f,0f,0f,0f});
     Seq<Color> colors = new Seq<>(new Color[]{Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear});
@@ -475,9 +475,9 @@ public class HudUi {
             }).padRight(Scl.scl(24 * 8f));
             table.row();
             table.update(() -> {
-                strings = info.returnStrings(getTarget());
-                numbers = info.returnNumbers(getTarget());
-                colors = info.returnColors(getTarget());
+                strings = BarInfo.returnStrings(getTarget());
+                numbers = BarInfo.returnNumbers(getTarget());
+                colors = BarInfo.returnColors(getTarget());
                 if(getTarget() instanceof Turret.TurretBuild){
                     if(((Turret.TurretBuild) getTarget()).charging) charge += Time.delta;
                     else charge = 0f;
