@@ -9,7 +9,6 @@ import arc.struct.Seq;
 import arc.util.*;
 import mindustry.*;
 import mindustry.core.Version;
-import mindustry.game.Team;
 import mindustry.gen.*;
 import mindustry.ui.Styles;
 import mindustry.ui.dialogs.*;

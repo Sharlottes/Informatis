@@ -46,7 +46,6 @@ public class HudUi {
     float tileScrollPos;
     float itemScrollPos;
 
-    Element image;
     Color lastItemColor = Pal.items;
     Color lastAmmoColor = Pal.ammo;
     Teamc lockedTarget;
@@ -191,7 +190,6 @@ public class HudUi {
                 update(() -> {
                     if(!(getTarget() instanceof ItemTurret.ItemTurretBuild) && !(getTarget() instanceof LiquidTurret.LiquidTurretBuild) && !(getTarget() instanceof PowerTurret.PowerTurretBuild)){
                         clearChildren();
-                        image = null;
                         return;
                     }
                     if(getTarget() instanceof Turret.TurretBuild){
@@ -216,31 +214,27 @@ public class HudUi {
                                 imaget = new Image(entity.liquids.current().uiIcon).setScaling(Scaling.fit);
                         }
                         else if(getTarget() instanceof PowerTurret.PowerTurretBuild){
-                            imaget = new ReqImage(Icon.power.getRegion(), () -> ((PowerTurret.PowerTurretBuild) getTarget()).power.status * ((PowerTurret.PowerTurretBuild) getTarget()).power.graph.getLastScaledPowerIn() > 0f){{
-                                add(new Image(Icon.power.getRegion()));
-                                add(new Element(){
-                                    @Override
-                                    public void draw(){
-                                        Building entity = getTarget();
-                                        float max = entity.block.consumes.getPower().usage;
-                                        float v = entity.power.status * entity.power.graph.getLastScaledPowerIn();
+                            imaget = new Image(Icon.power.getRegion()){
+                                @Override
+                                public void draw(){
+                                    Building entity = getTarget();
+                                    float max = entity.block.consumes.getPower().usage;
+                                    float v = entity.power.status * entity.power.graph.getLastScaledPowerIn();
 
-                                        Lines.stroke(Scl.scl(2f), Pal.removeBack);
-                                        Draw.alpha(1 - v/max);
-                                        Lines.line(x, y - 2f + height, x + width, y - 2f);
-                                        Draw.color(Pal.remove);
-                                        Draw.alpha(1 - v/max);
-                                        Lines.line(x, y + height, x + width, y);
-                                        Draw.reset();
-                                    }
-                                });
-                            }};
+                                    super.draw();
+                                    Lines.stroke(Scl.scl(2f), Pal.removeBack);
+                                    Draw.alpha(1 - v/max);
+                                    Lines.line(x, y - 2f + height, x + width, y - 2f);
+                                    Draw.color(Pal.remove);
+                                    Draw.alpha(1 - v/max);
+                                    Lines.line(x, y + height, x + width, y);
+                                    Draw.reset();
+                                }
+                            };
                         }
 
-                        if(image != null && (imaget.getClass() != image.getClass() || imaget.getClass() == Image.class))
-                            clearChildren();
+                        clearChildren();
                         add(imaget).size(iconSmall).padBottom(2 * 8f).padRight(3 * 8f);
-                        image = imaget;
                     }
                 });
                 pack();

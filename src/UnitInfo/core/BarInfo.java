@@ -1,5 +1,6 @@
 package UnitInfo.core;
 
+import UnitInfo.SVars;
 import arc.Core;
 import arc.graphics.Color;
 import arc.math.Mathf;
@@ -24,24 +25,24 @@ import static mindustry.Vars.content;
 import static mindustry.Vars.state;
 
 public class BarInfo {
-    Seq<String> strings = new Seq<>(new String[]{"","","","","",""});
-    Seq<Float> numbers = new Seq<>(new Float[]{0f,0f,0f,0f,0f,0f});
-    Seq<Color> colors = new Seq<>(new Color[]{Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear});
+    static Seq<String> strings = new Seq<>(new String[]{"","","","","",""});
+    static Seq<Float> numbers = new Seq<>(new Float[]{0f,0f,0f,0f,0f,0f});
+    static Seq<Color> colors = new Seq<>(new Color[]{Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear});
 
-    public <T extends Teamc> Seq<String> returnStrings(T target){
+    public static <T extends Teamc> Seq<String> returnStrings(T target){
         getInfo(target);
         return strings;
     }
-    public <T extends Teamc> Seq<Color> returnColors(T target){
+    public static <T extends Teamc> Seq<Color> returnColors(T target){
         getInfo(target);
         return colors;
     }
-    public <T extends Teamc> Seq<Float> returnNumbers(T target){
+    public static <T extends Teamc> Seq<Float> returnNumbers(T target){
         getInfo(target);
         return numbers;
     }
 
-    public <T extends Teamc> void getInfo(T target){
+    public static <T extends Teamc> void getInfo(T target){
         for(int i = 0; i < 6; i++) { //init
             strings.set(i, "[lightgray]<Empty>[]");
             colors.set(i, Color.clear);
@@ -133,10 +134,10 @@ public class BarInfo {
         if(target instanceof Turret.TurretBuild){
             Turret turret = (Turret)((Turret.TurretBuild)target).block;
             if(turret.chargeTime > 0f) {
-                float value = Mathf.clamp(Main.hud.charge / turret.chargeTime) * 100f;
+                float value = Mathf.clamp(SVars.hud.charge / turret.chargeTime) * 100f;
                 strings.set(3, Core.bundle.format("shar-stat.charge", Strings.fixed(value, (Math.abs((int)value - value) <= 0.001f ? 0 : Math.abs((int)(value * 10) - value * 10) <= 0.001f ? 1 : 2))));
-                colors.set(3, Pal.surge.cpy().lerp(Pal.accent, Main.hud.charge / turret.chargeTime));
-                numbers.set(3, Main.hud.charge / turret.chargeTime);
+                colors.set(3, Pal.surge.cpy().lerp(Pal.accent, SVars.hud.charge / turret.chargeTime));
+                numbers.set(3, SVars.hud.charge / turret.chargeTime);
             }
         }
         else if(target instanceof Unit && ((Unit) target).type != null) {

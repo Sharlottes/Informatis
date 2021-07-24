@@ -33,6 +33,7 @@ jar {
 dependencies {
     compileOnly "com.github.Anuken.Arc:arc-core:$pMindustryVersion"
     compileOnly "com.github.Anuken.Mindustry:core:$pMindustryVersion"
+    implementation 'org.hjson:hjson:3.0.0'
 }
 
 task dexify(type: Jar) {

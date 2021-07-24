@@ -3,6 +3,7 @@ package UnitInfo.core;
 import UnitInfo.ui.FreeBar;
 import arc.Core;
 import arc.Events;
+import arc.files.Fi;
 import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Fill;
@@ -30,12 +31,11 @@ import mindustry.world.Block;
 import mindustry.world.blocks.defense.turrets.BaseTurret;
 import mindustry.world.blocks.defense.turrets.Turret;
 
+import static UnitInfo.SVars.*;
 import static arc.Core.*;
 import static mindustry.Vars.*;
 
 public class Main extends Mod {
-    public static Setting settingAdder = new Setting();
-    public static HudUi hud = new HudUi();
 
     @Override
     public void init(){
@@ -48,6 +48,8 @@ public class Main extends Mod {
             hud.addTileTable();
             hud.addTable();
             hud.setEvent();
+            playerinfo.createFile();
+            playerinfo.setEvent();
         });
 
         Events.on(WorldLoadEvent.class, e -> {
@@ -61,8 +63,6 @@ public class Main extends Mod {
             hud = new HudUi();
             hud.addWaveTable();
         });
-
-
 
         Events.run(Trigger.draw, () -> {
             if(settings.getBool("blockstatus")) Groups.build.each(build -> {
