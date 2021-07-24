@@ -112,7 +112,7 @@ public class Main extends Mod {
 
             if(settings.getBool("rangeNearby")) {
                 Groups.all.each(entityc ->
-                        (entityc instanceof BaseTurret.BaseTurretBuild || entityc instanceof Unit) && player != null
+                        (entityc instanceof BaseTurret.BaseTurretBuild || (settings.getBool("unitRange") && entityc instanceof Unit)) && player != null
                                 && (settings.getBool("allTeamRange") || (player.team() != ((Ranged) entityc).team() && ((Ranged) entityc).team() != Team.derelict)), entityc -> {
                     if(entityc instanceof Turret.TurretBuild
                             && (settings.getBool("allTargetRange") || !(player.unit().isFlying() && ((Turret)((Turret.TurretBuild) entityc).block).targetAir || !(player.unit().isFlying()) && ((Turret)((Turret.TurretBuild) entityc).block).targetGround))) return;

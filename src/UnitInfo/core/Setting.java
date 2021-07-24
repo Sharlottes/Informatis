@@ -277,6 +277,7 @@ public class Setting {
         addGraphicCheckSetting("rangeNearby", true, scanSeq);
         addGraphicCheckSetting("allTeamRange", false, scanSeq);
         addGraphicCheckSetting("allTargetRange", false, scanSeq);
+        addGraphicCheckSetting("unitRange", false, scanSeq);
         addGraphicSlideSetting("rangeRadius", 5, 0, 20, 1, s -> s + "tiles", scanSeq);
         addGraphicDialogSetting("wavesetting", scanSeq, scanTable);
 
