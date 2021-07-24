@@ -675,6 +675,8 @@ public class HudUi {
             if(Vars.player.unit() == null) return;
 
             for(int i = 0; i < coreItems.tables.size; i++){
+                coreamount = coreItems.teams[i].cores().size;
+                if(coreItems.teams[i].cores().isEmpty()) continue;
                 int finalI = i;
                 t.table(Tex.underline2, head -> {
                     head.table(label -> {
@@ -683,7 +685,6 @@ public class HudUi {
                     });
                 });
                 t.row();
-                coreamount = coreItems.teams[i].cores().size;
                 for(int r = 0; r < coreamount; r++) {
                     CoreBlock.CoreBuild core = coreItems.teams[i].cores().get(r);
 
@@ -815,6 +816,7 @@ public class HudUi {
     public void setItem(Table table){
         table.table(t -> {
             for(int i = 0; i < coreItems.tables.size; i++){
+                if(coreItems.teams[i].cores().isEmpty()) continue;
                 int finalI = i;
                 t.background(Tex.underline2).label(() -> "[#" + coreItems.teams[finalI].color.toString() + "]" + coreItems.teams[finalI].name + "[]").center();
                 t.row();
