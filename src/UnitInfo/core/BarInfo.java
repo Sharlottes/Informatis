@@ -17,6 +17,7 @@ import mindustry.gen.*;
 import mindustry.graphics.Pal;
 import mindustry.ui.Fonts;
 import mindustry.world.blocks.ConstructBlock;
+import mindustry.world.blocks.defense.ForceProjector;
 import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.blocks.storage.*;
 import mindustry.world.blocks.units.Reconstructor;
@@ -32,19 +33,6 @@ public class BarInfo {
     static Seq<String> strings = new Seq<>(new String[]{"","","","","",""});
     static Seq<Float> numbers = new Seq<>(new Float[]{0f,0f,0f,0f,0f,0f});
     static Seq<Color> colors = new Seq<>(new Color[]{Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear});
-
-    public static <T extends Teamc> Seq<String> returnStrings(T target){
-        getInfo(target);
-        return strings;
-    }
-    public static <T extends Teamc> Seq<Color> returnColors(T target){
-        getInfo(target);
-        return colors;
-    }
-    public static <T extends Teamc> Seq<Float> returnNumbers(T target){
-        getInfo(target);
-        return numbers;
-    }
 
     public static String format(float number){
         if(number >= 10000) return UI.formatAmount((long)number);
@@ -97,6 +85,15 @@ public class BarInfo {
             strings.set(1, Core.bundle.format("shar-stat.progress", Strings.fixed(reconstruct.fraction() * 100, 1)));
             colors.set(1, Pal.darkerMetal);
             numbers.set(1, reconstruct.fraction());
+        }
+        else if(target instanceof ForceProjector.ForceBuild){
+            ForceProjector.ForceBuild force = (ForceProjector.ForceBuild) target;
+            ForceProjector forceBlock = (ForceProjector) force.block;
+            float max = forceBlock.shieldHealth + forceBlock.phaseShieldBoost * force.phaseHeat;
+            strings.set(1, Core.bundle.format("shar-stat.shield", format(max-force.buildup), max));
+            colors.set(1, Pal.shield);
+            numbers.set(1, (max-force.buildup)/max);
+
         }
         
         if(target instanceof ItemTurret.ItemTurretBuild) {

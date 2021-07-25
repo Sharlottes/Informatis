@@ -62,22 +62,29 @@ public class HudUi {
     int waveamount;
     int coreamount;
 
-    Seq<String> strings = new Seq<>(new String[]{"","","","","",""});
-    Seq<Float> numbers = new Seq<>(new Float[]{0f,0f,0f,0f,0f,0f});
-    Seq<Color> colors = new Seq<>(new Color[]{Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear});
     Seq<Color> lastColors = new Seq<>(new Color[]{Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear});
     CoresItemsDisplay coreItems = new CoresItemsDisplay(Team.baseTeams);
-
 
     @Nullable Teamc target;
 
     @SuppressWarnings("unchecked")
     public <T extends Teamc> T getTarget(){
-        if(locked && lockedTarget != null) return (T) lockedTarget; //if there is locked target, return it first.
-        Seq<Unit> units = Groups.unit.intersect(Core.input.mouseWorldX(), Core.input.mouseWorldY(), 4, 4);
-        if(units.size > 0) return (T) units.peek(); //if there is unit, return it.
-        else if(getTile() != null && getTile().build != null) return (T) getTile().build; //if there isn't unit but there is build, return it.
-        else if(player.unit() instanceof BlockUnitUnit && ((BlockUnitUnit)player.unit()).tile() != null) return (T)((BlockUnitUnit)player.unit()).tile();
+        if(locked &&
+            (lockedTarget instanceof Unit && ((Unit) lockedTarget).dead) ||
+            (lockedTarget instanceof Building && ((Building) lockedTarget).dead)) {
+            lockedTarget = null;
+            locked = false;
+        }
+        if(locked && lockedTarget != null)
+            return (T) lockedTarget; //if there is locked target, return it first.
+
+        Seq<Unit> units = Groups.unit.intersect(Core.input.mouseWorldX(), Core.input.mouseWorldY(), 4, 4); // well, 0.5tile is enough to search them........ maybe?
+        if(units.size > 0)
+            return (T) units.peek(); //if there is unit, return it.
+        else if(getTile() != null && getTile().build != null)
+            return (T) getTile().build; //if there isn't unit but there is build, return it.
+        else if(player.unit() instanceof BlockUnitUnit && ((BlockUnitUnit)player.unit()).tile() != null)
+            return (T)((BlockUnitUnit)player.unit()).tile();
         return (T) player.unit(); //if there are not unit and not build, return player.
     }
 
@@ -225,27 +232,27 @@ public class HudUi {
 
     public void addBars(){
         bars.clear();
-        lastColors.set(2, colors.get(2));
+
         {
             int i = 0;
             bars.add(new SBar(
-                    () -> strings.get(i),
+                    () -> BarInfo.strings.get(i),
                     () -> {
-                        if (colors.get(i) != Color.clear) lastColors.set(i, colors.get(i));
+                        if (BarInfo.colors.get(i) != Color.clear) lastColors.set(i, BarInfo.colors.get(i));
                         return lastColors.get(i);
                     },
-                    () -> numbers.get(i)
+                    () -> BarInfo.numbers.get(i)
             ));
         }
         {
             int i = 1;
             bars.add(new SBar(
-                    () -> strings.get(i),
+                    () -> BarInfo.strings.get(i),
                     () -> {
-                        if (colors.get(i) != Color.clear) lastColors.set(i, colors.get(i));
+                        if (BarInfo.colors.get(i) != Color.clear) lastColors.set(i, BarInfo.colors.get(i));
                         return lastColors.get(i);
                     },
-                    () -> numbers.get(i)
+                    () -> BarInfo.numbers.get(i)
             ));
         }
         bars.add(new Stack(){{
@@ -253,12 +260,12 @@ public class HudUi {
                 t.top().defaults().width(Scl.scl(23 * 8f)).height(Scl.scl(4f * 8f));
                 int i = 2;
                 t.add(new SBar(
-                    () -> strings.get(i),
+                    () -> BarInfo.strings.get(i),
                     () -> {
-                        if(colors.get(i) != Color.clear) lastColors.set(i, colors.get(i));
+                        if(BarInfo.colors.get(i) != Color.clear) lastColors.set(i, BarInfo.colors.get(i));
                         return lastColors.get(i);
                     },
-                    () -> numbers.get(i)
+                    () -> BarInfo.numbers.get(i)
                 )).growX().left();
             }));
             add(new Table(){{
@@ -333,12 +340,12 @@ public class HudUi {
         {
             int i = 3;
             bars.add(new SBar(
-                    () -> strings.get(i),
+                    () -> BarInfo.strings.get(i),
                     () -> {
-                        if (colors.get(i) != Color.clear) lastColors.set(i, colors.get(i));
+                        if (BarInfo.colors.get(i) != Color.clear) lastColors.set(i, BarInfo.colors.get(i));
                         return lastColors.get(i);
                     },
-                    () -> numbers.get(i)
+                    () -> BarInfo.numbers.get(i)
             ));
         }
 
@@ -346,12 +353,12 @@ public class HudUi {
         {
             int i = 4;
             bars.add(new SBar(
-                    () -> strings.get(i),
+                    () -> BarInfo.strings.get(i),
                     () -> {
-                        if (colors.get(i) != Color.clear) lastColors.set(i, colors.get(i));
+                        if (BarInfo.colors.get(i) != Color.clear) lastColors.set(i, BarInfo.colors.get(i));
                         return lastColors.get(i);
                     },
-                    () -> numbers.get(i)
+                    () -> BarInfo.numbers.get(i)
             ));
         }
 
@@ -361,12 +368,12 @@ public class HudUi {
 
                 int i = 5;
                 t.add(new SBar(
-                        () -> strings.get(i),
+                        () -> BarInfo.strings.get(i),
                         () -> {
-                            if (colors.get(i) != Color.clear) lastColors.set(i, colors.get(i));
+                            if (BarInfo.colors.get(i) != Color.clear) lastColors.set(i, BarInfo.colors.get(i));
                             return lastColors.get(i);
                         },
-                        () -> numbers.get(i)
+                        () -> BarInfo.numbers.get(i)
                 )).growX().left();
             }));
             add(new Table(t -> {
@@ -569,9 +576,7 @@ public class HudUi {
             }).padRight(Scl.scl(24 * 8f));
             table.row();
             table.update(() -> {
-                strings = BarInfo.returnStrings(getTarget());
-                numbers = BarInfo.returnNumbers(getTarget());
-                colors = BarInfo.returnColors(getTarget());
+                BarInfo.getInfo(target);
                 if(getTarget() instanceof Turret.TurretBuild){
                     if(((Turret.TurretBuild) getTarget()).charging) charge += Time.delta;
                     else charge = 0f;
