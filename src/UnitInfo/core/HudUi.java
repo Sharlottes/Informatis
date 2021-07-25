@@ -770,6 +770,7 @@ public class HudUi {
             for(int i = 0; i < coreItems.tables.size; i++){
                 coreamount = coreItems.teams[i].cores().size;
                 if(coreItems.teams[i].cores().isEmpty()) continue;
+                if(state.rules.pvp && coreItems.teams[i] != player.team()) continue;
                 int finalI = i;
                 t.table(Tex.underline2, head -> {
                     head.table(label -> {
@@ -909,7 +910,7 @@ public class HudUi {
     public void setItem(Table table){
         table.table(t -> {
             for(int i = 0; i < coreItems.tables.size; i++){
-                if(coreItems.teams[i].cores().isEmpty()) continue;
+                if((state.rules.pvp && coreItems.teams[i] != player.team()) || coreItems.teams[i].cores().isEmpty()) continue;
                 int finalI = i;
                 t.background(Tex.underline2).label(() -> "[#" + coreItems.teams[finalI].color.toString() + "]" + coreItems.teams[finalI].name + "[]").center();
                 t.row();
