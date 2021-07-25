@@ -491,7 +491,7 @@ public class HudUi {
                                 add(new Table(temp -> temp.add(new Image(){{
                                     update(()->{
                                         TextureRegion region = atlas.find("clear");
-                                        if(getTarget() instanceof Unit && !((Unit) getTarget()).dead) region = Icon.defenseSmall.getRegion();
+                                        if(getTarget() instanceof Unit) region = Icon.defenseSmall.getRegion();
                                         setDrawable(region);
                                     });
                                 }}.setScaling(Scaling.fit))));
