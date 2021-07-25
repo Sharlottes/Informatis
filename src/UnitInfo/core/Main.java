@@ -27,7 +27,9 @@ import mindustry.logic.Ranged;
 import mindustry.mod.Mod;
 import mindustry.ui.Fonts;
 import mindustry.world.Block;
+import mindustry.world.blocks.ConstructBlock;
 import mindustry.world.blocks.defense.turrets.BaseTurret;
+import mindustry.world.blocks.defense.turrets.PointDefenseTurret;
 import mindustry.world.blocks.defense.turrets.Turret;
 
 import static UnitInfo.SVars.*;
@@ -113,8 +115,16 @@ public class Main extends Mod {
                 Groups.all.each(entityc ->
                         (entityc instanceof BaseTurret.BaseTurretBuild || (settings.getBool("unitRange") && entityc instanceof Unit)) && player != null
                                 && (settings.getBool("allTeamRange") || (player.team() != ((Ranged) entityc).team() && ((Ranged) entityc).team() != Team.derelict)), entityc -> {
-                    if(entityc instanceof Turret.TurretBuild
-                            && (settings.getBool("allTargetRange") || !(player.unit().isFlying() && ((Turret)((Turret.TurretBuild) entityc).block).targetAir || !(player.unit().isFlying()) && ((Turret)((Turret.TurretBuild) entityc).block).targetGround))) return;
+                    if(entityc instanceof PointDefenseTurret.PointDefenseBuild || ((entityc instanceof ConstructBlock.ConstructBuild && ((ConstructBlock.ConstructBuild)entityc).current instanceof Turret && (settings.getBool("allTargetRange") ||
+                            !(player.unit().isFlying() && ((Turret)((ConstructBlock.ConstructBuild)entityc).current).targetAir) ||
+                                    !(player.unit().isFlying() && ((Turret)((ConstructBlock.ConstructBuild)entityc).current).targetGround))) ||
+                            (entityc instanceof Turret.TurretBuild && (settings.getBool("allTargetRange") ||
+                            !(player.unit().isFlying() && ((Turret)((Turret.TurretBuild) entityc).block).targetAir) ||
+                            !(player.unit().isFlying() && ((Turret)((Turret.TurretBuild) entityc).block).targetGround) ||
+                            !((Turret.TurretBuild) entityc).hasAmmo())))) {
+                        Drawf.dashCircle(((Ranged) entityc).x(), ((Ranged) entityc).y(), ((Ranged) entityc).range(), Color.gray);
+                        return;
+                    };
                     float range = ((Ranged) entityc).range();
                     float margin = settings.getInt("rangeRadius") * tilesize;
                     if(Vars.player.dst((Position) entityc) <= range + margin)
