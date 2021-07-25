@@ -10,13 +10,17 @@ import arc.util.Time;
 import mindustry.ai.types.FormationAI;
 import mindustry.core.UI;
 import mindustry.ctype.UnlockableContent;
+import mindustry.entities.Units;
 import mindustry.entities.abilities.ForceFieldAbility;
 import mindustry.entities.abilities.ShieldRegenFieldAbility;
 import mindustry.gen.*;
 import mindustry.graphics.Pal;
+import mindustry.ui.Fonts;
 import mindustry.world.blocks.ConstructBlock;
 import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.blocks.storage.*;
+import mindustry.world.blocks.units.Reconstructor;
+import mindustry.world.blocks.units.UnitFactory;
 import mindustry.world.consumers.ConsumePower;
 
 
@@ -77,7 +81,18 @@ public class BarInfo {
             colors.set(1, Pal.darkerMetal);
             numbers.set(1, construct.progress);
         }
-
+        else if(target instanceof UnitFactory.UnitFactoryBuild){
+            UnitFactory.UnitFactoryBuild factory = (UnitFactory.UnitFactoryBuild) target;
+            strings.set(1, Core.bundle.format("shar-stat.progress", Strings.fixed(factory.fraction() * 100f, 1)));
+            colors.set(1, Pal.darkerMetal);
+            numbers.set(1, factory.fraction());
+        }
+        else if(target instanceof Reconstructor.ReconstructorBuild){
+            Reconstructor.ReconstructorBuild reconstruct = (Reconstructor.ReconstructorBuild) target;
+            strings.set(1, Core.bundle.format("shar-stat.progress", Strings.fixed(reconstruct.fraction() * 100, 1)));
+            colors.set(1, Pal.darkerMetal);
+            numbers.set(1, reconstruct.fraction());
+        }
         
         if(target instanceof ItemTurret.ItemTurretBuild) {
             ItemTurret.ItemTurretBuild turretBuild = (ItemTurret.ItemTurretBuild) target;
@@ -123,7 +138,7 @@ public class BarInfo {
         }
         else if(target instanceof Unit && ((Unit)target).type() != null) {
             strings.set(2, bundle.format("shar-stat.itemCapacity", UI.formatAmount(((Unit)target).stack().amount), UI.formatAmount(((Unit)target).type().itemCapacity)));
-            colors.set(2, ((Unit)target).stack().item.color.cpy().lerp(Color.white, 0.15f));
+            if(((Unit)target).stack().amount > 0 && ((Unit)target).stack().item != null) colors.set(2, ((Unit)target).stack().item.color.cpy().lerp(Color.white, 0.15f));
             numbers.set(2, ((Unit)target).stack().amount / (((Unit)target).type().itemCapacity * 1f));
         }
 
@@ -142,7 +157,13 @@ public class BarInfo {
             colors.set(3, Pal.powerBar.cpy().lerp(Pal.surge.cpy().mul(Pal.lighterOrange), Mathf.absin(Time.time, 7f / (1f + Mathf.clamp(Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == target) / (((Unit)target).type().commandLimit * 1f))), 1f)));
             numbers.set(3, Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == target) / (((Unit)target).type().commandLimit * 1f));
         }
-
+        else if(target instanceof UnitFactory.UnitFactoryBuild){
+            UnitFactory.UnitFactoryBuild factory = (UnitFactory.UnitFactoryBuild) target;
+            strings.set(3, factory.unit() == null ? "[lightgray]" + Iconc.cancel :
+                    Core.bundle.format("bar.unitcap", Fonts.getUnicodeStr(factory.unit().name), factory.team.data().countType(factory.unit()), Units.getCap(factory.team)));
+            colors.set(3, Pal.power);
+            numbers.set(3, factory.unit() == null ? 0f : (float)factory.team.data().countType(factory.unit()) / Units.getCap(factory.team));
+        }
 
         if(target instanceof Unit && target instanceof Payloadc && ((Unit) target).type != null){
             strings.set(4, Core.bundle.format("shar-stat.payloadCapacity", Mathf.round(Mathf.sqrt(((Payloadc)target).payloadUsed())), Mathf.round(Mathf.sqrt(((Unit)target).type().payloadCapacity))));

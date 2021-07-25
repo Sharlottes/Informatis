@@ -3,7 +3,6 @@ package UnitInfo.core;
 import UnitInfo.ui.FreeBar;
 import arc.Core;
 import arc.Events;
-import arc.files.Fi;
 import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Fill;

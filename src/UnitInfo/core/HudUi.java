@@ -7,7 +7,6 @@ import arc.graphics.g2d.*;
 import arc.input.KeyCode;
 import arc.math.*;
 import arc.math.geom.Geometry;
-import arc.math.geom.Vec2;
 import arc.scene.*;
 import arc.scene.event.HandCursorListener;
 import arc.scene.style.*;
@@ -18,7 +17,6 @@ import arc.struct.*;
 import arc.util.*;
 import mindustry.*;
 import mindustry.content.*;
-import mindustry.entities.Predict;
 import mindustry.entities.Units;
 import mindustry.entities.units.*;
 import mindustry.game.*;
@@ -52,8 +50,6 @@ public class HudUi {
     float tileScrollPos;
     float itemScrollPos;
 
-    Color lastItemColor = Pal.items;
-    Color lastAmmoColor = Pal.ammo;
     Teamc lockedTarget;
     ImageButton lockButton;
     boolean locked = false;
@@ -69,7 +65,7 @@ public class HudUi {
     Seq<String> strings = new Seq<>(new String[]{"","","","","",""});
     Seq<Float> numbers = new Seq<>(new Float[]{0f,0f,0f,0f,0f,0f});
     Seq<Color> colors = new Seq<>(new Color[]{Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear});
-
+    Seq<Color> lastColors = new Seq<>(new Color[]{Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear});
     CoresItemsDisplay coreItems = new CoresItemsDisplay(Team.baseTeams);
 
 
@@ -229,23 +225,40 @@ public class HudUi {
 
     public void addBars(){
         bars.clear();
-        bars.add(new SBar(
-            () -> strings.get(0),
-            () -> colors.get(0),
-            () -> numbers.get(0)
-        ));
-        bars.add(new SBar(
-            () -> strings.get(1),
-            () -> colors.get(1),
-            () -> numbers.get(1)
-        ));
+        lastColors.set(2, colors.get(2));
+        {
+            int i = 0;
+            bars.add(new SBar(
+                    () -> strings.get(i),
+                    () -> {
+                        if (colors.get(i) != Color.clear) lastColors.set(i, colors.get(i));
+                        return lastColors.get(i);
+                    },
+                    () -> numbers.get(i)
+            ));
+        }
+        {
+            int i = 1;
+            bars.add(new SBar(
+                    () -> strings.get(i),
+                    () -> {
+                        if (colors.get(i) != Color.clear) lastColors.set(i, colors.get(i));
+                        return lastColors.get(i);
+                    },
+                    () -> numbers.get(i)
+            ));
+        }
         bars.add(new Stack(){{
             add(new Table(t -> {
                 t.top().defaults().width(Scl.scl(23 * 8f)).height(Scl.scl(4f * 8f));
+                int i = 2;
                 t.add(new SBar(
-                    () -> strings.get(2),
-                    () -> lastItemColor = colors.get(2),
-                    () -> numbers.get(2)
+                    () -> strings.get(i),
+                    () -> {
+                        if(colors.get(i) != Color.clear) lastColors.set(i, colors.get(i));
+                        return lastColors.get(i);
+                    },
+                    () -> numbers.get(i)
                 )).growX().left();
             }));
             add(new Table(){{
@@ -316,26 +329,44 @@ public class HudUi {
             }));
         }});
 
-        bars.add(new SBar(
-            () -> strings.get(3),
-            () -> colors.get(3),
-            () -> numbers.get(3)
-        ));
 
-        bars.add(new SBar(
-            () -> strings.get(4),
-            () -> colors.get(4),
-            () -> numbers.get(4)
-        ));
+        {
+            int i = 3;
+            bars.add(new SBar(
+                    () -> strings.get(i),
+                    () -> {
+                        if (colors.get(i) != Color.clear) lastColors.set(i, colors.get(i));
+                        return lastColors.get(i);
+                    },
+                    () -> numbers.get(i)
+            ));
+        }
+
+
+        {
+            int i = 4;
+            bars.add(new SBar(
+                    () -> strings.get(i),
+                    () -> {
+                        if (colors.get(i) != Color.clear) lastColors.set(i, colors.get(i));
+                        return lastColors.get(i);
+                    },
+                    () -> numbers.get(i)
+            ));
+        }
 
         bars.add(new Stack(){{
             add(new Table(t -> {
                 t.top().defaults().width(Scl.scl(23 * 8f)).height(Scl.scl(4f * 8f));
 
+                int i = 5;
                 t.add(new SBar(
-                    () -> strings.get(5),
-                    () -> lastAmmoColor = colors.get(5),
-                    () -> numbers.get(5)
+                        () -> strings.get(i),
+                        () -> {
+                            if (colors.get(i) != Color.clear) lastColors.set(i, colors.get(i));
+                            return lastColors.get(i);
+                        },
+                        () -> numbers.get(i)
                 )).growX().left();
             }));
             add(new Table(t -> {
