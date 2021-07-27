@@ -100,19 +100,19 @@ public class BarInfo {
             numbers.set(1, (float) over.sense(LAccess.progress));
         }
         
-        if(target instanceof ItemTurret.ItemTurretBuild turretBuild) {
-            strings.set(2, bundle.format("shar-stat.itemAmmo", format(turretBuild.totalAmmo), format(((ItemTurret)turretBuild.block).maxAmmo)));
-            colors.set(2, turretBuild.hasAmmo() ? ((ItemTurret)turretBuild.block).ammoTypes.findKey(turretBuild.peekAmmo(), true).color : Pal.ammo);
-            numbers.set(2, turretBuild.totalAmmo / (((ItemTurret)turretBuild.block).maxAmmo * 1f));
+        if(target instanceof ItemTurret.ItemTurretBuild turret) {
+            strings.set(2, bundle.format("shar-stat.itemAmmo", format(turret.totalAmmo), format(((ItemTurret)turret.block).maxAmmo)));
+            colors.set(2, turret.hasAmmo() ? ((ItemTurret)turret.block).ammoTypes.findKey(turret.peekAmmo(), true).color : Pal.ammo);
+            numbers.set(2, turret.totalAmmo / (((ItemTurret)turret.block).maxAmmo * 1f));
         }
-        else if(target instanceof LiquidTurret.LiquidTurretBuild turretBuild){
-            strings.set(2, bundle.format("shar-stat.liquidAmmo", format(turretBuild.liquids.get(turretBuild.liquids.current())), format(turretBuild.block.liquidCapacity)));
-            colors.set(2, turretBuild.liquids.current().color);
-            numbers.set(2, turretBuild.liquids.get(turretBuild.liquids.current()) / turretBuild.block.liquidCapacity);
+        else if(target instanceof LiquidTurret.LiquidTurretBuild turret){
+            strings.set(2, bundle.format("shar-stat.liquidAmmo", format(turret.liquids.get(turret.liquids.current())), format(turret.block.liquidCapacity)));
+            colors.set(2, turret.liquids.current().color);
+            numbers.set(2, turret.liquids.get(turret.liquids.current()) / turret.block.liquidCapacity);
         }
-        else if(target instanceof PowerTurret.PowerTurretBuild entity){
-            float max = entity.block.consumes.getPower().usage;
-            float v = entity.power.status * entity.power.graph.getLastScaledPowerIn();
+        else if(target instanceof PowerTurret.PowerTurretBuild turret){
+            float max = turret.block.consumes.getPower().usage;
+            float v = turret.power.status * turret.power.graph.getLastScaledPowerIn();
             strings.set(2, bundle.format("shar-stat.power", format(Math.min(v,max) * 60), format(max * 60)));
             colors.set(2, Pal.powerBar);
             numbers.set(2, v/max);
@@ -124,8 +124,7 @@ public class BarInfo {
             }
             else if(target instanceof StorageBlock.StorageBuild sb && !sb.canPickup()){
                 for(int i = 0; i < 4; i++) {
-                    //                    Building build = i == 0 ? ((Building) target).front() : i == 1 ? ((Building) target).back() : i == 2 ? ((Building) target).left() : ((Building) target).right();
-                    Building build = sb.nearby(i);
+                    Building build = i == 0 ? sb.front() : i == 1 ? sb.back() : i == 2 ? sb.left() : sb.right();
                     if(build instanceof CoreBlock.CoreBuild cb){
                         strings.set(2, bundle.format("shar-stat.itemCapacity", format(sb.items.total()), format(cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow))));
                         numbers.set(2, sb.items.total() / (cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow) * 1f));
@@ -139,10 +138,10 @@ public class BarInfo {
             }
             colors.set(2, Pal.items);
         }
-        else if(target instanceof Unit unit && unit.type() != null) {
-            strings.set(2, bundle.format("shar-stat.itemCapacity", format(unit.stack().amount), format(unit.type().itemCapacity)));
-            if(unit.stack().amount > 0 && unit.stack().item != null) colors.set(2, unit.stack().item.color.cpy().lerp(Color.white, 0.15f));
-            numbers.set(2, unit.stack().amount / (unit.type().itemCapacity * 1f));
+        else if(target instanceof Unit unit && unit.type != null) {
+            strings.set(2, bundle.format("shar-stat.itemCapacity", format(unit.stack.amount), format(unit.type.itemCapacity)));
+            if(unit.stack.amount > 0 && unit.stack().item != null) colors.set(2, unit.stack.item.color.cpy().lerp(Color.white, 0.15f));
+            numbers.set(2, unit.stack.amount / (unit.type.itemCapacity * 1f));
         }
 
 
