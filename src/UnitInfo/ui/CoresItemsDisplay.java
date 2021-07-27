@@ -1,16 +1,14 @@
 package UnitInfo.ui;
 
-import arc.scene.ui.layout.Table;
-import arc.struct.ObjectSet;
-import arc.struct.Seq;
-import mindustry.content.UnitTypes;
-import mindustry.core.UI;
-import mindustry.game.Team;
-import mindustry.gen.Groups;
-import mindustry.type.Item;
-import mindustry.type.UnitType;
-import mindustry.ui.Styles;
-import mindustry.world.blocks.storage.CoreBlock;
+import arc.scene.ui.layout.*;
+import arc.struct.*;
+import mindustry.content.*;
+import mindustry.core.*;
+import mindustry.game.*;
+import mindustry.gen.*;
+import mindustry.type.*;
+import mindustry.ui.*;
+import mindustry.world.blocks.storage.*;
 
 import static mindustry.Vars.content;
 import static mindustry.Vars.iconSmall;
