@@ -2,6 +2,8 @@ package UnitInfo.core;
 
 import UnitInfo.ui.*;
 import arc.*;
+import arc.func.Floatp;
+import arc.func.Prov;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.input.KeyCode;
@@ -62,8 +64,13 @@ public class HudUi {
     int waveamount;
     int coreamount;
 
-    Seq<Color> lastColors = new Seq<>(new Color[]{Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear});
+    //is this rly good idea?
+    Seq<String> strings = Seq.with("","","","","","");
+    FloatSeq numbers = FloatSeq.with(0f,0f,0f,0f,0f,0f);
+    Seq<Color> colors = Seq.with(Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear);
+    Seq<Color> lastColors = Seq.with(Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear);
     CoresItemsDisplay coreItems = new CoresItemsDisplay(Team.baseTeams);
+
 
     @Nullable Teamc target;
 
@@ -232,27 +239,27 @@ public class HudUi {
 
     public void addBars(){
         bars.clear();
-
+        lastColors.set(2, colors.get(2));
         {
             int i = 0;
             bars.add(new SBar(
-                    () -> BarInfo.strings.get(i),
+                    () -> strings.get(i),
                     () -> {
-                        if (BarInfo.colors.get(i) != Color.clear) lastColors.set(i, BarInfo.colors.get(i));
+                        if (colors.get(i) != Color.clear) lastColors.set(i, colors.get(i));
                         return lastColors.get(i);
                     },
-                    () -> BarInfo.numbers.get(i)
+                    () -> numbers.get(i)
             ));
         }
         {
             int i = 1;
             bars.add(new SBar(
-                    () -> BarInfo.strings.get(i),
+                    () -> strings.get(i),
                     () -> {
-                        if (BarInfo.colors.get(i) != Color.clear) lastColors.set(i, BarInfo.colors.get(i));
+                        if (colors.get(i) != Color.clear) lastColors.set(i, colors.get(i));
                         return lastColors.get(i);
                     },
-                    () -> BarInfo.numbers.get(i)
+                    () -> numbers.get(i)
             ));
         }
         bars.add(new Stack(){{
@@ -340,12 +347,12 @@ public class HudUi {
         {
             int i = 3;
             bars.add(new SBar(
-                    () -> BarInfo.strings.get(i),
+                    () -> strings.get(i),
                     () -> {
-                        if (BarInfo.colors.get(i) != Color.clear) lastColors.set(i, BarInfo.colors.get(i));
+                        if (colors.get(i) != Color.clear) lastColors.set(i, colors.get(i));
                         return lastColors.get(i);
                     },
-                    () -> BarInfo.numbers.get(i)
+                    () -> numbers.get(i)
             ));
         }
 
@@ -353,12 +360,12 @@ public class HudUi {
         {
             int i = 4;
             bars.add(new SBar(
-                    () -> BarInfo.strings.get(i),
+                    () -> strings.get(i),
                     () -> {
-                        if (BarInfo.colors.get(i) != Color.clear) lastColors.set(i, BarInfo.colors.get(i));
+                        if (colors.get(i) != Color.clear) lastColors.set(i, colors.get(i));
                         return lastColors.get(i);
                     },
-                    () -> BarInfo.numbers.get(i)
+                    () -> numbers.get(i)
             ));
         }
 
@@ -368,12 +375,12 @@ public class HudUi {
 
                 int i = 5;
                 t.add(new SBar(
-                        () -> BarInfo.strings.get(i),
+                        () -> strings.get(i),
                         () -> {
-                            if (BarInfo.colors.get(i) != Color.clear) lastColors.set(i, BarInfo.colors.get(i));
+                            if (colors.get(i) != Color.clear) lastColors.set(i, colors.get(i));
                             return lastColors.get(i);
                         },
-                        () -> BarInfo.numbers.get(i)
+                        () -> numbers.get(i)
                 )).growX().left();
             }));
             add(new Table(t -> {
@@ -576,7 +583,11 @@ public class HudUi {
             }).padRight(Scl.scl(24 * 8f));
             table.row();
             table.update(() -> {
-                BarInfo.getInfo(target);
+                BarInfo.getInfo(getTarget());
+                strings = BarInfo.strings;
+                numbers = BarInfo.numbers;
+                colors = BarInfo.colors;
+
                 if(getTarget() instanceof Turret.TurretBuild){
                     if(((Turret.TurretBuild) getTarget()).charging) charge += Time.delta;
                     else charge = 0f;

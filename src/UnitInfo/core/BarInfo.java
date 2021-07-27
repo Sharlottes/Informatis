@@ -4,7 +4,9 @@ import UnitInfo.SVars;
 import arc.Core;
 import arc.graphics.Color;
 import arc.math.Mathf;
+import arc.struct.FloatSeq;
 import arc.struct.Seq;
+import arc.util.Log;
 import arc.util.Strings;
 import arc.util.Time;
 import mindustry.ai.types.FormationAI;
@@ -15,9 +17,13 @@ import mindustry.entities.abilities.ForceFieldAbility;
 import mindustry.entities.abilities.ShieldRegenFieldAbility;
 import mindustry.gen.*;
 import mindustry.graphics.Pal;
+import mindustry.logic.LAccess;
+import mindustry.type.Item;
 import mindustry.ui.Fonts;
 import mindustry.world.blocks.ConstructBlock;
 import mindustry.world.blocks.defense.ForceProjector;
+import mindustry.world.blocks.defense.MendProjector;
+import mindustry.world.blocks.defense.OverdriveProjector;
 import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.blocks.storage.*;
 import mindustry.world.blocks.units.Reconstructor;
@@ -31,7 +37,7 @@ import static mindustry.Vars.state;
 
 public class BarInfo {
     static Seq<String> strings = Seq.with("","","","","","");
-    static Seq<Float> numbers = Seq.with(0f,0f,0f,0f,0f,0f);
+    static FloatSeq numbers = FloatSeq.with(0f,0f,0f,0f,0f,0f);
     static Seq<Color> colors = Seq.with(Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear);
 
     public static String format(float number){
@@ -70,10 +76,9 @@ public class BarInfo {
             numbers.set(1, unit.shield() / Math.max(max1, max2));
         }
         else if(target instanceof ConstructBlock.ConstructBuild build){
-            ConstructBlock.ConstructBuild construct = build;
-            strings.set(1, Core.bundle.format("shar-stat.progress", Strings.fixed(construct.progress * 100, 1)));
+            strings.set(1, Core.bundle.format("shar-stat.progress", Strings.fixed(build.progress * 100, 1)));
             colors.set(1, Pal.darkerMetal);
-            numbers.set(1, construct.progress);
+            numbers.set(1, build.progress);
         }
         else if(target instanceof UnitFactory.UnitFactoryBuild build){
             strings.set(1, Core.bundle.format("shar-stat.progress", Strings.fixed(build.fraction() * 100f, 1)));
@@ -88,10 +93,19 @@ public class BarInfo {
         else if(target instanceof ForceProjector.ForceBuild force){
             ForceProjector forceBlock = (ForceProjector) force.block;
             float max = forceBlock.shieldHealth + forceBlock.phaseShieldBoost * force.phaseHeat;
-            strings.set(1, Core.bundle.format("shar-stat.shield", format(max-force.buildup), max));
+            strings.set(1, Core.bundle.format("shar-stat.shield", format(max-force.buildup), format(max)));
             colors.set(1, Pal.shield);
             numbers.set(1, (max-force.buildup)/max);
-
+        }
+        else if(target instanceof MendProjector.MendBuild mend){
+            strings.set(1, Core.bundle.format("shar-stat.progress", Strings.fixed((float) mend.sense(LAccess.progress), 1)));
+            colors.set(1, Pal.heal);
+            numbers.set(1, (float) mend.sense(LAccess.progress));
+        }
+        else if(target instanceof OverdriveProjector.OverdriveBuild over){
+            strings.set(1, Core.bundle.format("shar-stat.progress", Strings.fixed((float) over.sense(LAccess.progress), 1)));
+            colors.set(1, Pal.heal);
+            numbers.set(1, (float) over.sense(LAccess.progress));
         }
         
         if(target instanceof ItemTurret.ItemTurretBuild turretBuild) {
@@ -118,6 +132,7 @@ public class BarInfo {
             }
             else if(target instanceof StorageBlock.StorageBuild sb && !sb.canPickup()){
                 for(int i = 0; i < 4; i++) {
+                    //                    Building build = i == 0 ? ((Building) target).front() : i == 1 ? ((Building) target).back() : i == 2 ? ((Building) target).left() : ((Building) target).right();
                     Building build = sb.nearby(i);
                     if(build instanceof CoreBlock.CoreBuild cb){
                         strings.set(2, bundle.format("shar-stat.itemCapacity", format(sb.items.total()), format(cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow))));

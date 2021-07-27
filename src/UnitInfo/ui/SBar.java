@@ -9,19 +9,21 @@ import arc.math.geom.*;
 import arc.scene.*;
 import arc.scene.style.*;
 import arc.scene.ui.layout.*;
+import arc.struct.FloatSeq;
+import arc.struct.Seq;
+import arc.util.Log;
 import arc.util.pooling.*;
 import mindustry.graphics.*;
 import mindustry.ui.*;
 
 public class SBar extends Element{
-    private static final Rect scissor = new Rect();
+    static final Rect scissor = new Rect();
 
-    private final Floatp fraction;
-    private String name = "";
-    private float value, lastValue, blink;
-    private final Color blinkColor = new Color();
-    NinePatchDrawable bar;
-    NinePatchDrawable top;
+    Floatp fraction;
+    String name = "";
+    float value, lastValue, blink;
+    final Color blinkColor = new Color();
+    NinePatchDrawable bar, top;
     float spriteWidth;
 
     public SBar(Prov<String> name, Prov<Color> color, Floatp fraction){
@@ -40,6 +42,25 @@ public class SBar extends Element{
                 this.name = "";
             }
         });
+        init();
+    }
+
+
+    public Drawable drawable(String name, int left, int right, int top, int bottom){
+        Drawable out;
+
+        TextureAtlas.AtlasRegion region = Core.atlas.find(name);
+
+        int[] splits = {left, right, top, bottom};
+        NinePatch patch = new NinePatch(region, splits[0], splits[1], splits[2], splits[3]);
+        int[] pads = region.pads;
+        if(pads != null) patch.setPadding(pads[0], pads[1], pads[2], pads[3]);
+        out = new ScaledNinePatchDrawable(patch, 1f);
+
+        return out;
+    }
+
+    public void init(){
         boolean ssim = Core.settings.getBool("ssim");
         boolean shar = Core.settings.getBool("shar");
         boolean shar1 = Core.settings.getBool("shar1");
@@ -74,21 +95,6 @@ public class SBar extends Element{
             top = (NinePatchDrawable) drawable("unitinfo-barSSSSSS-top", 32, 32, 16, 16);
             spriteWidth = Core.atlas.find("unitinfo-barSSSSSS").width;
         }
-
-    }
-
-    public Drawable drawable(String name, int left, int right, int top, int bottom){
-        Drawable out;
-
-        TextureAtlas.AtlasRegion region = Core.atlas.find(name);
-
-        int[] splits = {left, right, top, bottom};
-        NinePatch patch = new NinePatch(region, splits[0], splits[1], splits[2], splits[3]);
-        int[] pads = region.pads;
-        if(pads != null) patch.setPadding(pads[0], pads[1], pads[2], pads[3]);
-        out = new ScaledNinePatchDrawable(patch, 1f);
-
-        return out;
     }
 
     @Override
@@ -141,8 +147,8 @@ public class SBar extends Element{
                 ScissorStack.pop();
             }
         }
-
         Draw.color();
+
         Font font = Fonts.outline;
         GlyphLayout lay = Pools.obtain(GlyphLayout.class, GlyphLayout::new);
         font.getData().setScale(Scl.scl());
