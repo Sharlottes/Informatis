@@ -2,21 +2,20 @@ package UnitInfo.core;
 
 import arc.*;
 import arc.graphics.*;
-import arc.scene.event.Touchable;
+import arc.scene.event.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
-import arc.struct.Seq;
+import arc.struct.*;
 import arc.util.*;
 import mindustry.*;
-import mindustry.core.Version;
+import mindustry.core.*;
 import mindustry.gen.*;
-import mindustry.ui.Styles;
+import mindustry.ui.*;
 import mindustry.ui.dialogs.*;
 
-import java.util.Iterator;
+import java.util.*;
 
-import static arc.Core.bundle;
-import static arc.Core.settings;
+import static arc.Core.*;
 import static mindustry.Vars.*;
 
 public class Setting {
@@ -78,9 +77,7 @@ public class Setting {
 
                 box.update(() -> box.setChecked(settings.getBool(name)));
 
-                box.changed(() -> {
-                    settings.put(name, box.isChecked());
-                });
+                box.changed(() -> settings.put(name, box.isChecked()));
 
                 box.left();
                 table.add(box).left().padTop(3f);
@@ -232,17 +229,17 @@ public class Setting {
             public Table rebuild() {
                 table.clearChildren();
 
-                Iterator var1 = list.iterator();
+                Iterator<SettingsMenuDialog.SettingsTable.Setting> var1 = list.iterator();
 
                 while(var1.hasNext()) {
-                    SettingsMenuDialog.SettingsTable.Setting setting = (SettingsMenuDialog.SettingsTable.Setting)var1.next();
+                    SettingsMenuDialog.SettingsTable.Setting setting = var1.next();
                     setting.add(table);
                 }
                 table.button(Core.bundle.get("settings.reset", "Reset to Defaults"), () -> {
-                    Iterator var2 = list.iterator();
+                    Iterator<SettingsMenuDialog.SettingsTable.Setting> var2 = list.iterator();
 
                     while(var2.hasNext()) {
-                        SettingsMenuDialog.SettingsTable.Setting setting = (SettingsMenuDialog.SettingsTable.Setting)var1.next();
+                        SettingsMenuDialog.SettingsTable.Setting setting = var1.next();
                         if (setting.name != null && setting.title != null) {
                             Core.settings.put(setting.name, Core.settings.getDefault(setting.name));
                         }

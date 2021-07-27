@@ -1,35 +1,21 @@
 package UnitInfo.core;
 
-import UnitInfo.ui.FreeBar;
-import arc.Core;
-import arc.Events;
-import arc.graphics.Color;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Fill;
-import arc.graphics.g2d.Lines;
-import arc.math.Angles;
-import arc.math.Mathf;
-import arc.math.geom.Position;
-import arc.scene.ui.layout.Scl;
-import arc.util.Align;
-import arc.util.Time;
-import arc.util.Tmp;
-import mindustry.Vars;
-import mindustry.content.Fx;
+import UnitInfo.ui.*;
+import arc.*;
+import arc.graphics.*;
+import arc.graphics.g2d.*;
+import arc.math.*;
+import arc.scene.ui.layout.*;
+import arc.util.*;
+import mindustry.*;
+import mindustry.content.*;
 import mindustry.game.EventType.*;
-import mindustry.game.Team;
-import mindustry.gen.Building;
-import mindustry.gen.Groups;
-import mindustry.gen.Teamc;
-import mindustry.gen.Unit;
-import mindustry.graphics.Drawf;
-import mindustry.graphics.Layer;
-import mindustry.graphics.Pal;
-import mindustry.mod.Mod;
-import mindustry.type.UnitType;
-import mindustry.ui.Fonts;
-import mindustry.world.Block;
-import mindustry.world.blocks.ConstructBlock;
+import mindustry.game.*;
+import mindustry.gen.*;
+import mindustry.graphics.*;
+import mindustry.mod.*;
+import mindustry.ui.*;
+import mindustry.world.*;
 import mindustry.world.blocks.defense.turrets.*;
 
 import static UnitInfo.SVars.*;
@@ -37,7 +23,6 @@ import static arc.Core.*;
 import static mindustry.Vars.*;
 
 public class Main extends Mod {
-
     @Override
     public void init(){
         Events.on(ClientLoadEvent.class, e -> {
@@ -111,68 +96,40 @@ public class Main extends Mod {
                 Draw.reset();
             });
 
+            // Turret Ranges
             if(settings.getBool("rangeNearby") && player != null) {
-                Groups.all.each(entityc -> entityc instanceof Teamc && (entityc instanceof Building || (settings.getBool("unitRange") && entityc instanceof Unit)), entityc -> { //only turret and unit are allowed
-                    boolean h = false;
-                    float range = 0;
-                    if(entityc instanceof Turret.TurretBuild) { //if it's turret and can target player and
-                        Turret turret = (Turret) ((Turret.TurretBuild) entityc).block;
-                        if((entityc instanceof PowerTurret.PowerTurretBuild)) { //can shoot to player or
-                            if(((PowerTurret.PowerTurretBuild) entityc).power().graph.getLastScaledPowerIn() > 0f) {
-                                if(player.unit().isGrounded() && turret.targetGround) h = true;
-                                if(player.unit().isFlying() && turret.targetAir) h = true;
-                            }
-                        }else if(((Turret.TurretBuild) entityc).hasAmmo()) {
-                            if(player.unit().isGrounded() && turret.targetGround) h = true;
-                            if(player.unit().isFlying() && turret.targetAir) h = true;
-                        }
-                        range = turret.range;
-                    }
-                    if(entityc instanceof TractorBeamTurret.TractorBeamBuild) { //if it's parallax and can target player or
-                        TractorBeamTurret turret = (TractorBeamTurret) ((TractorBeamTurret.TractorBeamBuild) entityc).block;
-                        if(((TractorBeamTurret.TractorBeamBuild) entityc).power().graph.getLastScaledPowerIn() > 0f) {
-                            if(player.unit().isGrounded() && turret.targetGround) h = true;
-                            if(player.unit().isFlying() && turret.targetAir) h = true;
-                        }
-                        range = turret.range;
-                    }
-                    if(entityc instanceof ConstructBlock.ConstructBuild) { //if it's not constructed yet but can target player later or
-                        if (((ConstructBlock.ConstructBuild) entityc).current instanceof Turret) {
-                            Turret turret = (Turret) ((ConstructBlock.ConstructBuild) entityc).current;
-                            if (player.unit().isGrounded() && turret.targetGround) h = true;
-                            if (player.unit().isFlying() && turret.targetAir) h = true;
-                            range = turret.range;
-                        } else if (((ConstructBlock.ConstructBuild) entityc).current instanceof TractorBeamTurret) {
-                            TractorBeamTurret turret = (TractorBeamTurret) ((ConstructBlock.ConstructBuild) entityc).current;
-                            if (player.unit().isGrounded() && turret.targetGround) h = true;
-                            if (player.unit().isFlying() && turret.targetAir) h = true;
-                            range = turret.range;
-                        }
-                    }
-                    if(entityc instanceof Unit) {  //if it's just unit and can target player,
-                        UnitType type = ((Unit) entityc).type;
-                        if (player.unit().isGrounded() && type.targetGround) h = true;
-                        if (player.unit().isFlying() && type.targetAir) h = true;
-                        range = ((Unit) entityc).range();
-                    }
+                Team team = player.team();
+                Unit unit = player.unit();
+                Groups.build.each(e -> {
+                    if (e.team == team) return; // Don't draw own turrets
+                    if (!(e instanceof BaseTurret.BaseTurretBuild )) return; // Not a turret
+                    if ((e instanceof Turret.TurretBuild t && !t.hasAmmo()) || !e.cons.valid()) return; // No ammo
 
-                    //draw range.
-                    if(Vars.player.dst((Position) entityc) <= range + settings.getInt("rangeRadius") * tilesize && //out of range is not allowed
-                        (settings.getBool("allTeamRange") || //derelict or player team are not allowed without setting
-                            (((Teamc) entityc).team() != player.team() && ((Teamc) entityc).team() != Team.derelict))){
-                    if (h) {
-                        if(entityc instanceof ConstructBlock.ConstructBuild){
-                            Lines.stroke(3f, Tmp.c1.set(Pal.gray).a(((ConstructBlock.ConstructBuild) entityc).progress));
-                            Lines.dashCircle(((Teamc) entityc).x(), ((Teamc) entityc).y(), range);
-                            Lines.stroke(1f, Tmp.c1.set(((Teamc) entityc).team().color).a(((ConstructBlock.ConstructBuild) entityc).progress));
-                            Lines.dashCircle(((Teamc) entityc).x(), ((Teamc) entityc).y(), range);
-                            Draw.reset();
-                        }
-                        else Drawf.dashCircle(((Teamc) entityc).x(), ((Teamc) entityc).y(), range, ((Teamc) entityc).team().color);
-                    }else if (settings.getBool("allTargetRange"))
-                        Drawf.dashCircle(((Teamc) entityc).x(), ((Teamc) entityc).y(), range, Color.gray);
+                    boolean canHit = e.block instanceof Turret t ? unit.isFlying() ? t.targetAir : t.targetGround :
+                        e.block instanceof TractorBeamTurret tu && (unit.isFlying() ? tu.targetAir : tu.targetGround);
+                    float range = ((BaseTurret.BaseTurretBuild) e).range();
+
+
+                    if(Vars.player.dst(e) <= range + settings.getInt("rangeRadius") * tilesize + e.block.offset) {
+                        if (canHit || settings.getBool("allTargetRange"))
+                            Drawf.dashCircle(e.x, e.y, range, canHit ? e.team.color : Team.derelict.color);
                     }
                 });
+
+                // Unit Ranges (Only works when turret ranges are enabled)
+                if (!settings.getBool("unitRange")) {
+                    Groups.unit.each(u -> {
+                        if (u.team == team) return; // Don't draw own units
+
+                        boolean canHit = unit.isFlying() ? u.type.targetAir : u.type.targetGround;
+                        float range = u.range();
+
+                        if(Vars.player.dst(u) <= range + settings.getInt("rangeRadius") * tilesize) { // TODO: Store value of rangeRadius as an int, should increase performance
+                            if (canHit || settings.getBool("allTargetRange")) // Same as above
+                                Drawf.dashCircle(u.x, u.y, range, canHit ? u.team.color : Team.derelict.color);
+                        }
+                    });
+                }
             }
         });
     }

@@ -1,14 +1,13 @@
 package UnitInfo;
 
-import UnitInfo.core.HudUi;
-import UnitInfo.core.PlayerParser;
-import UnitInfo.core.Setting;
-import arc.Core;
-import arc.files.Fi;
-import arc.struct.Seq;
+import UnitInfo.core.*;
+import arc.files.*;
+import arc.struct.*;
+
+import static mindustry.Vars.*;
 
 public class SVars {
-    public static Fi modRoot = Core.settings.getDataDirectory().child("mods/UnitInfo");
+    public static Fi modRoot = modDirectory.child("UnitInfo");
     public static Seq<PlayerParser.PlayerInfo> playerInfos = new Seq<>();
 
     public static Setting settingAdder = new Setting();
