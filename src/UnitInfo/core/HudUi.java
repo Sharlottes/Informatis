@@ -74,8 +74,8 @@ public class HudUi {
     @SuppressWarnings("unchecked")
     public <T extends Teamc> T getTarget(){
         if(locked &&
-            (lockedTarget instanceof Unit && ((Unit) lockedTarget).dead) ||
-            (lockedTarget instanceof Building && ((Building) lockedTarget).dead)) {
+            (lockedTarget instanceof Unit u && u.dead) ||
+            (lockedTarget instanceof Building b && b.dead)) {
             lockedTarget = null;
             locked = false;
         }
@@ -87,8 +87,8 @@ public class HudUi {
             return (T) units.peek(); //if there is unit, return it.
         else if(getTile() != null && getTile().build != null)
             return (T) getTile().build; //if there isn't unit but there is build, return it.
-        else if(player.unit() instanceof BlockUnitUnit && ((BlockUnitUnit)player.unit()).tile() != null)
-            return (T)((BlockUnitUnit)player.unit()).tile();
+        else if(player.unit() instanceof BlockUnitUnit b && b.tile() != null)
+            return (T)b.tile();
         return (T) player.unit(); //if there are not unit and not build, return player.
     }
 
@@ -146,9 +146,9 @@ public class HudUi {
                     unit.aim(player.mouseX = Core.input.mouseWorldX(), player.mouseY = Core.input.mouseWorldY());
                 } else if(target == null){
                     player.shooting = false;
-                    if(unit instanceof BlockUnitUnit){
-                        if(((BlockUnitUnit)unit).tile() instanceof ControlBlock && !((ControlBlock)((BlockUnitUnit)unit).tile()).shouldAutoTarget()){
-                            Building build = ((BlockUnitUnit)unit).tile();
+                    if(unit instanceof BlockUnitUnit b){
+                        if(b.tile() instanceof ControlBlock c && !c.shouldAutoTarget()){
+                            Building build = b.tile();
                             float range = build instanceof Ranged ? ((Ranged)build).range() : 0f;
                             boolean targetGround = build instanceof Turret.TurretBuild && ((Turret) build.block).targetAir;
                             boolean targetAir = build instanceof Turret.TurretBuild && ((Turret) build.block).targetGround;
@@ -275,54 +275,45 @@ public class HudUi {
             add(new Table(){{
                 left();
                 update(() -> {
-                    if(!(getTarget() instanceof ItemTurret.ItemTurretBuild) && !(getTarget() instanceof LiquidTurret.LiquidTurretBuild) && !(getTarget() instanceof PowerTurret.PowerTurretBuild)){
-                        clearChildren();
-                        return;
+                    Element image = new Element();
+                    if(getTarget() instanceof ItemTurret.ItemTurretBuild turret){
+                        if(turret.hasAmmo()) image = new Image(((ItemTurret)turret.block).ammoTypes.findKey(turret.peekAmmo(), true).uiIcon);
+                        else {MultiReqImage itemReq = new MultiReqImage();
+                            for(Item item : ((ItemTurret) turret.block).ammoTypes.keys())
+                                itemReq.add(new ReqImage(item.uiIcon, turret::hasAmmo));
+                            image = itemReq;
+                        }
                     }
-                    if(getTarget() instanceof Turret.TurretBuild){
-                        Element image = new Element();
-                        if(getTarget() instanceof ItemTurret.ItemTurretBuild){
-                            ItemTurret.ItemTurretBuild turretBuild = getTarget();
-                            if(turretBuild.hasAmmo()) image = new Image(((ItemTurret)turretBuild.block).ammoTypes.findKey(turretBuild.peekAmmo(), true).uiIcon);
-                            else {MultiReqImage itemReq = new MultiReqImage();
-                                for(Item item : ((ItemTurret) turretBuild.block).ammoTypes.keys())
-                                    itemReq.add(new ReqImage(item.uiIcon, turretBuild::hasAmmo));
-                                image = itemReq;
+                    else if(getTarget() instanceof LiquidTurret.LiquidTurretBuild turret){
+                        MultiReqImage liquidReq = new MultiReqImage();
+                        for(Liquid liquid : ((LiquidTurret) turret.block).ammoTypes.keys())
+                            liquidReq.add(new ReqImage(liquid.uiIcon, turret::hasAmmo));
+                        image = liquidReq;
+
+                        if(((LiquidTurret.LiquidTurretBuild) getTarget()).hasAmmo())
+                            image = new Image(turret.liquids.current().uiIcon).setScaling(Scaling.fit);
+                    }
+                    else if(getTarget() instanceof PowerTurret.PowerTurretBuild){
+                        image = new Image(Icon.power.getRegion()){
+                            @Override
+                            public void draw(){
+                                Building entity = getTarget();
+                                float max = entity.block.consumes.getPower().usage;
+                                float v = entity.power.status * entity.power.graph.getLastScaledPowerIn();
+
+                                super.draw();
+                                Lines.stroke(Scl.scl(2f), Pal.removeBack);
+                                Draw.alpha(1 - v/max);
+                                Lines.line(x, y - 2f + height, x + width, y - 2f);
+                                Draw.color(Pal.remove);
+                                Draw.alpha(1 - v/max);
+                                Lines.line(x, y + height, x + width, y);
+                                Draw.reset();
                             }
-                        }
-                        else if(getTarget() instanceof LiquidTurret.LiquidTurretBuild){
-                            LiquidTurret.LiquidTurretBuild entity = getTarget();
-                            MultiReqImage liquidReq = new MultiReqImage();
-                            for(Liquid liquid : ((LiquidTurret) ((LiquidTurret.LiquidTurretBuild) getTarget()).block).ammoTypes.keys())
-                                liquidReq.add(new ReqImage(liquid.uiIcon, () -> ((LiquidTurret.LiquidTurretBuild) getTarget()).hasAmmo()));
-                            image = liquidReq;
-
-                            if(((LiquidTurret.LiquidTurretBuild) getTarget()).hasAmmo())
-                                image = new Image(entity.liquids.current().uiIcon).setScaling(Scaling.fit);
-                        }
-                        else if(getTarget() instanceof PowerTurret.PowerTurretBuild){
-                            image = new Image(Icon.power.getRegion()){
-                                @Override
-                                public void draw(){
-                                    Building entity = getTarget();
-                                    float max = entity.block.consumes.getPower().usage;
-                                    float v = entity.power.status * entity.power.graph.getLastScaledPowerIn();
-
-                                    super.draw();
-                                    Lines.stroke(Scl.scl(2f), Pal.removeBack);
-                                    Draw.alpha(1 - v/max);
-                                    Lines.line(x, y - 2f + height, x + width, y - 2f);
-                                    Draw.color(Pal.remove);
-                                    Draw.alpha(1 - v/max);
-                                    Lines.line(x, y + height, x + width, y);
-                                    Draw.reset();
-                                }
-                            };
-                        }
-
-                        clearChildren();
-                        add(image).size(iconSmall).padBottom(2 * 8f).padRight(3 * 8f);
+                        };
                     }
+                    clearChildren();
+                    add(image).size(iconSmall).padBottom(2 * 8f).padRight(3 * 8f);
                 });
                 pack();
             }});
@@ -330,8 +321,8 @@ public class HudUi {
                 t.left();
                 t.add(new Image(){{
                         update(() -> {
-                            if(getTarget() instanceof Unit && ((Unit) getTarget()).stack().item != null && ((Unit) getTarget()).stack.amount > 0)
-                                setDrawable(((Unit) getTarget()).stack().item.uiIcon);
+                            if(getTarget() instanceof Unit u && u.stack.item != null && u.stack.amount > 0)
+                                setDrawable(u.stack.item.uiIcon);
                             else setDrawable(Core.atlas.find("clear"));
                         });
                         visibility = () -> getTarget() instanceof Unit;
@@ -386,8 +377,8 @@ public class HudUi {
                     update(() -> {
                         TextureRegion region = Core.atlas.find("clear");
 
-                        if(Vars.state.rules.unitAmmo && getTarget() instanceof Unit && ((Unit) getTarget()).type() != null){
-                            UnitType type = ((Unit) getTarget()).type();
+                        if(Vars.state.rules.unitAmmo && getTarget() instanceof Unit u && u.type != null){
+                            UnitType type = u.type;
                             if(type.ammoType == AmmoTypes.copper) region = Items.copper.uiIcon;
                             else if(type.ammoType == AmmoTypes.thorium) region = Items.thorium.uiIcon;
                             else if(type.ammoType == AmmoTypes.power || type.ammoType == AmmoTypes.powerLow || type.ammoType == AmmoTypes.powerHigh) region = Icon.powerSmall.getRegion();
@@ -407,11 +398,11 @@ public class HudUi {
             tx.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, tt -> {
                 tt.left().top().defaults().width(Scl.scl(24/3f * 8f)).minHeight(Scl.scl(12/3f * 8f));
 
-                if(getTarget() instanceof Unit && ((Unit) getTarget()).type != null) {
-                    UnitType type = ((Unit) getTarget()).type;
+                if(getTarget() instanceof Unit u && u.type != null) {
+                    UnitType type = u.type;
                     for(int r = 0; r < type.weapons.size; r++){
                         Weapon weapon = type.weapons.get(r);
-                        WeaponMount mount = ((Unit) getTarget()).mounts[r];
+                        WeaponMount mount = u.mounts[r];
                         TextureRegion region = !weapon.name.equals("") && weapon.outlineRegion.found() ? weapon.outlineRegion : type.uiIcon;
                         if(type.weapons.size > 1 && r % 3 == 0) tt.row();
                         else if(r % 3 == 0) tt.row();
@@ -444,18 +435,18 @@ public class HudUi {
 
                                             float recoil = -((mount.reload) / weapon.reload * weapon.recoil);
                                             y += recoil;
-                                            if(getDrawable() != null) getDrawable().draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
+                                            if(getDrawable() != null)
+                                                getDrawable().draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
                                         }
                                     }.setScaling(Scaling.fit)).size(Scl.scl(6 * 8f)).scaling(Scaling.fit);
                                 }));
 
                                 add(new Table(h -> {
                                     h.defaults().growX().height(Scl.scl(9)).width(Scl.scl(31.5f)).padTop(Scl.scl(9*2f));
-                                    Bar reloadBar = new Bar(
-                                            () -> "",
-                                            () -> Pal.accent.cpy().lerp(Color.orange, mount.reload / weapon.reload),
-                                            () -> mount.reload / weapon.reload);
-                                    h.add(reloadBar).padLeft(Scl.scl(8f));
+                                    h.add(new Bar(
+                                        () -> "",
+                                        () -> Pal.accent.cpy().lerp(Color.orange, mount.reload / weapon.reload),
+                                        () -> mount.reload / weapon.reload)).padLeft(Scl.scl(8f));
                                     h.pack();
                                 }));
                             }}).left();
@@ -687,12 +678,9 @@ public class HudUi {
                         }
                         tt.addListener(new Tooltip(t -> t.background(Tex.button).table(to -> {
                             to.left();
-                            to.table(Tex.underline2, tot -> tot.add("[stat]" + group.type.localizedName + "[]"));
-                            to.row();
-                            to.add(bundle.format("shar-stat-waveAmount", amount));
-                            to.row();
-                            to.add(bundle.format("shar-stat-waveShield", group.getShield(j)));
-                            to.row();
+                            to.table(Tex.underline2, tot -> tot.add("[stat]" + group.type.localizedName + "[]")).row();
+                            to.add(bundle.format("shar-stat-waveAmount", amount)).row();
+                            to.add(bundle.format("shar-stat-waveShield", group.getShield(j))).row();
                             if(group.effect != null) {
                                 if(group.effect == StatusEffects.none) return;
                                 Image status = new Image(group.effect.uiIcon).setScaling(Scaling.fit);
