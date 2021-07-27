@@ -1,16 +1,12 @@
 package UnitInfo.core;
 
-import UnitInfo.SVars;
-import arc.Events;
-import arc.struct.ObjectMap;
-import arc.struct.Seq;
-import mindustry.Vars;
-import mindustry.game.EventType;
-import mindustry.gen.Groups;
-import mindustry.gen.Player;
-import org.hjson.JsonArray;
-import org.hjson.JsonObject;
-import org.hjson.Stringify;
+import UnitInfo.*;
+import arc.*;
+import arc.struct.*;
+import mindustry.*;
+import mindustry.game.*;
+import mindustry.gen.*;
+import org.hjson.*;
 
 import static UnitInfo.SVars.modRoot;
 
