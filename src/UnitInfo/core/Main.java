@@ -97,9 +97,9 @@ public class Main extends Mod {
                 Team team = player.team();
                 Unit unit = player.unit();
                 Groups.build.each(e -> {
-                    if (e.team == team) return; // Don't draw own turrets
-                    if (!(e instanceof BaseTurret.BaseTurretBuild)) return; // Not a turret
-                    if ((e instanceof Turret.TurretBuild t && !t.hasAmmo()) || !e.cons.valid()) return; // No ammo
+                    if(e.team == team) return; // Don't draw own turrets
+                    if(!(e instanceof BaseTurret.BaseTurretBuild)) return; // Not a turret
+                    if((e instanceof Turret.TurretBuild t && !t.hasAmmo()) || !e.cons.valid()) return; // No ammo
 
                     boolean canHit = e.block instanceof Turret t ? unit.isFlying() ? t.targetAir : t.targetGround :
                         e.block instanceof TractorBeamTurret tu && (unit.isFlying() ? tu.targetAir : tu.targetGround);
