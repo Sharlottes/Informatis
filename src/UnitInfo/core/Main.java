@@ -98,7 +98,7 @@ public class Main extends Mod {
                 Unit unit = player.unit();
                 Groups.build.each(e -> {
                     if (e.team == team) return; // Don't draw own turrets
-                    if (!(e instanceof BaseTurret.BaseTurretBuild )) return; // Not a turret
+                    if (!(e instanceof BaseTurret.BaseTurretBuild)) return; // Not a turret
                     if ((e instanceof Turret.TurretBuild t && !t.hasAmmo()) || !e.cons.valid()) return; // No ammo
 
                     boolean canHit = e.block instanceof Turret t ? unit.isFlying() ? t.targetAir : t.targetGround :
@@ -107,16 +107,14 @@ public class Main extends Mod {
 
 
                     if(Vars.player.dst(e) <= range + settings.getInt("rangeRadius") * tilesize + e.block.offset) {
-                        if (canHit || settings.getBool("allTargetRange"))
+                        if(canHit || settings.getBool("allTargetRange"))
                             Drawf.dashCircle(e.x, e.y, range, canHit ? e.team.color : Team.derelict.color);
                     }
                 });
 
                 // Unit Ranges (Only works when turret ranges are enabled)
-                if (!settings.getBool("unitRange")) {
-                    Groups.unit.each(u -> {
-                        if (u.team == team) return; // Don't draw own units
-
+                if(settings.getBool("unitRange")) {
+                    Groups.unit.each(u -> u.team == team, u -> { // Don't draw own units
                         boolean canHit = unit.isFlying() ? u.type.targetAir : u.type.targetGround;
                         float range = u.range();
 
