@@ -18,6 +18,8 @@ import mindustry.ui.*;
 import mindustry.world.blocks.*;
 import mindustry.world.blocks.defense.*;
 import mindustry.world.blocks.defense.turrets.*;
+import mindustry.world.blocks.environment.Floor;
+import mindustry.world.blocks.production.*;
 import mindustry.world.blocks.storage.*;
 import mindustry.world.blocks.units.*;
 import mindustry.world.consumers.*;
@@ -67,21 +69,6 @@ public class BarInfo {
             colors.set(1, Pal.surge);
             numbers.set(1, unit.shield() / Math.max(max1, max2));
         }
-        else if(target instanceof ConstructBlock.ConstructBuild build){
-            strings.set(1, Core.bundle.format("shar-stat.progress", Strings.fixed(build.progress * 100, 1)));
-            colors.set(1, Pal.darkerMetal);
-            numbers.set(1, build.progress);
-        }
-        else if(target instanceof UnitFactory.UnitFactoryBuild build){
-            strings.set(1, Core.bundle.format("shar-stat.progress", Strings.fixed(build.fraction() * 100f, 1)));
-            colors.set(1, Pal.darkerMetal);
-            numbers.set(1, build.fraction());
-        }
-        else if(target instanceof Reconstructor.ReconstructorBuild reconstruct){
-            strings.set(1, Core.bundle.format("shar-stat.progress", Strings.fixed(reconstruct.fraction() * 100, 1)));
-            colors.set(1, Pal.darkerMetal);
-            numbers.set(1, reconstruct.fraction());
-        }
         else if(target instanceof ForceProjector.ForceBuild force){
             ForceProjector forceBlock = (ForceProjector) force.block;
             float max = forceBlock.shieldHealth + forceBlock.phaseShieldBoost * force.phaseHeat;
@@ -89,17 +76,47 @@ public class BarInfo {
             colors.set(1, Pal.shield);
             numbers.set(1, (max-force.buildup)/max);
         }
+        else if(target instanceof ConstructBlock.ConstructBuild build){
+            strings.set(1, Core.bundle.format("shar-stat.progress", Strings.fixed(build.progress * 100, 2)));
+            colors.set(1, Pal.darkerMetal);
+            numbers.set(1, build.progress);
+        }
+        else if(target instanceof UnitFactory.UnitFactoryBuild build){
+            strings.set(1, Core.bundle.format("shar-stat.progress", Strings.fixed(build.fraction() * 100f, 2)));
+            colors.set(1, Pal.darkerMetal);
+            numbers.set(1, build.fraction());
+        }
+        else if(target instanceof Reconstructor.ReconstructorBuild reconstruct){
+            strings.set(1, Core.bundle.format("shar-stat.progress", Strings.fixed(reconstruct.fraction() * 100, 2)));
+            colors.set(1, Pal.darkerMetal);
+            numbers.set(1, reconstruct.fraction());
+        }
         else if(target instanceof MendProjector.MendBuild mend){
-            strings.set(1, Core.bundle.format("shar-stat.progress", Strings.fixed((float) mend.sense(LAccess.progress), 1)));
+            strings.set(1, Core.bundle.format("shar-stat.progress", Strings.fixed((float) mend.sense(LAccess.progress) * 100f, 2)));
             colors.set(1, Pal.heal);
             numbers.set(1, (float) mend.sense(LAccess.progress));
         }
         else if(target instanceof OverdriveProjector.OverdriveBuild over){
-            strings.set(1, Core.bundle.format("shar-stat.progress", Strings.fixed((float) over.sense(LAccess.progress), 1)));
+            strings.set(1, Core.bundle.format("shar-stat.progress", Strings.fixed((float) over.sense(LAccess.progress) * 100f, 2)));
             colors.set(1, Pal.heal);
             numbers.set(1, (float) over.sense(LAccess.progress));
         }
-        
+        else if(target instanceof Drill.DrillBuild drill){
+            strings.set(1, bundle.format("shar-stat.progress", Strings.fixed((float) drill.sense(LAccess.progress) * 100f, 2)));
+            colors.set(1, drill.dominantItem == null ? Pal.items : drill.dominantItem.color);
+            numbers.set(1, (float) drill.sense(LAccess.progress));
+        }
+        else if(target instanceof GenericCrafter.GenericCrafterBuild crafter){
+            GenericCrafter block = (GenericCrafter) crafter.block;
+            if(block.outputItem != null) Tmp.c1.set(block.outputItem.item.color);
+            else if(block.outputLiquid != null) Tmp.c1.set(block.outputLiquid.liquid.color);
+            else Tmp.c1.set(Pal.items);
+            strings.set(1, bundle.format("shar-stat.progress", Strings.fixed((float) crafter.sense(LAccess.progress) * 100f, 2)));
+            colors.set(1, Tmp.c1);
+            numbers.set(1, (float) crafter.sense(LAccess.progress));
+        }
+
+
         if(target instanceof ItemTurret.ItemTurretBuild turret) {
             strings.set(2, bundle.format("shar-stat.itemAmmo", format(turret.totalAmmo), format(((ItemTurret)turret.block).maxAmmo)));
             colors.set(2, turret.hasAmmo() ? ((ItemTurret)turret.block).ammoTypes.findKey(turret.peekAmmo(), true).color : Pal.ammo);
@@ -164,6 +181,32 @@ public class BarInfo {
             colors.set(3, Pal.power);
             numbers.set(3, factory.unit() == null ? 0f : (float)factory.team.data().countType(factory.unit()) / Units.getCap(factory.team));
         }
+        else if(target instanceof Drill.DrillBuild e){
+            strings.set(3, bundle.format("bar.drillspeed", Strings.fixed(e.lastDrillSpeed * 60 * e.timeScale, 2)));
+            colors.set(3, Pal.ammo);
+            numbers.set(3, e.warmup);
+        }
+        else if(target instanceof AttributeCrafter.AttributeCrafterBuild crafter){
+            AttributeCrafter block = (AttributeCrafter) crafter.block;
+            strings.set(3, bundle.format("shar-stat.attr", (int)((block.baseEfficiency + Math.min(block.maxBoost, block.boostScale * block.sumAttribute(block.attribute, crafter.tileX(), crafter.tileY()))) * 100f)));
+            colors.set(3, Pal.ammo);
+            numbers.set(3, block.boostScale * crafter.attrsum / block.maxBoost);
+        }
+        else if(target instanceof SolidPump.SolidPumpBuild crafter){
+            SolidPump block = (SolidPump) crafter.block;
+            float fraction = Math.max(crafter.validTiles + crafter.boost + (block.attribute == null ? 0 : block.attribute.env()), 0);
+            final float[] max = {0f};
+            content.blocks().each(b->b instanceof Floor f && f.attributes != null, b -> {
+                Floor floor = (Floor) b;
+                max[0] = Math.max(max[0], floor.attributes.get(block.attribute));
+            });
+            float h = Math.max(block.sumAttribute(block.attribute, crafter.tileX(), crafter.tileY()) / block.size / block.size + block.baseEfficiency, 0f) * 100 * block.percentSolid(crafter.tileX(), crafter.tileY());
+            strings.set(3, bundle.format("shar-stat.attr", (int) h));
+            colors.set(3, Pal.ammo);
+            numbers.set(3, fraction / max[0]);
+        }
+
+
 
         if(target instanceof Unit unit && target instanceof Payloadc pay && unit.type != null){
             strings.set(4, Core.bundle.format("shar-stat.payloadCapacity", format(Mathf.round(Mathf.sqrt(pay.payloadUsed()))), format(Mathf.round(Mathf.sqrt(unit.type().payloadCapacity)))));
