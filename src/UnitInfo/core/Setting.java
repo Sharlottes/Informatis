@@ -275,6 +275,8 @@ public class Setting {
         addGraphicCheckSetting("allTeamRange", false, scanSeq);
         addGraphicCheckSetting("allTargetRange", false, scanSeq);
         addGraphicCheckSetting("unitRange", false, scanSeq);
+        addGraphicCheckSetting("softRangeDrawing", false, scanSeq);
+        addGraphicSlideSetting("softRangeOpacity", 10, 0, 25, 1, s -> s + "%", scanSeq);
         addGraphicSlideSetting("rangeRadius", 5, 0, 20, 1, s -> s + "tiles", scanSeq);
         addGraphicDialogSetting("wavesetting", scanSeq, scanTable);
 

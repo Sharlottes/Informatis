@@ -104,11 +104,17 @@ public class Main extends Mod {
                     boolean canHit = e.block instanceof Turret t ? unit.isFlying() ? t.targetAir : t.targetGround :
                         e.block instanceof TractorBeamTurret tu && (unit.isFlying() ? tu.targetAir : tu.targetGround);
                     float range = ((BaseTurret.BaseTurretBuild) e).range();
+                    float max = range + settings.getInt("rangeRadius") * tilesize + e.block.offset;
 
-
-                    if(Vars.player.dst(e) <= range + settings.getInt("rangeRadius") * tilesize + e.block.offset) {
-                        if(canHit || settings.getBool("allTargetRange"))
-                            Drawf.dashCircle(e.x, e.y, range, canHit ? e.team.color : Team.derelict.color);
+                    if(Vars.player.dst(e) <= max) {
+                        if(canHit || settings.getBool("allTargetRange")){
+                            if(settings.getBool("softRangeDrawing")){
+                                Lines.stroke(1, Tmp.c1.set(canHit ? e.team.color : Team.derelict.color).a(0.5f));
+                                Lines.poly(e.x, e.y, Lines.circleVertices(range), range);
+                                Fill.light(e.x, e.y, Lines.circleVertices(range), range, Color.clear, Tmp.c1.a(Mathf.clamp(1-(Vars.player.dst(e)/max), 0, settings.getInt("softRangeOpacity")/100f)));
+                            }
+                            else Drawf.dashCircle(e.x, e.y, range, canHit ? e.team.color : Team.derelict.color);
+                        }
                     }
                 });
 
@@ -117,10 +123,16 @@ public class Main extends Mod {
                     Groups.unit.each(u -> u.team == team, u -> { // Don't draw own units
                         boolean canHit = unit.isFlying() ? u.type.targetAir : u.type.targetGround;
                         float range = u.range();
+                        float max = range + settings.getInt("rangeRadius") * tilesize;
 
                         if(Vars.player.dst(u) <= range + settings.getInt("rangeRadius") * tilesize) { // TODO: Store value of rangeRadius as an int, should increase performance
                             if (canHit || settings.getBool("allTargetRange")) // Same as above
-                                Drawf.dashCircle(u.x, u.y, range, canHit ? u.team.color : Team.derelict.color);
+                                if(settings.getBool("softRangeDrawing")){
+                                    Lines.stroke(1, Tmp.c1.set(canHit ? u.team.color : Team.derelict.color).a(0.5f));
+                                    Lines.poly(u.x, u.y, Lines.circleVertices(range), range);
+                                    Fill.light(u.x, u.y, Lines.circleVertices(range), range, Color.clear, Tmp.c1.a(Math.min(settings.getInt("softRangeOpacity")/100f, 1-Vars.player.dst(u)/max)));
+                                }
+                                else Drawf.dashCircle(u.x, u.y, range, canHit ? u.team.color : Team.derelict.color);
                         }
                     });
                 }
