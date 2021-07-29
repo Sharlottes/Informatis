@@ -222,7 +222,7 @@ public class BarInfo {
 
         if(target instanceof Unit unit && state.rules.unitAmmo && unit.type != null){
             strings.set(5, Core.bundle.format("shar-stat.ammos", format(unit.ammo()), format(unit.type().ammoCapacity)));
-            colors.set(5, unit.type().ammoType.color);
+            colors.set(5, unit.type().ammoType.color());
             numbers.set(5, unit.ammof());
         }
         else if(target instanceof Building build && build.block.hasPower && build.block.consumes.hasPower()){

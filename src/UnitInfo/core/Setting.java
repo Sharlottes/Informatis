@@ -26,12 +26,13 @@ public class Setting {
     public void addGraphicCheckSetting(String key, boolean def){
         ui.settings.graphics.checkPref(key, def);
     }
+    public void addGraphicSlideSetting(String key, int def, int min, int max, int step, SettingsMenuDialog.StringProcessor s){
+        ui.settings.graphics.sliderPref(key, def, min, max, step, s);
+    }
+    /*
     public void addGraphicSlideSetting(String key, int def, int min, int max, int step, SettingsMenuDialog.StringProcessor s, Seq<SettingsMenuDialog.SettingsTable.Setting> list){
-        list.add(new SettingsMenuDialog.SettingsTable.Setting() {
+        list.add(new SettingsMenuDialog.SettingsTable.Setting(key) {
             {
-                name = key;
-                title = bundle.get("setting." + key + ".name");
-
                 Core.settings.defaults(name, def);
             }
 
@@ -260,8 +261,9 @@ public class Setting {
             }
         });
     }
-
+    */
     public void init(){
+        /*
         Seq<SettingsMenuDialog.SettingsTable.Setting> waveSeq = new Seq<>();
         addGraphicCheckSetting("pastwave", false, waveSeq);
         addGraphicCheckSetting("emptywave", true, waveSeq);
@@ -285,6 +287,22 @@ public class Setting {
         addGraphicSlideSetting("baropacity", 50, 0, 100, 5, s -> s + "%", opacitySeq);
         addGraphicSlideSetting("uiopacity", 50, 0, 100, 5, s -> s + "%", opacitySeq);
         addGraphicDialogSetting("opacitysetting", opacitySeq, opacityTable);
+        */
+
+        addGraphicCheckSetting("pastwave", false);
+        addGraphicCheckSetting("emptywave", true);
+        addGraphicCheckSetting("scan", false);
+        addGraphicSlideSetting("rangemax", 10, 0, 100, 1, s -> s + "tiles");
+        addGraphicCheckSetting("rangeNearby", true);
+        addGraphicCheckSetting("allTeamRange", false);
+        addGraphicCheckSetting("allTargetRange", false);
+        addGraphicCheckSetting("unitRange", false);
+        addGraphicCheckSetting("softRangeDrawing", false);
+        addGraphicSlideSetting("softRangeOpacity", 10, 0, 25, 1, s -> s + "%");
+        addGraphicSlideSetting("rangeRadius", 5, 0, 20, 1, s -> s + "tiles");
+        addGraphicSlideSetting("selectopacity", 50, 0, 100, 5, s -> s + "%");
+        addGraphicSlideSetting("baropacity", 50, 0, 100, 5, s -> s + "%");
+        addGraphicSlideSetting("uiopacity", 50, 0, 100, 5, s -> s + "%");
 
         addGraphicCheckSetting("autoShooting", false);
         addGraphicCheckSetting("infoui", true);

@@ -74,7 +74,7 @@ public class FreeBar {
             float moser = topWidth + height;
             if(unit.ammo <= 0) moser = (width / 2 + height) * (2 * Mathf.clamp(unit.ammof()) - 1);
 
-            Draw.color((unit.dead() || unit instanceof BlockUnitc ? Pal.ammo : unit.type.ammoType.color).cpy().a((settings.getInt("baropacity") / 100f)));
+            Draw.color((unit.dead() || unit instanceof BlockUnitc ? Pal.ammo : unit.type.ammoType.color()).cpy().a((settings.getInt("baropacity") / 100f)));
             Fill.poly(FloatSeq.with(
                     x - (width / 2 + height), y,
                     x - width / 2, y + height,

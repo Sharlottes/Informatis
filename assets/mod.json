@@ -5,7 +5,7 @@
   "description": "The mod displays more information for unit, such as health, armor, shield, weapon/weapon reload etc",
   "version": "1.2",
   "main": "UnitInfo.core.Main",
-  "minGameVersion": "128",
+  "minGameVersion": "129",
   "dependencies": [],
   "hidden": true,
   "java": true

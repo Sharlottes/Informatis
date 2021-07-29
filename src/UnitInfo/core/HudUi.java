@@ -25,6 +25,8 @@ import mindustry.graphics.*;
 import mindustry.input.*;
 import mindustry.logic.*;
 import mindustry.type.*;
+import mindustry.type.ammo.ItemAmmoType;
+import mindustry.type.ammo.PowerAmmoType;
 import mindustry.ui.*;
 import mindustry.world.*;
 import mindustry.world.blocks.*;
@@ -379,9 +381,8 @@ public class HudUi {
 
                         if(Vars.state.rules.unitAmmo && getTarget() instanceof Unit u && u.type != null){
                             UnitType type = u.type;
-                            if(type.ammoType == AmmoTypes.copper) region = Items.copper.uiIcon;
-                            else if(type.ammoType == AmmoTypes.thorium) region = Items.thorium.uiIcon;
-                            else if(type.ammoType == AmmoTypes.power || type.ammoType == AmmoTypes.powerLow || type.ammoType == AmmoTypes.powerHigh) region = Icon.powerSmall.getRegion();
+                            if(type.ammoType instanceof ItemAmmoType ammo) region = ammo.item.uiIcon;
+                            else if(type.ammoType instanceof PowerAmmoType) region = Icon.powerSmall.getRegion();
                         }
                         setDrawable(region);
                     });
