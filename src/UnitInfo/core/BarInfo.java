@@ -18,21 +18,33 @@ import mindustry.ui.*;
 import mindustry.world.blocks.*;
 import mindustry.world.blocks.defense.*;
 import mindustry.world.blocks.defense.turrets.*;
-import mindustry.world.blocks.environment.Floor;
+import mindustry.world.blocks.environment.*;
 import mindustry.world.blocks.production.*;
 import mindustry.world.blocks.storage.*;
 import mindustry.world.blocks.units.*;
 import mindustry.world.consumers.*;
 
+import java.lang.reflect.*;
 
-import static arc.Core.bundle;
-import static mindustry.Vars.content;
-import static mindustry.Vars.state;
+import static arc.Core.*;
+import static mindustry.Vars.*;
 
 public class BarInfo {
     static Seq<String> strings = Seq.with("","","","","","");
     static FloatSeq numbers = FloatSeq.with(0f,0f,0f,0f,0f,0f);
     static Seq<Color> colors = Seq.with(Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear);
+    static Field linkedCore; // Versions below 130 don't have this public
+
+    static {
+        if(Version.build <= 129) {
+            try {
+                linkedCore = StorageBlock.StorageBuild.class.getDeclaredField("linkedCore");
+            } catch (NoSuchFieldException e) {
+                e.printStackTrace();
+            }
+            linkedCore.setAccessible(true);
+        }
+    }
 
     public static String format(float number){
         if(number >= 10000) return UI.formatAmount((long)number);
@@ -40,7 +52,7 @@ public class BarInfo {
         return Strings.fixed(number, 1);
     }
 
-    public static <T extends Teamc> void getInfo(T target){
+    public static <T extends Teamc> void getInfo(T target) {
         for(int i = 0; i < 6; i++) { //init
             strings.set(i, "[lightgray]<Empty>[]");
             colors.set(i, Color.clear);
@@ -118,9 +130,10 @@ public class BarInfo {
 
 
         if(target instanceof ItemTurret.ItemTurretBuild turret) {
-            strings.set(2, bundle.format("shar-stat.itemAmmo", format(turret.totalAmmo), format(((ItemTurret)turret.block).maxAmmo)));
-            colors.set(2, turret.hasAmmo() ? ((ItemTurret)turret.block).ammoTypes.findKey(turret.peekAmmo(), true).color : Pal.ammo);
-            numbers.set(2, turret.totalAmmo / (((ItemTurret)turret.block).maxAmmo * 1f));
+            ItemTurret block = (ItemTurret)turret.block;
+            strings.set(2, bundle.format("shar-stat.itemAmmo", format(turret.totalAmmo), format(block.maxAmmo)));
+            colors.set(2, turret.hasAmmo() ? block.ammoTypes.findKey(turret.peekAmmo(), true).color : Pal.ammo);
+            numbers.set(2, turret.totalAmmo / (float)block.maxAmmo);
         }
         else if(target instanceof LiquidTurret.LiquidTurretBuild turret){
             strings.set(2, bundle.format("shar-stat.liquidAmmo", format(turret.liquids.get(turret.liquids.current())), format(turret.block.liquidCapacity)));
@@ -136,22 +149,22 @@ public class BarInfo {
         }
         else if(target instanceof Building b && b.block.hasItems) {
             if(target instanceof CoreBlock.CoreBuild cb){
-                strings.set(2, bundle.format("shar-stat.itemCapacity", format(((Building) target).items.total()), format(cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow))));
+                strings.set(2, bundle.format("shar-stat.itemCapacity", format(b.items.total()), format(cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow))));
                 numbers.set(2, cb.items.total() / (cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow) * 1f));
             }
             else if(target instanceof StorageBlock.StorageBuild sb && !sb.canPickup()){
-                for(int i = 0; i < 4; i++) {
-                    Building build = i == 0 ? sb.front() : i == 1 ? sb.back() : i == 2 ? sb.left() : sb.right();
-                    if(build instanceof CoreBlock.CoreBuild cb){
-                        strings.set(2, bundle.format("shar-stat.itemCapacity", format(sb.items.total()), format(cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow))));
-                        numbers.set(2, sb.items.total() / (cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow) * 1f));
-                        break;
-                    }
+                CoreBlock.CoreBuild cb = null /*sb.linkedCore TODO: Replace null with this comment when v130 exists*/;
+                try { // Backwards compatibility
+                    cb = Version.build <= 129 ? (CoreBlock.CoreBuild) linkedCore.get(sb): null;
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
                 }
+                strings.set(2, bundle.format("shar-stat.itemCapacity", format(sb.items.total()), format(cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow))));
+                numbers.set(2, sb.items.total() / (cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow) * 1f));
             }
             else {
                 strings.set(2, bundle.format("shar-stat.itemCapacity", format(b.items.total()), format(b.block.itemCapacity)));
-                numbers.set(2, b.items.total() / (((Building)target).block.itemCapacity * 1f));
+                numbers.set(2, b.items.total() / (float) b.block.itemCapacity);
             }
             colors.set(2, Pal.items);
         }
@@ -195,15 +208,11 @@ public class BarInfo {
         else if(target instanceof SolidPump.SolidPumpBuild crafter){
             SolidPump block = (SolidPump) crafter.block;
             float fraction = Math.max(crafter.validTiles + crafter.boost + (block.attribute == null ? 0 : block.attribute.env()), 0);
-            final float[] max = {0f};
-            content.blocks().each(b->b instanceof Floor f && f.attributes != null, b -> {
-                Floor floor = (Floor) b;
-                max[0] = Math.max(max[0], floor.attributes.get(block.attribute));
-            });
-            float h = Math.max(block.sumAttribute(block.attribute, crafter.tileX(), crafter.tileY()) / block.size / block.size + block.baseEfficiency, 0f) * 100 * block.percentSolid(crafter.tileX(), crafter.tileY());
-            strings.set(3, bundle.format("shar-stat.attr", (int) h));
+            float max = content.blocks().max(b -> b instanceof Floor f && f.attributes != null ? f.attributes.get(block.attribute) : 0).asFloor().attributes.get(block.attribute);
+            int h = (int)(Math.max(block.sumAttribute(block.attribute, crafter.tileX(), crafter.tileY()) / block.size / block.size + block.baseEfficiency, 0f) * 100 * block.percentSolid(crafter.tileX(), crafter.tileY()));
+            strings.set(3, bundle.format("shar-stat.attr", h));
             colors.set(3, Pal.ammo);
-            numbers.set(3, fraction / max[0]);
+            numbers.set(3, fraction / max);
         }
 
 
