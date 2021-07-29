@@ -17,7 +17,9 @@ import arc.struct.*;
 import arc.util.*;
 import mindustry.*;
 import mindustry.content.*;
+import mindustry.core.Renderer;
 import mindustry.entities.*;
+import mindustry.entities.bullet.MassDriverBolt;
 import mindustry.entities.units.*;
 import mindustry.game.*;
 import mindustry.gen.*;
@@ -31,7 +33,12 @@ import mindustry.ui.*;
 import mindustry.world.*;
 import mindustry.world.blocks.*;
 import mindustry.world.blocks.defense.turrets.*;
+import mindustry.world.blocks.distribution.MassDriver;
+import mindustry.world.blocks.power.PowerNode;
 import mindustry.world.blocks.storage.*;
+
+import java.io.PipedWriter;
+import java.util.Objects;
 
 import static arc.Core.*;
 import static mindustry.Vars.*;
@@ -70,8 +77,10 @@ public class HudUi {
     Seq<Color> lastColors = Seq.with(Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear);
     CoresItemsDisplay coreItems = new CoresItemsDisplay(Team.baseTeams);
 
-
     @Nullable Teamc target;
+
+    public Seq<MassDriver.MassDriverBuild> linkedMasses = new Seq<>();
+    public Seq<Building> linkedNodes = new Seq<>();
 
     @SuppressWarnings("unchecked")
     public <T extends Teamc> T getTarget(){
@@ -98,8 +107,88 @@ public class HudUi {
         return Vars.world.tileWorld(Core.input.mouseWorldX(), Core.input.mouseWorldY());
     }
 
+
+    public void drawMassLink(MassDriver.MassDriverBuild from){
+        Groups.build.each(b -> b instanceof MassDriver.MassDriverBuild fromMass &&
+                world.build(fromMass.link) == from &&
+                from.within(fromMass.x, fromMass.y, ((MassDriver)fromMass.block).range) &&
+                !linkedMasses.contains(from), b -> {
+            linkedMasses.add((MassDriver.MassDriverBuild) b);
+            drawMassLink((MassDriver.MassDriverBuild) b);
+        });
+        if(world.build(from.link) instanceof MassDriver.MassDriverBuild to &&
+                from != to &&
+                to.within(from.x, from.y, ((MassDriver)from.block).range) &&
+                !linkedMasses.contains(to)){
+            linkedMasses.add(to);
+
+            float sin = Mathf.absin(Time.time, 6f, 1f);
+            Tmp.v1.set(from.x + from.block.offset, from.y + from.block.offset).sub(to.x, to.y).limit(from.block.size * tilesize + sin + 0.5f);
+            float x2 = from.x - Tmp.v1.x, y2 = from.y - Tmp.v1.y,
+                    x1 = to.x + Tmp.v1.x, y1 = to.y + Tmp.v1.y;
+            int segs = (int)(to.dst(from.x, from.y)/tilesize);
+
+            Lines.stroke(4f, Pal.gray);
+            Lines.dashLine(x1, y1, x2, y2, segs);
+            Lines.stroke(2f, Pal.placing);
+            Lines.dashLine(x1, y1, x2, y2, segs);
+            Lines.stroke(1f, Pal.accent);
+            Drawf.circles(from.x, from.y, (from.tile.block().size / 2f + 1) * tilesize + sin - 2f, Pal.accent);
+
+            for(var shooter : from.waitingShooters){
+                Drawf.circles(shooter.x, shooter.y, (from.tile.block().size / 2f + 1) * tilesize + sin - 2f);
+                Drawf.arrow(shooter.x, shooter.y, from.x, from.y, from.block.size * tilesize + sin, 4f + sin);
+            }
+            if(from.link != -1 && world.build(from.link) instanceof MassDriver.MassDriverBuild other && other.block == from.block && other.team == from.team && from.within(other, ((MassDriver)from.block).range)){
+                Building target = world.build(from.link);
+                Drawf.circles(target.x, target.y, (target.block().size / 2f + 1) * tilesize + sin - 2f);
+                Drawf.arrow(from.x, from.y, target.x, target.y, from.block.size * tilesize + sin, 4f + sin);
+            }
+
+            if(world.build(to.link) instanceof MassDriver.MassDriverBuild newTo &&
+                    to != newTo &&
+                    newTo.within(to.x, to.y, ((MassDriver)to.block).range) &&
+                    !linkedMasses.contains(newTo))
+                drawMassLink(to);
+        }
+    }
+
+    public Seq<Building> getPowerLinkedBuilds(Building build){
+        Seq<Building> linkedBuilds = new Seq<>();
+        linkedBuilds.add(build.front(), build.back(), build.right(), build.left());
+        build.power.links.each(i -> linkedBuilds.add(world.build(i)));
+        linkedBuilds.filter(b -> b != null && b.power != null);
+        return linkedBuilds;
+    }
+
+    public void drawNodeLink(Building node){
+        if(node.power == null) return;
+        if(!linkedNodes.contains(node)) {
+            linkedNodes.add(node);
+        getPowerLinkedBuilds(node).each(other -> {
+                float angle1 = Angles.angle(node.x, node.y, other.x, other.y),
+                        vx = Mathf.cosDeg(angle1), vy = Mathf.sinDeg(angle1),
+                        len1 = node.block.size * tilesize / 2f - 1.5f, len2 = other.block.size * tilesize / 2f - 1.5f;
+
+                Draw.color(Color.white, Color.valueOf("98ff98"), (1f - node.power.graph.getSatisfaction()) * 0.86f + Mathf.absin(3f, 0.1f));
+                Draw.alpha(Renderer.laserOpacity);
+                Drawf.laser(node.team, atlas.find("unitinfo-Slaser"), atlas.find("unitinfo-Slaser-end"), node.x + vx*len1, node.y + vy*len1, other.x - vx*len2, other.y - vy*len2, 0.25f);
+
+                if(other.power != null) getPowerLinkedBuilds(other).each(this::drawNodeLink);
+            });
+        }
+    }
     public void setEvent(){
         Events.run(EventType.Trigger.draw, () -> {
+            if(getTarget() instanceof MassDriver.MassDriverBuild mass){
+                linkedMasses.clear();
+                drawMassLink(mass);
+            }
+            if(getTarget() instanceof Building node){
+                linkedNodes.clear();
+                drawNodeLink(node);
+            }
+
             if(getTarget() == null || !Core.settings.getBool("select")) return;
 
             Posc entity = getTarget();
