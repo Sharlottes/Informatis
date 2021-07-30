@@ -25,6 +25,8 @@ import mindustry.world.blocks.units.*;
 import mindustry.world.consumers.*;
 
 
+import java.lang.reflect.Field;
+
 import static arc.Core.bundle;
 import static mindustry.Vars.content;
 import static mindustry.Vars.state;
@@ -40,7 +42,7 @@ public class BarInfo {
         return Strings.fixed(number, 1);
     }
 
-    public static <T extends Teamc> void getInfo(T target){
+    public static <T extends Teamc> void getInfo(T target) throws IllegalAccessException, NoSuchFieldException {
         for(int i = 0; i < 6; i++) { //init
             strings.set(i, "[lightgray]<Empty>[]");
             colors.set(i, Color.clear);
@@ -97,9 +99,12 @@ public class BarInfo {
             numbers.set(1, (float) mend.sense(LAccess.progress));
         }
         else if(target instanceof OverdriveProjector.OverdriveBuild over){
-            strings.set(1, Core.bundle.format("shar-stat.progress", Strings.fixed((float) over.sense(LAccess.progress) * 100f, 2)));
-            colors.set(1, Pal.heal);
-            numbers.set(1, (float) over.sense(LAccess.progress));
+            Field ohno = OverdriveProjector.OverdriveBuild.class.getDeclaredField("charge");
+            ohno.setAccessible(true);
+            float charge = (float) ohno.get(over);
+            strings.set(1, Core.bundle.format("shar-stat.progress", Strings.fixed(Mathf.clamp(charge/((OverdriveProjector)over.block).reload) * 100f, 2)));
+            colors.set(1, Color.valueOf("feb380"));
+            numbers.set(1, Mathf.clamp(charge/((OverdriveProjector)over.block).reload));
         }
         else if(target instanceof Drill.DrillBuild drill){
             strings.set(1, bundle.format("shar-stat.progress", Strings.fixed((float) drill.sense(LAccess.progress) * 100f, 2)));
@@ -180,6 +185,13 @@ public class BarInfo {
                     Core.bundle.format("bar.unitcap", Fonts.getUnicodeStr(factory.unit().name), format(factory.team.data().countType(factory.unit())), format(Units.getCap(factory.team))));
             colors.set(3, Pal.power);
             numbers.set(3, factory.unit() == null ? 0f : (float)factory.team.data().countType(factory.unit()) / Units.getCap(factory.team));
+        }
+        else if(target instanceof Reconstructor.ReconstructorBuild reconstruct){
+            strings.set(3, reconstruct.unit() == null ? "[lightgray]" + Iconc.cancel :
+                    Core.bundle.format("bar.unitcap", Fonts.getUnicodeStr(reconstruct.unit().name), format(reconstruct.team.data().countType(reconstruct.unit())), format(Units.getCap(reconstruct.team))));
+            colors.set(3, Pal.power);
+            numbers.set(3, reconstruct.unit() == null ? 0f : (float)reconstruct.team.data().countType(reconstruct.unit()) / Units.getCap(reconstruct.team));
+
         }
         else if(target instanceof Drill.DrillBuild e){
             strings.set(3, bundle.format("bar.drillspeed", Strings.fixed(e.lastDrillSpeed * 60 * e.timeScale, 2)));

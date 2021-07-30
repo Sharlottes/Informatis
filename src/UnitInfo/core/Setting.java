@@ -293,6 +293,7 @@ public class Setting {
         addGraphicCheckSetting("emptywave", true);
         addGraphicCheckSetting("scan", false);
         addGraphicSlideSetting("rangemax", 10, 0, 100, 1, s -> s + "tiles");
+        addGraphicCheckSetting("coreRange", true);
         addGraphicCheckSetting("rangeNearby", true);
         addGraphicCheckSetting("allTeamRange", false);
         addGraphicCheckSetting("allTargetRange", false);

@@ -19,7 +19,6 @@ import mindustry.*;
 import mindustry.content.*;
 import mindustry.core.Renderer;
 import mindustry.entities.*;
-import mindustry.entities.bullet.MassDriverBolt;
 import mindustry.entities.units.*;
 import mindustry.game.*;
 import mindustry.gen.*;
@@ -34,12 +33,11 @@ import mindustry.world.*;
 import mindustry.world.blocks.*;
 import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.blocks.distribution.MassDriver;
+import mindustry.world.blocks.power.PowerGraph;
 import mindustry.world.blocks.power.PowerNode;
 import mindustry.world.blocks.storage.*;
 
-import java.io.PipedWriter;
-import java.util.Objects;
-
+import java.lang.reflect.Field;
 import static arc.Core.*;
 import static mindustry.Vars.*;
 
@@ -153,15 +151,22 @@ public class HudUi {
         }
     }
 
-    public Seq<Building> getPowerLinkedBuilds(Building build){
+    public Seq<Building> getPowerLinkedBuilds(Building build) {
         Seq<Building> linkedBuilds = new Seq<>();
-        linkedBuilds.add(build.front(), build.back(), build.right(), build.left());
+        /*
+        Field ohno = PowerGraph.class.getDeclaredField("all");
+        ohno.setAccessible(true);
+        ((Seq<Building>) ohno.get(build.power.graph)).each(linkedBuilds::add);
+        */
         build.power.links.each(i -> linkedBuilds.add(world.build(i)));
+        build.proximity().each(linkedBuilds::add);
         linkedBuilds.filter(b -> b != null && b.power != null);
+        if(!build.block.outputsPower && !(build instanceof PowerNode.PowerNodeBuild))
+            linkedBuilds.filter(b -> b.block.outputsPower || b instanceof PowerNode.PowerNodeBuild);
         return linkedBuilds;
     }
 
-    public void drawNodeLink(Building node){
+    public void drawNodeLink(Building node) {
         if(node.power == null) return;
         if(!linkedNodes.contains(node)) {
             linkedNodes.add(node);
@@ -661,7 +666,11 @@ public class HudUi {
             }).padRight(Scl.scl(24 * 8f));
             table.row();
             table.update(() -> {
-                BarInfo.getInfo(getTarget());
+                try {
+                    BarInfo.getInfo(getTarget());
+                } catch (IllegalAccessException | NoSuchFieldException e) {
+                    e.printStackTrace();
+                }
                 strings = BarInfo.strings;
                 numbers = BarInfo.numbers;
                 colors = BarInfo.colors;
