@@ -10,7 +10,7 @@ public class SVars {
     public static Fi modRoot = modDirectory.child("UnitInfo");
     public static Seq<PlayerParser.PlayerInfo> playerInfos = new Seq<>();
 
-    public static Setting settingAdder = new Setting();
+    public static SettingS settingAdder = new SettingS();
     public static HudUi hud = new HudUi();
     public static PlayerParser playerinfo = new PlayerParser();
 }
