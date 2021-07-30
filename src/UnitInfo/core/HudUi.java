@@ -33,11 +33,9 @@ import mindustry.world.*;
 import mindustry.world.blocks.*;
 import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.blocks.distribution.MassDriver;
-import mindustry.world.blocks.power.PowerGraph;
 import mindustry.world.blocks.power.PowerNode;
 import mindustry.world.blocks.storage.*;
 
-import java.lang.reflect.Field;
 import static arc.Core.*;
 import static mindustry.Vars.*;
 
@@ -114,11 +112,9 @@ public class HudUi {
             linkedMasses.add((MassDriver.MassDriverBuild) b);
             drawMassLink((MassDriver.MassDriverBuild) b);
         });
-        if(world.build(from.link) instanceof MassDriver.MassDriverBuild to &&
-                from != to &&
-                to.within(from.x, from.y, ((MassDriver)from.block).range) &&
-                !linkedMasses.contains(to)){
-            linkedMasses.add(to);
+
+        if(world.build(from.link) instanceof MassDriver.MassDriverBuild to && from != to &&
+                to.within(from.x, from.y, ((MassDriver)from.block).range)){
 
             float sin = Mathf.absin(Time.time, 6f, 1f);
             Tmp.v1.set(from.x + from.block.offset, from.y + from.block.offset).sub(to.x, to.y).limit(from.block.size * tilesize + sin + 0.5f);
@@ -142,22 +138,17 @@ public class HudUi {
                 Drawf.circles(target.x, target.y, (target.block().size / 2f + 1) * tilesize + sin - 2f);
                 Drawf.arrow(from.x, from.y, target.x, target.y, from.block.size * tilesize + sin, 4f + sin);
             }
-
-            if(world.build(to.link) instanceof MassDriver.MassDriverBuild newTo &&
-                    to != newTo &&
+            if(world.build(to.link) instanceof MassDriver.MassDriverBuild newTo && to != newTo &&
                     newTo.within(to.x, to.y, ((MassDriver)to.block).range) &&
-                    !linkedMasses.contains(newTo))
+                    !linkedMasses.contains(to)){
+                linkedMasses.add(to);
                 drawMassLink(to);
+            }
         }
     }
 
     public Seq<Building> getPowerLinkedBuilds(Building build) {
         Seq<Building> linkedBuilds = new Seq<>();
-        /*
-        Field ohno = PowerGraph.class.getDeclaredField("all");
-        ohno.setAccessible(true);
-        ((Seq<Building>) ohno.get(build.power.graph)).each(linkedBuilds::add);
-        */
         build.power.links.each(i -> linkedBuilds.add(world.build(i)));
         build.proximity().each(linkedBuilds::add);
         linkedBuilds.filter(b -> b != null && b.power != null);
