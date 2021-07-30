@@ -18,7 +18,7 @@ import java.util.*;
 import static arc.Core.*;
 import static mindustry.Vars.*;
 
-public class Setting {
+public class SettingS {
     public static SettingsMenuDialog.SettingsTable waveTable = new SettingsMenuDialog.SettingsTable();
     public static SettingsMenuDialog.SettingsTable opacityTable = new SettingsMenuDialog.SettingsTable();
     public static SettingsMenuDialog.SettingsTable scanTable = new SettingsMenuDialog.SettingsTable();
@@ -30,8 +30,8 @@ public class Setting {
         ui.settings.graphics.sliderPref(key, def, min, max, step, s);
     }
     /*
-    public void addGraphicSlideSetting(String key, int def, int min, int max, int step, SettingsMenuDialog.StringProcessor s, Seq<SettingsMenuDialog.SettingsTable.Setting> list){
-        list.add(new SettingsMenuDialog.SettingsTable.Setting(key) {
+    public void addGraphicSlideSetting(String key, int def, int min, int max, int step, SettingsMenuDialog.StringProcessor s, Seq<SettingsMenuDialog.SettingsTable.SettingS> list){
+        list.add(new SettingsMenuDialog.SettingsTable.SettingS(key) {
             {
                 Core.settings.defaults(name, def);
             }
@@ -62,8 +62,8 @@ public class Setting {
             }
         });
     }
-    public void addGraphicCheckSetting(String key, boolean def, Seq<SettingsMenuDialog.SettingsTable.Setting> list){
-        list.add(new SettingsMenuDialog.SettingsTable.Setting() {
+    public void addGraphicCheckSetting(String key, boolean def, Seq<SettingsMenuDialog.SettingsTable.SettingS> list){
+        list.add(new SettingsMenuDialog.SettingsTable.SettingS() {
             {
                 name = key;
                 title = bundle.get("setting." + key + ".name");
@@ -87,8 +87,8 @@ public class Setting {
         });
     }
 
-    public void addGraphicTypeSetting(String key, int defs, String dialogs, String invalid, int warnMax, Seq<SettingsMenuDialog.SettingsTable.Setting> list){
-        list.add(new SettingsMenuDialog.SettingsTable.Setting() {
+    public void addGraphicTypeSetting(String key, int defs, String dialogs, String invalid, int warnMax, Seq<SettingsMenuDialog.SettingsTable.SettingS> list){
+        list.add(new SettingsMenuDialog.SettingsTable.SettingS() {
             public final int def;
             {
                 def = defs;
@@ -218,8 +218,8 @@ public class Setting {
         });
     }
 
-    public void addGraphicDialogSetting(String key, Seq<SettingsMenuDialog.SettingsTable.Setting> list, SettingsMenuDialog.SettingsTable table){
-    ui.settings.graphics.pref(new SettingsMenuDialog.SettingsTable.Setting() {
+    public void addGraphicDialogSetting(String key, Seq<SettingsMenuDialog.SettingsTable.SettingS> list, SettingsMenuDialog.SettingsTable table){
+    ui.settings.graphics.pref(new SettingsMenuDialog.SettingsTable.SettingS() {
             {
                 name = key;
                 title = Core.bundle.get("setting." + key + ".name");
@@ -230,17 +230,17 @@ public class Setting {
             public Table rebuild() {
                 table.clearChildren();
 
-                Iterator<SettingsMenuDialog.SettingsTable.Setting> var1 = list.iterator();
+                Iterator<SettingsMenuDialog.SettingsTable.SettingS> var1 = list.iterator();
 
                 while(var1.hasNext()) {
-                    SettingsMenuDialog.SettingsTable.Setting setting = var1.next();
+                    SettingsMenuDialog.SettingsTable.SettingS setting = var1.next();
                     setting.add(table);
                 }
                 table.button(Core.bundle.get("settings.reset", "Reset to Defaults"), () -> {
-                    Iterator<SettingsMenuDialog.SettingsTable.Setting> var2 = list.iterator();
+                    Iterator<SettingsMenuDialog.SettingsTable.SettingS> var2 = list.iterator();
 
                     while(var2.hasNext()) {
-                        SettingsMenuDialog.SettingsTable.Setting setting = var1.next();
+                        SettingsMenuDialog.SettingsTable.SettingS setting = var1.next();
                         if (setting.name != null && setting.title != null) {
                             Core.settings.put(setting.name, Core.settings.getDefault(setting.name));
                         }
@@ -264,13 +264,13 @@ public class Setting {
     */
     public void init(){
         /*
-        Seq<SettingsMenuDialog.SettingsTable.Setting> waveSeq = new Seq<>();
+        Seq<SettingsMenuDialog.SettingsTable.SettingS> waveSeq = new Seq<>();
         addGraphicCheckSetting("pastwave", false, waveSeq);
         addGraphicCheckSetting("emptywave", true, waveSeq);
         addGraphicTypeSetting("wavemax", 100, "@editmaxwave","@invalid", 200, waveSeq);
         addGraphicDialogSetting("wavesetting", waveSeq, waveTable);
 
-        Seq<SettingsMenuDialog.SettingsTable.Setting> scanSeq = new Seq<>();
+        Seq<SettingsMenuDialog.SettingsTable.SettingS> scanSeq = new Seq<>();
         addGraphicCheckSetting("scan", false, scanSeq);
         addGraphicTypeSetting("rangemax", 10, "@editrange","@invalid", 100, scanSeq);
         addGraphicCheckSetting("rangeNearby", true, scanSeq);
@@ -282,7 +282,7 @@ public class Setting {
         addGraphicSlideSetting("rangeRadius", 5, 0, 20, 1, s -> s + "tiles", scanSeq);
         addGraphicDialogSetting("wavesetting", scanSeq, scanTable);
 
-        Seq<SettingsMenuDialog.SettingsTable.Setting> opacitySeq = new Seq<>();
+        Seq<SettingsMenuDialog.SettingsTable.SettingS> opacitySeq = new Seq<>();
         addGraphicSlideSetting("selectopacity", 50, 0, 100, 5, s -> s + "%", opacitySeq);
         addGraphicSlideSetting("baropacity", 50, 0, 100, 5, s -> s + "%", opacitySeq);
         addGraphicSlideSetting("uiopacity", 50, 0, 100, 5, s -> s + "%", opacitySeq);
@@ -293,6 +293,7 @@ public class Setting {
         addGraphicCheckSetting("emptywave", true);
         addGraphicCheckSetting("scan", false);
         addGraphicSlideSetting("rangemax", 10, 0, 100, 1, s -> s + "tiles");
+        addGraphicCheckSetting("coreRange", true);
         addGraphicCheckSetting("rangeNearby", true);
         addGraphicCheckSetting("allTeamRange", false);
         addGraphicCheckSetting("allTargetRange", false);
