@@ -75,28 +75,30 @@ public class HudUi {
 
     @Nullable Teamc target;
 
-    public Seq<MassDriver.MassDriverBuild> linkedMasses = new Seq<>();
-    public Seq<Building> linkedNodes = new Seq<>();
+    Seq<MassDriver.MassDriverBuild> linkedMasses = new Seq<>();
+    Seq<Building> linkedNodes = new Seq<>();
+
+    boolean remoteChanged = false;
 
     @SuppressWarnings("unchecked")
     public <T extends Teamc> T getTarget(){
-        if(locked &&
-            (lockedTarget instanceof Unit u && u.dead) ||
-            (lockedTarget instanceof Building b && b.dead)) {
-            lockedTarget = null;
-            locked = false;
+        if(locked && lockedTarget != null) {
+            if(settings.getBool("deadTarget") && !Groups.all.contains(e -> e == lockedTarget)) {
+                lockedTarget = null;
+                locked = false;
+            }
+            else return (T) lockedTarget; //if there is locked target, return it first.
         }
-        if(locked && lockedTarget != null)
-            return (T) lockedTarget; //if there is locked target, return it first.
 
-        Seq<Unit> units = Groups.unit.intersect(Core.input.mouseWorldX(), Core.input.mouseWorldY(), 4, 4); // well, 0.5tile is enough to search them........ maybe?
+
+        Seq<Unit> units = Groups.unit.intersect(Core.input.mouseWorldX(), Core.input.mouseWorldY(), 4, 4); // well, 0.5tile is enough to search them
         if(units.size > 0)
             return (T) units.peek(); //if there is unit, return it.
         else if(getTile() != null && getTile().build != null)
             return (T) getTile().build; //if there isn't unit but there is build, return it.
         else if(player.unit() instanceof BlockUnitUnit b && b.tile() != null)
             return (T)b.tile();
-        return (T) player.unit(); //if there are not unit and not build, return player.
+        return (T) player.unit(); //if there aren't unit and not build, return player.
     }
 
     public @Nullable Tile getTile(){
@@ -176,6 +178,11 @@ public class HudUi {
     }
     public void setEvent(){
         Events.run(EventType.Trigger.draw, () -> {
+            if(locked && lockedTarget instanceof Healthc u && u.dead()) {
+                lockedTarget = null;
+                locked = false;
+            }
+
             if(getTarget() instanceof MassDriver.MassDriverBuild mass){
                 linkedMasses.clear();
                 drawMassLink(mass);
@@ -185,81 +192,126 @@ public class HudUi {
                 drawNodeLink(node);
             }
 
-            if(getTarget() == null || !Core.settings.getBool("select")) return;
+            if(getTarget() != null && Core.settings.getBool("select")) {
+                Posc entity = getTarget();
+                for(int i = 0; i < 4; i++){
+                    float rot = i * 90f + 45f + (-Time.time) % 360f;
+                    float length = (entity instanceof Unit ? ((Unit)entity).hitSize : entity instanceof Building ? ((Building)entity).block.size * tilesize : 0) * 1.5f + 2.5f;
+                    Draw.color(Tmp.c1.set(locked ? Color.orange : Color.darkGray).lerp(locked ? Color.scarlet : Color.gray, Mathf.absin(Time.time, 2f, 1f)).a(settings.getInt("selectopacity") / 100f));
+                    Draw.rect("select-arrow", entity.x() + Angles.trnsx(rot, length), entity.y() + Angles.trnsy(rot, length), length / 1.9f, length / 1.9f, rot - 135f);
+                }
+                if(player.unit() != null && getTarget() != player.unit()) {
+                    Teamc from = player.unit();
+                    Teamc to = getTarget();
+                    float sin = Mathf.absin(Time.time, 6f, 1f);
+                    if(player.unit() instanceof BlockUnitUnit bu) Tmp.v1.set(bu.x() + bu.tile().block.offset, bu.y() + bu.tile().block.offset).sub(to.x(), to.y()).limit(bu.tile().block.size * tilesize + sin + 0.5f);
+                    else Tmp.v1.set(from.x(), from.y()).sub(to.x(), to.y()).limit(player.unit().hitSize / tilesize + sin + 0.5f);
 
-            Posc entity = getTarget();
-            for(int i = 0; i < 4; i++){
-                float rot = i * 90f + 45f + (-Time.time) % 360f;
-                float length = (entity instanceof Unit ? ((Unit)entity).hitSize : entity instanceof Building ? ((Building)entity).block.size * tilesize : 0) * 1.5f + 2.5f;
-                Draw.color(Tmp.c1.set(locked ? Color.orange : Color.darkGray).lerp(locked ? Color.scarlet : Color.gray, Mathf.absin(Time.time, 2f, 1f)).a(settings.getInt("selectopacity") / 100f));
-                Draw.rect("select-arrow", entity.x() + Angles.trnsx(rot, length), entity.y() + Angles.trnsy(rot, length), length / 1.9f, length / 1.9f, rot - 135f);
-                Draw.reset();
-            }
+                    float x2 = from.x() - Tmp.v1.x, y2 = from.y() - Tmp.v1.y,
+                            x1 = to.x() + Tmp.v1.x, y1 = to.y() + Tmp.v1.y;
+                    int segs = (int) (to.dst(from.x(), from.y()) / tilesize);
+
+                    Lines.stroke(4f, Pal.gray);
+                    Lines.dashLine(x1, y1, x2, y2, segs);
+                    Lines.stroke(2f, Pal.placing);
+                    Lines.dashLine(x1, y1, x2, y2, segs);
+                    Lines.stroke(1f, Pal.accent);
+                }
+            };
+
+            Draw.reset();
         });
+
         Events.on(EventType.ResetEvent.class, e -> {
             if(settings.getBool("allTeam")) coreItems.teams = Team.all;
             else coreItems.teams = Team.baseTeams;
             coreItems.resetUsed();
             coreItems.tables.each(Group::clear);
         });
+
         Events.run(EventType.Trigger.update, ()->{
-            if((Core.input.keyDown(KeyCode.shiftRight) || Core.input.keyDown(KeyCode.shiftLeft)) && Core.input.keyTap(KeyCode.r)){
-                lockButton.change();
-            }
-            if(!settings.getBool("autoShooting")) return;
-            Unit unit = player.unit();
-            if(unit.type == null) return;
-            boolean omni = unit.type.omniMovement;
-            boolean validHealTarget = unit.type.canHeal && target instanceof Building && ((Building)target).isValid() && target.team() == unit.team && ((Building)target).damaged() && target.within(unit, unit.type.range);
-            boolean boosted = (unit instanceof Mechc && unit.isFlying());
-            if((unit.type != null && Units.invalidateTarget(target, unit, unit.type.range) && !validHealTarget) || state.isEditor()){
-                target = null;
-            }
-
-
-            float mouseAngle = unit.angleTo(unit.aimX(), unit.aimY());
-            boolean aimCursor = omni && player.shooting && unit.type.hasWeapons() && unit.type.faceTarget && !boosted && unit.type.rotateShooting;
-            if(aimCursor){
-                unit.lookAt(mouseAngle);
-            }else{
-                unit.lookAt(unit.prefRotation());
-            }
-
-            //update shooting if not building + not mining
-            if(!player.unit().activelyBuilding() && player.unit().mineTile == null){
-                //autofire targeting
-                if(input.keyDown(KeyCode.mouseLeft)) {
-                    player.shooting = !boosted;
-                    unit.aim(player.mouseX = Core.input.mouseWorldX(), player.mouseY = Core.input.mouseWorldY());
-                } else if(target == null){
-                    player.shooting = false;
-                    if(unit instanceof BlockUnitUnit b){
-                        if(b.tile() instanceof ControlBlock c && !c.shouldAutoTarget()){
-                            Building build = b.tile();
-                            float range = build instanceof Ranged ? ((Ranged)build).range() : 0f;
-                            boolean targetGround = build instanceof Turret.TurretBuild && ((Turret) build.block).targetAir;
-                            boolean targetAir = build instanceof Turret.TurretBuild && ((Turret) build.block).targetGround;
-                            target = Units.closestTarget(build.team, build.x, build.y, range, u -> u.checkTarget(targetAir, targetGround), u -> targetGround);
-                        }
-                        else target = null;
-                    } else if(unit.type != null){
-                        float range = unit.hasWeapons() ? unit.range() : 0f;
-                        target = Units.closestTarget(unit.team, unit.x, unit.y, range, u -> u.checkTarget(unit.type.targetAir, unit.type.targetGround), u -> unit.type.targetGround);
-
-                        if(unit.type.canHeal && target == null){
-                            target = Geometry.findClosest(unit.x, unit.y, indexer.getDamaged(Team.sharded));
-                            if(target != null && !unit.within(target, range)){
-                                target = null;
-                            }
-                        }
-                    }
-                }else {
-                    player.shooting = !boosted;
-                    unit.rotation(Angles.angle(unit.x, unit.y, target.x(), target.y()));
-                    unit.aim(target.x(), target.y());
+            if((input.keyDown(KeyCode.shiftRight) || input.keyDown(KeyCode.shiftLeft))){
+                if(input.keyTap(KeyCode.r)) lockButton.change();
+                else if(input.keyTap(KeyCode.num1)) {
+                    remoteChanged = true;
+                    uiIndex = 0;
+                }
+                else if(input.keyTap(KeyCode.num2)) {
+                    remoteChanged = true;
+                    uiIndex = 1;
+                }
+                else if(input.keyTap(KeyCode.num3)) {
+                    remoteChanged = true;
+                    uiIndex = 2;
+                }
+                else if(input.keyTap(KeyCode.num4)) {
+                    remoteChanged = true;
+                    uiIndex = 3;
+                }
+                else if(input.keyTap(KeyCode.num5)) {
+                    remoteChanged = true;
+                    uiIndex = 4;
+                }
+                else if(input.keyTap(KeyCode.num6)) {
+                    remoteChanged = true;
+                    uiIndex = 5;
                 }
             }
-            unit.controlWeapons(player.shooting && !boosted);
+
+            if(settings.getBool("autoShooting")) {
+                Unit unit = player.unit();
+                if (unit.type == null) return;
+                boolean omni = unit.type.omniMovement;
+                boolean validHealTarget = unit.type.canHeal && target instanceof Building && ((Building) target).isValid() && target.team() == unit.team && ((Building) target).damaged() && target.within(unit, unit.type.range);
+                boolean boosted = (unit instanceof Mechc && unit.isFlying());
+                if ((unit.type != null && Units.invalidateTarget(target, unit, unit.type.range) && !validHealTarget) || state.isEditor()) {
+                    target = null;
+                }
+
+
+                float mouseAngle = unit.angleTo(unit.aimX(), unit.aimY());
+                boolean aimCursor = omni && player.shooting && unit.type.hasWeapons() && unit.type.faceTarget && !boosted && unit.type.rotateShooting;
+                if (aimCursor) {
+                    unit.lookAt(mouseAngle);
+                } else {
+                    unit.lookAt(unit.prefRotation());
+                }
+
+                //update shooting if not building + not mining
+                if (!player.unit().activelyBuilding() && player.unit().mineTile == null) {
+                    //autofire targeting
+                    if (input.keyDown(KeyCode.mouseLeft)) {
+                        player.shooting = !boosted;
+                        unit.aim(player.mouseX = Core.input.mouseWorldX(), player.mouseY = Core.input.mouseWorldY());
+                    } else if (target == null) {
+                        player.shooting = false;
+                        if (unit instanceof BlockUnitUnit b) {
+                            if (b.tile() instanceof ControlBlock c && !c.shouldAutoTarget()) {
+                                Building build = b.tile();
+                                float range = build instanceof Ranged ? ((Ranged) build).range() : 0f;
+                                boolean targetGround = build instanceof Turret.TurretBuild && ((Turret) build.block).targetAir;
+                                boolean targetAir = build instanceof Turret.TurretBuild && ((Turret) build.block).targetGround;
+                                target = Units.closestTarget(build.team, build.x, build.y, range, u -> u.checkTarget(targetAir, targetGround), u -> targetGround);
+                            } else target = null;
+                        } else if (unit.type != null) {
+                            float range = unit.hasWeapons() ? unit.range() : 0f;
+                            target = Units.closestTarget(unit.team, unit.x, unit.y, range, u -> u.checkTarget(unit.type.targetAir, unit.type.targetGround), u -> unit.type.targetGround);
+
+                            if (unit.type.canHeal && target == null) {
+                                target = Geometry.findClosest(unit.x, unit.y, indexer.getDamaged(Team.sharded));
+                                if (target != null && !unit.within(target, range)) {
+                                    target = null;
+                                }
+                            }
+                        }
+                    } else {
+                        player.shooting = !boosted;
+                        unit.rotation(Angles.angle(unit.x, unit.y, target.x(), target.y()));
+                        unit.aim(target.x(), target.y());
+                    }
+                }
+                unit.controlWeapons(player.shooting && !boosted);
+            }
         });
     }
 
@@ -302,6 +354,10 @@ public class HudUi {
                 Seq<Button> buttons = Seq.with(null, null, null, null, null, null);
                 Seq<String> strs = Seq.with("hud.unit", "hud.wave", "hud.core", "hud.tile", "hud.item", "hud.cancel");
                 Seq<TextureRegionDrawable> icons = Seq.with(Icon.units, Icon.fileText, Icon.commandRally, Icon.grid, Icon.copy, Icon.cancel);
+                if(remoteChanged){
+                    reset(uiIndex, buttons, label, table, labelTable, strs.get(uiIndex));
+                    remoteChanged = false;
+                }
                 for(int i = 0; i < buttons.size; i++){
                     int finalI = i;
                     buttons.set(i, t.button(icons.get(i), Styles.clearToggleTransi, () -> {

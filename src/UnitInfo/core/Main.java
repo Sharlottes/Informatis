@@ -97,7 +97,7 @@ public class Main extends Mod {
                 Team team = player.team();
                 Unit unit = player.unit();
                 Groups.build.each(e -> {
-                    if(e.team == team) return; // Don't draw own turrets
+                    if(!settings.getBool("allTeamRange") && e.team == team) return; // Don't draw own turrets
                     if(!(e instanceof BaseTurret.BaseTurretBuild)) return; // Not a turret
                     if((e instanceof Turret.TurretBuild t && !t.hasAmmo()) || !e.cons.valid()) return; // No ammo
 
@@ -120,12 +120,13 @@ public class Main extends Mod {
 
                 // Unit Ranges (Only works when turret ranges are enabled)
                 if(settings.getBool("unitRange")) {
-                    Groups.unit.each(u -> u.team == team, u -> { // Don't draw own units
+                    Groups.unit.each(u -> {
+                        if(!settings.getBool("allTeamRange") && u.team == team) return; // Don't draw own units
                         boolean canHit = unit.isFlying() ? u.type.targetAir : u.type.targetGround;
                         float range = u.range();
                         float max = range + settings.getInt("rangeRadius") * tilesize;
 
-                        if(Vars.player.dst(u) <= range + settings.getInt("rangeRadius") * tilesize) { // TODO: Store value of rangeRadius as an int, should increase performance
+                        if(Vars.player.dst(u) <= max) { // TODO: Store value of rangeRadius as an int, should increase performance
                             if (canHit || settings.getBool("allTargetRange")) // Same as above
                                 if(settings.getBool("softRangeDrawing")){
                                     Lines.stroke(1, Tmp.c1.set(canHit ? u.team.color : Team.derelict.color).a(0.5f));

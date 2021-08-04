@@ -293,14 +293,14 @@ public class SettingS {
         addGraphicCheckSetting("emptywave", true);
         addGraphicCheckSetting("scan", false);
         addGraphicSlideSetting("rangemax", 10, 0, 100, 1, s -> s + "tiles");
-        addGraphicCheckSetting("coreRange", true);
+        addGraphicCheckSetting("coreRange", false);
         addGraphicCheckSetting("rangeNearby", true);
         addGraphicCheckSetting("allTeamRange", false);
         addGraphicCheckSetting("allTargetRange", false);
         addGraphicCheckSetting("unitRange", false);
-        addGraphicCheckSetting("softRangeDrawing", false);
+        addGraphicCheckSetting("softRangeDrawing", true);
         addGraphicSlideSetting("softRangeOpacity", 10, 0, 25, 1, s -> s + "%");
-        addGraphicSlideSetting("rangeRadius", 5, 0, 20, 1, s -> s + "tiles");
+        addGraphicSlideSetting("rangeRadius", 15, 0, 20, 1, s -> s + "tiles");
         addGraphicSlideSetting("selectopacity", 50, 0, 100, 5, s -> s + "%");
         addGraphicSlideSetting("baropacity", 50, 0, 100, 5, s -> s + "%");
         addGraphicSlideSetting("uiopacity", 50, 0, 100, 5, s -> s + "%");
@@ -317,5 +317,6 @@ public class SettingS {
         addGraphicCheckSetting("shar3", false);
         addGraphicCheckSetting("gaycursor", false);
         addGraphicCheckSetting("allTeam", false);
+        addGraphicCheckSetting("deadTarget", false);
     }
 }
