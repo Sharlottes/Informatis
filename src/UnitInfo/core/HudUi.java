@@ -36,6 +36,8 @@ import mindustry.world.blocks.distribution.MassDriver;
 import mindustry.world.blocks.power.PowerNode;
 import mindustry.world.blocks.storage.*;
 
+import java.util.Objects;
+
 import static arc.Core.*;
 import static mindustry.Vars.*;
 
@@ -232,30 +234,6 @@ public class HudUi {
         Events.run(EventType.Trigger.update, ()->{
             if((input.keyDown(KeyCode.shiftRight) || input.keyDown(KeyCode.shiftLeft))){
                 if(input.keyTap(KeyCode.r)) lockButton.change();
-                else if(input.keyTap(KeyCode.num1)) {
-                    remoteChanged = true;
-                    uiIndex = 0;
-                }
-                else if(input.keyTap(KeyCode.num2)) {
-                    remoteChanged = true;
-                    uiIndex = 1;
-                }
-                else if(input.keyTap(KeyCode.num3)) {
-                    remoteChanged = true;
-                    uiIndex = 2;
-                }
-                else if(input.keyTap(KeyCode.num4)) {
-                    remoteChanged = true;
-                    uiIndex = 3;
-                }
-                else if(input.keyTap(KeyCode.num5)) {
-                    remoteChanged = true;
-                    uiIndex = 4;
-                }
-                else if(input.keyTap(KeyCode.num6)) {
-                    remoteChanged = true;
-                    uiIndex = 5;
-                }
             }
 
             if(settings.getBool("autoShooting")) {
@@ -354,10 +332,6 @@ public class HudUi {
                 Seq<Button> buttons = Seq.with(null, null, null, null, null, null);
                 Seq<String> strs = Seq.with("hud.unit", "hud.wave", "hud.core", "hud.tile", "hud.item", "hud.cancel");
                 Seq<TextureRegionDrawable> icons = Seq.with(Icon.units, Icon.fileText, Icon.commandRally, Icon.grid, Icon.copy, Icon.cancel);
-                if(remoteChanged){
-                    reset(uiIndex, buttons, label, table, labelTable, strs.get(uiIndex));
-                    remoteChanged = false;
-                }
                 for(int i = 0; i < buttons.size; i++){
                     int finalI = i;
                     buttons.set(i, t.button(icons.get(i), Styles.clearToggleTransi, () -> {
