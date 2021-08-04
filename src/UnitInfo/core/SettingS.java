@@ -318,5 +318,7 @@ public class SettingS {
         addGraphicCheckSetting("gaycursor", false);
         addGraphicCheckSetting("allTeam", false);
         addGraphicCheckSetting("deadTarget", false);
+        addGraphicCheckSetting("linkedMass", true);
+        addGraphicCheckSetting("linkedNode", false);
     }
 }

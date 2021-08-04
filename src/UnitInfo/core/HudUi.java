@@ -75,8 +75,8 @@ public class HudUi {
 
     @Nullable Teamc target;
 
-    Seq<MassDriver.MassDriverBuild> linkedMasses = new Seq<>();
-    Seq<Building> linkedNodes = new Seq<>();
+    public Seq<MassDriver.MassDriverBuild> linkedMasses = new Seq<>();
+    public Seq<Building> linkedNodes = new Seq<>();
 
     boolean remoteChanged = false;
 
@@ -178,21 +178,21 @@ public class HudUi {
     }
     public void setEvent(){
         Events.run(EventType.Trigger.draw, () -> {
-            if(locked && lockedTarget instanceof Healthc u && u.dead()) {
+            if(settings.getBool("deadTarget") && locked && lockedTarget != null && !Groups.all.contains(e -> e == lockedTarget)) {
                 lockedTarget = null;
                 locked = false;
             }
 
-            if(getTarget() instanceof MassDriver.MassDriverBuild mass){
+            if(settings.getBool("linkedMass") && getTarget() instanceof MassDriver.MassDriverBuild mass){
                 linkedMasses.clear();
                 drawMassLink(mass);
             }
-            if(getTarget() instanceof Building node){
+            if(settings.getBool("linkedNode") && getTarget() instanceof Building node){
                 linkedNodes.clear();
                 drawNodeLink(node);
             }
 
-            if(getTarget() != null && Core.settings.getBool("select")) {
+            if(Core.settings.getBool("select") && getTarget() != null) {
                 Posc entity = getTarget();
                 for(int i = 0; i < 4; i++){
                     float rot = i * 90f + 45f + (-Time.time) % 360f;
@@ -205,7 +205,7 @@ public class HudUi {
                     Teamc to = getTarget();
                     float sin = Mathf.absin(Time.time, 6f, 1f);
                     if(player.unit() instanceof BlockUnitUnit bu) Tmp.v1.set(bu.x() + bu.tile().block.offset, bu.y() + bu.tile().block.offset).sub(to.x(), to.y()).limit(bu.tile().block.size * tilesize + sin + 0.5f);
-                    else Tmp.v1.set(from.x(), from.y()).sub(to.x(), to.y()).limit(player.unit().hitSize / tilesize + sin + 0.5f);
+                    else Tmp.v1.set(from.x(), from.y()).sub(to.x(), to.y()).limit(player.unit().hitSize + sin + 0.5f);
 
                     float x2 = from.x() - Tmp.v1.x, y2 = from.y() - Tmp.v1.y,
                             x1 = to.x() + Tmp.v1.x, y1 = to.y() + Tmp.v1.y;
