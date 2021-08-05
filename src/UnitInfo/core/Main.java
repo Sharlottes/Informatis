@@ -8,7 +8,10 @@ import arc.math.*;
 import arc.scene.ui.layout.*;
 import arc.util.*;
 import mindustry.*;
+import mindustry.ai.types.BuilderAI;
+import mindustry.ai.types.MinerAI;
 import mindustry.content.*;
+import mindustry.entities.units.AIController;
 import mindustry.game.EventType.*;
 import mindustry.game.*;
 import mindustry.gen.*;
@@ -123,8 +126,9 @@ public class Main extends Mod {
                 // Unit Ranges (Only works when turret ranges are enabled)
                 if(settings.getBool("unitRange") || (settings.getBool("allTeamRange") && player.unit() != null)) {
                     Groups.unit.each(u -> {
-                        if(!settings.getBool("unitRange") && settings.getBool("allTeamRange") && player.unit() != u) return;
+                        if(!settings.getBool("unitRange") && settings.getBool("allTeamRange") && player.unit() != u) return; //player unit rule
                         if(!settings.getBool("allTeamRange") && u.team == team) return; // Don't draw own units
+                        if(u.controller() instanceof AIController ai && (ai instanceof BuilderAI || ai instanceof MinerAI)) return; //don't draw poly and mono
                         boolean canHit = unit.isFlying() ? u.type.targetAir : u.type.targetGround;
                         float range = u.range();
                         float max = range + settings.getInt("rangeRadius") * tilesize;

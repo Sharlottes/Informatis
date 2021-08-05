@@ -17,7 +17,7 @@ import arc.struct.*;
 import arc.util.*;
 import mindustry.*;
 import mindustry.content.*;
-import mindustry.core.Renderer;
+import mindustry.core.*;
 import mindustry.entities.*;
 import mindustry.entities.units.*;
 import mindustry.game.*;
@@ -32,6 +32,7 @@ import mindustry.world.*;
 import mindustry.world.blocks.*;
 import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.blocks.distribution.MassDriver;
+import mindustry.world.blocks.payloads.PayloadMassDriver;
 import mindustry.world.blocks.power.PowerNode;
 import mindustry.world.blocks.storage.*;
 
@@ -75,6 +76,7 @@ public class HudUi {
     @Nullable Teamc target;
 
     public Seq<MassDriver.MassDriverBuild> linkedMasses = new Seq<>();
+    public Seq<PayloadMassDriver.PayloadDriverBuild> linkedPayloadMasses = new Seq<>();
     public Seq<Building> linkedNodes = new Seq<>();
 
     @SuppressWarnings("unchecked")
@@ -88,7 +90,7 @@ public class HudUi {
         }
 
 
-        Seq<Unit> units = Groups.unit.intersect(Core.input.mouseWorldX(), Core.input.mouseWorldY(), 4, 4); // well, 0.5tile is enough to search them
+        Seq<Unit> units = Groups.unit.intersect(input.mouseWorldX(), input.mouseWorldY(), 4, 4); // well, 0.5tile is enough to search them
         if(units.size > 0)
             return (T) units.peek(); //if there is unit, return it.
         else if(getTile() != null && getTile().build != null)
@@ -99,9 +101,49 @@ public class HudUi {
     }
 
     public @Nullable Tile getTile(){
-        return Vars.world.tileWorld(Core.input.mouseWorldX(), Core.input.mouseWorldY());
+        return Vars.world.tileWorld(input.mouseWorldX(), input.mouseWorldY());
     }
 
+    public void drawMassPayloadLink(PayloadMassDriver.PayloadDriverBuild from){
+        Groups.build.each(b -> b instanceof PayloadMassDriver.PayloadDriverBuild fromMass &&
+                world.build(fromMass.link) == from &&
+                from.within(fromMass.x, fromMass.y, ((PayloadMassDriver)fromMass.block).range) &&
+                !linkedPayloadMasses.contains(from), b -> {
+            linkedPayloadMasses.add((PayloadMassDriver.PayloadDriverBuild) b);
+            drawMassPayloadLink((PayloadMassDriver.PayloadDriverBuild) b);
+        });
+
+        if(world.build(from.link) instanceof PayloadMassDriver.PayloadDriverBuild to && from != to &&
+                to.within(from.x, from.y, ((PayloadMassDriver)from.block).range)){
+            float sin = Mathf.absin(Time.time, 6f, 1f);
+            Tmp.v1.set(from.x + from.block.offset, from.y + from.block.offset).sub(to.x, to.y).limit(from.block.size * tilesize + sin + 0.5f);
+            float x2 = from.x - Tmp.v1.x, y2 = from.y - Tmp.v1.y,
+                    x1 = to.x + Tmp.v1.x, y1 = to.y + Tmp.v1.y;
+            int segs = (int)(to.dst(from.x, from.y)/tilesize);
+
+            Lines.stroke(4f, Pal.gray);
+            Lines.dashLine(x1, y1, x2, y2, segs);
+            Lines.stroke(2f, Pal.placing);
+            Lines.dashLine(x1, y1, x2, y2, segs);
+            Lines.stroke(1f, Pal.accent);
+            Drawf.circles(from.x, from.y, (from.tile.block().size / 2f + 1) * tilesize + sin - 2f, Pal.accent);
+
+            for(var shooter : from.waitingShooters){
+                Drawf.circles(shooter.x, shooter.y, (from.tile.block().size / 2f + 1) * tilesize + sin - 2f);
+                Drawf.arrow(shooter.x, shooter.y, from.x, from.y, from.block.size * tilesize + sin, 4f + sin);
+            }
+            if(from.link != -1 && world.build(from.link) instanceof PayloadMassDriver.PayloadDriverBuild other && other.block == from.block && other.team == from.team && from.within(other, ((PayloadMassDriver)from.block).range)){
+                Building target = world.build(from.link);
+                Drawf.circles(target.x, target.y, (target.block().size / 2f + 1) * tilesize + sin - 2f);
+                Drawf.arrow(from.x, from.y, target.x, target.y, from.block.size * tilesize + sin, 4f + sin);
+            }
+            if(world.build(to.link) instanceof PayloadMassDriver.PayloadDriverBuild newTo && to != newTo &&
+                    newTo.within(to.x, to.y, ((PayloadMassDriver)to.block).range) && !linkedPayloadMasses.contains(to)){
+                linkedPayloadMasses.add(to);
+                drawMassPayloadLink(to);
+            }
+        }
+    }
 
     public void drawMassLink(MassDriver.MassDriverBuild from){
         Groups.build.each(b -> b instanceof MassDriver.MassDriverBuild fromMass &&
@@ -114,7 +156,6 @@ public class HudUi {
 
         if(world.build(from.link) instanceof MassDriver.MassDriverBuild to && from != to &&
                 to.within(from.x, from.y, ((MassDriver)from.block).range)){
-
             float sin = Mathf.absin(Time.time, 6f, 1f);
             Tmp.v1.set(from.x + from.block.offset, from.y + from.block.offset).sub(to.x, to.y).limit(from.block.size * tilesize + sin + 0.5f);
             float x2 = from.x - Tmp.v1.x, y2 = from.y - Tmp.v1.y,
@@ -138,8 +179,7 @@ public class HudUi {
                 Drawf.arrow(from.x, from.y, target.x, target.y, from.block.size * tilesize + sin, 4f + sin);
             }
             if(world.build(to.link) instanceof MassDriver.MassDriverBuild newTo && to != newTo &&
-                    newTo.within(to.x, to.y, ((MassDriver)to.block).range) &&
-                    !linkedMasses.contains(to)){
+                    newTo.within(to.x, to.y, ((MassDriver)to.block).range) && !linkedMasses.contains(to)){
                 linkedMasses.add(to);
                 drawMassLink(to);
             }
@@ -180,16 +220,23 @@ public class HudUi {
                 locked = false;
             }
 
-            if(settings.getBool("linkedMass") && getTarget() instanceof MassDriver.MassDriverBuild mass){
-                linkedMasses.clear();
-                drawMassLink(mass);
+            if(settings.getBool("linkedMass")){
+                if(getTarget() instanceof MassDriver.MassDriverBuild mass) {
+                    linkedMasses.clear();
+                    drawMassLink(mass);
+                }
+                else if(getTarget() instanceof PayloadMassDriver.PayloadDriverBuild mass) {
+                    linkedPayloadMasses.clear();
+                    drawMassPayloadLink(mass);
+                }
             }
+
             if(settings.getBool("linkedNode") && getTarget() instanceof Building node){
                 linkedNodes.clear();
                 drawNodeLink(node);
             }
 
-            if(Core.settings.getBool("select") && getTarget() != null) {
+            if(settings.getBool("select") && getTarget() != null) {
                 Posc entity = getTarget();
                 for(int i = 0; i < 4; i++){
                     float rot = i * 90f + 45f + (-Time.time) % 360f;
@@ -197,7 +244,7 @@ public class HudUi {
                     Draw.color(Tmp.c1.set(locked ? Color.orange : Color.darkGray).lerp(locked ? Color.scarlet : Color.gray, Mathf.absin(Time.time, 2f, 1f)).a(settings.getInt("selectopacity") / 100f));
                     Draw.rect("select-arrow", entity.x() + Angles.trnsx(rot, length), entity.y() + Angles.trnsy(rot, length), length / 1.9f, length / 1.9f, rot - 135f);
                 }
-                if(player.unit() != null && getTarget() != player.unit()) {
+                if(settings.getBool("distanceLine") && player.unit() != null && !player.unit().dead && getTarget() != player.unit()) { //need selected other unit with living player
                     Teamc from = player.unit();
                     Teamc to = getTarget();
                     float sin = Mathf.absin(Time.time, 6f, 1f);
@@ -208,9 +255,9 @@ public class HudUi {
                             x1 = to.x() + Tmp.v1.x, y1 = to.y() + Tmp.v1.y;
                     int segs = (int) (to.dst(from.x(), from.y()) / tilesize);
 
-                    Lines.stroke(4f, Pal.gray);
+                    Lines.stroke(2.5f, Pal.gray);
                     Lines.dashLine(x1, y1, x2, y2, segs);
-                    Lines.stroke(2f, Pal.placing);
+                    Lines.stroke(1f, Pal.placing);
                     Lines.dashLine(x1, y1, x2, y2, segs);
 
                     Fonts.outline.draw(Strings.fixed(to.dst(from.x(), from.y()), 2) + " (" + segs + "tiles)",
@@ -246,7 +293,7 @@ public class HudUi {
                 if(!player.unit().activelyBuilding() && player.unit().mineTile == null) {
                     if(input.keyDown(KeyCode.mouseLeft)) {
                         player.shooting = !boosted;
-                        unit.aim(player.mouseX = Core.input.mouseWorldX(), player.mouseY = Core.input.mouseWorldY());
+                        unit.aim(player.mouseX = input.mouseWorldX(), player.mouseY = input.mouseWorldY());
                     } else if(target == null) {
                         player.shooting = false;
                         if(unit instanceof BlockUnitUnit b) {
@@ -290,7 +337,7 @@ public class HudUi {
     public void reset(int index, Seq<Button> buttons, Label label, Table table, Table labelTable, String hud){
         uiIndex = index;
         buttons.each(b -> b.setChecked(buttons.indexOf(b) == index));
-        label.setText(Core.bundle.get(hud));
+        label.setText(bundle.get(hud));
         addBars();
         addWeapon();
         addUnitTable();
@@ -770,8 +817,8 @@ public class HudUi {
                             }));
                         }}).pad(2f);
                         tt.clicked(() -> {
-                            if(Core.input.keyDown(KeyCode.shiftLeft) && Fonts.getUnicode(group.type.name) != 0){
-                                Core.app.setClipboardText((char)Fonts.getUnicode(group.type.name) + "");
+                            if(input.keyDown(KeyCode.shiftLeft) && Fonts.getUnicode(group.type.name) != 0){
+                                app.setClipboardText((char)Fonts.getUnicode(group.type.name) + "");
                                 ui.showInfoFade("@copied");
                             }else{
                                 ui.content.show(group.type);
@@ -840,9 +887,9 @@ public class HudUi {
         wavePane.setScrollYForce(waveScrollPos);
         wavePane.update(() -> {
             if(wavePane.hasScroll()){
-                Element result = Core.scene.hit(Core.input.mouseX(), Core.input.mouseY(), true);
+                Element result = scene.hit(input.mouseX(), input.mouseY(), true);
                 if(result == null || !result.isDescendantOf(wavePane)){
-                    Core.scene.setScrollFocus(null);
+                    scene.setScrollFocus(null);
                 }
             }
             waveScrollPos = wavePane.getScrollY();
@@ -931,9 +978,9 @@ public class HudUi {
         corePane.setScrollYForce(coreScrollPos);
         corePane.update(() -> {
             if(corePane.hasScroll()){
-                Element result = Core.scene.hit(Core.input.mouseX(), Core.input.mouseY(), true);
+                Element result = scene.hit(input.mouseX(), input.mouseY(), true);
                 if(result == null || !result.isDescendantOf(corePane)){
-                    Core.scene.setScrollFocus(null);
+                    scene.setScrollFocus(null);
                 }
             }
             coreScrollPos = corePane.getScrollY();
@@ -967,9 +1014,9 @@ public class HudUi {
                 head.table(image -> {
                     image.left();
                     if(tile == null) return;
-                    if(tile.floor().uiIcon != Core.atlas.find("error")) image.image(tile.floor().uiIcon);
-                    if(tile.overlay().uiIcon != Core.atlas.find("error")) image.image(tile.overlay().uiIcon);
-                    if(tile.block().uiIcon != Core.atlas.find("error")) image.image(tile.block().uiIcon);
+                    if(tile.floor().uiIcon != atlas.find("error")) image.image(tile.floor().uiIcon);
+                    if(tile.overlay().uiIcon != atlas.find("error")) image.image(tile.overlay().uiIcon);
+                    if(tile.block().uiIcon != atlas.find("error")) image.image(tile.block().uiIcon);
                 });
                 head.label(() -> tile == null ? "(null, null)" : "(" + tile.x + ", " + tile.y + ")").center();
             });
@@ -983,9 +1030,9 @@ public class HudUi {
         tilePane.setScrollYForce(tileScrollPos);
         tilePane.update(() -> {
             if(tilePane.hasScroll()){
-                Element result = Core.scene.hit(Core.input.mouseX(), Core.input.mouseY(), true);
+                Element result = scene.hit(input.mouseX(), input.mouseY(), true);
                 if(result == null || !result.isDescendantOf(tilePane)){
-                    Core.scene.setScrollFocus(null);
+                    scene.setScrollFocus(null);
                 }
             }
             tileScrollPos = tilePane.getScrollY();
@@ -1032,9 +1079,9 @@ public class HudUi {
         tilePane.setScrollYForce(tileScrollPos);
         tilePane.update(() -> {
             if(tilePane.hasScroll()){
-                Element result = Core.scene.hit(Core.input.mouseX(), Core.input.mouseY(), true);
+                Element result = scene.hit(input.mouseX(), input.mouseY(), true);
                 if(result == null || !result.isDescendantOf(tilePane)){
-                    Core.scene.setScrollFocus(null);
+                    scene.setScrollFocus(null);
                 }
             }
             itemScrollPos = tilePane.getScrollY();

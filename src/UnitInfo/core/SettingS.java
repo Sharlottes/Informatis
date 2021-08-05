@@ -321,5 +321,6 @@ public class SettingS {
         addGraphicCheckSetting("deadTarget", false);
         addGraphicCheckSetting("linkedMass", true);
         addGraphicCheckSetting("linkedNode", false);
+        addGraphicCheckSetting("distanceLine", true);
     }
 }
