@@ -1,6 +1,5 @@
 package UnitInfo.core;
 
-import UnitInfo.SVars;
 import UnitInfo.ui.*;
 import arc.*;
 import arc.graphics.*;
@@ -36,6 +35,7 @@ import mindustry.world.blocks.distribution.MassDriver;
 import mindustry.world.blocks.power.PowerNode;
 import mindustry.world.blocks.storage.*;
 
+import static UnitInfo.SVars.clear;
 import static arc.Core.*;
 import static mindustry.Vars.*;
 
@@ -432,7 +432,7 @@ public class HudUi {
                         update(() -> {
                             if(getTarget() instanceof Unit u && u.stack.item != null && u.stack.amount > 0)
                                 setDrawable(u.stack.item.uiIcon);
-                            else setDrawable(Core.atlas.find("clear"));
+                            else setDrawable(clear);
                         });
                         visibility = () -> getTarget() instanceof Unit;
                     }}.setScaling(Scaling.fit)).size(Scl.scl(30f)).padBottom(Scl.scl(4 * 8f)).padRight(Scl.scl(6 * 8f));
@@ -484,7 +484,7 @@ public class HudUi {
                 t.left();
                 t.add(new Image(){{
                     update(() -> {
-                        TextureRegion region = Core.atlas.find("clear");
+                        TextureRegion region = clear;
 
                         if(Vars.state.rules.unitAmmo && getTarget() instanceof Unit u && u.type != null){
                             UnitType type = u.type;
@@ -503,7 +503,7 @@ public class HudUi {
         weapon = new Table(tx -> {
             tx.left().defaults().minSize(Scl.scl(12 * 8f));
 
-            tx.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, tt -> {
+            tx.add(new Table(Tex.button, tt -> {
                 tt.left().top().defaults().width(Scl.scl(24/3f * 8f)).minHeight(Scl.scl(12/3f * 8f));
 
                 if(getTarget() instanceof Unit u && u.type != null) {
@@ -580,16 +580,16 @@ public class HudUi {
         unitTable = new Table(table -> {
             table.left();
             addBars();
-            table.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
+            table.add(new Table(Tex.button, t -> {
                 t.defaults().width(Scl.scl(25 * 8f)).scaling(Scaling.bounded);
 
                 t.table(Tex.underline2, tt -> {
                     Stack stack = new Stack(){{
                         add(new Table(ttt -> ttt.add(new Image(){{
                             update(() -> {
-                                TextureRegion region = atlas.find("clear");
+                                TextureRegion region = clear;
                                 if(getTarget() instanceof Unit && ((Unit) getTarget()).type() != null) region = ((Unit) getTarget()).type().uiIcon;
-                                if(getTarget() instanceof Building && ((Building) getTarget()).block != null) {
+                                else if(getTarget() instanceof Building && ((Building) getTarget()).block != null) {
                                     if(getTarget() instanceof ConstructBlock.ConstructBuild) region = ((ConstructBlock.ConstructBuild) getTarget()).current.uiIcon;
                                     else region = ((Building) getTarget()).block.uiIcon;
                                 }
@@ -599,7 +599,7 @@ public class HudUi {
                         add(new Table(ttt -> {
                             ttt.add(new Stack(){{
                                 add(new Table(temp -> temp.add(new Image(){{
-                                    update(()-> setDrawable(getTarget() instanceof Unit ? Icon.defenseSmall.getRegion() : SVars.clear));
+                                    update(()-> setDrawable(getTarget() instanceof Unit ? Icon.defenseSmall.getRegion() : clear));
                                 }}.setScaling(Scaling.fit))));
 
                                 add(new Table(temp -> {
@@ -835,7 +835,7 @@ public class HudUi {
 
     public void addWaveTable(){
         if(uiIndex != 1) return;
-        ScrollPane wavePane = new ScrollPane(new Image(Core.atlas.find("clear")).setScaling(Scaling.fit), Styles.smallPane);
+        ScrollPane wavePane = new ScrollPane(new Image(clear).setScaling(Scaling.fit), Styles.smallPane);
         wavePane.setScrollingDisabled(true, false);
         wavePane.setScrollYForce(waveScrollPos);
         wavePane.update(() -> {
@@ -852,7 +852,7 @@ public class HudUi {
         wavePane.setOverscroll(false, false);
         wavePane.setWidget(new Table(tx -> tx.table(this::setWave).left()));
         waveTable = new Table(table -> {
-            table.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
+            table.add(new Table(Tex.button, t -> {
                 t.defaults().minWidth(Scl.scl(25 * 8f)).scaling(Scaling.fit).left();
                 t.add(wavePane).maxHeight(Scl.scl(32 * 8f));
             }){
@@ -942,7 +942,7 @@ public class HudUi {
         corePane.setOverscroll(false, false);
 
         coreTable = new Table(table -> {
-            table.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
+            table.add(new Table(Tex.button, t -> {
                 t.defaults().minWidth(Scl.scl(25 * 8f)).scaling(Scaling.fit).left();
                 t.add(corePane).maxHeight(Scl.scl(32 * 8f));
             }){
@@ -978,7 +978,7 @@ public class HudUi {
 
     public void addTileTable(){
         if(uiIndex != 3) return;
-        ScrollPane tilePane = new ScrollPane(new Image(Core.atlas.find("clear")).setScaling(Scaling.fit), Styles.smallPane);
+        ScrollPane tilePane = new ScrollPane(new Image(clear).setScaling(Scaling.fit), Styles.smallPane);
         tilePane.setScrollingDisabled(true, false);
         tilePane.setScrollYForce(tileScrollPos);
         tilePane.update(() -> {
@@ -994,7 +994,7 @@ public class HudUi {
 
         tilePane.setOverscroll(false, false);
         tileTable = new Table(table -> {
-            table.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
+            table.add(new Table(Tex.button, t -> {
                 t.defaults().minWidth(Scl.scl(25 * 8f)).scaling(Scaling.fit).left();
                 t.add(tilePane).maxHeight(Scl.scl(32 * 8f));
             }){
@@ -1027,7 +1027,7 @@ public class HudUi {
 
     public void addItemTable(){
         if(uiIndex != 4) return;
-        ScrollPane tilePane = new ScrollPane(new Image(Core.atlas.find("clear")).setScaling(Scaling.fit), Styles.smallPane);
+        ScrollPane tilePane = new ScrollPane(new Image(clear).setScaling(Scaling.fit), Styles.smallPane);
         tilePane.setScrollingDisabled(true, false);
         tilePane.setScrollYForce(tileScrollPos);
         tilePane.update(() -> {
@@ -1043,7 +1043,7 @@ public class HudUi {
 
         tilePane.setOverscroll(false, false);
         itemTable = new Table(table -> {
-            table.add(new Table(scene.getStyle(Button.ButtonStyle.class).up, t -> {
+            table.add(new Table(Tex.button, t -> {
                 t.defaults().minWidth(Scl.scl(25 * 8f)).scaling(Scaling.fit).left();
                 t.add(tilePane).maxHeight(Scl.scl(32 * 8f));
             }){

@@ -291,6 +291,7 @@ public class SettingS {
 
         addGraphicCheckSetting("pastwave", false);
         addGraphicCheckSetting("emptywave", true);
+        addGraphicSlideSetting("wavemax", 50, 0, 200, 1, s -> s + "waves");
         addGraphicCheckSetting("scan", false);
         addGraphicSlideSetting("rangemax", 10, 0, 100, 1, s -> s + "tiles");
         addGraphicCheckSetting("coreRange", false);

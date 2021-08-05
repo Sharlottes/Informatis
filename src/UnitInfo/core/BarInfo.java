@@ -66,7 +66,7 @@ public class BarInfo {
             numbers.set(0, healthc.healthf());
         }
 
-        
+
         if(target instanceof Turret.TurretBuild turret){
             strings.set(1, Core.bundle.format("shar-stat.reload", Strings.fixed((turret.reload / ((Turret)turret.block).reloadTime) * 100f, 1)));
             colors.set(1, Pal.accent.cpy().lerp(Color.orange, Mathf.clamp((turret.reload / ((Turret)turret.block).reloadTime))));
@@ -224,7 +224,6 @@ public class BarInfo {
             colors.set(3, Pal.ammo);
             numbers.set(3, fraction / max);
         }
-
 
 
         if(target instanceof Unit unit && target instanceof Payloadc pay && unit.type != null){
