@@ -1,5 +1,6 @@
 package UnitInfo.core;
 
+import UnitInfo.SVars;
 import UnitInfo.ui.*;
 import arc.*;
 import arc.graphics.*;
@@ -26,8 +27,7 @@ import mindustry.graphics.*;
 import mindustry.input.*;
 import mindustry.logic.*;
 import mindustry.type.*;
-import mindustry.type.ammo.ItemAmmoType;
-import mindustry.type.ammo.PowerAmmoType;
+import mindustry.type.ammo.*;
 import mindustry.ui.*;
 import mindustry.world.*;
 import mindustry.world.blocks.*;
@@ -35,8 +35,6 @@ import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.blocks.distribution.MassDriver;
 import mindustry.world.blocks.power.PowerNode;
 import mindustry.world.blocks.storage.*;
-
-import java.util.Objects;
 
 import static arc.Core.*;
 import static mindustry.Vars.*;
@@ -74,13 +72,10 @@ public class HudUi {
     Seq<Color> colors = Seq.with(Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear);
     Seq<Color> lastColors = Seq.with(Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear);
     CoresItemsDisplay coreItems = new CoresItemsDisplay(Team.baseTeams);
-
     @Nullable Teamc target;
 
     public Seq<MassDriver.MassDriverBuild> linkedMasses = new Seq<>();
     public Seq<Building> linkedNodes = new Seq<>();
-
-    boolean remoteChanged = false;
 
     @SuppressWarnings("unchecked")
     public <T extends Teamc> T getTarget(){
@@ -217,18 +212,15 @@ public class HudUi {
                     Lines.dashLine(x1, y1, x2, y2, segs);
                     Lines.stroke(2f, Pal.placing);
                     Lines.dashLine(x1, y1, x2, y2, segs);
-                    Lines.stroke(1f, Pal.accent);
+
+                    Fonts.outline.draw(Strings.fixed(to.dst(from.x(), from.y()), 2) + " (" + segs + "tiles)",
+                            from.x() + Angles.trnsx(Angles.angle(from.x(), from.y(), to.x(), to.y()), player.unit().hitSize() + 40),
+                            from.y() + Angles.trnsy(Angles.angle(from.x(), from.y(), to.x(), to.y()), player.unit().hitSize() + 40) - 3,
+                            Pal.accent, 0.25f, false, Align.center);
                 }
-            };
+            }
 
             Draw.reset();
-        });
-
-        Events.on(EventType.ResetEvent.class, e -> {
-            if(settings.getBool("allTeam")) coreItems.teams = Team.all;
-            else coreItems.teams = Team.baseTeams;
-            coreItems.resetUsed();
-            coreItems.tables.each(Group::clear);
         });
 
         Events.run(EventType.Trigger.update, ()->{
@@ -246,36 +238,31 @@ public class HudUi {
                     target = null;
                 }
 
-
                 float mouseAngle = unit.angleTo(unit.aimX(), unit.aimY());
                 boolean aimCursor = omni && player.shooting && unit.type.hasWeapons() && unit.type.faceTarget && !boosted && unit.type.rotateShooting;
-                if (aimCursor) {
-                    unit.lookAt(mouseAngle);
-                } else {
-                    unit.lookAt(unit.prefRotation());
-                }
+                unit.lookAt(aimCursor ? mouseAngle : unit.prefRotation());
 
                 //update shooting if not building + not mining
-                if (!player.unit().activelyBuilding() && player.unit().mineTile == null) {
-                    //autofire targeting
-                    if (input.keyDown(KeyCode.mouseLeft)) {
+                if(!player.unit().activelyBuilding() && player.unit().mineTile == null) {
+                    if(input.keyDown(KeyCode.mouseLeft)) {
                         player.shooting = !boosted;
                         unit.aim(player.mouseX = Core.input.mouseWorldX(), player.mouseY = Core.input.mouseWorldY());
-                    } else if (target == null) {
+                    } else if(target == null) {
                         player.shooting = false;
-                        if (unit instanceof BlockUnitUnit b) {
-                            if (b.tile() instanceof ControlBlock c && !c.shouldAutoTarget()) {
+                        if(unit instanceof BlockUnitUnit b) {
+                            if(b.tile() instanceof ControlBlock c && !c.shouldAutoTarget()) {
                                 Building build = b.tile();
                                 float range = build instanceof Ranged ? ((Ranged) build).range() : 0f;
                                 boolean targetGround = build instanceof Turret.TurretBuild && ((Turret) build.block).targetAir;
                                 boolean targetAir = build instanceof Turret.TurretBuild && ((Turret) build.block).targetGround;
                                 target = Units.closestTarget(build.team, build.x, build.y, range, u -> u.checkTarget(targetAir, targetGround), u -> targetGround);
-                            } else target = null;
-                        } else if (unit.type != null) {
+                            }
+                            else target = null;
+                        } else if(unit.type != null) {
                             float range = unit.hasWeapons() ? unit.range() : 0f;
                             target = Units.closestTarget(unit.team, unit.x, unit.y, range, u -> u.checkTarget(unit.type.targetAir, unit.type.targetGround), u -> unit.type.targetGround);
 
-                            if (unit.type.canHeal && target == null) {
+                            if(unit.type.canHeal && target == null) {
                                 target = Geometry.findClosest(unit.x, unit.y, indexer.getDamaged(Team.sharded));
                                 if (target != null && !unit.within(target, range)) {
                                     target = null;
@@ -290,6 +277,13 @@ public class HudUi {
                 }
                 unit.controlWeapons(player.shooting && !boosted);
             }
+        });
+
+        Events.on(EventType.ResetEvent.class, e -> {
+            if(settings.getBool("allTeam")) coreItems.teams = Team.all;
+            else coreItems.teams = Team.baseTeams;
+            coreItems.resetUsed();
+            coreItems.tables.each(Group::clear);
         });
     }
 
@@ -319,12 +313,11 @@ public class HudUi {
                 a = Mathf.lerpDelta(a, 0f, 0.025f);
                 label.color.a = a;
             });
-            Label.LabelStyle style = new Label.LabelStyle(){{
+            label.setStyle(new Label.LabelStyle(){{
                 font = Fonts.outline;
                 fontColor = Color.white;
                 background = Styles.black8;
-            }};
-            label.setStyle(style);
+            }});
 
             Table labelTable = new Table(t -> t.add(label).scaling(Scaling.fit).left().padRight(40 * 8f));
 
@@ -334,9 +327,8 @@ public class HudUi {
                 Seq<TextureRegionDrawable> icons = Seq.with(Icon.units, Icon.fileText, Icon.commandRally, Icon.grid, Icon.copy, Icon.cancel);
                 for(int i = 0; i < buttons.size; i++){
                     int finalI = i;
-                    buttons.set(i, t.button(icons.get(i), Styles.clearToggleTransi, () -> {
-                        reset(finalI, buttons, label, table, labelTable, strs.get(finalI));
-                    }).size(5*8f).get());
+                    buttons.set(i, t.button(icons.get(i), Styles.clearToggleTransi, () ->
+                        reset(finalI, buttons, label, table, labelTable, strs.get(finalI))).size(5*8f).get());
                     t.row();
                 }
             });
@@ -607,11 +599,7 @@ public class HudUi {
                         add(new Table(ttt -> {
                             ttt.add(new Stack(){{
                                 add(new Table(temp -> temp.add(new Image(){{
-                                    update(()->{
-                                        TextureRegion region = atlas.find("clear");
-                                        if(getTarget() instanceof Unit) region = Icon.defenseSmall.getRegion();
-                                        setDrawable(region);
-                                    });
+                                    update(()-> setDrawable(getTarget() instanceof Unit ? Icon.defenseSmall.getRegion() : SVars.clear));
                                 }}.setScaling(Scaling.fit))));
 
                                 add(new Table(temp -> {
@@ -638,7 +626,6 @@ public class HudUi {
                         return name;
                     });
 
-                    label.setFontScale(Scl.scl());
                     TextButton button = Elem.newButton("?", Styles.clearPartialt, () -> {
                         if(getTarget() instanceof Unit && ((Unit) getTarget()).type() != null)
                             ui.content.show(((Unit) getTarget()).type);
@@ -723,7 +710,7 @@ public class HudUi {
                 table.center();
                 final int jj = j+1;
                 Label label = new Label(() -> "[#" + (state.wave == j+1 ? Color.red.toString() : Pal.accent.toString()) + "]" + jj + "[]");
-                label.setFontScale(Scl.scl());
+
                 t.add(label);
             }).size(Scl.scl(32f));
 
@@ -769,7 +756,6 @@ public class HudUi {
                             add(new Table(ttt -> {
                                 ttt.bottom().left();
                                 Label label = new Label(() -> amount + "");
-                                label.setFontScale(Scl.scl());
                                 ttt.add(label);
                                 ttt.pack();
                             }));
@@ -894,10 +880,8 @@ public class HudUi {
                 if(state.rules.pvp && coreItems.teams[i] != player.team()) continue;
                 int finalI = i;
                 t.table(Tex.underline2, head -> {
-                    head.table(label -> {
-                        label.center();
-                        label.label(() -> "[#" + coreItems.teams[finalI].color.toString() + "]" + coreItems.teams[finalI].name + "[]");
-                    });
+                    head.center();
+                    head.label(() -> "[#" + coreItems.teams[finalI].color.toString() + "]" + coreItems.teams[finalI].name + "[]");
                 });
                 t.row();
                 for(int r = 0; r < coreamount; r++) {

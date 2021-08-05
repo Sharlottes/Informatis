@@ -105,13 +105,15 @@ public class Main extends Mod {
                         e.block instanceof TractorBeamTurret tu && (unit.isFlying() ? tu.targetAir : tu.targetGround);
                     float range = ((BaseTurret.BaseTurretBuild) e).range();
                     float max = range + settings.getInt("rangeRadius") * tilesize + e.block.offset;
+                    float dst = Mathf.dst(control.input.getMouseX(), control.input.getMouseY(), e.x, e.y);
 
-                    if(Vars.player.dst(e) <= max) {
+                    if(control.input.block != null && dst <= max) canHit = e.block instanceof Turret t && t.targetGround;
+                    if(player.dst(e) <= max || (control.input.block != null && dst <= max)) {
                         if(canHit || settings.getBool("allTargetRange")){
                             if(settings.getBool("softRangeDrawing")){
                                 Lines.stroke(1, Tmp.c1.set(canHit ? e.team.color : Team.derelict.color).a(0.5f));
                                 Lines.poly(e.x, e.y, Lines.circleVertices(range), range);
-                                Fill.light(e.x, e.y, Lines.circleVertices(range), range, Color.clear, Tmp.c1.a(Mathf.clamp(1-(Vars.player.dst(e)/max), 0, settings.getInt("softRangeOpacity")/100f)));
+                                Fill.light(e.x, e.y, Lines.circleVertices(range), range, Color.clear, Tmp.c1.a(Mathf.clamp(1-((control.input.block != null && dst <= max ? dst : player.dst(e))/max), 0, settings.getInt("softRangeOpacity")/100f)));
                             }
                             else Drawf.dashCircle(e.x, e.y, range, canHit ? e.team.color : Team.derelict.color);
                         }
@@ -119,8 +121,9 @@ public class Main extends Mod {
                 });
 
                 // Unit Ranges (Only works when turret ranges are enabled)
-                if(settings.getBool("unitRange")) {
+                if(settings.getBool("unitRange") || (settings.getBool("allTeamRange") && player.unit() != null)) {
                     Groups.unit.each(u -> {
+                        if(!settings.getBool("unitRange") && settings.getBool("allTeamRange") && player.unit() != u) return;
                         if(!settings.getBool("allTeamRange") && u.team == team) return; // Don't draw own units
                         boolean canHit = unit.isFlying() ? u.type.targetAir : u.type.targetGround;
                         float range = u.range();
