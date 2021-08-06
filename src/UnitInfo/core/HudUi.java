@@ -698,6 +698,28 @@ public class HudUi {
                     tt.add(label);
                     tt.add(button).size(Scl.scl(5 * 8f));
                     tt.add(lockButton).size(Scl.scl(3 * 8f));
+
+                    tt.clicked(()->{
+                        if(getTarget() == null) return;
+                        if(control.input instanceof DesktopInput)
+                            ((DesktopInput) control.input).panning = true;
+                        Core.camera.position.set(getTarget().x(), getTarget().y());
+                    });
+                    tt.addListener(new Tooltip(tool -> tool.background(Tex.button).table(to -> {
+                        to.table(Tex.underline2, tool2 -> {
+                            tool2.label(()->{
+                                if(getTarget() instanceof Unit u){
+                                    if(u.getPlayer() != null) return u.getPlayer().name;
+                                    else if(u.type != null) return u.type.localizedName;
+                                }
+                                else if(getTarget() instanceof Building b) return b.block.localizedName;
+                                return "";
+                            });
+
+                        });
+                        to.row();
+                        to.label(()->getTarget() == null ? "(" + 0 + ", " + 0 + ")" : "(" + Strings.fixed(getTarget().x() / tilesize, 2) + ", " + Strings.fixed(getTarget().y() / tilesize, 2) + ")");
+                    })));
                 });
                 t.row();
                 t.table(tt -> {
