@@ -290,6 +290,7 @@ public class SettingS {
         */
 
         addGraphicSlideSetting("infoUiScale", 100, 25, 300, 25, s -> s + "%");
+        addGraphicSlideSetting("coreItemCheckRate", 60, 6, 180, 6, s -> Strings.fixed(s/60f,1) + "sec");
         addGraphicCheckSetting("pastwave", false);
         addGraphicCheckSetting("emptywave", true);
         addGraphicSlideSetting("wavemax", 50, 0, 200, 1, s -> s + "waves");

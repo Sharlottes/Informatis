@@ -151,6 +151,7 @@ public class SBar extends Element{
             }
         }
         Draw.color();
-        Fonts.outline.draw(name, x + width / 2f, y + height / 2f, Color.white, Scl.scl(modUiScale < 1 ? modUiScale : 1), false, Align.center);
+
+        Fonts.outline.draw(name, x + width / 2f, y + height * 0.75f, Color.white, Scl.scl(modUiScale < 1 ? modUiScale : 1), false, Align.center);
     }
 }

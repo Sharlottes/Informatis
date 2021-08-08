@@ -13,6 +13,7 @@ import mindustry.ui.*;
 import mindustry.world.blocks.storage.*;
 
 import static UnitInfo.SVars.modUiScale;
+import static arc.Core.settings;
 import static mindustry.Vars.*;
 
 public class CoresItemsDisplay {
@@ -74,7 +75,7 @@ public class CoresItemsDisplay {
                     core = team.core();
 
                     heat += Time.delta;
-                    if(heat >= 60f) {
+                    if(heat >= settings.getInt("coreItemCheckRate")) {
                         heat = 0;
                         updateItem(team);
                     }
