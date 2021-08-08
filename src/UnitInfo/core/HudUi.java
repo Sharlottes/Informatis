@@ -462,7 +462,7 @@ public class HudUi {
                                 float v = entity.power.status * entity.power.graph.getLastScaledPowerIn();
 
                                 super.draw();
-                                Lines.stroke(Scl.scl() * 2f, Pal.removeBack);
+                                Lines.stroke(Scl.scl(modUiScale) * 2f, Pal.removeBack);
                                 Draw.alpha(1 - v/max);
                                 Lines.line(x, y - 2f + height, x + width, y - 2f);
                                 Draw.color(Pal.remove);
