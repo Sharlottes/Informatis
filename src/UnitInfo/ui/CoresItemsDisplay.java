@@ -96,10 +96,10 @@ public class CoresItemsDisplay {
                         if(usedItems.get(team).contains(item)){
                             itemTable.add(new Stack(){{
                                 add(new Table(tt -> {
-                                    tt.image(item.uiIcon).size(iconSmall * Scl.scl(modUiScale < 1 ? modUiScale : 1)).tooltip(ttt -> ttt.background(Styles.black6).margin(2f * Scl.scl(modUiScale)).add(item.localizedName).style(Styles.outlineLabel));
+                                    tt.image(item.uiIcon).size(iconSmall * Scl.scl(modUiScale < 1 ? modUiScale : 1)).tooltip(ttt -> ttt.background(Styles.black6).margin(2f * Scl.scl(modUiScale < 1 ? modUiScale : 1)).add(item.localizedName).style(Styles.outlineLabel));
                                     Label label = new Label(() -> core == null ? "0" : UI.formatAmount(core.items.get(item)));
                                     label.setFontScale(Scl.scl(modUiScale < 1 ? modUiScale : 1));
-                                    tt.add(label).minWidth(5 * 8f * Scl.scl(modUiScale)).left();
+                                    tt.add(label).minWidth(5 * 8f * Scl.scl(modUiScale < 1 ? modUiScale : 1)).left();
                                 }));
                                 add(new Table(tt -> {
                                     tt.bottom().right();
@@ -108,10 +108,10 @@ public class CoresItemsDisplay {
                                         return (amount > 0 ? "[green]+" : amount == 0 ? "[orange]" : "[red]") + amount + "[]";
                                     });
                                     label.setFontScale(0.65f * Scl.scl(modUiScale < 1 ? modUiScale : 1));
-                                    tt.add(label).bottom().right().padTop(16f * Scl.scl(modUiScale));
+                                    tt.add(label).bottom().right().padTop(16f * Scl.scl(modUiScale < 1 ? modUiScale : 1));
                                     tt.pack();
                                 }));
-                            }}).padRight(3 * Scl.scl(modUiScale)).left();
+                            }}).padRight(3 * Scl.scl(modUiScale < 1 ? modUiScale : 1)).left();
                             if(++i[0] % 5 == 0) itemTable.row();
                         }
                     }
@@ -122,10 +122,10 @@ public class CoresItemsDisplay {
                     unitTable.center();
                     for(UnitType unit : content.units()){
                         if(unit != UnitTypes.block && usedUnits.get(team).contains(unit)){
-                            unitTable.image(unit.uiIcon).size(iconSmall * Scl.scl(modUiScale < 1 ? modUiScale : 1)).padRight(3 * Scl.scl(modUiScale)).tooltip(tt -> tt.background(Styles.black6).margin(2f * Scl.scl(modUiScale)).add(unit.localizedName).style(Styles.outlineLabel));
+                            unitTable.image(unit.uiIcon).size(iconSmall * Scl.scl(modUiScale < 1 ? modUiScale : 1)).padRight(3 * Scl.scl(modUiScale < 1 ? modUiScale : 1)).tooltip(tt -> tt.background(Styles.black6).margin(2f * Scl.scl(modUiScale < 1 ? modUiScale : 1)).add(unit.localizedName).style(Styles.outlineLabel));
                             Label label = new Label(() -> core == null ? "0" : UI.formatAmount(Groups.unit.count(u -> u.team == team && u.type == unit)));
                             label.setFontScale(Scl.scl(modUiScale < 1 ? modUiScale : 1));
-                            unitTable.add(label).padRight(3 * Scl.scl(modUiScale)).minWidth(5 * 8f * Scl.scl(modUiScale)).left();
+                            unitTable.add(label).padRight(3 * Scl.scl(modUiScale < 1 ? modUiScale : 1)).minWidth(5 * 8f * Scl.scl(modUiScale < 1 ? modUiScale : 1)).left();
 
                             if(++i[0] % 5 == 0) unitTable.row();
                         }

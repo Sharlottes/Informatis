@@ -58,7 +58,7 @@ public class SBar extends Element{
         NinePatch patch = new NinePatch(region, splits[0], splits[1], splits[2], splits[3]);
         int[] pads = region.pads;
         if(pads != null) patch.setPadding(pads[0], pads[1], pads[2], pads[3]);
-        out = new ScaledNinePatchDrawable(patch, Scl.scl());
+        out = new ScaledNinePatchDrawable(patch, 1);
 
         return out;
     }
@@ -150,15 +150,7 @@ public class SBar extends Element{
                 ScissorStack.pop();
             }
         }
-
         Draw.color();
-
         Fonts.outline.draw(name, x + width / 2f, y + height / 2f, Color.white, Scl.scl(modUiScale < 1 ? modUiScale : 1), false, Align.center);
-        Font font = Fonts.outline;
-        GlyphLayout lay = Pools.obtain(GlyphLayout.class, GlyphLayout::new);
-        lay.setText(font, name);
-
-
-        Pools.free(lay);
     }
 }

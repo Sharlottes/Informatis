@@ -276,6 +276,7 @@ public class HudUi {
                 modUiScale = settings.getInt("infoUiScale") / 100f;
                 mainTable.clearChildren();
                 addTable();
+                coreItems.rebuild();
             }
             if((input.keyDown(KeyCode.shiftRight) || input.keyDown(KeyCode.shiftLeft))){
                 if(input.keyTap(KeyCode.r)) lockButton.change();
@@ -930,11 +931,11 @@ public class HudUi {
         });
         wavePane.setOverscroll(false, false);
         wavePane.setWidget(new Table(tx -> tx.table(this::setWave).left()));
+
         waveTable = new Table(table -> {
-            table.add(new Table(Tex.button, t -> {
-                t.defaults().minWidth(Scl.scl(modUiScale) * 25 * 8f).left();
-                t.add(wavePane).maxHeight(Scl.scl(modUiScale) * 32 * 8f).align(Align.left);
-            }){
+            table.left();
+            table.defaults().width(Scl.scl(modUiScale) * 32 * 8f).maxHeight(Scl.scl(modUiScale) * 32 * 8f).align(Align.left);
+            table.add(new Table(Tex.button, t -> t.add(wavePane)){
                 @Override
                 protected void drawBackground(float x, float y) {
                     if(getBackground() == null) return;
@@ -1030,10 +1031,9 @@ public class HudUi {
         corePane.setOverscroll(false, false);
 
         coreTable = new Table(table -> {
-            table.add(new Table(Tex.button, t -> {
-                t.defaults().minWidth(Scl.scl(modUiScale) * 25 * 8f).left();
-                t.add(corePane).maxHeight(Scl.scl(modUiScale) * 32 * 8f).align(Align.left);
-            }){
+            table.left();
+            table.defaults().width(Scl.scl(modUiScale) * 50 * 8f).height(Scl.scl(modUiScale) * 32 * 8f).align(Align.left);
+            table.add(new Table(Tex.button, t -> t.add(corePane)){
                 @Override
                 protected void drawBackground(float x, float y) {
                     if(getBackground() == null) return;
@@ -1059,6 +1059,7 @@ public class HudUi {
                     if(tile.overlay().uiIcon != atlas.find("error")) image.image(tile.overlay().uiIcon);
                     if(tile.block().uiIcon != atlas.find("error")) image.image(tile.block().uiIcon);
                 });
+                head.row();
                 Label label = new Label(() -> tile == null ? "(null, null)" : "(" + tile.x + ", " + tile.y + ")");
                 if(modUiScale < 1) label.setFontScale(Scl.scl(modUiScale));
                 head.add(label).center();
@@ -1068,25 +1069,14 @@ public class HudUi {
 
     public void addTileTable(){
         if(uiIndex != 3) return;
-        ScrollPane tilePane = new ScrollPane(new Image(clear).setScaling(Scaling.fit), Styles.smallPane);
-        tilePane.setScrollingDisabled(true, false);
-        tilePane.setScrollYForce(tileScrollPos);
-        tilePane.update(() -> {
-            if(tilePane.hasScroll()){
-                Element result = scene.hit(input.mouseX(), input.mouseY(), true);
-                if(result == null || !result.isDescendantOf(tilePane)){
-                    scene.setScrollFocus(null);
-                }
-            }
-            tileScrollPos = tilePane.getScrollY();
-            tilePane.setWidget(new Table(tx -> tx.table(this::setTile).left()));
-        });
-
-        tilePane.setOverscroll(false, false);
         tileTable = new Table(table -> {
-            table.add(new Table(Tex.button, t -> {
-                t.defaults().minWidth(Scl.scl(modUiScale) * 25 * 8f).left();
-                t.add(tilePane).maxHeight(Scl.scl(modUiScale) * 32 * 8f).align(Align.left);
+            table.left();
+            table.defaults().minWidth(Scl.scl(modUiScale) * 32 * 8f).minHeight(Scl.scl(modUiScale) * 20 * 8f).align(Align.left);
+            table.add(new Table(Tex.button, t->{
+                t.update(()->{
+                    t.clearChildren();
+                    setTile(t);
+                });
             }){
                 @Override
                 protected void drawBackground(float x, float y) {
@@ -1119,26 +1109,25 @@ public class HudUi {
 
     public void addItemTable(){
         if(uiIndex != 4) return;
-        ScrollPane tilePane = new ScrollPane(new Image(clear).setScaling(Scaling.fit), Styles.smallPane);
-        tilePane.setScrollingDisabled(true, false);
-        tilePane.setScrollYForce(tileScrollPos);
-        tilePane.update(() -> {
-            if(tilePane.hasScroll()){
+        ScrollPane itemPane = new ScrollPane(new Image(clear).setScaling(Scaling.fit), Styles.smallPane);
+        itemPane.setScrollingDisabled(true, false);
+        itemPane.setScrollYForce(tileScrollPos);
+        itemPane.update(() -> {
+            if(itemPane.hasScroll()){
                 Element result = scene.hit(input.mouseX(), input.mouseY(), true);
-                if(result == null || !result.isDescendantOf(tilePane)){
+                if(result == null || !result.isDescendantOf(itemPane)){
                     scene.setScrollFocus(null);
                 }
             }
-            itemScrollPos = tilePane.getScrollY();
+            itemScrollPos = itemPane.getScrollY();
         });
-        tilePane.setWidget(new Table(this::setItem).left());
+        itemPane.setWidget(new Table(this::setItem).left());
+        itemPane.setOverscroll(false, false);
 
-        tilePane.setOverscroll(false, false);
         itemTable = new Table(table -> {
-            table.add(new Table(Tex.button, t -> {
-                t.defaults().minWidth(Scl.scl(modUiScale) * 25 * 8f).left();
-                t.add(tilePane).maxHeight(Scl.scl(modUiScale) * 32 * 8f).align(Align.left);
-            }){
+            table.left();
+            table.defaults().width(Scl.scl(modUiScale) * 50 * 8f).height(Scl.scl(modUiScale) * 32 * 8f).align(Align.left);
+            table.add(new Table(Tex.button, t -> t.add(itemPane)){
                 @Override
                 protected void drawBackground(float x, float y) {
                     if(getBackground() == null) return;
