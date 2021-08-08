@@ -114,7 +114,7 @@ public class Main extends Mod {
                     if(player.dst(e) <= max || (control.input.block != null && dst <= max)) {
                         if(canHit || settings.getBool("allTargetRange")){
                             if(settings.getBool("softRangeDrawing")){
-                                Lines.stroke(1, Tmp.c1.set(canHit ? e.team.color : Team.derelict.color).a(0.5f));
+                                Lines.stroke(Scl.scl(), Tmp.c1.set(canHit ? e.team.color : Team.derelict.color).a(0.5f));
                                 Lines.poly(e.x, e.y, Lines.circleVertices(range), range);
                                 Fill.light(e.x, e.y, Lines.circleVertices(range), range, Color.clear, Tmp.c1.a(Mathf.clamp(1-((control.input.block != null && dst <= max ? dst : player.dst(e))/max), 0, settings.getInt("softRangeOpacity")/100f)));
                             }
@@ -136,7 +136,7 @@ public class Main extends Mod {
                         if(Vars.player.dst(u) <= max) { // TODO: Store value of rangeRadius as an int, should increase performance
                             if (canHit || settings.getBool("allTargetRange")) // Same as above
                                 if(settings.getBool("softRangeDrawing")){
-                                    Lines.stroke(1, Tmp.c1.set(canHit ? u.team.color : Team.derelict.color).a(0.5f));
+                                    Lines.stroke(Scl.scl(), Tmp.c1.set(canHit ? u.team.color : Team.derelict.color).a(0.5f));
                                     Lines.poly(u.x, u.y, Lines.circleVertices(range), range);
                                     Fill.light(u.x, u.y, Lines.circleVertices(range), range, Color.clear, Tmp.c1.a(Math.min(settings.getInt("softRangeOpacity")/100f, 1-Vars.player.dst(u)/max)));
                                 }

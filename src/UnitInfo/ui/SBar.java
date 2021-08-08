@@ -8,10 +8,16 @@ import arc.math.*;
 import arc.math.geom.*;
 import arc.scene.*;
 import arc.scene.style.*;
+import arc.scene.ui.Label;
 import arc.scene.ui.layout.*;
+import arc.util.Align;
+import arc.util.Strings;
 import arc.util.pooling.*;
 import mindustry.graphics.*;
 import mindustry.ui.*;
+
+import static UnitInfo.SVars.modUiScale;
+import static mindustry.Vars.player;
 
 public class SBar extends Element{
     static final Rect scissor = new Rect();
@@ -52,7 +58,7 @@ public class SBar extends Element{
         NinePatch patch = new NinePatch(region, splits[0], splits[1], splits[2], splits[3]);
         int[] pads = region.pads;
         if(pads != null) patch.setPadding(pads[0], pads[1], pads[2], pads[3]);
-        out = new ScaledNinePatchDrawable(patch, 1f);
+        out = new ScaledNinePatchDrawable(patch, Scl.scl());
 
         return out;
     }
@@ -144,17 +150,15 @@ public class SBar extends Element{
                 ScissorStack.pop();
             }
         }
+
         Draw.color();
 
+        Fonts.outline.draw(name, x + width / 2f, y + height / 2f, Color.white, Scl.scl(modUiScale < 1 ? modUiScale : 1), false, Align.center);
         Font font = Fonts.outline;
         GlyphLayout lay = Pools.obtain(GlyphLayout.class, GlyphLayout::new);
-        font.getData().setScale(Scl.scl());
         lay.setText(font, name);
-        font.setColor(Color.white);
-        font.draw(name, x + width / 2f - lay.width / 2f, y + height / 2f + lay.height / 2f + 1);
-        font.getData().setScale(Scl.scl());
+
 
         Pools.free(lay);
-        Draw.reset();
     }
 }

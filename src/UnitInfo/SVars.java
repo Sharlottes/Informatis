@@ -6,6 +6,7 @@ import arc.graphics.g2d.TextureRegion;
 import arc.struct.*;
 
 import static arc.Core.atlas;
+import static arc.Core.settings;
 import static mindustry.Vars.*;
 
 public class SVars {
@@ -17,4 +18,6 @@ public class SVars {
     public static PlayerParser playerinfo = new PlayerParser();
 
     public static TextureRegion clear = atlas.find("clear");
+
+    public static float modUiScale = (settings.getInt("infoUiScale") / 100f == 0 ? 1 : settings.getInt("infoUiScale") / 100f);
 }

@@ -289,6 +289,7 @@ public class SettingS {
         addGraphicDialogSetting("opacitysetting", opacitySeq, opacityTable);
         */
 
+        addGraphicSlideSetting("infoUiScale", 100, 25, 300, 25, s -> s + "%");
         addGraphicCheckSetting("pastwave", false);
         addGraphicCheckSetting("emptywave", true);
         addGraphicSlideSetting("wavemax", 50, 0, 200, 1, s -> s + "waves");
