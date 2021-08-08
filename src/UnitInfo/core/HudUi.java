@@ -934,7 +934,7 @@ public class HudUi {
 
         waveTable = new Table(table -> {
             table.left();
-            table.defaults().width(Scl.scl(modUiScale) * 32 * 8f).maxHeight(Scl.scl(modUiScale) * 32 * 8f).align(Align.left);
+            table.defaults().width(Scl.scl(modUiScale < 1 ? modUiScale : 1) * 32 * 8f).maxHeight(Scl.scl(modUiScale < 1 ? modUiScale : 1) * 32 * 8f).align(Align.left);
             table.add(new Table(Tex.button, t -> t.add(wavePane)){
                 @Override
                 protected void drawBackground(float x, float y) {
@@ -943,7 +943,7 @@ public class HudUi {
                     getBackground().draw(x, y, width, height);
                     Draw.reset();
                 }
-            }).padRight(Scl.scl(modUiScale) * 39 * 8f);
+            }).padRight(Scl.scl(modUiScale < 1 ? modUiScale : 1) * 39 * 8f);
 
             table.fillParent = true;
             table.visibility = () -> uiIndex == 1;
@@ -1032,7 +1032,7 @@ public class HudUi {
 
         coreTable = new Table(table -> {
             table.left();
-            table.defaults().width(Scl.scl(modUiScale) * 50 * 8f).height(Scl.scl(modUiScale) * 32 * 8f).align(Align.left);
+            table.defaults().width(Scl.scl(modUiScale < 1 ? modUiScale : 1) * 50 * 8f).height(Scl.scl(modUiScale < 1 ? modUiScale : 1) * 32 * 8f).align(Align.left);
             table.add(new Table(Tex.button, t -> t.add(corePane)){
                 @Override
                 protected void drawBackground(float x, float y) {
@@ -1041,7 +1041,7 @@ public class HudUi {
                     getBackground().draw(x, y, width, height);
                     Draw.reset();
                 }
-            }).padRight(Scl.scl(modUiScale) * 39 * 8f);
+            }).padRight(Scl.scl(modUiScale < 1 ? modUiScale : 1) * 39 * 8f);
 
             table.fillParent = true;
             table.visibility = () -> uiIndex == 2;
@@ -1085,7 +1085,7 @@ public class HudUi {
                     getBackground().draw(x, y, width, height);
                     Draw.reset();
                 }
-            }).padRight(Scl.scl(modUiScale) * 39 * 8f);
+            }).padRight(Scl.scl(modUiScale < 1 ? modUiScale : 1) * 39 * 8f);
 
             table.fillParent = true;
             table.visibility = () -> uiIndex == 3;
@@ -1126,7 +1126,7 @@ public class HudUi {
 
         itemTable = new Table(table -> {
             table.left();
-            table.defaults().width(Scl.scl(modUiScale) * 50 * 8f).height(Scl.scl(modUiScale) * 32 * 8f).align(Align.left);
+            table.defaults().width(Scl.scl(modUiScale < 1 ? modUiScale : 1) * 50 * 8f).height(Scl.scl(modUiScale < 1 ? modUiScale : 1) * 32 * 8f).align(Align.left);
             table.add(new Table(Tex.button, t -> t.add(itemPane)){
                 @Override
                 protected void drawBackground(float x, float y) {
@@ -1135,7 +1135,7 @@ public class HudUi {
                     getBackground().draw(x, y, width, height);
                     Draw.reset();
                 }
-            }).padRight(Scl.scl(modUiScale) * 39 * 8f);
+            }).padRight(Scl.scl(modUiScale < 1 ? modUiScale : 1) * 39 * 8f);
 
             table.fillParent = true;
             table.visibility = () -> uiIndex == 4;
