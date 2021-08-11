@@ -1,7 +1,9 @@
 package UnitInfo.core;
 
+import UnitInfo.SUtils;
 import UnitInfo.ui.*;
 import arc.*;
+import arc.func.Cons;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.input.*;

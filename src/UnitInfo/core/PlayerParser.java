@@ -12,6 +12,7 @@ import static UnitInfo.SVars.modRoot;
 
 public class PlayerParser{
     ObjectMap<Player, Seq<String>> chats = new ObjectMap<>();
+
     public void setEvent() {
         Events.on(EventType.PlayerChatEvent.class, e -> {
             if(chats.containsKey(e.player)) chats.get(e.player).add(e.message);
@@ -56,6 +57,7 @@ public class PlayerParser{
         });
         modRoot.child("players.hjson").writeString(data.toString(Stringify.HJSON));
     }
+
     public static class PlayerInfo{
         Player player;
         Seq<String> names = new Seq<>();

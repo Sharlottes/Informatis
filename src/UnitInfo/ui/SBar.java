@@ -11,6 +11,7 @@ import arc.scene.*;
 import arc.scene.style.*;
 import arc.scene.ui.layout.*;
 import arc.util.Align;
+import arc.util.Tmp;
 import mindustry.graphics.*;
 import mindustry.ui.*;
 
@@ -111,27 +112,24 @@ public class SBar extends Element{
         Draw.colorl(0.1f);
         bar.draw(x, y, width, height);
 
-        Draw.color(color.cpy().mul(Pal.lightishGray), blinkColor, blink);
+        Draw.color(Tmp.c1.set(color).mul(Pal.lightishGray), blinkColor, blink);
         float topWidth = width * value;
         if(topWidth > spriteWidth){
             top.draw(x, y, topWidth, height);
-        }else{
-            if(ScissorStack.push(scissor.set(x, y, topWidth, height))){
-                top.draw(x, y, spriteWidth, height);
-                ScissorStack.pop();
-            }
+        } else if(ScissorStack.push(scissor.set(x, y, topWidth, height))){
+            top.draw(x, y, spriteWidth, height);
+            ScissorStack.pop();
         }
 
         Draw.color(color, blinkColor, blink);
         float topWidthReal = width * (Math.min(value, computed));
         if(topWidthReal > spriteWidth){
             top.draw(x, y, topWidthReal, height);
-        }else{
-            if(ScissorStack.push(scissor.set(x, y, topWidthReal, height))){
-                top.draw(x, y, spriteWidth, height);
-                ScissorStack.pop();
-            }
+        } else if(ScissorStack.push(scissor.set(x, y, topWidthReal, height))){
+            top.draw(x, y, spriteWidth, height);
+            ScissorStack.pop();
         }
+
         Fonts.outline.draw(name, x + width / 2f, y + height * 0.75f, Color.white, Scl.scl(modUiScale < 1 ? modUiScale : 1), false, Align.center);
     }
 }
