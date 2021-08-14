@@ -34,8 +34,8 @@ public class Main extends Mod {
             hud.addCoreTable();
             hud.addWaveTable();
             hud.addUnitTable();
-            hud.addTileTable();
             hud.addTable();
+            hud.addWaveInfoTable();
             hud.setEvent();
             playerinfo.createFile();
             playerinfo.setEvent();
@@ -44,7 +44,6 @@ public class Main extends Mod {
         Events.on(WorldLoadEvent.class, e -> {
             hud = new HudUi();
             hud.addWaveTable();
-            hud.addTileTable();
         });
 
         Events.on(WaveEvent.class, e -> {

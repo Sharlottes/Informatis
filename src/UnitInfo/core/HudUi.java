@@ -1,9 +1,7 @@
 package UnitInfo.core;
 
-import UnitInfo.SUtils;
 import UnitInfo.ui.*;
 import arc.*;
-import arc.func.Cons;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.input.*;
@@ -38,8 +36,7 @@ import mindustry.world.blocks.payloads.PayloadMassDriver;
 import mindustry.world.blocks.power.PowerNode;
 import mindustry.world.blocks.storage.*;
 
-import static UnitInfo.SVars.clear;
-import static UnitInfo.SVars.modUiScale;
+import static UnitInfo.SVars.*;
 import static arc.Core.*;
 import static mindustry.Vars.*;
 
@@ -51,11 +48,10 @@ public class HudUi {
     Table unitTable = new Table();
     Table waveTable = new Table();
     Table coreTable = new Table();
-    Table tileTable = new Table();
     Table itemTable = new Table();
+    Table waveInfoTable = new Table();
     float waveScrollPos;
     float coreScrollPos;
-    float tileScrollPos;
     float itemScrollPos;
 
     Teamc lockedTarget;
@@ -69,6 +65,7 @@ public class HudUi {
     //to update tables
     int waveamount;
     int coreamount;
+    int enemyamount;
 
     //is this rly good idea?
     Seq<String> strings = Seq.with("","","","","","");
@@ -157,8 +154,7 @@ public class HudUi {
             drawMassLink((MassDriver.MassDriverBuild) b);
         });
 
-        if(world.build(from.link) instanceof MassDriver.MassDriverBuild to && from != to &&
-                to.within(from.x, from.y, ((MassDriver)from.block).range)){
+        if(world.build(from.link) instanceof MassDriver.MassDriverBuild to && from != to && to.within(from.x, from.y, ((MassDriver)from.block).range)){
             float sin = Mathf.absin(Time.time, 6f, 1f);
             Tmp.v1.set(from.x + from.block.offset, from.y + from.block.offset).sub(to.x, to.y).limit(from.block.size * tilesize + sin + 0.5f);
             float x2 = from.x - Tmp.v1.x, y2 = from.y - Tmp.v1.y,
@@ -352,13 +348,74 @@ public class HudUi {
         addUnitTable();
         addWaveTable();
         addCoreTable();
-        addTileTable();
         addItemTable();
         table.removeChild(baseTable);
         labelTable.setPosition(buttons.items[uiIndex].x, buttons.items[uiIndex].y);
-        baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, tileTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
+        baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
         a = 1f;
     }
+
+    public void setLeftUnitTable(Table table) {
+        table.table(t -> {
+            t.center();
+            int[] i = {0};
+            enemyamount = Groups.unit.count(u -> u.team == state.rules.waveTeam);
+            content.units().each(type -> Groups.unit.contains(u -> u.type == type && u.team == state.rules.waveTeam), type -> {
+                t.table(tt -> {
+                    tt.add(new Stack() {{
+                        add(new Table(ttt -> {
+                            ttt.add(new Image(type.uiIcon)).size(iconMed);
+                        }));
+                        add(new Table(ttt -> {
+                            ttt.right().bottom();
+                            ttt.add(new Label(() -> Groups.unit.count(u -> u.type == type && u.team == state.rules.waveTeam) + ""));
+                        }));
+                    }}).pad(6);
+                    if(++i[0] % 4 == 0) tt.row();
+                });
+            });
+        });
+    }
+
+    public void setTile(Table table){
+        table.table(t -> {
+            t.table(Tex.underline2, head -> {
+                head.table(image -> {
+                    image.left();
+                    image.image(() -> getTile() == null ? clear : getTile().floor().uiIcon == error ? clear : getTile().floor().uiIcon).size(iconSmall);
+                    image.image(() -> getTile() == null ? clear : getTile().overlay().uiIcon == error ? clear : getTile().overlay().uiIcon).size(iconSmall);
+                    image.image(() -> getTile() == null ? clear : getTile().block().uiIcon == error ? clear : getTile().block().uiIcon).size(iconSmall);
+                });
+                Label label = new Label(() -> getTile() == null ? "(null, null)" : "(" + getTile().x + ", " + getTile().y + ")");
+                if(modUiScale < 1) label.setFontScale(Scl.scl(modUiScale));
+                head.add(label).center();
+            });
+        });
+    }
+
+    public void addWaveInfoTable() {
+        waveInfoTable = new Table(Tex.wavepane, t -> {
+            t.defaults().width(35 * 8f).center();
+            setTile(t);
+            t.row();
+            setLeftUnitTable(t);
+            t.update(() -> {
+                if(enemyamount != Groups.unit.count(u -> u.team == state.rules.waveTeam)) {
+                    t.clearChildren();
+                    setTile(t);
+                    t.row();
+                    setLeftUnitTable(t);
+                }
+            });
+        });
+        Table table = (Table)((Group)((Group)((Group)((Group)ui.hudGroup.getChildren().get(5)) //HudFragment#118, name: overlaymarker
+            .getChildren().get(mobile ? 2 : 0)) //HudFragment#192, name: wave/editor
+                .getChildren().get(0)) //HudFragment#196, name: waves
+                    .getChildren().get(0)); //HudFragment#200 -> HudFragment#590, name: status
+        table.row();
+        table.add(waveInfoTable);
+    }
+
     public void addTable(){
         mainTable = new Table(table -> {
             table.left();
@@ -378,9 +435,9 @@ public class HudUi {
             Table labelTable = new Table(t -> t.add(label).left().padRight(Scl.scl(modUiScale) * 40 * 8f));
 
             table.table(t -> {
-                Seq<Button> buttons = Seq.with(null, null, null, null, null, null);
-                Seq<String> strs = Seq.with("hud.unit", "hud.wave", "hud.core", "hud.tile", "hud.item", "hud.cancel");
-                Seq<TextureRegionDrawable> icons = Seq.with(Icon.units, Icon.fileText, Icon.commandRally, Icon.grid, Icon.copy, Icon.cancel);
+                Seq<Button> buttons = Seq.with(null, null, null, null, null);
+                Seq<String> strs = Seq.with("hud.unit", "hud.wave", "hud.core", "hud.item", "hud.cancel");
+                Seq<TextureRegionDrawable> icons = Seq.with(Icon.units, Icon.fileText, Icon.commandRally, Icon.copy, Icon.cancel);
                 for(int i = 0; i < buttons.size; i++){
                     int finalI = i;
                     buttons.set(i, t.button(icons.get(i), Styles.clearToggleTransi, () ->
@@ -388,7 +445,7 @@ public class HudUi {
                     t.row();
                 }
             });
-            baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, tileTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
+            baseTable = table.table(tt -> tt.stack(unitTable, coreTable, waveTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
             table.fillParent = true;
 
             table.visibility = () -> ui.hudfrag.shown && !ui.minimapfrag.shown();
@@ -1050,50 +1107,6 @@ public class HudUi {
         });
     }
 
-    public void setTile(Table table){
-        table.table(t -> {
-                Tile tile = getTile();
-            t.table(Tex.underline2, head -> {
-                head.table(image -> {
-                    image.left();
-                    if(tile == null) return;
-                    if(tile.floor().uiIcon != atlas.find("error")) image.image(tile.floor().uiIcon);
-                    if(tile.overlay().uiIcon != atlas.find("error")) image.image(tile.overlay().uiIcon);
-                    if(tile.block().uiIcon != atlas.find("error")) image.image(tile.block().uiIcon);
-                });
-                head.row();
-                Label label = new Label(() -> tile == null ? "(null, null)" : "(" + tile.x + ", " + tile.y + ")");
-                if(modUiScale < 1) label.setFontScale(Scl.scl(modUiScale));
-                head.add(label).center();
-            });
-        });
-    }
-
-    public void addTileTable(){
-        if(uiIndex != 3) return;
-        tileTable = new Table(table -> {
-            table.left();
-            table.defaults().minWidth(Scl.scl(modUiScale) * 32 * 8f).minHeight(Scl.scl(modUiScale) * 20 * 8f).align(Align.left);
-            table.add(new Table(Tex.button, t->{
-                t.update(()->{
-                    t.clearChildren();
-                    setTile(t);
-                });
-            }){
-                @Override
-                protected void drawBackground(float x, float y) {
-                    if(getBackground() == null) return;
-                    Draw.color(color.r, color.g, color.b, (settings.getInt("uiopacity") / 100f) * this.parentAlpha);
-                    getBackground().draw(x, y, width, height);
-                    Draw.reset();
-                }
-            }).padRight(Scl.scl(modUiScale < 1 ? modUiScale : 1) * 39 * 8f);
-
-            table.fillParent = true;
-            table.visibility = () -> uiIndex == 3;
-        });
-    }
-
     public void setItem(Table table){
         table.table(t -> {
             for(int i = 0; i < coreItems.tables.size; i++){
@@ -1110,10 +1123,10 @@ public class HudUi {
     }
 
     public void addItemTable(){
-        if(uiIndex != 4) return;
+        if(uiIndex != 3) return;
         ScrollPane itemPane = new ScrollPane(new Image(clear).setScaling(Scaling.fit), Styles.smallPane);
         itemPane.setScrollingDisabled(true, false);
-        itemPane.setScrollYForce(tileScrollPos);
+        itemPane.setScrollYForce(itemScrollPos);
         itemPane.update(() -> {
             if(itemPane.hasScroll()){
                 Element result = scene.hit(input.mouseX(), input.mouseY(), true);
@@ -1140,7 +1153,7 @@ public class HudUi {
             }).padRight(Scl.scl(modUiScale < 1 ? modUiScale : 1) * 39 * 8f);
 
             table.fillParent = true;
-            table.visibility = () -> uiIndex == 4;
+            table.visibility = () -> uiIndex == 3;
         });
     }
 }
