@@ -625,79 +625,73 @@ public class HudUi {
     }
 
     public void addWeapon(){
-        weapon = new Table(tx -> {
-            tx.left().defaults().minSize(Scl.scl(modUiScale) * 12 * 8f);
+        weapon = new Table(Tex.button, tt -> {
+            tt.left().defaults().minSize(Scl.scl(modUiScale) * 12 * 8f);
+            tt.defaults().width(Scl.scl(modUiScale) * 8 * 8f).minHeight(Scl.scl(modUiScale) * 4 * 8f);
 
-            tx.add(new Table(Tex.button, tt -> {
-                tt.left().top().defaults().width(Scl.scl(modUiScale) * 8 * 8f).minHeight(Scl.scl(modUiScale) * 4 * 8f);
+            if(getTarget() instanceof Unit u && u.type != null) {
+                UnitType type = u.type;
+                for(int r = 0; r < type.weapons.size; r++){
+                    Weapon weapon = type.weapons.get(r);
+                    WeaponMount mount = u.mounts[r];
+                    TextureRegion region = !weapon.name.equals("") && weapon.outlineRegion.found() ? weapon.outlineRegion : type.uiIcon;
+                    if(type.weapons.size > 1 && r % 3 == 0) tt.row();
+                    else if(r % 3 == 0) tt.row();
+                    tt.table(weapontable -> {
+                        weapontable.add(new Stack(){{
+                            add(new Table(o -> {
+                                o.left();
+                                o.add(new Image(region){
+                                    @Override
+                                    public void draw(){
+                                        validate();
+                                        float x = this.x;
+                                        float y = this.y;
+                                        float scaleX = this.scaleX;
+                                        float scaleY = this.scaleY;
+                                        Draw.color(color);
+                                        Draw.alpha(parentAlpha * color.a);
 
-                if(getTarget() instanceof Unit u && u.type != null) {
-                    UnitType type = u.type;
-                    for(int r = 0; r < type.weapons.size; r++){
-                        Weapon weapon = type.weapons.get(r);
-                        WeaponMount mount = u.mounts[r];
-                        TextureRegion region = !weapon.name.equals("") && weapon.outlineRegion.found() ? weapon.outlineRegion : type.uiIcon;
-                        if(type.weapons.size > 1 && r % 3 == 0) tt.row();
-                        else if(r % 3 == 0) tt.row();
-                        tt.table(weapontable -> {
-                            weapontable.left();
-                            weapontable.add(new Stack(){{
-                                add(new Table(o -> {
-                                    o.left();
-                                    o.add(new Image(region){
-                                        @Override
-                                        public void draw(){
-                                            validate();
-                                            float x = this.x;
-                                            float y = this.y;
-                                            float scaleX = this.scaleX;
-                                            float scaleY = this.scaleY;
-                                            Draw.color(color);
-                                            Draw.alpha(parentAlpha * color.a);
-
-                                            if(getDrawable() instanceof TransformDrawable){
-                                                float rotation = getRotation();
-                                                if(scaleX != 1 || scaleY != 1 || rotation != 0){
-                                                    getDrawable().draw(x + imageX, y + imageY,
-                                                            originX - imageX, originY - imageY,
-                                                            imageWidth, imageHeight,
-                                                            scaleX, scaleY, rotation);
-                                                    return;
-                                                }
+                                        if(getDrawable() instanceof TransformDrawable){
+                                            float rotation = getRotation();
+                                            if(scaleX != 1 || scaleY != 1 || rotation != 0){
+                                                getDrawable().draw(x + imageX, y + imageY,
+                                                        originX - imageX, originY - imageY,
+                                                        imageWidth, imageHeight,
+                                                        scaleX, scaleY, rotation);
+                                                return;
                                             }
-
-                                            float recoil = -((mount.reload) / weapon.reload * weapon.recoil);
-                                            y += recoil;
-                                            if(getDrawable() != null)
-                                                getDrawable().draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
                                         }
-                                    }.setScaling(Scaling.fit)).size(Scl.scl(modUiScale) * 6 * 8f);
-                                }));
 
-                                add(new Table(h -> {
-                                    h.defaults().growX().height(Scl.scl(modUiScale) * 9f).width(Scl.scl(modUiScale) * 31.5f).padTop(Scl.scl(modUiScale) * 18f);
-                                    h.add(new Bar(
-                                        () -> "",
-                                        () -> Pal.accent.cpy().lerp(Color.orange, mount.reload / weapon.reload),
-                                        () -> mount.reload / weapon.reload)).padLeft(Scl.scl(modUiScale) * 8f);
-                                    h.pack();
-                                }));
-                            }}).left();
-                        }).left();
-                        tt.center();
-                    }
+                                        float recoil = -((mount.reload) / weapon.reload * weapon.recoil);
+                                        y += recoil;
+                                        if(getDrawable() != null)
+                                            getDrawable().draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
+                                    }
+                                }).scaling(Scaling.fill).size(Scl.scl(modUiScale) * iconLarge);
+                            }));
+
+                            add(new Table(h -> {
+                                h.defaults().growX().height(Scl.scl(modUiScale) * 9f).width(Scl.scl(modUiScale) * iconLarge).padTop(Scl.scl(modUiScale) * 18f);
+                                h.add(new Bar(
+                                    () -> "",
+                                    () -> Pal.accent.cpy().lerp(Color.orange, mount.reload / weapon.reload),
+                                    () -> mount.reload / weapon.reload));
+                                h.pack();
+                            }));
+                        }});
+                    });
                 }
-            }){
-                @Override
-                protected void drawBackground(float x, float y) {
-                    if(getBackground() == null) return;
-                    Color color = this.color;
-                    Draw.color(color.r, color.g, color.b, (settings.getInt("uiopacity") / 100f) * this.parentAlpha);
-                    getBackground().draw(x, y, width, height);
-                }
-            }).padRight(Scl.scl(modUiScale) * 24 * 8f);
-            tx.setColor(tx.color.cpy().a(1f));
-        });
+            }
+        }){
+            @Override
+            protected void drawBackground(float x, float y) {
+                if(getBackground() == null) return;
+                Color color = this.color;
+                Draw.color(color.r, color.g, color.b, (settings.getInt("uiopacity") / 100f) * this.parentAlpha);
+                getBackground().draw(x, y, width, height);
+            }
+        };
     }
 
     public void addUnitTable(){
@@ -823,7 +817,7 @@ public class HudUi {
                     Draw.color(color.r, color.g, color.b, (settings.getInt("uiopacity") / 100f) * this.parentAlpha);
                     getBackground().draw(x, y, width, height);
                 }
-            }).padRight(Scl.scl(modUiScale) * 24 * 8f);
+            });
             table.row();
             table.update(() -> {
                 try {
@@ -839,8 +833,9 @@ public class HudUi {
                     if(((Turret.TurretBuild) getTarget()).charging) charge += Time.delta;
                     else charge = 0f;
                 }
+
                 table.removeChild(weapon);
-                if(settings.getBool("weaponui") && getTarget() instanceof Unit && ((Unit) getTarget()).type != null) {
+                if(settings.getBool("weaponui") && getTarget() instanceof Unit u && u.type != null) {
                     addWeapon();
                     table.row();
                     table.add(weapon);
