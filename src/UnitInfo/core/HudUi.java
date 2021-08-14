@@ -360,7 +360,7 @@ public class HudUi {
             t.center();
             int[] i = {0};
             enemyamount = Groups.unit.count(u -> u.team == state.rules.waveTeam);
-            content.units().each(type -> Groups.unit.contains(u -> u.type == type && u.team == state.rules.waveTeam), type -> {
+            content.units().each(type -> Groups.unit.contains(u -> u.type == type && u.team == state.rules.waveTeam && u.isBoss()), type -> {
                 t.table(tt -> {
                     tt.add(new Stack() {{
                         add(new Table(ttt -> {
@@ -368,10 +368,25 @@ public class HudUi {
                         }));
                         add(new Table(ttt -> {
                             ttt.right().bottom();
-                            ttt.add(new Label(() -> Groups.unit.count(u -> u.type == type && u.team == state.rules.waveTeam) + ""));
+                            ttt.add(new Label(() -> Groups.unit.count(u -> u.type == type && u.team == state.rules.waveTeam && u.isBoss()) + ""));
                         }));
                     }}).pad(6);
-                    if(++i[0] % 4 == 0) tt.row();
+                    if(++i[0] % 6 == 0) tt.row();
+                });
+            });
+            t.row();
+            content.units().each(type -> Groups.unit.contains(u -> u.type == type && u.team == state.rules.waveTeam && !u.isBoss()), type -> {
+                t.table(tt -> {
+                    tt.add(new Stack() {{
+                        add(new Table(ttt -> {
+                            ttt.add(new Image(type.uiIcon)).size(iconMed);
+                        }));
+                        add(new Table(ttt -> {
+                            ttt.right().bottom();
+                            ttt.add(new Label(() -> Groups.unit.count(u -> u.type == type && u.team == state.rules.waveTeam && !u.isBoss()) + ""));
+                        }));
+                    }}).pad(6);
+                    if(++i[0] % 6 == 0) tt.row();
                 });
             });
         });
