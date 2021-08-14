@@ -9,36 +9,18 @@
 
 This mod displays some extra information about units, waves, cores, and tiles.
 
-## In-game Display
-The display is located at the left side, although it is entirely possible to change its location by pressing a button.
+## Freatures
+* **In-game UI**: Located at left side, although it is entirely possible to change its location by pressing a button.
+  * **Unit Info**: Shows unit/build information by cursor.
+  * **Wave Info**: Shows wave list, including type/amount/boss. can click to view detail info.
+  * **Core Info**: Shows core position/health for each team. can click to change camera.   
+  * **Tile Info**: Shows block/floor/ore icon and position on the cursor. if map has wave, shows remaining wave units too.
+  * **Item Info**: Shows current resources(inc/decrement), unit amount for each team.
+  
 
-### Unit Info
-Shows unit's name, the amount of armor, health, shields, ammo; transported items, controlled units, it's weapons and payload if possible.
-    
-### Wave Status
-Shows the amount of units relative for each wave. There is a setting to modify it. 
-
-### Core Status
-Shows the core's health and coordinates. You can move the screen to your core or just click the core icon.
-
-### Tile Status
-Shows blocks, tiles, or overlay tiles and their respective location.
-
-### hidden
-shows nothing
-
-## additional things
-### magic cursor
-r a i n b o w (toggleable through settings)
-
-### block scanner
-Scans turret stats and outputs the info in a circle or linear view. (can be toggled in settings)
-
-### rendered block info
-Shows information about any block (even if it's not in the same team), some info bars. (suggestion by @nichrosia)
-
-### rendered unit info
-Shows health, ammo, and shields under any unit.
-
-## Setting
-Can toggle display on/off ingame, set some ui opacity etc.
+* **In-game Drawer**: draws on the screen, drawing location can be each block or unit.
+  * **Block Scanner**: draws turret/wall health and range near the cursor.
+  * **Unit Bar**: draws unit ammo/shield/health under each unit.
+  * **Turret Range**: draws turret range.
+  * **Power Link**: overdraws green power node on blocks which is power-connected with the selected block.
+  * **Mass Link**: draws mass link lines between selected mass driver and another mass driver.
