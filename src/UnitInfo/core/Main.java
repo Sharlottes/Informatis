@@ -4,10 +4,9 @@ import UnitInfo.ui.*;
 import arc.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
+import arc.input.KeyCode;
 import arc.math.*;
 import arc.scene.ui.layout.*;
-import arc.struct.IntSeq;
-import arc.struct.Seq;
 import arc.util.*;
 import mindustry.*;
 import mindustry.ai.Pathfinder;
@@ -24,9 +23,6 @@ import mindustry.ui.*;
 import mindustry.world.*;
 import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.blocks.storage.CoreBlock;
-import mindustry.world.meta.BlockFlag;
-
-import java.lang.reflect.Field;
 import java.util.Objects;
 
 import static UnitInfo.SVars.*;
@@ -35,10 +31,11 @@ import static mindustry.Vars.*;
 
 public class Main extends Mod {
     int otherCores;
+    boolean groundValid = false, legValid = false, navalValid = false;
 
-    public Tile getNextTile(Tile tile){
+    public Tile getNextTile(Tile tile, int finder){
         Team team = state.rules.waveTeam;
-        Pathfinder.Flowfield field = pathfinder.getField(team, Pathfinder.costGround, Pathfinder.fieldCore);
+        Pathfinder.Flowfield field = pathfinder.getField(team, finder, Pathfinder.fieldCore);
         Tile tile1 = pathfinder.getTargetTile(tile, field);
         pathTiles.add(tile1);
         if(otherCores != Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != team)
@@ -46,7 +43,7 @@ public class Main extends Mod {
                 tile1.build instanceof CoreBlock.CoreBuild ||
                 !Groups.build.contains(b -> b instanceof CoreBlock.CoreBuild && b.team != team)) //so many ififififififif.
             return tile1;
-        return getNextTile(tile1);
+        return getNextTile(tile1, finder);
     }
 
     @Override
@@ -76,20 +73,35 @@ public class Main extends Mod {
         });
 
         Events.run(Trigger.draw, () -> {
-            spawner.getSpawns().each(t -> {
-                Team enemyTeam = state.rules.waveTeam;
-                otherCores = Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != enemyTeam);
-                getNextTile(t);
-                pathTiles.filter(Objects::nonNull);
-                for(int i = 1; i < pathTiles.size; i++){
-                    if(i + 1 >= pathTiles.size) continue; //prevent IndexOutException
-                    Tile tile1 = pathTiles.get(i);
-                    Tile tile2 = pathTiles.get(i + 1);
-                    Lines.stroke(1, enemyTeam.color);
-                    Lines.line(tile1.worldx(), tile1.worldy(), tile2.worldx(), tile2.worldy());
-                }
-                pathTiles.clear();
-            });
+            if((input.keyDown(KeyCode.shiftRight) || input.keyDown(KeyCode.shiftLeft))) {
+                if(input.keyTap(KeyCode.q)) settings.put("spathfinder", !settings.getBool("spathfinder"));
+                if(input.keyTap(KeyCode.num1)) groundValid = !groundValid;
+                if(input.keyTap(KeyCode.num2)) legValid = !legValid;
+                if(input.keyTap(KeyCode.num3)) navalValid = !navalValid;
+            }
+
+            if(settings.getBool("spathfinder") || (input.keyDown(KeyCode.shiftRight) || input.keyDown(KeyCode.shiftLeft)) && input.keyTap(KeyCode.q)) {
+                spawner.getSpawns().each(t -> {
+                    Team enemyTeam = state.rules.waveTeam;
+                    for (int p = 0; p < 3; p++) {
+                        if(p == 0 && !groundValid) continue;
+                        if(p == 1 && !legValid) continue;
+                        if(p == 2 && !navalValid) continue;
+
+                        otherCores = Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != enemyTeam);
+                        getNextTile(t, p);
+                        pathTiles.filter(Objects::nonNull);
+                        for (int i = 1; i < pathTiles.size; i++) {
+                            if (i + 1 >= pathTiles.size) continue; //prevent IndexOutException
+                            Tile tile1 = pathTiles.get(i);
+                            Tile tile2 = pathTiles.get(i + 1);
+                            Lines.stroke(1, enemyTeam.color);
+                            Lines.line(tile1.worldx(), tile1.worldy(), tile2.worldx(), tile2.worldy());
+                        }
+                        pathTiles.clear();
+                    }
+                });
+            }
 
             if(settings.getBool("blockstatus")) Groups.build.each(build -> {
                 if(Vars.player != null && Vars.player.team() == build.team) return;
