@@ -423,12 +423,15 @@ public class HudUi {
                 }
             });
         });
-        Table table = (Table)((Group)((Group)((Group)ui.hudGroup.getChildren().get(5)) //HudFragment#118, name: overlaymarker
-            .getChildren().get(mobile ? 2 : 0)) //HudFragment#192, name: wave/editor
-                .getChildren().get(0)) //HudFragment#196, name: waves
-                    .getChildren().get(0); //HudFragment#200 -> HudFragment#590, name: status
+        Table waveTable = (Table)((Group)((Group)ui.hudGroup.getChildren().get(5)) //HudFragment#118, name: overlaymarker
+                .getChildren().get(mobile ? 2 : 0)) //HudFragment#192, name: wave/editor
+                .getChildren().get(0); //HudFragment#196, name: waves
+        Table table = (Table)waveTable.getChildren().get(0); //HudFragment#198, name: x
+        Table statusTable = (Table) waveTable.getChildren().get(1);
+        waveTable.removeChild(statusTable);
         table.row();
-        table.add(waveInfoTable);
+        statusTable.top();
+        table.stack(waveInfoTable, statusTable);
     }
 
     public void addTable(){
@@ -738,7 +741,7 @@ public class HudUi {
                             for(StatusEffect effect : content.statusEffects()){
                                 if(applied.get(effect.id) && !effect.isHidden()){
                                     t.image(effect.uiIcon).size(iconSmall).get().addListener(new Tooltip(l -> l.label(() ->
-                                                    effect.localizedName + " [lightgray]" + UI.formatTime(st.getDuration(effect))).style(Styles.outlineLabel)));
+                                        effect.localizedName + " [lightgray]" + UI.formatTime(st.getDuration(effect))).style(Styles.outlineLabel)));
                                 }
                             }
                             statuses.set(applied);
@@ -855,7 +858,7 @@ public class HudUi {
                 });
                 t.row();
                 t.table(tt -> {
-                    tt.defaults().width(Scl.scl(modUiScale) * 23 * 8f).height(Scl.scl(modUiScale) * 4f * 8f).top();
+                    tt.defaults().height(Scl.scl(modUiScale) * 4f * 8f).pad(0,4,0,4).top();
                     for(Element bar : bars){
                         bar.setScale(Scl.scl(modUiScale));
                         tt.add(bar).growX().left();
