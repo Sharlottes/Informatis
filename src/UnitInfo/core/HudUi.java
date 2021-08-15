@@ -855,6 +855,7 @@ public class HudUi {
                         if(modUiScale < 1) label2.setFontScale(Scl.scl(modUiScale));
                         to.add(label2);
                     })));
+                    tt.update(()->tt.setBackground(((NinePatchDrawable)Tex.underline2).tint(getTarget().isNull() ? Color.gray : getTarget().team().color)));
                 });
                 t.row();
                 t.table(tt -> {
