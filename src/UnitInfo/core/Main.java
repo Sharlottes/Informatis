@@ -41,7 +41,10 @@ public class Main extends Mod {
         Pathfinder.Flowfield field = pathfinder.getField(team, Pathfinder.costGround, Pathfinder.fieldCore);
         Tile tile1 = pathfinder.getTargetTile(tile, field);
         pathTiles.add(tile1);
-        if(otherCores != Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != team) || tile1 == tile || tile1 == null || tile1.build instanceof CoreBlock.CoreBuild || !Groups.build.contains(b -> b.team != team)) //so many ififififififif.
+        if(otherCores != Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != team)
+                || tile1 == tile || tile1 == null ||
+                tile1.build instanceof CoreBlock.CoreBuild ||
+                !Groups.build.contains(b -> b instanceof CoreBlock.CoreBuild && b.team != team)) //so many ififififififif.
             return tile1;
         return getNextTile(tile1);
     }
