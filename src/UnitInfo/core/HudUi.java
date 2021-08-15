@@ -372,6 +372,13 @@ public class HudUi {
                             ttt.right().bottom();
                             ttt.add(new Label(() -> Groups.unit.count(u -> u.type == type && u.team == state.rules.waveTeam && u.isBoss()) + ""));
                         }));
+                        add(new Table(ttt -> {
+                            ttt.top().right();
+                            Image image = new Image(Icon.warning.getRegion()).setScaling(Scaling.fit);
+                            image.update(() -> image.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f))));
+                            ttt.add(image).size(Scl.scl(modUiScale < 1 ? modUiScale : 1) * 12f);
+                            ttt.pack();
+                        }));
                     }}).pad(6);
                     if(++i[0] % 6 == 0) tt.row();
                 });
