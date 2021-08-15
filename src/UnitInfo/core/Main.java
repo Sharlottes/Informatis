@@ -84,9 +84,9 @@ public class Main extends Mod {
                 spawner.getSpawns().each(t -> {
                     Team enemyTeam = state.rules.waveTeam;
                     for (int p = 0; p < 3; p++) {
-                        if(p == 0 && !groundValid) continue;
-                        if(p == 1 && !legValid) continue;
-                        if(p == 2 && !navalValid) continue;
+                        if(p == 0 && !groundValid && !mobile) continue;
+                        if(p == 1 && !legValid && !mobile) continue;
+                        if(p == 2 && !navalValid && !mobile) continue;
 
                         otherCores = Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != enemyTeam);
                         getNextTile(t, p);
