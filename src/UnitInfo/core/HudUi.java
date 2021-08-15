@@ -404,7 +404,6 @@ public class HudUi {
                     image.image(() -> getTile() == null ? clear : getTile().block().uiIcon == error ? clear : getTile().block().uiIcon).size(iconSmall);
                 });
                 Label label = new Label(() -> getTile() == null ? "(null, null)" : "(" + getTile().x + ", " + getTile().y + ")");
-                if(modUiScale < 1) label.setFontScale(Scl.scl(modUiScale));
                 head.add(label).center();
             });
         });
