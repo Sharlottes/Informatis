@@ -37,6 +37,8 @@ import mindustry.world.blocks.payloads.PayloadMassDriver;
 import mindustry.world.blocks.power.PowerNode;
 import mindustry.world.blocks.storage.*;
 
+import java.util.Arrays;
+
 import static UnitInfo.SVars.*;
 import static arc.Core.*;
 import static mindustry.Vars.*;
@@ -65,7 +67,7 @@ public class HudUi {
 
     //to update tables
     int waveamount;
-    int coreamount;
+    int coreamounts;
     int enemyamount;
 
     //is this rly good idea?
@@ -409,8 +411,8 @@ public class HudUi {
     }
 
     public void addWaveInfoTable() {
-        waveInfoTable = new Table(Tex.wavepane, t -> {
-            t.defaults().width(35 * 8f).center();
+        waveInfoTable = new Table(Tex.buttonEdge4, t -> {
+            t.defaults().width(34 * 8f).center();
             setTile(t);
             t.row();
             setLeftUnitTable(t);
@@ -678,11 +680,12 @@ public class HudUi {
                                 , new Table(h -> {
                                     h.defaults().growX().height(Scl.scl(modUiScale) * 9f).width(Scl.scl(modUiScale) * iconLarge).padTop(Scl.scl(modUiScale) * 18f);
                                     h.add(new Bar(
-                                        () -> "",
-                                        () -> Pal.accent.cpy().lerp(Color.orange, mount.reload / weapon.reload),
-                                        () -> mount.reload / weapon.reload));
+                                            () -> "",
+                                            () -> Pal.accent.cpy().lerp(Color.orange, mount.reload / weapon.reload),
+                                            () -> mount.reload / weapon.reload));
                                     h.pack();
-                            }));
+                                })
+                            );
                         });
                     }
                 }
@@ -1074,33 +1077,33 @@ public class HudUi {
 
     public void setCore(Table table){
         table.table(t -> {
+            coreamounts = Groups.build.count(b -> b instanceof CoreBlock.CoreBuild);
             if(Vars.player.unit() == null) return;
 
             for(int i = 0; i < coreItems.tables.size; i++){
-                coreamount = coreItems.teams[i].cores().size;
                 if(coreItems.teams[i].cores().isEmpty()) continue;
                 if(state.rules.pvp && coreItems.teams[i] != player.team()) continue;
                 int finalI = i;
                 t.table(Tex.underline2, head -> {
-                    head.center();
+                    t.center();
                     Label label = new Label(() -> "[#" + coreItems.teams[finalI].color.toString() + "]" + coreItems.teams[finalI].name + "[]");
-                    if(modUiScale < 1) label.setFontScale(Scl.scl(modUiScale));
+                    label.setFontScale(Scl.scl(modUiScale < 1 ? modUiScale : 1));
                     head.add(label);
                 });
                 t.row();
-                for(int r = 0; r < coreamount; r++) {
+                for(int r = 0, n = coreItems.teams[i].cores().size; r < n; r++) {
                     CoreBlock.CoreBuild core = coreItems.teams[i].cores().get(r);
 
-                    if(coreamount > 1 && r % 3 == 0) t.row();
+                    if(n > 1 && r % 3 == 0) t.row();
                     else if(r % 3 == 0) t.row();
 
                     t.table(tt -> {
-                        tt.add(new Stack(){{
-                            add(new Table(s -> {
-                                s.left();
+                        tt.stack(
+                            new Table(s -> {
+                                s.center();
                                 Image image = new Image(core.block.uiIcon);
                                 image.clicked(() -> {
-                                    if (control.input instanceof DesktopInput)
+                                    if(control.input instanceof DesktopInput)
                                         ((DesktopInput) control.input).panning = true;
                                     Core.camera.position.set(core.x, core.y);
                                 });
@@ -1109,24 +1112,25 @@ public class HudUi {
                                     image.addListener(listener1);
                                     image.update(() -> image.color.lerp(!listener1.isOver() ? Color.lightGray : Color.white, Mathf.clamp(0.4f * Time.delta)));
                                 }
-                                image.addListener(new Tooltip(t -> {
-
+                                image.addListener(new Tooltip(ttt -> {
                                     Label label = new Label(() -> "([#" + Tmp.c1.set(Color.green).lerp(Color.red, 1 - core.healthf()).toString() + "]" + Strings.fixed(core.health, 2) + "[]/" + Strings.fixed(core.block.health, 2) + ")");
-                                    if(modUiScale < 1) label.setFontScale(Scl.scl(modUiScale));
-                                    t.background(Tex.button).add(label);
+                                    if (modUiScale < 1) label.setFontScale(Scl.scl(modUiScale));
+                                    ttt.background(Tex.button).add(label);
                                 }));
                                 s.add(image).size(iconLarge * Scl.scl(modUiScale < 1 ? modUiScale : 1));
-                            }));
-
-                            add(new Table(s -> {
-                                s.bottom().defaults().growX().height(Scl.scl(modUiScale) * 9f).pad(4 * Scl.scl(modUiScale));
-                                s.add(new Bar(() -> "", () -> Pal.health, core::healthf));
-                                s.pack();
-                            }));
-                        }});
+                            }),
+                            new Table(h -> {
+                                h.bottom().defaults().height(Scl.scl(modUiScale) * 9f).width(Scl.scl(modUiScale) * iconLarge * 1.5f).growX();
+                                SBar bar = new SBar(() -> "", () -> Pal.health, () -> core.health / core.block.health);
+                                bar.onedot = true;
+                                bar.init();
+                                h.add(bar);
+                                h.pack();
+                            })
+                        );
                         tt.row();
                         Label label = new Label(() -> "(" + (int) core.x / 8 + ", " + (int) core.y / 8 + ")");
-                        if(modUiScale < 1) label.setFontScale(Scl.scl(modUiScale));
+                        label.setFontScale(Scl.scl(modUiScale < 1 ? modUiScale : 1) * 0.75f);
                         tt.add(label);
                     });
                 }
@@ -1140,6 +1144,8 @@ public class HudUi {
         ScrollPane corePane = new ScrollPane(new Table(tx -> tx.table(this::setCore).left()), Styles.smallPane);
         corePane.setScrollingDisabled(true, false);
         corePane.setScrollYForce(coreScrollPos);
+        corePane.setOverscroll(false, false);
+
         corePane.update(() -> {
             if(corePane.hasScroll()){
                 Element result = scene.hit(input.mouseX(), input.mouseY(), true);
@@ -1148,9 +1154,10 @@ public class HudUi {
                 }
             }
             coreScrollPos = corePane.getScrollY();
+
+            if(coreamounts != Groups.build.count(b -> b instanceof CoreBlock.CoreBuild))
+                corePane.setWidget(new Table(tx -> tx.table(this::setCore).left()));
         });
-        corePane.setWidget(new Table(tx -> tx.table(this::setCore).left()));
-        corePane.setOverscroll(false, false);
 
         coreTable = new Table(table -> {
             table.left();

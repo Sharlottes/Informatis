@@ -27,6 +27,8 @@ public class SBar extends Element{
     NinePatchDrawable bar, top;
     float spriteWidth;
 
+    public boolean onedot = false;
+
     public SBar(Prov<String> name, Prov<Color> color, Floatp fraction){
         this.fraction = fraction;
         try{
@@ -53,10 +55,16 @@ public class SBar extends Element{
         boolean shar2 = Core.settings.getBool("shar2");
         boolean shar3 = Core.settings.getBool("shar3");
 
+
         bar = (NinePatchDrawable) SUtils.getDrawable(Core.atlas.find("unitinfo-barS"), 10, 10, 9, 9);
         top = (NinePatchDrawable) SUtils.getDrawable(Core.atlas.find("unitinfo-barS-top"), 10, 10, 9, 9);
         spriteWidth = Core.atlas.find("unitinfo-barS").width;
-        if(ssim){
+        if(onedot){
+            bar = (NinePatchDrawable) SUtils.getDrawable(Core.atlas.find("unitinfo-1dotbar"), 0,0,0,0);
+            top = (NinePatchDrawable) SUtils.getDrawable(Core.atlas.find("unitinfo-1dotbar-top"),0,0,0,0);
+            spriteWidth = Core.atlas.find("unitinfo-1dotbar").width;
+        }
+        else if(ssim){
             bar = (NinePatchDrawable) SUtils.getDrawable(Core.atlas.find("unitinfo-barSS"), 14, 14, 19, 19);
             top = (NinePatchDrawable) SUtils.getDrawable(Core.atlas.find("unitinfo-barSS-top"), 14, 14, 19, 19);
             spriteWidth = Core.atlas.find("unitinfo-barSS").width;
@@ -122,7 +130,7 @@ public class SBar extends Element{
         }
 
         Draw.color(color, blinkColor, blink);
-        float topWidthReal = width * (Math.min(value, computed));
+        float topWidthReal = width * Math.min(value, computed);
         if(topWidthReal > spriteWidth){
             top.draw(x, y, topWidthReal, height);
         } else if(ScissorStack.push(scissor.set(x, y, topWidthReal, height))){

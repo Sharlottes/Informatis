@@ -173,15 +173,7 @@ public class BarInfo {
         }
 
 
-        if(target instanceof Turret.TurretBuild t){
-            Turret turret = (Turret)t.block;
-            if(turret.chargeTime > 0f) {
-                strings.set(3, Core.bundle.format("shar-stat.charge", floatFormat((SVars.hud.charge / turret.chargeTime) * 100)));
-                colors.set(3, Pal.surge.cpy().lerp(Pal.accent, SVars.hud.charge / turret.chargeTime));
-                numbers.set(3, SVars.hud.charge / turret.chargeTime);
-            }
-        }
-        else if(target instanceof Unit unit && unit.type != null) {
+        if(target instanceof Unit unit && unit.type != null) {
             strings.set(3, Core.bundle.format("shar-stat.commandUnits", floatFormat(Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == target)), floatFormat(unit.type().commandLimit)));
             colors.set(3, Pal.powerBar.cpy().lerp(Pal.surge.cpy().mul(Pal.lighterOrange), Mathf.absin(Time.time, 7f / (1f + Mathf.clamp(Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == target) / (unit.type().commandLimit * 1f))), 1f)));
             numbers.set(3, Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == target) / (unit.type().commandLimit * 1f));
