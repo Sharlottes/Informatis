@@ -150,13 +150,7 @@ public class BarInfo {
                 strings.set(2, bundle.format("shar-stat.itemCapacity", floatFormat(b.items.total()), floatFormat(cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow))));
                 numbers.set(2, cb.items.total() / (cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow) * 1f));
             }
-            else if(target instanceof StorageBlock.StorageBuild sb && !sb.canPickup()){
-                CoreBlock.CoreBuild cb = null /*sb.linkedCore TODO: Replace null with this comment when v130 exists*/;
-                try { // Backwards compatibility
-                    cb = Version.build <= 129 ? (CoreBlock.CoreBuild) linkedCore.get(sb): null;
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
+            else if(target instanceof StorageBlock.StorageBuild sb && !sb.canPickup() && sb.linkedCore instanceof CoreBlock.CoreBuild cb){
                 strings.set(2, bundle.format("shar-stat.itemCapacity", floatFormat(sb.items.total()), floatFormat(cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow))));
                 numbers.set(2, sb.items.total() / (cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow) * 1f));
             }

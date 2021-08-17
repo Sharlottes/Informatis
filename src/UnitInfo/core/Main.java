@@ -48,6 +48,13 @@ public class Main extends Mod {
 
     @Override
     public void init(){
+        Core.app.post(() -> {
+        Mods.ModMeta meta = Vars.mods.locateMod("unitinfo").meta;
+        meta.displayName = "[#B5FFD9]Unit Infomation[]";
+        meta.author = "[#B5FFD9]Sharlotte[lightgray]#0018[][]";
+        meta.description = bundle.get("shar-description");
+        });
+
         Events.on(ClientLoadEvent.class, e -> {
             hud = new HudUi();
             settingAdder.init();
