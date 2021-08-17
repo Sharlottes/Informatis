@@ -15,8 +15,7 @@ public class PlayerParser{
 
     public void setEvent() {
         Events.on(EventType.PlayerChatEvent.class, e -> {
-            if(chats.containsKey(e.player)) chats.get(e.player).add(e.message);
-            else chats.put(e.player, Seq.with(e.message));
+            chats.get(e.player,Seq::new).add(e.message);
             writeJson(e.player);
             save();
         });
