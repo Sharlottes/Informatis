@@ -48,7 +48,12 @@ public class SBar extends Element{
         init();
     }
 
-    public void init(){
+    public SBar rect(){
+        onedot = true;
+        return this;
+    }
+
+    public SBar init(){
         boolean ssim = Core.settings.getBool("ssim");
         boolean shar = Core.settings.getBool("shar");
         boolean shar1 = Core.settings.getBool("shar1");
@@ -89,6 +94,7 @@ public class SBar extends Element{
             top = (NinePatchDrawable) SUtils.getDrawable(Core.atlas.find("unitinfo-barSSSSSS-top"), 32, 32, 16, 16);
             spriteWidth = Core.atlas.find("unitinfo-barSSSSSS").width;
         }
+        return this;
     }
 
     @Override

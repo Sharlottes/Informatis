@@ -290,7 +290,7 @@ public class SettingS {
         */
 
         addGraphicCheckSetting("spathfinder", true);
-        addGraphicSlideSetting("infoUiScale", 100, 25, 300, 25, s -> s + "%");
+        addGraphicSlideSetting("infoUiScale", 100, 50, 200, 10, s -> s + "%");
         addGraphicSlideSetting("coreItemCheckRate", 60, 6, 180, 6, s -> Strings.fixed(s/60f,1) + "sec");
         addGraphicCheckSetting("pastwave", false);
         addGraphicCheckSetting("emptywave", true);
