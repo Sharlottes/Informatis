@@ -629,7 +629,7 @@ public class HudUi {
     public void addWeaponTable(Table table){
         table.table().update(t -> {
             t.clear();
-            t.add(new Table(Tex.button, tt -> {
+            t.add(new Table(((NinePatchDrawable)Tex.button).tint(Tmp.c1.set(((NinePatchDrawable)Tex.button).getPatch().getColor()).a(settings.getInt("uiopacity") / 100f)), tt -> {
                 tt.defaults().width(Scl.scl(modUiScale) * 8 * 8f).minHeight(Scl.scl(modUiScale) * 4 * 8f).align(Align.left);
                 tt.visibility = () -> settings.getBool("weaponui") && getTarget() instanceof Unit u && u.type != null && u.type.weapons.size > 0;
                 if(settings.getBool("weaponui") && getTarget() instanceof Unit u && u.type != null) {
@@ -686,15 +686,7 @@ public class HudUi {
                         });
                     }
                 }
-            }){
-                @Override
-                protected void drawBackground(float x, float y) {
-                    if(getBackground() == null) return;
-                    Color color = this.color;
-                    Draw.color(color.r, color.g, color.b, (settings.getInt("uiopacity") / 100f) * this.parentAlpha);
-                    getBackground().draw(x, y, width, height);
-                }
-            });
+            }));
         });
     }
 
@@ -755,22 +747,22 @@ public class HudUi {
     public void addUnitTable(){
         if(uiIndex != 0) return;
         unitTable = new Table(table -> {
-            table.left().defaults().width(scaledScale * 27 * 8f).maxHeight(scaledScale * 35 * 8f).align(Align.left);
+            table.left().defaults().width(scaledScale * 27 * 8f).maxHeight(scaledScale * 35 * 8f);
             addBars();
             Table table1 = new Table(Tex.button, t -> {
+                t.left();
                 t.table(Tex.underline2, tt -> {
                     Stack stack = new Stack(){{
                         add(new Table(ttt -> {
-                            ttt.setSize(Scl.scl(modUiScale) * 4f * 8f);
                             ttt.image(() -> {
                                 TextureRegion region = clear;
-                                if(getTarget() instanceof Unit u && u.type != null) region = ((Unit) getTarget()).type().uiIcon;
-                                else if(getTarget() instanceof Building b && b.block != null) {
+                                if(getTarget() instanceof Unit u && u.type != null) region = u.type.uiIcon;
+                                else if(getTarget() instanceof Building b) {
                                     if(getTarget() instanceof ConstructBlock.ConstructBuild cb) region = cb.current.uiIcon;
-                                    else region = b.block.uiIcon;
+                                    else if(b.block != null) region = b.block.uiIcon;
                                 }
                                 return region;
-                            });
+                            }).size(Scl.scl(modUiScale) * 4 * 8f);
                         }));
 
                         add(new Table(ttt -> {
@@ -794,13 +786,12 @@ public class HudUi {
                     Label label = new Label(() -> {
                         String name = "";
                         if(getTarget() instanceof Unit u && u.type != null)
-                            name = "[accent]" + u.type.localizedName + "[]";
+                            name = u.type.localizedName;
                         if(getTarget() instanceof Building b && b.block != null) {
-                            if(getTarget() instanceof ConstructBlock.ConstructBuild cb) name = "[accent]" + cb.current.localizedName + "[]";
-                            else name = "[accent]" + b.block.localizedName + "[]";
+                            if(getTarget() instanceof ConstructBlock.ConstructBuild cb) name = cb.current.localizedName;
+                            else name = b.block.localizedName;
                         }
-                        if(name.length() > 12) return name.substring(0, 12) + "...";
-                        return name;
+                        return "[accent]" + (name.length() > 9 ? name.substring(0, 9) + "..." : name) + "[]";
                     });
                     label.setFontScale(scaledScale);
 
@@ -814,7 +805,6 @@ public class HudUi {
                     button.visibility = () -> getTarget() != null;
                     button.update(()->{
                         lockButton.getStyle().imageUp = Icon.lock.tint(locked ? Pal.accent : Color.white);
-                        lockButton.getStyle().imageDown = Icon.lock.tint(locked ? Pal.accent : Color.white);
                     });
 
                     lockButton = Elem.newImageButton(Styles.clearPartiali, Icon.lock.tint(locked ? Pal.accent : Color.white), 3 * 8f * Scl.scl(modUiScale), () -> {
@@ -867,15 +857,12 @@ public class HudUi {
                 t.setColor(t.color.cpy().a(1f));
 
                 t.background(Tex.button);
-            }){
-                @Override
-                protected void drawBackground(float x, float y) {
-                    if(getBackground() == null) return;
-                    Color color = this.color;
-                    Draw.color(color.r, color.g, color.b, (settings.getInt("uiopacity") / 100f) * this.parentAlpha);
-                    getBackground().draw(x, y, width, height);
-                }
-            };
+
+                t.update(() -> {
+                    NinePatchDrawable patch = (NinePatchDrawable)Tex.button;
+                    t.setBackground(patch.tint(Tmp.c1.set(patch.getPatch().getColor()).a(settings.getInt("uiopacity") / 100f)));
+                });
+            });
             table.table(t -> t.stack(table1, addInfoTable(t)));
             table.row();
             table.table(this::addWeaponTable);
@@ -1053,15 +1040,13 @@ public class HudUi {
 
         waveTable = new Table(table -> {
             table.left().defaults().width(scaledScale * 32 * 8f).maxHeight(scaledScale * 32 * 8f).align(Align.left);
-            table.add(new Table(Tex.button, t -> t.add(wavePane)){
-                @Override
-                protected void drawBackground(float x, float y) {
-                    if(getBackground() == null) return;
-                    Draw.color(color.r, color.g, color.b, (settings.getInt("uiopacity") / 100f) * this.parentAlpha);
-                    getBackground().draw(x, y, width, height);
-                    Draw.reset();
-                }
-            }).padRight(scaledScale * 39 * 8f);
+            table.add(new Table(Tex.button, t -> {
+                t.add(wavePane);
+                t.update(() -> {
+                    NinePatchDrawable patch = (NinePatchDrawable)Tex.button;
+                    t.setBackground(patch.tint(Tmp.c1.set(patch.getPatch().getColor()).a(settings.getInt("uiopacity") / 100f)));
+                });
+            })).padRight(scaledScale * 39 * 8f);
 
             table.fillParent = true;
             table.visibility = () -> uiIndex == 1;
@@ -1069,7 +1054,8 @@ public class HudUi {
     }
 
     public void setItem(Table table){
-        table.table(t -> {
+        table.table().update(t -> {
+            t.clear();
             for(int i = 0; i < coreItems.tables.size; i++){
                 if((state.rules.pvp && coreItems.teams[i] != player.team()) || coreItems.teams[i].cores().isEmpty()) continue;
                 int finalI = i;

@@ -18,18 +18,8 @@ public class SUtils {
     }
 
     public static String floatFormat(float number){
-        if(number >= 10000) return UI.formatAmount((long)number);
+        if(number >= 1000) return UI.formatAmount((long)number);
         if(String.valueOf(number).split("[.]")[1].matches("0")) return String.valueOf(number).split("[.]")[0];
         return Strings.fixed(number, 1);
-    }
-
-    public static Object getFinalStatic(Field field) throws Exception {
-        field.setAccessible(true);
-
-        Field modifiersField = Field.class.getDeclaredField("modifiers");
-        modifiersField.setAccessible(true);
-        modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-
-        return field.get(null);
     }
 }
