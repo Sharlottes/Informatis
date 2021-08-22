@@ -367,7 +367,7 @@ public class HudUi {
                             ttt.top().right();
                             Image image = new Image(Icon.warning.getRegion()).setScaling(Scaling.fit);
                             image.update(() -> image.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f))));
-                            ttt.add(image).size(Scl.scl(Math.min(modUiScale, 1)) * 12f);
+                            ttt.add(image).size(scaledScale * 12f);
                             ttt.pack();
                         }));
                     }}).pad(6);
@@ -448,7 +448,7 @@ public class HudUi {
                 fontColor = Color.white;
                 background = Styles.black8;
             }});
-            if(modUiScale < 1) label.setFontScale(Scl.scl(modUiScale));
+            label.setFontScale(scaledScale);
             Table labelTable = new Table(t -> t.add(label).left().padRight(Scl.scl(modUiScale) * 40 * 8f));
 
             table.table(t -> {
@@ -755,7 +755,7 @@ public class HudUi {
     public void addUnitTable(){
         if(uiIndex != 0) return;
         unitTable = new Table(table -> {
-            table.left().defaults().width(Scl.scl(Math.min(modUiScale, 1)) * 27 * 8f).maxHeight(Scl.scl(Math.min(modUiScale, 1)) * 35 * 8f).align(Align.left);
+            table.left().defaults().width(scaledScale * 27 * 8f).maxHeight(scaledScale * 35 * 8f).align(Align.left);
             addBars();
             Table table1 = new Table(Tex.button, t -> {
                 t.table(Tex.underline2, tt -> {
@@ -802,7 +802,7 @@ public class HudUi {
                         if(name.length() > 12) return name.substring(0, 12) + "...";
                         return name;
                     });
-                    if(modUiScale < 1) label.setFontScale(Scl.scl(modUiScale));
+                    label.setFontScale(scaledScale);
 
                     TextButton button = Elem.newButton("?", Styles.clearPartialt, () -> {
                         if(getTarget() instanceof Unit u && u.type != null)
@@ -845,12 +845,12 @@ public class HudUi {
                                 else if(getTarget() instanceof Building b) return b.block.localizedName;
                                 return "";
                             });
-                            if(modUiScale < 1) label2.setFontScale(Scl.scl(modUiScale));
+                            label2.setFontScale(scaledScale);
                             tool2.add(label2);
                         });
                         to.row();
                         Label label2 = new Label(()->getTarget() == null ? "(" + 0 + ", " + 0 + ")" : "(" + Strings.fixed(getTarget().x() / tilesize, 2) + ", " + Strings.fixed(getTarget().y() / tilesize, 2) + ")");
-                        if(modUiScale < 1) label2.setFontScale(Scl.scl(modUiScale));
+                        label2.setFontScale(scaledScale);
                         to.add(label2);
                     })));
                     tt.update(()->tt.setBackground(((NinePatchDrawable)Tex.underline2).tint(getTarget().isNull() ? Color.gray : getTarget().team().color)));
@@ -909,10 +909,8 @@ public class HudUi {
             if(!settings.getBool("emptywave") && state.rules.spawns.find(g -> g.getSpawned(j) > 0) == null) continue;
             table.table(t -> {
                 table.center();
-                final int jj = j+1;
-                Label label = new Label(() -> "[#" + (state.wave == j+1 ? Color.red.toString() : Pal.accent.toString()) + "]" + jj + "[]");
-                if(modUiScale < 1) label.setFontScale(Scl.scl(modUiScale));
-
+                Label label = new Label(() -> "[#" + (state.wave == j+1 ? Color.red.toString() : Pal.accent.toString()) + "]" + (j+1) + "[]");
+                label.setFontScale(scaledScale);
                 t.add(label);
             }).size(Scl.scl(modUiScale) * 4 * 8f);
 
@@ -922,9 +920,8 @@ public class HudUi {
                     tx.add("[lightgray]<Empty>[]");
                     return;
                 }
-                int row = 0;
-                ObjectIntMap<SpawnGroup> groups = new ObjectIntMap<>();
 
+                ObjectIntMap<SpawnGroup> groups = new ObjectIntMap<>();
                 for(SpawnGroup group : state.rules.spawns) {
                     if(group.getSpawned(j) <= 0) continue;
                     SpawnGroup sameTypeKey = groups.keys().toArray().find(g -> g.type == group.type && g.effect != StatusEffects.boss);
@@ -941,37 +938,36 @@ public class HudUi {
                 ObjectIntMap<SpawnGroup> groupsTmp = new ObjectIntMap<>();
                 groupSorted.each(g -> groupsTmp.put(g, groups.get(g)));
 
+                int row = 0;
                 for(SpawnGroup group : groupsTmp.keys()){
                     int amount = groupsTmp.get(group);
-                    row ++;
-
                     tx.table(tt -> {
                         tt.right();
                         Image image = new Image(group.type.uiIcon).setScaling(Scaling.fit);
-                        tt.add(new Stack(){{
-                            add(new Table(ttt -> {
+                        tt.stack(
+                            new Table(ttt -> {
                                 ttt.center();
-                                ttt.add(image).size(iconLarge * Scl.scl(Math.min(modUiScale, 1)));
+                                ttt.add(image).size(iconMed * scaledScale);
                                 ttt.pack();
-                            }));
+                            }),
 
-                            add(new Table(ttt -> {
+                            new Table(ttt -> {
                                 ttt.bottom().left();
                                 Label label = new Label(() -> amount + "");
-                                if(modUiScale < 1) label.setFontScale(Scl.scl(modUiScale));
+                                label.setFontScale(scaledScale * 0.85f);
                                 ttt.add(label);
                                 ttt.pack();
-                            }));
+                            }),
 
-                            add(new Table(ttt -> {
+                            new Table(ttt -> {
                                 ttt.top().right();
-                                Image image = new Image(Icon.warning.getRegion()).setScaling(Scaling.fit);
-                                image.update(() -> image.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f))));
-                                ttt.add(image).size(Scl.scl(Math.min(modUiScale, 1)) * 12f);
+                                Image image1 = new Image(Icon.warning.getRegion()).setScaling(Scaling.fit);
+                                image1.update(() -> image1.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f))));
+                                ttt.add(image1).size(scaledScale * 12f);
                                 ttt.visible(() -> group.effect == StatusEffects.boss);
                                 ttt.pack();
-                            }));
-                        }}).pad(2f * Scl.scl(modUiScale));
+                            })
+                        ).pad(2f * Scl.scl(modUiScale));
                         tt.clicked(() -> {
                             if(input.keyDown(KeyCode.shiftLeft) && Fonts.getUnicode(group.type.name) != 0){
                                 app.setClipboardText((char)Fonts.getUnicode(group.type.name) + "");
@@ -1029,7 +1025,7 @@ public class HudUi {
                             }
                         })));
                     });
-                    if(row % 4 == 0) tx.row();
+                    if(++row % 4 == 0) tx.row();
                 }
             });
             table.row();
@@ -1056,7 +1052,7 @@ public class HudUi {
         wavePane.setWidget(new Table(tx -> tx.table(this::setWave).left()));
 
         waveTable = new Table(table -> {
-            table.left().defaults().width(Scl.scl(Math.min(modUiScale, 1)) * 32 * 8f).maxHeight(Scl.scl(Math.min(modUiScale, 1)) * 32 * 8f).align(Align.left);
+            table.left().defaults().width(scaledScale * 32 * 8f).maxHeight(scaledScale * 32 * 8f).align(Align.left);
             table.add(new Table(Tex.button, t -> t.add(wavePane)){
                 @Override
                 protected void drawBackground(float x, float y) {
@@ -1065,7 +1061,7 @@ public class HudUi {
                     getBackground().draw(x, y, width, height);
                     Draw.reset();
                 }
-            }).padRight(Scl.scl(Math.min(modUiScale, 1)) * 39 * 8f);
+            }).padRight(scaledScale * 39 * 8f);
 
             table.fillParent = true;
             table.visibility = () -> uiIndex == 1;
@@ -1078,7 +1074,7 @@ public class HudUi {
                 if((state.rules.pvp && coreItems.teams[i] != player.team()) || coreItems.teams[i].cores().isEmpty()) continue;
                 int finalI = i;
                 Label label = new Label(() -> "[#" + coreItems.teams[finalI].color.toString() + "]" + coreItems.teams[finalI].name + "[]");
-                if(modUiScale < 1) label.setFontScale(Scl.scl(modUiScale));
+                label.setFontScale(scaledScale);
                 t.background(Tex.underline2).add(label).center();
                 t.row();
                 t.add(coreItems.tables.get(finalI)).left();
@@ -1104,14 +1100,14 @@ public class HudUi {
         });
 
         itemTable = new Table(table -> {
-            table.left().defaults().width(Scl.scl(Math.min(modUiScale, 1)) * 50 * 8f).height(Scl.scl(Math.min(modUiScale, 1)) * 32 * 8f).align(Align.left);
+            table.left().defaults().width(scaledScale * 50 * 8f).height(scaledScale * 32 * 8f).align(Align.left);
             table.table(Tex.button, t -> {
                 t.add(itemPane);
                 t.update(() -> {
                     NinePatchDrawable patch = (NinePatchDrawable)Tex.button;
                     t.setBackground(patch.tint(Tmp.c1.set(patch.getPatch().getColor()).a(settings.getInt("uiopacity") / 100f)));
                 });
-            }).padRight(Scl.scl(Math.min(modUiScale, 1)) * 39 * 8f);
+            }).padRight(scaledScale * 39 * 8f);
 
             table.fillParent = true;
             table.visibility = () -> uiIndex == 2;
