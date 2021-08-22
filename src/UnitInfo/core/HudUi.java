@@ -39,6 +39,7 @@ import mindustry.world.blocks.power.PowerNode;
 import static UnitInfo.SVars.*;
 import static arc.Core.*;
 import static mindustry.Vars.*;
+import static mindustry.gen.Tex.scrollKnobVerticalThin;
 
 public class HudUi {
     Seq<Element> bars = new Seq<>();
@@ -268,7 +269,7 @@ public class HudUi {
         });
 
         Events.run(EventType.Trigger.update, ()->{
-            if(modUiScale != settings.getInt("infoUiScale") / 100f && settings.getInt("infoUiScale") / 100f != 0){
+            if(modUiScale != settings.getInt("infoUiScale") / 100f){
                 modUiScale = settings.getInt("infoUiScale") / 100f;
                 mainTable.clearChildren();
                 addTable();
@@ -367,7 +368,7 @@ public class HudUi {
                             ttt.top().right();
                             Image image = new Image(Icon.warning.getRegion()).setScaling(Scaling.fit);
                             image.update(() -> image.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f))));
-                            ttt.add(image).size(scaledScale * 12f);
+                            ttt.add(image).size(modUiScale * 12f);
                             ttt.pack();
                         }));
                     }}).pad(6);
@@ -448,7 +449,7 @@ public class HudUi {
                 fontColor = Color.white;
                 background = Styles.black8;
             }});
-            label.setFontScale(scaledScale);
+            label.setFontScale(modUiScale);
             Table labelTable = new Table(t -> t.add(label).left().padRight(Scl.scl(modUiScale) * 40 * 8f));
 
             table.table(t -> {
@@ -457,7 +458,7 @@ public class HudUi {
                 Seq<TextureRegionDrawable> icons = Seq.with(Icon.units, Icon.fileText, Icon.copy, Icon.cancel);
                 for(int i = 0; i < buttons.size; i++){
                     int finalI = i;
-                    buttons.set(i, t.button(icons.get(i), Styles.clearToggleTransi, () ->
+                    buttons.set(i, t.button(new ScaledNinePatchDrawable(new NinePatch(icons.get(i).getRegion()), modUiScale), Styles.clearToggleTransi, () ->
                         reset(finalI, buttons, label, table, labelTable, strs.get(finalI))).size(Scl.scl(modUiScale) * 5 * 8f).get());
                     t.row();
                 }
@@ -747,7 +748,7 @@ public class HudUi {
     public void addUnitTable(){
         if(uiIndex != 0) return;
         unitTable = new Table(table -> {
-            table.left().defaults().width(scaledScale * 27 * 8f).maxHeight(scaledScale * 35 * 8f);
+            table.left().defaults().width(modUiScale * 27 * 8f).maxHeight(modUiScale * 35 * 8f);
             addBars();
             Table table1 = new Table(Tex.button, t -> {
                 t.left();
@@ -793,7 +794,7 @@ public class HudUi {
                         }
                         return "[accent]" + (name.length() > 9 ? name.substring(0, 9) + "..." : name) + "[]";
                     });
-                    label.setFontScale(scaledScale);
+                    label.setFontScale(modUiScale);
 
                     TextButton button = Elem.newButton("?", Styles.clearPartialt, () -> {
                         if(getTarget() instanceof Unit u && u.type != null)
@@ -835,12 +836,12 @@ public class HudUi {
                                 else if(getTarget() instanceof Building b) return b.block.localizedName;
                                 return "";
                             });
-                            label2.setFontScale(scaledScale);
+                            label2.setFontScale(modUiScale);
                             tool2.add(label2);
                         });
                         to.row();
                         Label label2 = new Label(()->getTarget() == null ? "(" + 0 + ", " + 0 + ")" : "(" + Strings.fixed(getTarget().x() / tilesize, 2) + ", " + Strings.fixed(getTarget().y() / tilesize, 2) + ")");
-                        label2.setFontScale(scaledScale);
+                        label2.setFontScale(modUiScale);
                         to.add(label2);
                     })));
                     tt.update(()->tt.setBackground(((NinePatchDrawable)Tex.underline2).tint(getTarget().isNull() ? Color.gray : getTarget().team().color)));
@@ -897,7 +898,7 @@ public class HudUi {
             table.table(t -> {
                 table.center();
                 Label label = new Label(() -> "[#" + (state.wave == j+1 ? Color.red.toString() : Pal.accent.toString()) + "]" + (j+1) + "[]");
-                label.setFontScale(scaledScale);
+                label.setFontScale(modUiScale);
                 t.add(label);
             }).size(Scl.scl(modUiScale) * 4 * 8f);
 
@@ -934,14 +935,14 @@ public class HudUi {
                         tt.stack(
                             new Table(ttt -> {
                                 ttt.center();
-                                ttt.add(image).size(iconMed * scaledScale);
+                                ttt.add(image).size(iconMed * modUiScale);
                                 ttt.pack();
                             }),
 
                             new Table(ttt -> {
                                 ttt.bottom().left();
                                 Label label = new Label(() -> amount + "");
-                                label.setFontScale(scaledScale * 0.85f);
+                                label.setFontScale(modUiScale * 0.85f);
                                 ttt.add(label);
                                 ttt.pack();
                             }),
@@ -950,7 +951,7 @@ public class HudUi {
                                 ttt.top().right();
                                 Image image1 = new Image(Icon.warning.getRegion()).setScaling(Scaling.fit);
                                 image1.update(() -> image1.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f))));
-                                ttt.add(image1).size(scaledScale * 12f);
+                                ttt.add(image1).size(modUiScale * 12f);
                                 ttt.visible(() -> group.effect == StatusEffects.boss);
                                 ttt.pack();
                             })
@@ -1021,7 +1022,10 @@ public class HudUi {
 
     public void addWaveTable(){
         if(uiIndex != 1) return;
-        ScrollPane wavePane = new ScrollPane(new Image(clear).setScaling(Scaling.fit), Styles.smallPane);
+        ScrollPane wavePane = new ScrollPane(new Image(clear).setScaling(Scaling.fit), new ScrollPane.ScrollPaneStyle(){{
+            vScroll = Tex.clear;
+            vScrollKnob = new ScaledNinePatchDrawable(new NinePatch(((TextureRegionDrawable) scrollKnobVerticalThin).getRegion()), modUiScale);
+        }});
         wavePane.setScrollingDisabled(true, false);
         wavePane.setScrollYForce(waveScrollPos);
         wavePane.update(() -> {
@@ -1039,14 +1043,14 @@ public class HudUi {
         wavePane.setWidget(new Table(tx -> tx.table(this::setWave).left()));
 
         waveTable = new Table(table -> {
-            table.left().defaults().width(scaledScale * 32 * 8f).maxHeight(scaledScale * 32 * 8f).align(Align.left);
+            table.left().defaults().width(modUiScale * 32 * 8f).maxHeight(modUiScale * 32 * 8f).align(Align.left);
             table.add(new Table(Tex.button, t -> {
                 t.add(wavePane);
                 t.update(() -> {
                     NinePatchDrawable patch = (NinePatchDrawable)Tex.button;
                     t.setBackground(patch.tint(Tmp.c1.set(patch.getPatch().getColor()).a(settings.getInt("uiopacity") / 100f)));
                 });
-            })).padRight(scaledScale * 39 * 8f);
+            })).padRight(modUiScale * 39 * 8f);
 
             table.fillParent = true;
             table.visibility = () -> uiIndex == 1;
@@ -1060,10 +1064,10 @@ public class HudUi {
                 if((state.rules.pvp && coreItems.teams[i] != player.team()) || coreItems.teams[i].cores().isEmpty()) continue;
                 int finalI = i;
                 Label label = new Label(() -> "[#" + coreItems.teams[finalI].color.toString() + "]" + coreItems.teams[finalI].name + "[]");
-                label.setFontScale(scaledScale);
+                label.setFontScale(modUiScale);
                 t.background(Tex.underline2).add(label).center();
                 t.row();
-                t.add(coreItems.tables.get(finalI)).left();
+                t.add(coreItems.tables.get(i)).left();
                 t.row();
             }
         });
@@ -1071,7 +1075,10 @@ public class HudUi {
 
     public void addItemTable(){
         if(uiIndex != 2) return;
-        ScrollPane itemPane = new ScrollPane(new Table(this::setItem).left(), Styles.smallPane);
+        ScrollPane itemPane = new ScrollPane(new Table(this::setItem).left(), new ScrollPane.ScrollPaneStyle(){{
+            vScroll = Tex.clear;
+            vScrollKnob = new ScaledNinePatchDrawable(new NinePatch(((TextureRegionDrawable) scrollKnobVerticalThin).getRegion()), modUiScale);
+        }});
         itemPane.setScrollingDisabled(true, false);
         itemPane.setScrollYForce(itemScrollPos);
         itemPane.setOverscroll(false, false);
@@ -1086,14 +1093,14 @@ public class HudUi {
         });
 
         itemTable = new Table(table -> {
-            table.left().defaults().width(scaledScale * 50 * 8f).height(scaledScale * 32 * 8f).align(Align.left);
+            table.left().defaults().width(modUiScale * 54 * 8f).height(modUiScale * 32 * 8f).align(Align.left);
             table.table(Tex.button, t -> {
                 t.add(itemPane);
                 t.update(() -> {
                     NinePatchDrawable patch = (NinePatchDrawable)Tex.button;
                     t.setBackground(patch.tint(Tmp.c1.set(patch.getPatch().getColor()).a(settings.getInt("uiopacity") / 100f)));
                 });
-            }).padRight(scaledScale * 39 * 8f);
+            }).padRight(modUiScale * 39 * 8f);
 
             table.fillParent = true;
             table.visibility = () -> uiIndex == 2;
