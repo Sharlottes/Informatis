@@ -51,10 +51,11 @@ public class FreeBar {
         Bits applied = unit.statusBits();
         if(!statuses.equals(applied) && applied != null){
             int i = 0;
+            int row = 0;
             for(StatusEffect effect : content.statusEffects()){
                 if(applied.get(effect.id) && !effect.isHidden()){
-                    new TextureRegionDrawable(effect.uiIcon).draw(unit.x - (unit.type.hitSize + 4)/2 + i * 3, unit.y - 6, 4,4);
-                    i++;
+                    new TextureRegionDrawable(effect.uiIcon).draw(unit.x - (unit.type.hitSize + 4)/2 + i * 4, unit.y - 6 + 4 * row, 4,4);
+                    if(++i > 2 * (unit.type.hitSize + 4)) row++;
                 }
             }
             statuses.set(applied);
