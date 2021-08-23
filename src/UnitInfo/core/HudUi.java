@@ -937,7 +937,9 @@ public class HudUi {
             table.table(Tex.underline, tx -> {
                 if(settings.getBool("emptywave") && state.rules.spawns.find(g -> g.getSpawned(j) > 0) == null) {
                     tx.center();
-                    tx.add("[lightgray]<Empty>[]");
+                    Label label = new Label("[lightgray]<Empty>[]");
+                    label.setFontScale(modUiScale);
+                    tx.add(label);
                     return;
                 }
 
