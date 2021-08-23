@@ -289,7 +289,7 @@ public class SettingS {
         addGraphicDialogSetting("opacitysetting", opacitySeq, opacityTable);
         */
 
-        addGraphicCheckSetting("spathfinder", true);
+        addGraphicSlideSetting("unitlinelimit", 50, 50, 250, 10, s -> s + "units");
         addGraphicSlideSetting("infoUiScale", 100, 50, 100, 5, s -> s + "%");
         addGraphicSlideSetting("coreItemCheckRate", 60, 6, 180, 6, s -> Strings.fixed(s/60f,1) + "sec");
         addGraphicCheckSetting("pastwave", false);
