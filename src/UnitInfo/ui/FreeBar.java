@@ -5,16 +5,21 @@ import arc.func.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
+import arc.scene.style.TextureRegionDrawable;
+import arc.scene.ui.Tooltip;
 import arc.struct.*;
 import arc.util.*;
 import mindustry.*;
 import mindustry.content.*;
+import mindustry.core.UI;
 import mindustry.entities.abilities.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.type.*;
+import mindustry.ui.Styles;
 import mindustry.world.blocks.defense.*;
 import mindustry.world.blocks.defense.turrets.*;
+import mindustry.world.blocks.payloads.Payload;
 
 import static arc.Core.*;
 import static mindustry.Vars.*;
@@ -32,9 +37,31 @@ public class FreeBar {
         value = Mathf.lerpDelta(value, Mathf.clamp(unit.healthf()), 0.15f);
 
         Draw.z(Layer.flyingUnit + 1);
+
+        if(unit instanceof Payloadc payload && payload.payloadUsed() > 0){
+            int i = 0;
+            int row = 0;
+            for(Payload p : payload.payloads()){
+                new TextureRegionDrawable(p.icon()).draw(unit.x - (unit.type.hitSize + 4)/2 + i * 4, unit.y - 14 - 4 * row, 4,4);
+                if(++i > 2 * (unit.type.hitSize + 4)) row++;
+            }
+        }
+
+        Bits statuses = new Bits();
+        Bits applied = unit.statusBits();
+        if(!statuses.equals(applied) && applied != null){
+            int i = 0;
+            for(StatusEffect effect : content.statusEffects()){
+                if(applied.get(effect.id) && !effect.isHidden()){
+                    new TextureRegionDrawable(effect.uiIcon).draw(unit.x - (unit.type.hitSize + 4)/2 + i * 3, unit.y - 6, 4,4);
+                    i++;
+                }
+            }
+            statuses.set(applied);
+        }
+
         Draw.color(0.1f, 0.1f, 0.1f, (settings.getInt("baropacity") / 100f));
         float width = unit.type.hitSize + 4f;
-
         float x = unit.x;
         float y = unit.y - 8;
         for(int i : Mathf.signs) {
@@ -68,8 +95,7 @@ public class FreeBar {
             }
         }
 
-        if(Vars.state.rules.unitAmmo)
-        {
+        if(Vars.state.rules.unitAmmo) {
             float topWidth = - width / 2 + width * Mathf.clamp(unit.ammof());
             float moser = topWidth + height;
             if(unit.ammo <= 0) moser = (width / 2 + height) * (2 * Mathf.clamp(unit.ammof()) - 1);
