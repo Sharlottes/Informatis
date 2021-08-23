@@ -113,7 +113,7 @@ public class CoresItemsDisplay {
                                 }
                                 image.addListener(new Tooltip(tttt -> {
                                     Label label = new Label(() -> "([#" + Tmp.c1.set(Color.green).lerp(Color.red, 1 - core.healthf()).toString() + "]" + Strings.fixed(core.health, 2) + "[]/" + Strings.fixed(core.block.health, 2) + ")");
-                                    if (modUiScale < 1) label.setFontScale(Scl.scl(modUiScale));
+                                    label.setFontScale(Scl.scl(modUiScale));
                                     tttt.background(Tex.button).add(label);
                                 }));
                                 s.add(image).size(iconLarge * modUiScale);
@@ -126,9 +126,9 @@ public class CoresItemsDisplay {
                         );
                         tt.row();
                         Label label = new Label(() -> "(" + (int) core.x / 8 + ", " + (int) core.y / 8 + ")");
-                        label.setFontScale(modUiScale * 0.75f);
+                        label.setFontScale(Scl.scl(modUiScale) * 0.75f);
                         tt.add(label);
-                    }).padTop(modUiScale * 2).padLeft(modUiScale * 4).padRight(modUiScale * 4);
+                    }).padTop(Scl.scl(modUiScale) * 2).padLeft(Scl.scl(modUiScale) * 4).padRight(Scl.scl(modUiScale) * 4);
                     if(++i[0] % 5 == 0) coretable.row();
                 }
             });

@@ -269,7 +269,7 @@ public class HudUi {
         });
 
         Events.run(EventType.Trigger.update, ()->{
-            if(modUiScale != settings.getInt("infoUiScale") / 100f){
+            if(Scl.scl(modUiScale) != settings.getInt("infoUiScale") / 100f){
                 modUiScale = settings.getInt("infoUiScale") / 100f;
                 mainTable.clearChildren();
                 addTable();
@@ -368,7 +368,7 @@ public class HudUi {
                             ttt.top().right();
                             Image image = new Image(Icon.warning.getRegion()).setScaling(Scaling.fit);
                             image.update(() -> image.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f))));
-                            ttt.add(image).size(modUiScale * 12f);
+                            ttt.add(image).size(Scl.scl(modUiScale) * 12f);
                             ttt.pack();
                         }));
                     }}).pad(6);
@@ -376,6 +376,7 @@ public class HudUi {
                 });
             });
             t.row();
+            i[0] = 0;
             content.units().each(type -> Groups.unit.contains(u -> u.type == type && u.team == state.rules.waveTeam && !u.isBoss()), type -> {
                 t.table(tt -> {
                     tt.add(new Stack() {{
@@ -677,10 +678,10 @@ public class HudUi {
                                 })
                                 , new Table(h -> {
                                     h.defaults().growX().height(Scl.scl(modUiScale) * 9f).width(Scl.scl(modUiScale) * iconLarge).padTop(Scl.scl(modUiScale) * 18f);
-                                    h.add(new Bar(
+                                    h.add(new SBar(
                                             () -> "",
                                             () -> Pal.accent.cpy().lerp(Color.orange, mount.reload / weapon.reload),
-                                            () -> mount.reload / weapon.reload));
+                                            () -> mount.reload / weapon.reload).rect().init());
                                     h.pack();
                                 })
                             );
@@ -748,7 +749,7 @@ public class HudUi {
     public void addUnitTable(){
         if(uiIndex != 0) return;
         unitTable = new Table(table -> {
-            table.left().defaults().width(modUiScale * 27 * 8f).maxHeight(modUiScale * 35 * 8f);
+            table.left().defaults().width(Scl.scl(modUiScale) * 27 * 8f).maxHeight(Scl.scl(modUiScale) * 35 * 8f);
             addBars();
             Table table1 = new Table(Tex.button, t -> {
                 t.left();
@@ -804,9 +805,8 @@ public class HudUi {
                         }
                     });
                     button.visibility = () -> getTarget() != null;
-                    button.update(()->{
-                        lockButton.getStyle().imageUp = Icon.lock.tint(locked ? Pal.accent : Color.white);
-                    });
+                    button.update(()->lockButton.getStyle().imageUp = Icon.lock.tint(locked ? Pal.accent : Color.white));
+                    button.getLabel().setFontScale(Scl.scl(modUiScale));
 
                     lockButton = Elem.newImageButton(Styles.clearPartiali, Icon.lock.tint(locked ? Pal.accent : Color.white), 3 * 8f * Scl.scl(modUiScale), () -> {
                         locked = !locked;
@@ -935,14 +935,14 @@ public class HudUi {
                         tt.stack(
                             new Table(ttt -> {
                                 ttt.center();
-                                ttt.add(image).size(iconMed * modUiScale);
+                                ttt.add(image).size(iconMed * Scl.scl(modUiScale));
                                 ttt.pack();
                             }),
 
                             new Table(ttt -> {
                                 ttt.bottom().left();
                                 Label label = new Label(() -> amount + "");
-                                label.setFontScale(modUiScale * 0.85f);
+                                label.setFontScale(Scl.scl(modUiScale) * 0.85f);
                                 ttt.add(label);
                                 ttt.pack();
                             }),
@@ -951,7 +951,7 @@ public class HudUi {
                                 ttt.top().right();
                                 Image image1 = new Image(Icon.warning.getRegion()).setScaling(Scaling.fit);
                                 image1.update(() -> image1.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f))));
-                                ttt.add(image1).size(modUiScale * 12f);
+                                ttt.add(image1).size(Scl.scl(modUiScale) * 12f);
                                 ttt.visible(() -> group.effect == StatusEffects.boss);
                                 ttt.pack();
                             })
@@ -1043,14 +1043,14 @@ public class HudUi {
         wavePane.setWidget(new Table(tx -> tx.table(this::setWave).left()));
 
         waveTable = new Table(table -> {
-            table.left().defaults().width(modUiScale * 32 * 8f).maxHeight(modUiScale * 32 * 8f).align(Align.left);
+            table.left().defaults().width(Scl.scl(modUiScale) * 35 * 8f).maxHeight(Scl.scl(modUiScale) * 32 * 8f).align(Align.left);
             table.add(new Table(Tex.button, t -> {
                 t.add(wavePane);
                 t.update(() -> {
                     NinePatchDrawable patch = (NinePatchDrawable)Tex.button;
                     t.setBackground(patch.tint(Tmp.c1.set(patch.getPatch().getColor()).a(settings.getInt("uiopacity") / 100f)));
                 });
-            })).padRight(modUiScale * 39 * 8f);
+            })).padRight(Scl.scl(modUiScale) * 39 * 8f);
 
             table.fillParent = true;
             table.visibility = () -> uiIndex == 1;
@@ -1093,14 +1093,14 @@ public class HudUi {
         });
 
         itemTable = new Table(table -> {
-            table.left().defaults().width(modUiScale * 54 * 8f).height(modUiScale * 32 * 8f).align(Align.left);
+            table.left().defaults().width(Scl.scl(modUiScale) * 54 * 8f).height(Scl.scl(modUiScale) * 32 * 8f).align(Align.left);
             table.table(Tex.button, t -> {
                 t.add(itemPane);
                 t.update(() -> {
                     NinePatchDrawable patch = (NinePatchDrawable)Tex.button;
                     t.setBackground(patch.tint(Tmp.c1.set(patch.getPatch().getColor()).a(settings.getInt("uiopacity") / 100f)));
                 });
-            }).padRight(modUiScale * 39 * 8f);
+            }).padRight(Scl.scl(modUiScale) * 39 * 8f);
 
             table.fillParent = true;
             table.visibility = () -> uiIndex == 2;

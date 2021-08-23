@@ -22,4 +22,11 @@ public class SUtils {
         if(String.valueOf(number).split("[.]")[1].matches("0")) return String.valueOf(number).split("[.]")[0];
         return Strings.fixed(number, 1);
     }
+
+
+    public static Object invoke(Object ut, String fieldName) throws IllegalAccessException, NoSuchFieldException {
+        Field field = ut.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        return field.get(ut);
+    }
 }

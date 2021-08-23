@@ -10,10 +10,11 @@ import arc.scene.ui.layout.*;
 import arc.util.*;
 import mindustry.*;
 import mindustry.ai.Pathfinder;
-import mindustry.ai.types.BuilderAI;
-import mindustry.ai.types.MinerAI;
+import mindustry.ai.types.*;
 import mindustry.content.*;
 import mindustry.entities.units.AIController;
+import mindustry.entities.units.UnitCommand;
+import mindustry.entities.units.UnitController;
 import mindustry.game.EventType.*;
 import mindustry.game.*;
 import mindustry.gen.*;
@@ -33,17 +34,14 @@ public class Main extends Mod {
     int otherCores;
     boolean groundValid = false, legValid = false, navalValid = false;
 
-    public Tile getNextTile(Tile tile, int finder){
-        Team team = state.rules.waveTeam;
-        Pathfinder.Flowfield field = pathfinder.getField(team, finder, Pathfinder.fieldCore);
+    public Tile getNextTile(Tile tile, int cost, Team team, int finder) {
+        Pathfinder.Flowfield field = pathfinder.getField(team, cost, finder);
         Tile tile1 = pathfinder.getTargetTile(tile, field);
         pathTiles.add(tile1);
         if(otherCores != Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != team)
-                || tile1 == tile || tile1 == null ||
-                tile1.build instanceof CoreBlock.CoreBuild ||
-                !Groups.build.contains(b -> b instanceof CoreBlock.CoreBuild && b.team != team)) //so many ififififififif.
+                || tile1 == tile || tile1 == null || tile1.build instanceof CoreBlock.CoreBuild) //so many ififififififif.
             return tile1;
-        return getNextTile(tile1, finder);
+        return getNextTile(tile1, cost, team, finder);
     }
 
     @Override
@@ -86,27 +84,57 @@ public class Main extends Mod {
                 if(input.keyTap(KeyCode.num3)) navalValid = !navalValid;
             }
 
-            if(settings.getBool("spathfinder") || (input.keyDown(KeyCode.shiftRight) || input.keyDown(KeyCode.shiftLeft)) && input.keyTap(KeyCode.q)) {
+            if(settings.getBool("spathfinder")) {
+                Groups.unit.each(u -> {
+                    Team enemyTeam = u.team;
+                    otherCores = Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != enemyTeam);
+                    if(otherCores == 0) return; //must have target core
+
+                    UnitController c = u.controller();
+                    UnitCommand com = enemyTeam.data().command;
+                    if(u.type.flying || //not flying
+                        c instanceof MinerAI || //not mono
+                        c instanceof BuilderAI || //not poly
+                        c instanceof RepairAI || //not mega
+                        c instanceof DefenderAI || //not oct
+                        c instanceof FormationAI || //not commanded unit by player
+                        c instanceof LogicAI || //not controlled unit by logic
+                        c instanceof FlyingAI ||
+                        com == UnitCommand.idle) return;
+
+                    getNextTile(u.tileOn(), u.pathType(), enemyTeam, com == UnitCommand.attack ? Pathfinder.fieldCore : Pathfinder.fieldRally);
+                    pathTiles.filter(Objects::nonNull);
+                    for(int i = 1; i < pathTiles.size; i++) {
+                        if(i + 1 >= pathTiles.size) continue; //prevent IndexOutException
+                        Tile tile1 = pathTiles.get(i);
+                        Tile tile2 = pathTiles.get(i + 1);
+                        Draw.z(Layer.overlayUI);
+                        Lines.stroke(1, enemyTeam.color);
+                        Lines.line(tile1.worldx(), tile1.worldy(), tile2.worldx(), tile2.worldy());
+                    }
+                    pathTiles.clear();
+                });
+
                 spawner.getSpawns().each(t -> {
                     Team enemyTeam = state.rules.waveTeam;
-                    for (int p = 0; p < 3; p++) {
-                        if(p == 0 && !groundValid && !mobile) continue;
-                        if(p == 1 && !legValid && !mobile) continue;
-                        if(p == 2 && !navalValid && !mobile) continue;
-
+                    for(int p = 0; p < 3; p++) {
                         otherCores = Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != enemyTeam);
-                        getNextTile(t, p);
+                        if(otherCores == 0) return; //must have target core
+
+                        getNextTile(t, p, enemyTeam, Pathfinder.fieldCore);
                         pathTiles.filter(Objects::nonNull);
-                        for (int i = 1; i < pathTiles.size; i++) {
-                            if (i + 1 >= pathTiles.size) continue; //prevent IndexOutException
+                        for(int i = 1; i < pathTiles.size; i++) {
+                            if(i + 1 >= pathTiles.size) continue; //prevent IndexOutException
                             Tile tile1 = pathTiles.get(i);
                             Tile tile2 = pathTiles.get(i + 1);
+                            Draw.z(Layer.overlayUI);
                             Lines.stroke(1, enemyTeam.color);
                             Lines.line(tile1.worldx(), tile1.worldy(), tile2.worldx(), tile2.worldy());
                         }
                         pathTiles.clear();
                     }
                 });
+                Draw.reset();
             }
 
             if(settings.getBool("blockstatus")) Groups.build.each(build -> {
@@ -126,6 +154,7 @@ public class Main extends Mod {
                     Draw.color();
                 }
             });
+
             if(Core.settings.getBool("unithealthui"))
                 Groups.unit.each(unit -> new FreeBar().draw(unit));
 
