@@ -54,11 +54,7 @@ public class SBar extends Element{
     }
 
     public SBar init(){
-        boolean ssim = Core.settings.getBool("ssim");
-        boolean shar = Core.settings.getBool("shar");
-        boolean shar1 = Core.settings.getBool("shar1");
-        boolean shar2 = Core.settings.getBool("shar2");
-        boolean shar3 = Core.settings.getBool("shar3");
+        int h = Core.settings.getInt("barstyle");
 
 
         bar = (NinePatchDrawable) SUtils.getDrawable(Core.atlas.find("unitinfo-barS"), 10, 10, 9, 9);
@@ -69,27 +65,27 @@ public class SBar extends Element{
             top = (NinePatchDrawable) SUtils.getDrawable(Core.atlas.find("unitinfo-1dotbar-top"),0,0,0,0);
             spriteWidth = Core.atlas.find("unitinfo-1dotbar").width;
         }
-        else if(ssim){
+        else if(h == 1){
             bar = (NinePatchDrawable) SUtils.getDrawable(Core.atlas.find("unitinfo-barSS"), 14, 14, 19, 19);
             top = (NinePatchDrawable) SUtils.getDrawable(Core.atlas.find("unitinfo-barSS-top"), 14, 14, 19, 19);
             spriteWidth = Core.atlas.find("unitinfo-barSS").width;
         }
-        else if(shar){
+        else if(h == 2){
             bar = (NinePatchDrawable) SUtils.getDrawable(Core.atlas.find("unitinfo-barSSS"), 25, 25, 17, 17);
             top = (NinePatchDrawable) SUtils.getDrawable(Core.atlas.find("unitinfo-barSSS-top"), 25, 25, 17, 17);
             spriteWidth = Core.atlas.find("unitinfo-barSSS").width;
         }
-        else if(shar1){
+        else if(h == 3){
             bar = (NinePatchDrawable) SUtils.getDrawable(Core.atlas.find("unitinfo-barSSSS"), 25, 25, 17, 17);
             top = (NinePatchDrawable) SUtils.getDrawable(Core.atlas.find("unitinfo-barSSSS-top"), 25, 25, 17, 17);
             spriteWidth = Core.atlas.find("unitinfo-barSSSS").width;
         }
-        else if(shar2){
+        else if(h == 4){
             bar = (NinePatchDrawable) SUtils.getDrawable(Core.atlas.find("unitinfo-barSSSSS"), 27, 27, 16, 16);
             top = (NinePatchDrawable) SUtils.getDrawable(Core.atlas.find("unitinfo-barSSSSS-top"), 27, 27, 16, 16);
             spriteWidth = Core.atlas.find("unitinfo-barSSSSS").width;
         }
-        else if(shar3){
+        else if(h == 5){
             bar = (NinePatchDrawable) SUtils.getDrawable(Core.atlas.find("unitinfo-barSSSSSS"), 32, 32, 16, 16);
             top = (NinePatchDrawable) SUtils.getDrawable(Core.atlas.find("unitinfo-barSSSSSS-top"), 32, 32, 16, 16);
             spriteWidth = Core.atlas.find("unitinfo-barSSSSSS").width;

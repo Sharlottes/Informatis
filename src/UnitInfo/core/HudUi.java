@@ -358,11 +358,14 @@ public class HudUi {
                 t.table(tt -> {
                     tt.add(new Stack() {{
                         add(new Table(ttt -> {
-                            ttt.image(type.uiIcon).size(iconMed);
+                            ttt.image(type.uiIcon).size(iconSmall);
                         }));
                         add(new Table(ttt -> {
                             ttt.right().bottom();
-                            ttt.label(() -> Groups.unit.count(u -> u.type == type && u.team == state.rules.waveTeam && u.isBoss()) + "");
+                            Label label = new Label(() -> Groups.unit.count(u -> u.type == type && u.team == state.rules.waveTeam && u.isBoss()) + "");
+                            label.setFontScale(0.75f);
+                            ttt.add(label);
+                            ttt.pack();
                         }));
                         add(new Table(ttt -> {
                             ttt.top().right();
@@ -372,8 +375,8 @@ public class HudUi {
                             ttt.pack();
                         }));
                     }}).pad(6);
-                    if(++i[0] % 6 == 0) tt.row();
                 });
+                if(++i[0] % 6 == 0) t.row();
             });
             t.row();
             i[0] = 0;
@@ -381,15 +384,18 @@ public class HudUi {
                 t.table(tt -> {
                     tt.add(new Stack() {{
                         add(new Table(ttt -> {
-                            ttt.add(new Image(type.uiIcon)).size(iconMed);
+                            ttt.add(new Image(type.uiIcon)).size(iconSmall);
                         }));
                         add(new Table(ttt -> {
                             ttt.right().bottom();
-                            ttt.add(new Label(() -> Groups.unit.count(u -> u.type == type && u.team == state.rules.waveTeam && !u.isBoss()) + ""));
+                            Label label = new Label(() -> Groups.unit.count(u -> u.type == type && u.team == state.rules.waveTeam && !u.isBoss()) + "");
+                            label.setFontScale(0.75f);
+                            ttt.add(label);
+                            ttt.pack();
                         }));
                     }}).pad(6);
-                    if(++i[0] % 6 == 0) tt.row();
                 });
+                if(++i[0] % 6 == 0) t.row();
             });
         });
     }
@@ -425,7 +431,7 @@ public class HudUi {
             });
         });
         Table pathlineTable = new Table(t -> {
-            t.right();
+            t.left();
 
             Button pathBtn = new ImageButton(new ScaledNinePatchDrawable(new NinePatch(Icon.grid.getRegion()), 0.5f), Styles.clearToggleTransi);
             Button unitBtn = new ImageButton(new ScaledNinePatchDrawable(new NinePatch(Icon.grid.getRegion()), 0.5f), Styles.clearToggleTransi);
@@ -875,7 +881,7 @@ public class HudUi {
                         Label label2 = new Label(()->getTarget() == null ? "(" + 0 + ", " + 0 + ")" : "(" + Strings.fixed(getTarget().x() / tilesize, 2) + ", " + Strings.fixed(getTarget().y() / tilesize, 2) + ")");
                         label2.setFontScale(modUiScale);
                         to.add(label2);
-                    })){{allowMobile = true;}});
+                    })));
                     tt.update(()->tt.setBackground(((NinePatchDrawable)Tex.underline2).tint(getTarget().isNull() ? Color.gray : getTarget().team().color)));
                 });
                 t.row();

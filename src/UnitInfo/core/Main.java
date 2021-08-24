@@ -82,9 +82,8 @@ public class Main extends Mod {
 
         Events.run(Trigger.draw, () -> {
             int[] units = {0};
-            Groups.unit.each(u -> {
+            if(pathLine || unitLine || logicLine) Groups.unit.each(u -> {
                 Team team = u.team;
-                otherCores = Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != team);
                 UnitController c = u.controller();
                 UnitCommand com = team.data().command;
 
@@ -109,6 +108,7 @@ public class Main extends Mod {
                     c instanceof FlyingAI || //not flying anyway
                     com == UnitCommand.idle) return; //not idle
 
+                otherCores = Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != team);
                 getNextTile(u.tileOn(), u.pathType(), team, com.ordinal());
                 pathTiles.filter(Objects::nonNull);
                 for(int i = 1; i < pathTiles.size; i++) {
@@ -141,7 +141,6 @@ public class Main extends Mod {
                     pathTiles.clear();
                 }
             });
-            Draw.reset();
 
             if(settings.getBool("blockstatus")) Groups.build.each(build -> {
                 if(Vars.player != null && Vars.player.team() == build.team) return;
@@ -163,16 +162,6 @@ public class Main extends Mod {
 
             if(Core.settings.getBool("unithealthui"))
                 Groups.unit.each(unit -> new FreeBar().draw(unit));
-
-            if(Core.settings.getBool("scan")){
-                float range = settings.getInt("rangemax") * 8f;
-                for(Team team : Team.all)
-                    indexer.eachBlock(team, Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, b -> true, b -> new FreeBar().draw(b));
-                Draw.color(Tmp.c1.set(Pal.accent).a(0.75f + Mathf.absin(3, 0.25f)));
-                for(int i = 0; i < 4; i++)
-                    Lines.swirl(Core.input.mouseWorldX(), Core.input.mouseWorldY(), range, 0.15f, 90 * i + Time.time % 360);
-                Draw.reset();
-            }
 
             if(!mobile && !Vars.state.isPaused() && settings.getBool("gaycursor"))
                 Fx.mine.at(Core.input.mouseWorldX(), Core.input.mouseWorldY(), Tmp.c2.set(Color.red).shiftHue(Time.time * 1.5f));
