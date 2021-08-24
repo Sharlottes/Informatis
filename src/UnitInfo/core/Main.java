@@ -223,7 +223,7 @@ public class Main extends Mod {
                         float range = u.range();
                         float max = range + settings.getInt("rangeRadius") * tilesize;
 
-                        if(Vars.player.dst(u) <= max) { // TODO: Store value of rangeRadius as an int, should increase performance
+                        if(Vars.player.dst(u) <= max) {
                             if (canHit || settings.getBool("allTargetRange")) // Same as above
                                 if(settings.getBool("softRangeDrawing")){
                                     Lines.stroke(Scl.scl(), Tmp.c1.set(canHit ? u.team.color : Team.derelict.color).a(0.5f));
@@ -235,6 +235,7 @@ public class Main extends Mod {
                     });
                 }
             }
+
             if(!state.rules.polygonCoreProtection && settings.getBool("coreRange") && player != null){
                 state.teams.eachEnemyCore(player.team(), core -> {
                     if(Core.camera.bounds(Tmp.r1).overlaps(Tmp.r2.setCentered(core.x, core.y, state.rules.enemyCoreBuildRadius * 2f))){

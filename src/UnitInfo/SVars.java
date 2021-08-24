@@ -3,7 +3,9 @@ package UnitInfo;
 import UnitInfo.core.*;
 import arc.files.*;
 import arc.graphics.g2d.TextureRegion;
+import arc.scene.ui.TextButton;
 import arc.scene.ui.layout.Scl;
+import arc.scene.ui.layout.Table;
 import arc.struct.*;
 import mindustry.world.Tile;
 
