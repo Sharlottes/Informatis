@@ -18,9 +18,9 @@ This mod displays some extra information about units, waves, cores, and tiles.
   * **Item Info**: Shows current resources(inc/decrement), unit amount for each team.
   
 
-* **In-game Drawer**: draws on the screen, drawing location can be each block or unit.
-  * **Block Scanner**: draws turret/wall health and range near the cursor.
-  * **Unit Bar**: draws unit ammo/shield/health under each unit.
-  * **Turret Range**: draws turret range.
-  * **Power Link**: overdraws green power node on blocks which is power-connected with the selected block.
-  * **Mass Link**: draws mass link lines between selected mass driver and another mass driver.
+* **In-game Drawer**: Draws on the screen, drawing location can be each block or unit.
+  * **Block Scanner**: Draws turret/wall health and range near the cursor.
+  * **Unit Bar**: Draws unit ammo/shield/health under each unit.
+  * **Turret Range**: Draws turret range.
+  * **Power Link**: Overdraws green power node on blocks which is power-connected with the selected block.
+  * **Mass Link**: Draws mass link lines between selected mass driver and another mass driver.
