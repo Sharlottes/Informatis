@@ -57,13 +57,11 @@ public class HudUi {
     ImageButton lockButton;
     boolean locked = false;
 
-    float charge;
     float a;
     int uiIndex = 0;
 
     //to update tables
     int waveamount;
-    int coreamounts;
     int enemyamount;
 
     //is this rly good idea?
@@ -551,6 +549,7 @@ public class HudUi {
             add(new Table(){{
                 left();
                 update(() -> {
+                    if(!Core.settings.getBool("infoui")) return;
                     Element image = new Element();
                     if(getTarget() instanceof ItemTurret.ItemTurretBuild turret){
                         if(turret.hasAmmo()) image = new Image(((ItemTurret)turret.block).ammoTypes.findKey(turret.peekAmmo(), true).uiIcon);
@@ -597,6 +596,7 @@ public class HudUi {
                 t.left();
                 t.add(new Image(){{
                         update(() -> {
+                            if(!Core.settings.getBool("infoui")) return;
                             if(getTarget() instanceof Unit u && u.stack.item != null && u.stack.amount > 0)
                                 setDrawable(u.stack.item.uiIcon);
                             else setDrawable(clear);
@@ -651,6 +651,7 @@ public class HudUi {
                 t.left();
                 t.add(new Image(){{
                     update(() -> {
+                        if(!Core.settings.getBool("infoui")) return;
                         TextureRegion region = clear;
 
                         if(Vars.state.rules.unitAmmo && getTarget() instanceof Unit u && u.type != null){
@@ -668,11 +669,12 @@ public class HudUi {
 
     public void addWeaponTable(Table table){
         table.table().update(t -> {
+            if(!Core.settings.getBool("infoui")) return;
             t.clear();
             t.add(new Table(((NinePatchDrawable)Tex.button).tint(Tmp.c1.set(((NinePatchDrawable)Tex.button).getPatch().getColor()).a(settings.getInt("uiopacity") / 100f)), tt -> {
                 tt.defaults().width(Scl.scl(modUiScale) * 8 * 8f).minHeight(Scl.scl(modUiScale) * 4 * 8f).align(Align.left);
-                tt.visibility = () -> settings.getBool("weaponui") && getTarget() instanceof Unit u && u.type != null && u.type.weapons.size > 0;
-                if(settings.getBool("weaponui") && getTarget() instanceof Unit u && u.type != null) {
+                tt.visibility = () -> getTarget() instanceof Unit u && u.type != null && u.type.weapons.size > 0;
+                if(getTarget() instanceof Unit u && u.type != null) {
                     UnitType type = u.type;
                     for(int r = 0; r < type.weapons.size; r++){
                         Weapon weapon = type.weapons.get(r);
@@ -736,6 +738,7 @@ public class HudUi {
 
             float[] count = new float[]{-1};
             table1.table().update(t -> {
+                if(!Core.settings.getBool("infoui")) return;
                 if(getTarget() instanceof Payloadc payload){
                     if(count[0] != payload.payloadUsed()){
                         t.clear();
@@ -763,6 +766,7 @@ public class HudUi {
 
             Bits statuses = new Bits();
             table1.table().update(t -> {
+                if(!Core.settings.getBool("infoui")) return;
                 t.left();
                 if(getTarget() instanceof Statusc st){
                     Bits applied = st.statusBits();
@@ -843,7 +847,10 @@ public class HudUi {
                         }
                     });
                     button.visibility = () -> getTarget() != null;
-                    button.update(()->lockButton.getStyle().imageUp = Icon.lock.tint(locked ? Pal.accent : Color.white));
+                    button.update(() -> {
+                        if(!Core.settings.getBool("infoui")) return;
+                        lockButton.getStyle().imageUp = Icon.lock.tint(locked ? Pal.accent : Color.white);
+                    });
                     button.getLabel().setFontScale(Scl.scl(modUiScale));
 
                     lockButton = Elem.newImageButton(Styles.clearPartiali, Icon.lock.tint(locked ? Pal.accent : Color.white), 3 * 8f * Scl.scl(modUiScale), () -> {
@@ -882,7 +889,10 @@ public class HudUi {
                         label2.setFontScale(modUiScale);
                         to.add(label2);
                     })));
-                    tt.update(()->tt.setBackground(((NinePatchDrawable)Tex.underline2).tint(getTarget().isNull() ? Color.gray : getTarget().team().color)));
+                    tt.update(() -> {
+                        if(!Core.settings.getBool("infoui")) return;
+                        tt.setBackground(((NinePatchDrawable)Tex.underline2).tint(getTarget().isNull() ? Color.gray : getTarget().team().color));
+                    });
                 });
                 t.row();
                 t.table(tt -> {
@@ -894,19 +904,18 @@ public class HudUi {
                     }
                 });
                 t.setColor(t.color.cpy().a(1f));
-
                 t.background(Tex.button);
-
                 t.update(() -> {
+                    if(!Core.settings.getBool("infoui")) return;
                     NinePatchDrawable patch = (NinePatchDrawable)Tex.button;
                     t.setBackground(patch.tint(Tmp.c1.set(patch.getPatch().getColor()).a(settings.getInt("uiopacity") / 100f)));
                 });
             });
-            table.table(t -> t.stack(table1, addInfoTable(t)));
-            table.row();
+            table.table(t -> t.stack(table1, addInfoTable(t))).row();
             table.table(this::addWeaponTable);
 
             table.update(() -> {
+                if(!Core.settings.getBool("infoui")) return;
                 try {
                     BarInfo.getInfo(getTarget());
                 } catch (IllegalAccessException | NoSuchFieldException e) {
@@ -915,11 +924,6 @@ public class HudUi {
                 strings = BarInfo.strings;
                 numbers = BarInfo.numbers;
                 colors = BarInfo.colors;
-
-                if(getTarget() instanceof Turret.TurretBuild tb){
-                    if(tb.charging) charge += Time.delta;
-                    else charge = 0f;
-                }
             });
 
             table.fillParent = true;
@@ -990,7 +994,10 @@ public class HudUi {
                             new Table(ttt -> {
                                 ttt.top().right();
                                 Image image1 = new Image(Icon.warning.getRegion()).setScaling(Scaling.fit);
-                                image1.update(() -> image1.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f))));
+                                image1.update(() -> {
+                                    if(!Core.settings.getBool("infoui")) return;
+                                    image1.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f)));
+                                });
                                 ttt.add(image1).size(Scl.scl(modUiScale) * 12f);
                                 ttt.visible(() -> group.effect == StatusEffects.boss);
                                 ttt.pack();
@@ -1007,7 +1014,10 @@ public class HudUi {
                         if(!mobile){
                             HandCursorListener listener1 = new HandCursorListener();
                             tt.addListener(listener1);
-                            tt.update(() -> image.color.lerp(!listener1.isOver() ? Color.lightGray : Color.white, Mathf.clamp(0.4f * Time.delta)));
+                            tt.update(() -> {
+                                if(!Core.settings.getBool("infoui")) return;
+                                image.color.lerp(!listener1.isOver() ? Color.lightGray : Color.white, Mathf.clamp(0.4f * Time.delta));
+                            });
                         }
                         tt.addListener(new Tooltip(t -> t.background(Tex.button).table(to -> {
                             to.left();
@@ -1020,7 +1030,10 @@ public class HudUi {
                                 if(group.effect == StatusEffects.boss){
                                     status = new Image(Icon.warning.getRegion()).setScaling(Scaling.fit);
                                     Image finalStatus = status;
-                                    status.update(() -> finalStatus.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f))));
+                                    status.update(() -> {
+                                        if(!Core.settings.getBool("infoui")) return;
+                                        finalStatus.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f)));
+                                    });
                                 }
                                 Image finalStatus = status;
                                 to.table(tot -> {
@@ -1030,7 +1043,10 @@ public class HudUi {
                                     if(!mobile){
                                         HandCursorListener listener = new HandCursorListener();
                                         finalStatus.addListener(listener);
-                                        finalStatus.update(() -> finalStatus.color.lerp(!listener.isOver() ? Color.lightGray : Color.white, Mathf.clamp(0.4f * Time.delta)));
+                                        finalStatus.update(() -> {
+                                            if(!Core.settings.getBool("infoui")) return;
+                                            finalStatus.color.lerp(!listener.isOver() ? Color.lightGray : Color.white, Mathf.clamp(0.4f * Time.delta));
+                                        });
                                     }
                                     tot.add("[stat]" + group.effect.localizedName);
                                 }).size(iconMed * Scl.scl(modUiScale));
@@ -1069,6 +1085,7 @@ public class HudUi {
         wavePane.setScrollingDisabled(true, false);
         wavePane.setScrollYForce(waveScrollPos);
         wavePane.update(() -> {
+            if(!Core.settings.getBool("infoui")) return;
             if(wavePane.hasScroll()){
                 Element result = scene.hit(input.mouseX(), input.mouseY(), true);
                 if(result == null || !result.isDescendantOf(wavePane)){
@@ -1099,6 +1116,7 @@ public class HudUi {
 
     public void setItem(Table table){
         table.table().update(t -> {
+            if(!Core.settings.getBool("infoui")) return;
             t.clear();
             for(int i = 0; i < coreItems.tables.size; i++){
                 if((state.rules.pvp && coreItems.teams[i] != player.team()) || coreItems.teams[i].cores().isEmpty()) continue;
@@ -1123,6 +1141,7 @@ public class HudUi {
         itemPane.setScrollYForce(itemScrollPos);
         itemPane.setOverscroll(false, false);
         itemPane.update(() -> {
+            if(!Core.settings.getBool("infoui")) return;
             if(itemPane.hasScroll()){
                 Element result = scene.hit(input.mouseX(), input.mouseY(), true);
                 if(result == null || !result.isDescendantOf(itemPane)){
@@ -1137,6 +1156,7 @@ public class HudUi {
             table.table(Tex.button, t -> {
                 t.add(itemPane);
                 t.update(() -> {
+                    if(!Core.settings.getBool("infoui")) return;
                     NinePatchDrawable patch = (NinePatchDrawable)Tex.button;
                     t.setBackground(patch.tint(Tmp.c1.set(patch.getPatch().getColor()).a(settings.getInt("uiopacity") / 100f)));
                 });

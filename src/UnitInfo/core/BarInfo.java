@@ -281,8 +281,8 @@ public class BarInfo {
             }
             else if(build.block.consumes.hasPower()){
                 ConsumePower cons = build.block.consumes.getPower();
-                if(cons.buffered) strings.set(5, bundle.format("shar-stat.powerCapacity", floatFormat(build.power.status * cons.capacity * 60f), floatFormat(cons.capacity * 60f)));
-                else strings.set(5, bundle.format("shar-stat.powerUsage", floatFormat(build.power.status * cons.usage * 60f), floatFormat(cons.usage * 60f)));
+                if(cons.buffered) strings.set(5, bundle.format("shar-stat.power", floatFormat(build.power.status * cons.capacity * 60f), floatFormat(cons.capacity * 60f)));
+                else strings.set(5, bundle.format("shar-stat.power", floatFormat(build.power.status * cons.usage * 60f), floatFormat(cons.usage * 60f)));
                 colors.set(5, Pal.powerBar);
                 numbers.set(5, Mathf.zero(cons.requestedPower(build)) && build.power.graph.getPowerProduced() + build.power.graph.getBatteryStored() > 0f ? 1f : build.power.status);
             }

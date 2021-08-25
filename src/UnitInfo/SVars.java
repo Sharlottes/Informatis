@@ -1,6 +1,7 @@
 package UnitInfo;
 
 import UnitInfo.core.*;
+import arc.Core;
 import arc.files.*;
 import arc.graphics.g2d.TextureRegion;
 import arc.scene.ui.TextButton;

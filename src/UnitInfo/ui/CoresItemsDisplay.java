@@ -35,7 +35,6 @@ public class CoresItemsDisplay {
     public Seq<Table> tables = new Seq<>();
 
     float heat;
-    boolean once;
 
     public CoresItemsDisplay(Team[] teams) {
         this.teams = teams;
@@ -48,8 +47,7 @@ public class CoresItemsDisplay {
         updateItems.clear();
         prevItems.clear();
         coreAmount.clear();
-        if(settings.getBool("allTeam")) teams = Team.all;
-        else teams = Team.baseTeams;
+        teams = new Seq<Team>(Team.all).filter(t -> !t.cores().isEmpty()).toArray();
         for(Team team : teams) {
             usedItems.put(team, new ObjectSet<>());
             usedUnits.put(team, new ObjectSet<>());
@@ -80,6 +78,7 @@ public class CoresItemsDisplay {
             t.clear();
 
             t.update(() -> {
+                if(!Core.settings.getBool("infoui")) return;
                 core = team.core();
                 heat += Time.delta;
 
@@ -109,7 +108,10 @@ public class CoresItemsDisplay {
                                 if(!mobile) {
                                     HandCursorListener listener1 = new HandCursorListener();
                                     image.addListener(listener1);
-                                    image.update(() -> image.color.lerp(!listener1.isOver() ? Color.lightGray : Color.white, Mathf.clamp(0.4f * Time.delta)));
+                                    image.update(() -> {
+                                        if(!Core.settings.getBool("infoui")) return;
+                                        image.color.lerp(!listener1.isOver() ? Color.lightGray : Color.white, Mathf.clamp(0.4f * Time.delta));
+                                    });
                                 }
                                 image.addListener(new Tooltip(tttt -> {
                                     Label label = new Label(() -> "([#" + Tmp.c1.set(Color.green).lerp(Color.red, 1 - core.healthf()).toString() + "]" + Strings.fixed(core.health, 2) + "[]/" + Strings.fixed(core.block.health, 2) + ")");
@@ -134,6 +136,7 @@ public class CoresItemsDisplay {
             });
             t.row();
             t.table().update(itemTable -> {
+                if(!Core.settings.getBool("infoui")) return;
                 itemTable.clear();
                 final int[] i = {0};
                 for(Item item : content.items()){
@@ -148,8 +151,8 @@ public class CoresItemsDisplay {
                             new Table(ttt -> {
                                 ttt.bottom().right();
                                 Label label = new Label(() -> {
-                                    int amount = updateItems.get(team).get(item.id).amount;
-                                    return (amount > 0 ? "[green]+" : amount == 0 ? "[orange]" : "[red]") + amount + "[]";
+                                    int amount = updateItems.get(team).get(item.id).amount / (settings.getInt("coreItemCheckRate") / 60);
+                                    return (amount > 0 ? "[green]+" : amount == 0 ? "[orange]" : "[red]") + amount + "/s[]";
                                 });
                                 label.setFontScale(0.65f * modUiScale);
                                 ttt.add(label).bottom().right().padTop(16f * modUiScale);
@@ -162,6 +165,7 @@ public class CoresItemsDisplay {
             });
             t.row();
             t.table().update(unitTable -> {
+                if(!Core.settings.getBool("infoui")) return;
                 unitTable.clear();
                 final int[] i = {0};
                 for(UnitType unit : content.units()){

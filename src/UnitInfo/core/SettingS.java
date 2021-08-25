@@ -19,30 +19,6 @@ import static mindustry.Vars.*;
 public class SettingS {
     public SettingsMenuDialog.SettingsTable sharset;
 
-    public void addGraphicSlideSetting(String key, int def, int min, int max, int step, SettingsMenuDialog.StringProcessor s, Seq<SharSetting> list){
-        list.add(new SharSetting(key, def) {
-
-            @Override
-            public void add(Table table){
-                Label value = new Label("");
-                value.setStyle(Styles.outlineLabel);
-                value.touchable = Touchable.disabled;
-                value.setAlignment(Align.center);
-                value.setWrap(true);
-
-                Slider slider = new Slider(min, max, step, false);
-                slider.setValue(settings.getInt(name));
-                slider.changed(() -> {
-                    settings.put(name, (int)slider.getValue());
-                    value.setText(title + ": " + s.get((int)slider.getValue()));
-                });
-                slider.change();
-
-                table.stack(slider, value).width(Math.min(Core.graphics.getWidth() / 1.2f, 460f)).row();
-            }
-        });
-    }
-
     public void addGraphicCheckSetting(String key, boolean def, Seq<SharSetting> list){
         list.add(new SharSetting(key, def) {
 
@@ -52,7 +28,38 @@ public class SettingS {
                 box.update(() -> box.setChecked(settings.getBool(name)));
                 box.changed(() -> settings.put(name, box.isChecked()));
 
-                table.add(box).row();
+                box.left();
+                addDesc(table.add(box).left().padTop(3f).get());
+                table.row();
+            }
+        });
+    }
+
+    public void addGraphicSlideSetting(String key, int def, int min, int max, int step, SettingsMenuDialog.StringProcessor sp, Seq<SharSetting> list){
+        list.add(new SharSetting(key, def) {
+
+            @Override
+            public void add(Table table){
+                Slider slider = new Slider(min, max, step, false);
+
+                slider.setValue(settings.getInt(name));
+
+                Label value = new Label("", Styles.outlineLabel);
+                Table content = new Table();
+                content.add(title, Styles.outlineLabel).left().growX().wrap();
+                content.add(value).padLeft(10f).right();
+                content.margin(3f, 33f, 3f, 33f);
+                content.touchable = Touchable.disabled;
+
+                slider.changed(() -> {
+                    settings.put(name, (int)slider.getValue());
+                    value.setText(sp.get((int)slider.getValue()));
+                });
+
+                slider.change();
+
+                addDesc(table.stack(slider, content).width(Math.min(Core.graphics.getWidth() / 1.2f, 460f)).left().padTop(4f).get());
+                table.row();
             }
         });
     }
@@ -61,19 +68,21 @@ public class SettingS {
         list.add(new SharSetting(key, def) {
 
             @Override
-            public void add(Table settingsTable) {
+            public void add(Table table) {
                 final String[] str = {""};
-                settingsTable.table(t -> {
+                Table table1 = new Table(t -> {
                     t.add(new Label(title + ": ")).left().padRight(5)
-                        .update(a -> a.setColor(condition.get() ? Color.white : Color.gray));
+                            .update(a -> a.setColor(condition.get() ? Color.white : Color.gray));
 
                     t.field((integer ? settings.getInt(key) : settings.getFloat(key)) + str[0], s -> {
-                        settings.put(key, integer ? Strings.parseInt(s) : Strings.parseFloat(s));
-                        str[0] = h.get(s);
-                    }).update(a -> a.setDisabled(!condition.get()))
-                        .valid(f -> Strings.canParsePositiveFloat(f) && Strings.parseFloat(f) >= min && Strings.parseFloat(f) <= max).width(120f).left();
+                                settings.put(key, integer ? Strings.parseInt(s) : Strings.parseFloat(s));
+                                str[0] = h.get(s);
+                            }).update(a -> a.setDisabled(!condition.get()))
+                            .valid(f -> Strings.canParsePositiveFloat(f) && Strings.parseFloat(f) >= min && Strings.parseFloat(f) <= max).width(120f).left();
                 });
-                settingsTable.row();
+
+                addDesc(table.add(table1).left().padTop(4f).get());
+                table.row();
             }
         });
     }
@@ -92,15 +101,13 @@ public class SettingS {
 
         Seq<Seq<SharSetting>> settingSeq = new Seq<>();
         Seq<SharSetting> tapSeq = new Seq<>();
-        addGraphicCheckSetting("infoui", true, tapSeq);
-        addGraphicCheckSetting("weaponui", true, tapSeq);
-        addGraphicTypeSetting("wavemax", 0, 100,200, true, () -> true, s -> s + "waves", tapSeq);
-        addGraphicCheckSetting("pastwave", false, tapSeq);
-        addGraphicCheckSetting("emptywave", true, tapSeq);
         addGraphicSlideSetting("barstyle", 0, 0, 5, 1, s -> s == 0 ? "default bar" : s + "th bar", tapSeq);
         addGraphicSlideSetting("infoUiScale", 100, 50, 100, 5, s -> s + "%", tapSeq);
         addGraphicSlideSetting("coreItemCheckRate", 60, 6, 180, 6, s -> Strings.fixed(s/60f,1) + "sec", tapSeq);
-        addGraphicCheckSetting("allTeam", false, tapSeq);
+        addGraphicTypeSetting("wavemax", 0, 100,200, true, () -> true, s -> s + "waves", tapSeq);
+        addGraphicCheckSetting("infoui", true, tapSeq);
+        addGraphicCheckSetting("pastwave", false, tapSeq);
+        addGraphicCheckSetting("emptywave", true, tapSeq);
 
         Seq<SharSetting> rangeSeq = new Seq<>();
         addGraphicTypeSetting("rangeRadius", 0, 50, 20, true, () -> true, s -> s + "tiles", rangeSeq);
@@ -118,6 +125,7 @@ public class SettingS {
         addGraphicSlideSetting("softRangeOpacity", 10, 0, 25, 1, s -> s + "%", opacitySeq);
 
         Seq<SharSetting> drawSeq = new Seq<>();
+        addGraphicTypeSetting("unitlinelimit", 0, 500, 50, true, () -> true, s -> s + "units", drawSeq);
         addGraphicCheckSetting("gaycursor", false, drawSeq);
         addGraphicCheckSetting("unithealthui", true, drawSeq);
         addGraphicCheckSetting("linkedMass", true, drawSeq);
@@ -125,10 +133,10 @@ public class SettingS {
         addGraphicCheckSetting("select", true, drawSeq);
         addGraphicCheckSetting("deadTarget", false, drawSeq);
         addGraphicCheckSetting("distanceLine", true, drawSeq);
-        addGraphicSlideSetting("unitlinelimit", 50, 50, 250, 10, s -> s + "units", drawSeq);
 
         Seq<SharSetting> etcSeq = new Seq<>();
         addGraphicCheckSetting("autoShooting", false, etcSeq);
+
         settingSeq.add(tapSeq, rangeSeq, opacitySeq);
         settingSeq.add(drawSeq, etcSeq);
 
@@ -151,26 +159,12 @@ public class SettingS {
             for(int i = 0; i < settingSeq.size; i++){
                 int finalI = i;
                 stack.add(new Table(st -> {
-                    st.center();
-                    for(SharSetting setting : settingSeq.get(finalI)) {
-                        Label label = new Label(setting.description);
-                        label.setColor(Color.gray);
-                        label.setFontScale(0.75f);
-
-                        st.table(stt -> {
-                            stt.center();
-                            setting.add(stt);
-                            stt.add(label);
-                        }).row();
-                    }
+                    for(SharSetting setting : settingSeq.get(finalI))
+                        st.table(setting::add).left().row();
 
                     st.button(Core.bundle.get("settings.reset", "Reset to Defaults"), () -> {
-                        for(SharSetting setting : settingSeq.get(finalI)) {
-                            if(setting.name != null && setting.title != null) {
-                                Core.settings.put(setting.name, Core.settings.getDefault(setting.name));
-                            }
-                        }
-                    }).margin(14.0F).width(240.0F).pad(6.0F);
+                        settingSeq.get(finalI).each(s -> Core.settings.put(s.name, Core.settings.getDefault(s.name)));
+                    }).margin(14.0f).width(240.0f).pad(6.0f);
                     st.visibility = () -> buttons.get(finalI).isChecked();
                     st.pack();
                 }));
