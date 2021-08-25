@@ -1,5 +1,6 @@
 package UnitInfo.core;
 
+import UnitInfo.SVars;
 import UnitInfo.ui.*;
 import arc.*;
 import arc.graphics.*;
@@ -30,11 +31,22 @@ import mindustry.type.ammo.*;
 import mindustry.ui.*;
 import mindustry.world.*;
 import mindustry.world.blocks.*;
+import mindustry.world.blocks.defense.ForceProjector;
+import mindustry.world.blocks.defense.MendProjector;
+import mindustry.world.blocks.defense.OverdriveProjector;
 import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.blocks.distribution.MassDriver;
 import mindustry.world.blocks.payloads.Payload;
 import mindustry.world.blocks.payloads.PayloadMassDriver;
+import mindustry.world.blocks.power.PowerGenerator;
 import mindustry.world.blocks.power.PowerNode;
+import mindustry.world.blocks.power.ThermalGenerator;
+import mindustry.world.blocks.production.AttributeCrafter;
+import mindustry.world.blocks.production.Drill;
+import mindustry.world.blocks.production.GenericCrafter;
+import mindustry.world.blocks.production.SolidPump;
+import mindustry.world.blocks.units.Reconstructor;
+import mindustry.world.blocks.units.UnitFactory;
 
 import static UnitInfo.SVars.*;
 import static arc.Core.*;
@@ -75,6 +87,8 @@ public class HudUi {
     public Seq<MassDriver.MassDriverBuild> linkedMasses = new Seq<>();
     public Seq<PayloadMassDriver.PayloadDriverBuild> linkedPayloadMasses = new Seq<>();
     public Seq<Building> linkedNodes = new Seq<>();
+
+    public final Rect scissor = new Rect();
 
     @SuppressWarnings("unchecked")
     public <T extends Teamc> T getTarget(){
@@ -506,163 +520,131 @@ public class HudUi {
         ui.hudGroup.addChild(mainTable);
     }
 
-    public void addBars(){
-        bars.clear();
-        lastColors.set(2, colors.get(2));
-        {
-            int i = 0;
-            bars.add(new SBar(
-                    () -> strings.get(i),
-                    () -> {
-                        if (colors.get(i) != Color.clear) lastColors.set(i, colors.get(i));
-                        return lastColors.get(i);
-                    },
-                    () -> numbers.get(i)
-            ));
+    public TextureRegion getRegions(int i){
+        Teamc target = getTarget();
+
+        TextureRegion region = clear;
+        if(i == 0){
+            if(target instanceof Healthc) region = SIcons.health;
+        } else if(i == 1){
+            if(target instanceof Turret.TurretBuild ||
+                    target instanceof MassDriver.MassDriverBuild){
+                region = SIcons.reload;
+            } else if((target instanceof Unit unit && unit.type != null) ||
+                    target instanceof ForceProjector.ForceBuild){
+                region = SIcons.shield;
+            } else if(target instanceof MendProjector.MendBuild ||
+                    target instanceof OverdriveProjector.OverdriveBuild ||
+                    target instanceof ConstructBlock.ConstructBuild ||
+                    target instanceof UnitFactory.UnitFactoryBuild ||
+                    target instanceof Reconstructor.ReconstructorBuild ||
+                    target instanceof Drill.DrillBuild ||
+                    target instanceof GenericCrafter.GenericCrafterBuild){
+                //region = SIcons.progress;
+            } else if(target instanceof PowerNode.PowerNodeBuild ||
+                    target instanceof PowerGenerator.GeneratorBuild){
+                region = SIcons.power;
+            }
+        } else if(i == 2){
+            if(target instanceof ItemTurret.ItemTurretBuild){
+                region = SIcons.ammo;
+            } else if(target instanceof LiquidTurret.LiquidTurretBuild){
+                region = SIcons.liquid;
+            } else if(target instanceof PowerTurret.PowerTurretBuild ||
+                    target instanceof PowerNode.PowerNodeBuild){
+                region = SIcons.power;
+            } else if((target instanceof Building b && b.block.hasItems) ||
+                    (target instanceof Unit unit && unit.type != null)){
+                region = SIcons.item;
+            }
+        } else if(i == 3){
+            if(target instanceof Unit unit && unit.type != null ||
+                    target instanceof UnitFactory.UnitFactoryBuild ||
+                    target instanceof Reconstructor.ReconstructorBuild){
+                region = Icon.units.getRegion();
+            } else if(target instanceof AttributeCrafter.AttributeCrafterBuild ||
+                    target instanceof SolidPump.SolidPumpBuild ||
+                    target instanceof ThermalGenerator.ThermalGeneratorBuild){
+                //region = SIcons.attr;
+            } else if(target instanceof PowerNode.PowerNodeBuild){
+                region = SIcons.power;
+            } else if(target instanceof OverdriveProjector.OverdriveBuild){
+                //region = SIcons.boost;
+            }
+        } else if(i == 4){
+            if(target instanceof Unit unit && target instanceof Payloadc && unit.type != null){
+
+            } else if(target instanceof PowerNode.PowerNodeBuild){
+                region = SIcons.power;
+            } else if(target instanceof Building b && b.block.hasLiquids){
+                region = SIcons.liquid;
+            }
+        } else if(i == 5){
+            if(target instanceof Unit unit && state.rules.unitAmmo && unit.type != null){
+                region = SIcons.ammo;
+            }else if(target instanceof PowerNode.PowerNodeBuild ||
+                    (target instanceof Building b && b.block.consumes.hasPower())){
+                region = SIcons.power;
+            }
         }
-        {
-            int i = 1;
-            bars.add(new SBar(
-                    () -> strings.get(i),
-                    () -> {
-                        if (colors.get(i) != Color.clear) lastColors.set(i, colors.get(i));
-                        return lastColors.get(i);
-                    },
-                    () -> numbers.get(i)
-            ));
-        }
-        bars.add(new Stack(){{
+
+        return region;
+    }
+    public Element addBar(int i){
+        return new Stack(){{
             add(new Table(t -> {
-                t.top().defaults().width(Scl.scl(modUiScale) * 23 * 8f).height(Scl.scl(modUiScale) * 4f * 8f);
-                int i = 2;
                 t.add(new SBar(
-                    () -> BarInfo.strings.get(i),
-                    () -> {
-                        if(BarInfo.colors.get(i) != Color.clear) lastColors.set(i, BarInfo.colors.get(i));
-                        return lastColors.get(i);
-                    },
-                    () -> BarInfo.numbers.get(i)
-                )).growX().left();
-            }));
-            add(new Table(){{
-                left();
-                update(() -> {
-                    if(!Core.settings.getBool("infoui")) return;
-                    Element image = new Element();
-                    if(getTarget() instanceof ItemTurret.ItemTurretBuild turret){
-                        if(turret.hasAmmo()) image = new Image(((ItemTurret)turret.block).ammoTypes.findKey(turret.peekAmmo(), true).uiIcon);
-                        else {MultiReqImage itemReq = new MultiReqImage();
-                            for(Item item : ((ItemTurret) turret.block).ammoTypes.keys())
-                                itemReq.add(new ReqImage(item.uiIcon, turret::hasAmmo));
-                            image = itemReq;
-                        }
-                    }
-                    else if(getTarget() instanceof LiquidTurret.LiquidTurretBuild turret){
-                        MultiReqImage liquidReq = new MultiReqImage();
-                        for(Liquid liquid : ((LiquidTurret) turret.block).ammoTypes.keys())
-                            liquidReq.add(new ReqImage(liquid.uiIcon, turret::hasAmmo));
-                        image = liquidReq;
-
-                        if(((LiquidTurret.LiquidTurretBuild) getTarget()).hasAmmo())
-                            image = new Image(turret.liquids.current().uiIcon).setScaling(Scaling.fit);
-                    }
-                    else if(getTarget() instanceof PowerTurret.PowerTurretBuild){
-                        image = new Image(Icon.power.getRegion()){
-                            @Override
-                            public void draw(){
-                                Building entity = getTarget();
-                                float max = entity.block.consumes.getPower().usage;
-                                float v = entity.power.status * entity.power.graph.getLastScaledPowerIn();
-
-                                super.draw();
-                                Lines.stroke(Scl.scl(modUiScale) * 2f, Pal.removeBack);
-                                Draw.alpha(1 - v/max);
-                                Lines.line(x, y - 2f + height, x + width, y - 2f);
-                                Draw.color(Pal.remove);
-                                Draw.alpha(1 - v/max);
-                                Lines.line(x, y + height, x + width, y);
-                                Draw.reset();
-                            }
-                        };
-                    }
-                    clearChildren();
-                    add(image).size(iconSmall * Scl.scl(modUiScale)).padBottom(2 * 8f).padRight(3 * 8f);
-                });
-                pack();
-            }});
-            add(new Table(t -> {
-                t.left();
-                t.add(new Image(){{
-                        update(() -> {
-                            if(!Core.settings.getBool("infoui")) return;
-                            if(getTarget() instanceof Unit u && u.stack.item != null && u.stack.amount > 0)
-                                setDrawable(u.stack.item.uiIcon);
-                            else setDrawable(clear);
-                        });
-                        visibility = () -> getTarget() instanceof Unit;
-                    }}.setScaling(Scaling.fit)).size(Scl.scl(modUiScale) * 30f).padBottom(Scl.scl(modUiScale) * 4 * 8f).padRight(Scl.scl(modUiScale) * 6 * 8f);
-                t.pack();
-            }));
-        }});
-
-
-        {
-            int i = 3;
-            bars.add(new SBar(
-                    () -> strings.get(i),
-                    () -> {
-                        if(colors.get(i) != Color.clear) lastColors.set(i, colors.get(i));
-                        return lastColors.get(i);
-                    },
-                    () -> numbers.get(i)
-            ));
-        }
-
-
-        {
-            int i = 4;
-            bars.add(new SBar(
-                    () -> strings.get(i),
-                    () -> {
-                        if(colors.get(i) != Color.clear) lastColors.set(i, colors.get(i));
-                        return lastColors.get(i);
-                    },
-                    () -> numbers.get(i)
-            ));
-        }
-
-        bars.add(new Stack(){{
-            add(new Table(t -> {
-                t.top().defaults().width(Scl.scl(modUiScale) * 23 * 8f).height(Scl.scl(modUiScale) * 4 * 8f);
-
-                int i = 5;
-                t.add(new SBar(
-                        () -> strings.get(i),
+                        () -> BarInfo.strings.get(i),
                         () -> {
-                            if(colors.get(i) != Color.clear) lastColors.set(i, colors.get(i));
+                            if (BarInfo.colors.get(i) != Color.clear) lastColors.set(i, BarInfo.colors.get(i));
                             return lastColors.get(i);
                         },
-                        () -> numbers.get(i)
-                )).growX().left();
+                        () -> BarInfo.numbers.get(i)
+                )).width(Scl.scl(modUiScale) * 24 * 8f).height(Scl.scl(modUiScale) * 4 * 8f).growX().left();
             }));
             add(new Table(t -> {
-                t.left();
-                t.add(new Image(){{
-                    update(() -> {
-                        if(!Core.settings.getBool("infoui")) return;
-                        TextureRegion region = clear;
+                t.right();
+                t.add(new Image(){
+                    @Override
+                    public void draw() {
+                        validate();
 
-                        if(Vars.state.rules.unitAmmo && getTarget() instanceof Unit u && u.type != null){
-                            UnitType type = u.type;
-                            if(type.ammoType instanceof ItemAmmoType ammo) region = ammo.item.uiIcon;
-                            else if(type.ammoType instanceof PowerAmmoType) region = Icon.powerSmall.getRegion();
+                        float x = this.x;
+                        float y = this.y;
+                        float scaleX = this.scaleX;
+                        float scaleY = this.scaleY;
+                        Draw.color(Color.white);
+                        Draw.alpha(parentAlpha * color.a);
+
+                        TextureRegionDrawable region = new TextureRegionDrawable(getRegions(i));
+                        float rotation = getRotation();
+                        if(scaleX != 1 || scaleY != 1 || rotation != 0){
+                            region.draw(x + imageX, y + imageY, originX - imageX, originY - imageY,
+                                    imageWidth, imageHeight, scaleX, scaleY, rotation);
+                            return;
                         }
-                        setDrawable(region);
-                    });
-                }}.setScaling(Scaling.fit)).size(Scl.scl(modUiScale) * 30f).padBottom(Scl.scl(modUiScale) * 4 * 8f).padRight(Scl.scl(modUiScale) * 6 * 8f);
-                t.pack();
+                        region.draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
+
+                        Draw.color(colors.get(i));
+                        if(ScissorStack.push(scissor.set(x, y, imageWidth * scaleX, imageHeight * scaleY * numbers.get(i)))){
+                            region.draw(x, y, imageWidth * scaleX, imageHeight * scaleY);
+                            ScissorStack.pop();
+                        }
+                        Draw.reset();
+                    }
+                }).size(iconMed * Scl.scl(modUiScale)).padRight(Scl.scl(modUiScale) * 8f);
             }));
-        }});
+        }};
+    }
+    public void addBars(){
+        bars.clear();
+
+        bars.add(addBar(0));
+        bars.add(addBar(1));
+        bars.add(addBar(2));
+        bars.add(addBar(3));
+        bars.add(addBar(4));
+        bars.add(addBar(5));
     }
 
     public void addWeaponTable(Table table){
@@ -775,7 +757,7 @@ public class HudUi {
                             for(StatusEffect effect : content.statusEffects()){
                                 if(applied.get(effect.id) && !effect.isHidden()){
                                     t.image(effect.uiIcon).size(iconSmall).get().addListener(new Tooltip(l -> l.label(() ->
-                                        effect.localizedName + " [lightgray]" + UI.formatTime(st.getDuration(effect))).style(Styles.outlineLabel)){{allowMobile = true;}});
+                                        effect.localizedName + " [lightgray]" + UI.formatTime(st.getDuration(effect))).style(Styles.outlineLabel)));
                                 }
                             }
                             statuses.set(applied);
@@ -894,7 +876,7 @@ public class HudUi {
                 });
                 t.row();
                 t.table(tt -> {
-                    tt.defaults().height(Scl.scl(modUiScale) * 4f * 8f).pad(0,4,0,4).top();
+                    tt.defaults().width(Scl.scl(modUiScale) * 30f * 8f).height(Scl.scl(modUiScale) * 4f * 8f).pad(0,4,0,4).top();
                     for(Element bar : bars){
                         bar.setScale(Scl.scl(modUiScale));
                         tt.add(bar).growX().left();

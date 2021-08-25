@@ -75,7 +75,7 @@ public class SettingS {
                     t.add(new Label(title + ": ")).left().padRight(5)
                             .update(a -> a.setColor(condition.get() ? Color.white : Color.gray));
 
-                    t.field(value[0] + str[0], s -> {
+                    t.field((integer ? String.valueOf(value[0]).split("[.]")[0] : value[0]) + str[0], s -> {
                                 value[0] = Strings.parseFloat(s);
                                 str[0] = h.get(s);
 

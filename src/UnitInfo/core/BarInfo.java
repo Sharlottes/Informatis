@@ -92,6 +92,19 @@ public class BarInfo {
             colors.set(1, Pal.shield);
             numbers.set(1, (max-force.buildup)/max);
         }
+        else if(target instanceof MendProjector.MendBuild mend){
+            strings.set(1, bundle.format("shar-stat.progress", floatFormat((float) mend.sense(LAccess.progress) * 100f)));
+            colors.set(1, Pal.heal);
+            numbers.set(1, (float) mend.sense(LAccess.progress));
+        }
+        else if(target instanceof OverdriveProjector.OverdriveBuild over){
+            Field ohno = OverdriveProjector.OverdriveBuild.class.getDeclaredField("charge");
+            ohno.setAccessible(true);
+            float charge = (float) ohno.get(over);
+            strings.set(1, bundle.format("shar-stat.progress", floatFormat(Mathf.clamp(charge/((OverdriveProjector)over.block).reload) * 100f)));
+            colors.set(1, Color.valueOf("feb380"));
+            numbers.set(1, Mathf.clamp(charge/((OverdriveProjector)over.block).reload));
+        }
         else if(target instanceof ConstructBlock.ConstructBuild build){
             strings.set(1, bundle.format("shar-stat.progress", floatFormat(build.progress * 100)));
             colors.set(1, Pal.darkerMetal);
@@ -106,19 +119,6 @@ public class BarInfo {
             strings.set(1, bundle.format("shar-stat.progress", floatFormat(reconstruct.fraction() * 100)));
             colors.set(1, Pal.darkerMetal);
             numbers.set(1, reconstruct.fraction());
-        }
-        else if(target instanceof MendProjector.MendBuild mend){
-            strings.set(1, bundle.format("shar-stat.progress", floatFormat((float) mend.sense(LAccess.progress) * 100f)));
-            colors.set(1, Pal.heal);
-            numbers.set(1, (float) mend.sense(LAccess.progress));
-        }
-        else if(target instanceof OverdriveProjector.OverdriveBuild over){
-            Field ohno = OverdriveProjector.OverdriveBuild.class.getDeclaredField("charge");
-            ohno.setAccessible(true);
-            float charge = (float) ohno.get(over);
-            strings.set(1, bundle.format("shar-stat.progress", floatFormat(Mathf.clamp(charge/((OverdriveProjector)over.block).reload) * 100f)));
-            colors.set(1, Color.valueOf("feb380"));
-            numbers.set(1, Mathf.clamp(charge/((OverdriveProjector)over.block).reload));
         }
         else if(target instanceof Drill.DrillBuild drill){
             strings.set(1, bundle.format("shar-stat.progress", floatFormat((float) drill.sense(LAccess.progress) * 100f)));
@@ -135,12 +135,12 @@ public class BarInfo {
             numbers.set(1, (float) crafter.sense(LAccess.progress));
         }
         else if(target instanceof PowerNode.PowerNodeBuild node){
-            strings.set(1, bundle.format("bar.powerstored", floatFormat(node.power.graph.getLastPowerStored()), floatFormat(node.power.graph.getLastCapacity())));
+            strings.set(1, bundle.format("bar.power", floatFormat(node.power.graph.getLastPowerStored()), floatFormat(node.power.graph.getLastCapacity())));
             colors.set(1, Pal.powerBar);
             numbers.set(1, node.power.graph.getLastPowerStored() / node.power.graph.getLastCapacity());
         }
         else if(target instanceof PowerGenerator.GeneratorBuild generator){
-            strings.set(1, bundle.format("bar.poweroutput", floatFormat(generator.getPowerProduction() * generator.timeScale() * 60f)));
+            strings.set(1, bundle.format("bar.power", floatFormat(generator.getPowerProduction() * generator.timeScale() * 60f)));
             colors.set(1, Pal.powerBar);
             numbers.set(1, generator.productionEfficiency);
         }

@@ -78,7 +78,6 @@ public class CoresItemsDisplay {
             t.clear();
 
             t.update(() -> {
-                if(!Core.settings.getBool("infoui")) return;
                 core = team.core();
                 heat += Time.delta;
 
@@ -109,7 +108,6 @@ public class CoresItemsDisplay {
                                     HandCursorListener listener1 = new HandCursorListener();
                                     image.addListener(listener1);
                                     image.update(() -> {
-                                        if(!Core.settings.getBool("infoui")) return;
                                         image.color.lerp(!listener1.isOver() ? Color.lightGray : Color.white, Mathf.clamp(0.4f * Time.delta));
                                     });
                                 }
@@ -136,7 +134,6 @@ public class CoresItemsDisplay {
             });
             t.row();
             t.table().update(itemTable -> {
-                if(!Core.settings.getBool("infoui")) return;
                 itemTable.clear();
                 final int[] i = {0};
                 for(Item item : content.items()){
@@ -165,7 +162,6 @@ public class CoresItemsDisplay {
             });
             t.row();
             t.table().update(unitTable -> {
-                if(!Core.settings.getBool("infoui")) return;
                 unitTable.clear();
                 final int[] i = {0};
                 for(UnitType unit : content.units()){
