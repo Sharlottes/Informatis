@@ -47,7 +47,7 @@ public class CoresItemsDisplay {
         updateItems.clear();
         prevItems.clear();
         coreAmount.clear();
-        teams = new Seq<Team>(Team.all).filter(t -> !t.cores().isEmpty()).toArray();
+        teams = new Seq<Team>(Team.all).addAll(Team.baseTeams).filter(t -> t.cores().any()).toArray();
         for(Team team : teams) {
             usedItems.put(team, new ObjectSet<>());
             usedUnits.put(team, new ObjectSet<>());
