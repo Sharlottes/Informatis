@@ -429,7 +429,7 @@ public class HudUi {
             });
         });
         Table pathlineTable = new Table(t -> {
-            t.left();
+            t.right();
 
             Button pathBtn = new ImageButton(new ScaledNinePatchDrawable(new NinePatch(Icon.grid.getRegion()), 0.5f), Styles.clearToggleTransi);
             Button unitBtn = new ImageButton(new ScaledNinePatchDrawable(new NinePatch(Icon.grid.getRegion()), 0.5f), Styles.clearToggleTransi);
@@ -453,11 +453,9 @@ public class HudUi {
                 logicBtn.setChecked(logicLine);
             });
 
-            t.add(pathBtn).padLeft(16).size(24);
-            t.row();
-            t.add(unitBtn).padLeft(16).size(24);
-            t.row();
-            t.add(logicBtn).padLeft(16).size(24);
+            t.add(pathBtn).padLeft(4 * 8f).size(3 * 8f).row();
+            t.add(unitBtn).padLeft(4 * 8f).size(3 * 8f).row();
+            t.add(logicBtn).padLeft(4 * 8f).size(3 * 8f).row();
         });
 
         Table waveTable = (Table)((Group)((Group)ui.hudGroup.getChildren().get(5)) //HudFragment#118, name: overlaymarker

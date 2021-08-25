@@ -71,12 +71,16 @@ public class SettingS {
             public void add(Table table) {
                 final String[] str = {""};
                 Table table1 = new Table(t -> {
+                    final float[] value = new float[1];
                     t.add(new Label(title + ": ")).left().padRight(5)
                             .update(a -> a.setColor(condition.get() ? Color.white : Color.gray));
 
-                    t.field((integer ? settings.getInt(key) : settings.getFloat(key)) + str[0], s -> {
-                                settings.put(key, integer ? Strings.parseInt(s) : Strings.parseFloat(s));
+                    t.field(value[0] + str[0], s -> {
+                                value[0] = Strings.parseFloat(s);
                                 str[0] = h.get(s);
+
+                                if(integer) settings.put(key, Strings.parseInt(s.split("[.]")[0]));
+                                else settings.put(key, Strings.parseFloat(s));
                             }).update(a -> a.setDisabled(!condition.get()))
                             .valid(f -> Strings.canParsePositiveFloat(f) && Strings.parseFloat(f) >= min && Strings.parseFloat(f) <= max).width(120f).left();
                 });

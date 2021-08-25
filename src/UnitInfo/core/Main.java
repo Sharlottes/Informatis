@@ -65,8 +65,6 @@ public class Main extends Mod {
             hud.addTable();
             hud.addWaveInfoTable();
             hud.setEvent();
-            playerinfo.createFile();
-            playerinfo.setEvent();
         });
 
         Events.on(WorldLoadEvent.class, e -> {
