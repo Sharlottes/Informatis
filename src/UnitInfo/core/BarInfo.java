@@ -1,13 +1,10 @@
 package UnitInfo.core;
 
-import UnitInfo.*;
-import arc.*;
 import arc.graphics.*;
 import arc.math.*;
 import arc.struct.*;
 import arc.util.*;
 import mindustry.ai.types.*;
-import mindustry.core.*;
 import mindustry.ctype.*;
 import mindustry.entities.*;
 import mindustry.entities.abilities.*;
@@ -18,11 +15,9 @@ import mindustry.ui.*;
 import mindustry.world.blocks.*;
 import mindustry.world.blocks.defense.*;
 import mindustry.world.blocks.defense.turrets.*;
-import mindustry.world.blocks.distribution.MassDriver;
+import mindustry.world.blocks.distribution.*;
 import mindustry.world.blocks.environment.*;
-import mindustry.world.blocks.power.PowerGenerator;
-import mindustry.world.blocks.power.PowerNode;
-import mindustry.world.blocks.power.ThermalGenerator;
+import mindustry.world.blocks.power.*;
 import mindustry.world.blocks.production.*;
 import mindustry.world.blocks.storage.*;
 import mindustry.world.blocks.units.*;
@@ -244,7 +239,7 @@ public class BarInfo {
         }
         else if(target instanceof Building build){
             if(target instanceof PowerNode.PowerNodeBuild node){
-                strings.set(4, bundle.format("shar-stat.powerOut", floatFormat(node.power.graph.getLastScaledPowerOut() * 60f)));
+                strings.set(4, bundle.format("shar-stat.powerOut", "-" + floatFormat(node.power.graph.getLastScaledPowerOut() * 60f)));
                 colors.set(4, Pal.powerBar);
                 numbers.set(4, node.power.graph.getLastScaledPowerOut() / node.power.graph.getLastScaledPowerIn());
             }

@@ -20,7 +20,6 @@ public class SVars {
     public static HudUi hud = new HudUi();
     public static float modUiScale = settings.getInt("infoUiScale") / 100f == 0 ? 1 : settings.getInt("infoUiScale") / 100f;
     public static boolean pathLine = false, unitLine = false, logicLine = false;
-    public static Seq<Tile> pathTiles = new Seq<>();
     public static TextureRegion clear = atlas.find("clear");
     public static TextureRegion error = atlas.find("error");
 }
