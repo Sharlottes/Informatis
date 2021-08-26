@@ -60,7 +60,8 @@ public class Main extends Mod {
             hud.addUnitTable();
             hud.addTable();
             hud.addWaveInfoTable();
-            hud.setEvent();
+            hud.setEvents();
+            OverDrawer.setEvent();
         });
 
         Events.on(WorldLoadEvent.class, e -> {
