@@ -29,7 +29,7 @@ public class CoresItemsDisplay {
     private final ObjectMap<Team, ObjectSet<UnitType>> usedUnits = new ObjectMap<>();
     private final ObjectMap<Team, Seq<ItemStack>> prevItems = new ObjectMap<>();
     private final ObjectMap<Team, Seq<ItemStack>> updateItems = new ObjectMap<>();
-    private final ObjectIntMap<Team> coreAmount = new ObjectIntMap<>();
+    public final ObjectIntMap<Team> coreAmount = new ObjectIntMap<>();
     private CoreBlock.CoreBuild core;
     public Team[] teams;
     public Seq<Table> tables = new Seq<>();
@@ -75,8 +75,6 @@ public class CoresItemsDisplay {
 
     public Table setTable(Team team){
         return new Table(t -> {
-            t.clear();
-
             t.update(() -> {
                 core = team.core();
                 heat += Time.delta;
@@ -91,11 +89,9 @@ public class CoresItemsDisplay {
                 }
             });
 
-
             Label label1 = new Label(() -> "[#" + team.color.toString() + "]" + team.name + "[]");
             label1.setFontScale(modUiScale);
             t.add(label1).row();
-            t.row();
             t.table(coretable -> {
                 final int[] i = {0};
                 for(CoreBlock.CoreBuild core : team.cores()) {

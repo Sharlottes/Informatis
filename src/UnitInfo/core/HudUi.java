@@ -132,7 +132,9 @@ public class HudUi {
             }
         });
 
-        Events.on(EventType.BlockDestroyEvent.class, e -> coreItems.resetUsed());
+        Events.on(EventType.BlockDestroyEvent.class, e -> {
+            if(e.tile.block() instanceof CoreBlock)coreItems.resetUsed();
+        });
         Events.on(EventType.CoreChangeEvent.class, e -> coreItems.resetUsed());
         Events.on(EventType.ResetEvent.class, e -> coreItems.resetUsed());
     }
@@ -877,27 +879,23 @@ public class HudUi {
 
     public void addItemTable(){
         if(uiIndex != 2) return;
-        ScrollPane itemPane = new ScrollPane(new Table(this::setItem).left(), new ScrollPane.ScrollPaneStyle(){{
-            vScroll = Tex.clear;
-            vScrollKnob = new ScaledNinePatchDrawable(new NinePatch(((TextureRegionDrawable) scrollKnobVerticalThin).getRegion()), modUiScale);
-        }});
-        itemPane.setScrollingDisabled(true, false);
-        itemPane.setScrollYForce(itemScrollPos);
-        itemPane.setOverscroll(false, false);
-        itemPane.update(() -> {
-            if(itemPane.hasScroll()){
-                Element result = scene.hit(input.mouseX(), input.mouseY(), true);
-                if(result == null || !result.isDescendantOf(itemPane)){
-                    scene.setScrollFocus(null);
-                }
-            }
-            itemScrollPos = itemPane.getScrollY();
-        });
-
         itemTable = new Table(table -> {
             table.left().defaults().minWidth(Scl.scl(modUiScale) * 54 * 8f).height(Scl.scl(modUiScale) * 32 * 8f).align(Align.left);
             table.table(Tex.button, t -> {
-                t.add(itemPane);
+                ScrollPane pane = t.pane(new ScrollPane.ScrollPaneStyle(){{
+                    vScroll = Tex.clear;
+                    vScrollKnob = new ScaledNinePatchDrawable(new NinePatch(((TextureRegionDrawable) scrollKnobVerticalThin).getRegion()), modUiScale);
+                }}, new Table(this::setItem).left()).get();
+                pane.update(() -> {
+                    Element result = scene.hit(input.mouseX(), input.mouseY(), true);
+                    if(pane.hasScroll() && (result == null || !result.isDescendantOf(pane)))
+                        scene.setScrollFocus(null);
+                    itemScrollPos = pane.getScrollY();
+                });
+                pane.setOverscroll(false, false);
+                pane.setScrollingDisabled(true, false);
+                pane.setScrollYForce(itemScrollPos);
+
                 t.update(() -> {
                     NinePatchDrawable patch = (NinePatchDrawable)Tex.button;
                     t.setBackground(patch.tint(Tmp.c1.set(patch.getPatch().getColor()).a(settings.getInt("uiopacity") / 100f)));
