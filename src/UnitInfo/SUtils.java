@@ -19,8 +19,12 @@ public class SUtils {
 
     public static String floatFormat(float number){
         if(number >= 1000) return UI.formatAmount((long)number);
-        if(String.valueOf(number).length() > 2 && String.valueOf(number).split("[.]")[1].matches("0")) return String.valueOf(number).split("[.]")[0];
-        return Strings.fixed(number, 2);
+        return Strings.fixed(number, 1);
+    }
+
+    public static String floatFormat(int number){
+        if(number >= 1000) return UI.formatAmount(number);
+        return String.valueOf(number);
     }
 
     public static Object invoke(Object ut, String fieldName) throws IllegalAccessException, NoSuchFieldException {

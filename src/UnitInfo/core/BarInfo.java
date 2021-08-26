@@ -135,24 +135,24 @@ public class BarInfo {
             numbers.set(1, (float) crafter.sense(LAccess.progress));
         }
         else if(target instanceof PowerNode.PowerNodeBuild node){
-            strings.set(1, bundle.format("bar.power", floatFormat(node.power.graph.getLastPowerStored()), floatFormat(node.power.graph.getLastCapacity())));
+            strings.set(1, bundle.format("shar-stat.power", floatFormat(node.power.graph.getLastPowerStored()), floatFormat(node.power.graph.getLastCapacity())));
             colors.set(1, Pal.powerBar);
             numbers.set(1, node.power.graph.getLastPowerStored() / node.power.graph.getLastCapacity());
         }
         else if(target instanceof PowerGenerator.GeneratorBuild generator){
-            strings.set(1, bundle.format("bar.power", floatFormat(generator.getPowerProduction() * generator.timeScale() * 60f)));
+            strings.set(1, bundle.format("shar-stat.power", floatFormat(generator.getPowerProduction() * generator.timeScale() * 60f)));
             colors.set(1, Pal.powerBar);
             numbers.set(1, generator.productionEfficiency);
         }
 
         if(target instanceof ItemTurret.ItemTurretBuild turret) {
             ItemTurret block = (ItemTurret)turret.block;
-            strings.set(2, bundle.format("shar-stat.itemAmmo", floatFormat(turret.totalAmmo), floatFormat(block.maxAmmo)));
+            strings.set(2, bundle.format("shar-stat.capacity", turret.hasAmmo() ? block.ammoTypes.findKey(turret.peekAmmo(), true).localizedName : bundle.get("stat.ammo"), floatFormat(turret.totalAmmo), floatFormat(block.maxAmmo)));
             colors.set(2, turret.hasAmmo() ? block.ammoTypes.findKey(turret.peekAmmo(), true).color : Pal.ammo);
             numbers.set(2, turret.totalAmmo / (float)block.maxAmmo);
         }
         else if(target instanceof LiquidTurret.LiquidTurretBuild turret){
-            strings.set(2, bundle.format("shar-stat.liquidAmmo", floatFormat(turret.liquids.get(turret.liquids.current())), floatFormat(turret.block.liquidCapacity)));
+            strings.set(2, bundle.format("shar-stat.capacity", turret.liquids.currentAmount() < 0.01f ? turret.liquids.current().localizedName : bundle.get("stat.ammo"), floatFormat(turret.liquids.get(turret.liquids.current())), floatFormat(turret.block.liquidCapacity)));
             colors.set(2, turret.liquids.current().color);
             numbers.set(2, turret.liquids.get(turret.liquids.current()) / turret.block.liquidCapacity);
         }
@@ -165,21 +165,21 @@ public class BarInfo {
         }
         else if(target instanceof Building b && b.block.hasItems) {
             if(target instanceof CoreBlock.CoreBuild cb){
-                strings.set(2, bundle.format("shar-stat.itemCapacity", floatFormat(b.items.total()), floatFormat(cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow))));
+                strings.set(2, bundle.format("shar-stat.capacity", bundle.get("category.items"), floatFormat(b.items.total()), floatFormat(cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow))));
                 numbers.set(2, cb.items.total() / (cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow) * 1f));
             }
             else if(target instanceof StorageBlock.StorageBuild sb && !sb.canPickup() && sb.linkedCore instanceof CoreBlock.CoreBuild cb){
-                strings.set(2, bundle.format("shar-stat.itemCapacity", floatFormat(sb.items.total()), floatFormat(cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow))));
+                strings.set(2, bundle.format("shar-stat.capacity", bundle.get("category.items"), floatFormat(sb.items.total()), floatFormat(cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow))));
                 numbers.set(2, sb.items.total() / (cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow) * 1f));
             }
             else {
-                strings.set(2, bundle.format("shar-stat.itemCapacity", floatFormat(b.items.total()), floatFormat(b.block.itemCapacity)));
+                strings.set(2, bundle.format("shar-stat.capacity", bundle.get("category.items"), floatFormat(b.items.total()), floatFormat(b.block.itemCapacity)));
                 numbers.set(2, b.items.total() / (float) b.block.itemCapacity);
             }
             colors.set(2, Pal.items);
         }
         else if(target instanceof Unit unit && unit.type != null) {
-            strings.set(2, bundle.format("shar-stat.itemCapacity", floatFormat(unit.stack.amount), floatFormat(unit.type.itemCapacity)));
+            strings.set(2, bundle.format("shar-stat.capacity", unit.stack.item.localizedName, floatFormat(unit.stack.amount), floatFormat(unit.type.itemCapacity)));
             if(unit.stack.amount > 0 && unit.stack().item != null) colors.set(2, unit.stack.item.color.cpy().lerp(Color.white, 0.15f));
             numbers.set(2, unit.stack.amount / (unit.type.itemCapacity * 1f));
         }
@@ -261,7 +261,7 @@ public class BarInfo {
                 numbers.set(4, node.power.graph.getLastScaledPowerOut() / node.power.graph.getLastScaledPowerIn());
             }
             else if(build.block.hasLiquids) {
-                strings.set(4, bundle.format("shar-stat.liquidCapacity", floatFormat(build.liquids.currentAmount()), floatFormat(build.block.liquidCapacity)));
+                strings.set(4, bundle.format("shar-stat.capacity", build.liquids.currentAmount() < 0.01f ? build.liquids.current().localizedName : bundle.get("bar.liquid"), floatFormat(build.liquids.currentAmount()), floatFormat(build.block.liquidCapacity)));
                 colors.set(4, build.liquids.current().color);
                 numbers.set(4, build.liquids.currentAmount() / build.block.liquidCapacity);
             }

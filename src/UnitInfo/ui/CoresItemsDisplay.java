@@ -47,7 +47,7 @@ public class CoresItemsDisplay {
         updateItems.clear();
         prevItems.clear();
         coreAmount.clear();
-        teams = new Seq<Team>(Team.all).addAll(Team.baseTeams).filter(t -> t.cores().any()).toArray();
+        teams = Team.baseTeams;
         for(Team team : teams) {
             usedItems.put(team, new ObjectSet<>());
             usedUnits.put(team, new ObjectSet<>());
@@ -148,7 +148,7 @@ public class CoresItemsDisplay {
                             new Table(ttt -> {
                                 ttt.bottom().right();
                                 Label label = new Label(() -> {
-                                    int amount = updateItems.get(team).get(item.id).amount / (settings.getInt("coreItemCheckRate") / 60);
+                                    int amount = (int)(updateItems.get(team).get(item.id).amount / ((settings.getInt("coreItemCheckRate") * 1f) / 60f));
                                     return (amount > 0 ? "[green]+" : amount == 0 ? "[orange]" : "[red]") + amount + "/s[]";
                                 });
                                 label.setFontScale(0.65f * modUiScale);

@@ -448,19 +448,19 @@ public class HudUi {
             Button unitBtn = new ImageButton(new ScaledNinePatchDrawable(new NinePatch(Icon.grid.getRegion()), 0.5f), Styles.clearToggleTransi);
             Button logicBtn = new ImageButton(new ScaledNinePatchDrawable(new NinePatch(Icon.grid.getRegion()), 0.5f), Styles.clearToggleTransi);
 
-            pathBtn.addListener(new Tooltip(l -> l.label(() -> "PathLine " + (pathLine ? "[accent]Enabled[]" : "[gray]Disabled[]"))){{allowMobile = true;}});
+            pathBtn.addListener(new Tooltip(l -> l.label(() -> "PathLine " + (pathLine ? "[accent]Enabled[]" : "[gray]Disabled[]"))));
             pathBtn.clicked(() -> {
                 pathLine = !pathLine;
                 pathBtn.setChecked(pathLine);
             });
 
-            unitBtn.addListener(new Tooltip(l -> l.label(() -> "UnitLine " + (unitLine ? "[accent]Enabled[]" : "[gray]Disabled[]"))){{allowMobile = true;}});
+            unitBtn.addListener(new Tooltip(l -> l.label(() -> "UnitLine " + (unitLine ? "[accent]Enabled[]" : "[gray]Disabled[]"))));
             unitBtn.clicked(() -> {
                 unitLine = !unitLine;
                 unitBtn.setChecked(unitLine);
             });
 
-            logicBtn.addListener(new Tooltip(l -> l.label(() -> "LogicLine " + (logicLine ? "[accent]Enabled[]" : "[gray]Disabled[]"))){{allowMobile = true;}});
+            logicBtn.addListener(new Tooltip(l -> l.label(() -> "LogicLine " + (logicLine ? "[accent]Enabled[]" : "[gray]Disabled[]"))));
             logicBtn.clicked(() -> {
                 logicLine = !logicLine;
                 logicBtn.setChecked(logicLine);
@@ -1024,7 +1024,7 @@ public class HudUi {
                                 }).size(iconMed * Scl.scl(modUiScale));
                                 to.row();
                             }
-                        })){{allowMobile = true;}});
+                        })));
                     });
                     if(++row % 4 == 0) tx.row();
                 }
