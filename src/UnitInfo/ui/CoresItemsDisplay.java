@@ -91,6 +91,11 @@ public class CoresItemsDisplay {
                 }
             });
 
+
+            Label label1 = new Label(() -> "[#" + team.color.toString() + "]" + team.name + "[]");
+            label1.setFontScale(modUiScale);
+            t.add(label1).row();
+            t.row();
             t.table(coretable -> {
                 final int[] i = {0};
                 for(CoreBlock.CoreBuild core : team.cores()) {
@@ -165,16 +170,16 @@ public class CoresItemsDisplay {
                 unitTable.clear();
                 final int[] i = {0};
                 for(UnitType unit : content.units()){
-                    unitTable.table(tt -> {
-                        tt.center();
-                        if(unit != UnitTypes.block && Groups.unit.contains(u -> u.type == unit && u.team == team)){
+                    if(unit != UnitTypes.block && Groups.unit.contains(u -> u.type == unit && u.team == team)){
+                        unitTable.table(tt -> {
+                            tt.center();
                             tt.image(unit.uiIcon).size(iconSmall * modUiScale).padRight(3 * modUiScale).tooltip(ttt -> ttt.background(Styles.black6).margin(2f * modUiScale).add(unit.localizedName).style(Styles.outlineLabel));
                             Label label = new Label(() -> core == null ? "0" : UI.formatAmount(Groups.unit.count(u -> u.team == team && u.type == unit)));
                             label.setFontScale(modUiScale);
                             tt.add(label).padRight(3 * modUiScale).minWidth(5 * 8f * modUiScale).left();
-                            if(++i[0] % 5 == 0) unitTable.row();
-                        }
-                    });
+                        });
+                        if(++i[0] % 5 == 0) unitTable.row();
+                    }
                 }
             });
         });

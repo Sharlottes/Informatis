@@ -38,18 +38,6 @@ public class BarInfo {
     static Seq<String> strings = Seq.with("","","","","","");
     static FloatSeq numbers = FloatSeq.with(0f,0f,0f,0f,0f,0f);
     static Seq<Color> colors = Seq.with(Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear);
-    static Field linkedCore; // Versions below 130 don't have this public
-
-    static {
-        if(Version.build <= 129) {
-            try {
-                linkedCore = StorageBlock.StorageBuild.class.getDeclaredField("linkedCore");
-            } catch (NoSuchFieldException e) {
-                e.printStackTrace();
-            }
-            linkedCore.setAccessible(true);
-        }
-    }
 
     public static <T extends Teamc> void getInfo(T target) throws IllegalAccessException, NoSuchFieldException {
         for(int i = 0; i < 6; i++) { //init

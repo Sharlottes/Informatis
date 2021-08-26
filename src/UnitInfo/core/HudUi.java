@@ -1072,16 +1072,17 @@ public class HudUi {
     }
 
     public void setItem(Table table){
+        table.left().defaults().minWidth(Scl.scl(modUiScale) * 54 * 8f).align(Align.center);
         table.table().update(t -> {
             t.clear();
             for(int i = 0; i < coreItems.tables.size; i++){
                 if((state.rules.pvp && coreItems.teams[i] != player.team()) || coreItems.teams[i].cores().isEmpty()) continue;
                 int finalI = i;
-                Label label = new Label(() -> "[#" + coreItems.teams[finalI].color.toString() + "]" + coreItems.teams[finalI].name + "[]");
-                label.setFontScale(modUiScale);
-                t.background(Tex.underline2).add(label).center();
-                t.row();
-                t.add(coreItems.tables.get(i)).left();
+                t.table(tt -> {
+                    tt.center().defaults().minWidth(Scl.scl(modUiScale) * 54 * 8f);
+                    coreItems.tables.get(finalI).setBackground(((NinePatchDrawable)Tex.underline2).tint(coreItems.teams[finalI].color));
+                    tt.add(coreItems.tables.get(finalI)).left();
+                }).pad(4);
                 t.row();
             }
         });
@@ -1107,7 +1108,7 @@ public class HudUi {
         });
 
         itemTable = new Table(table -> {
-            table.left().defaults().width(Scl.scl(modUiScale) * 54 * 8f).height(Scl.scl(modUiScale) * 32 * 8f).align(Align.left);
+            table.left().defaults().minWidth(Scl.scl(modUiScale) * 54 * 8f).height(Scl.scl(modUiScale) * 32 * 8f).align(Align.left);
             table.table(Tex.button, t -> {
                 t.add(itemPane);
                 t.update(() -> {
