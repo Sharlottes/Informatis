@@ -236,8 +236,7 @@ public class HudUi {
         Table statusTable = (Table)waveTable.getChildren().get(1); // TODO: Use scene.find("statustable") when https://github.com/Anuken/Mindustry/pull/5904 is merged
         waveTable.removeChild(statusTable);
         table.row();
-
-        table.stack(waveInfoTable, statusTable.top(), pathlineTable);
+        table.stack(waveInfoTable, statusTable.top(), pathlineTable).fillX().colspan(table.getColumns());
     }
 
     public void reset(int index, Seq<Button> buttons, Label label, Table table, Table labelTable, String hud){
