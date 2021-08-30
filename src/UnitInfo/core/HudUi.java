@@ -231,11 +231,9 @@ public class HudUi {
             t.add(logicBtn).padLeft(4 * 8f).size(3 * 8f).row();
         });
 
-        Table waveTable = (Table)((Group)((Group)ui.hudGroup.getChildren().get(5)) //HudFragment#118, name: overlaymarker
-                .getChildren().get(mobile ? 2 : 0)) //HudFragment#192, name: wave/editor
-                .getChildren().get(0); //HudFragment#196, name: waves
-        Table table = (Table)waveTable.getChildren().get(0); //HudFragment#198, name: x
-        Table statusTable = (Table) waveTable.getChildren().get(1);
+        Table waveTable = (Table) scene.find("waves");
+        Table table = (Table)waveTable.getChildren().first(); //HudFragment#198, name: x
+        Table statusTable = (Table)waveTable.getChildren().get(1); // TODO: Use scene.find("statustable") when https://github.com/Anuken/Mindustry/pull/5904 is merged
         waveTable.removeChild(statusTable);
         table.row();
 
