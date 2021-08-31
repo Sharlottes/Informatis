@@ -28,7 +28,7 @@ public class Main extends Mod {
             hud.addWaveInfoTable();
             hud.setEvents();
             OverDrawer.setEvent();
-            if(debug) ContentJSON.createFile();
+            if(debug) ContentJSON.save();
         });
 
         Events.on(WorldLoadEvent.class, e -> {
