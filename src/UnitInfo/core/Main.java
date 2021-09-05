@@ -21,14 +21,14 @@ public class Main extends Mod {
 
         Events.on(ClientLoadEvent.class, e -> {
             hud = new HudUi();
-            settingAdder.init();
+            new SettingS().init();
             hud.addWaveTable();
             hud.addUnitTable();
             hud.addTable();
             hud.addWaveInfoTable();
             hud.setEvents();
             OverDrawer.setEvent();
-            if(debug) ContentJSON.save();
+            if(jsonGen) ContentJSON.save();
         });
 
         Events.on(WorldLoadEvent.class, e -> {

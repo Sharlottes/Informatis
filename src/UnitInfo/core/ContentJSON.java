@@ -1,6 +1,7 @@
 package UnitInfo.core;
 
 import arc.Core;
+import arc.files.Fi;
 import arc.struct.Seq;
 import arc.util.Log;
 import mindustry.*;
@@ -10,7 +11,8 @@ import org.hjson.*;
 
 import java.lang.reflect.Field;
 
-import static UnitInfo.SVars.modRoot;
+import static mindustry.Vars.modDirectory;
+
 public class ContentJSON {
     public static void save() {
         for(Seq<Content> content : Vars.content.getContentMap()) {
@@ -39,7 +41,7 @@ public class ContentJSON {
                 data.add(name, obj);
             });
             try {
-                modRoot.child(content.peek().getContentType().toString() + ".json").writeString(data.toString(Stringify.FORMATTED));
+                modDirectory.child("UnitInfo").child(content.peek().getContentType().toString() + ".json").writeString(data.toString(Stringify.FORMATTED));
             } catch (Throwable t){
 
             }

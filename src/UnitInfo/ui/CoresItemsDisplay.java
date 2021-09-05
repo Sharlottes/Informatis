@@ -130,7 +130,7 @@ public class CoresItemsDisplay {
                         label.setFontScale(Scl.scl(modUiScale) * 0.75f);
                         tt.add(label);
                     }).padTop(Scl.scl(modUiScale) * 2).padLeft(Scl.scl(modUiScale) * 4).padRight(Scl.scl(modUiScale) * 4);
-                    if(++i[0] % 5 == 0) coretable.row();
+                    if(++i[0] % 4 == 0) coretable.row();
                 }
             });
             t.row();

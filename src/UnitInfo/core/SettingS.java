@@ -71,7 +71,7 @@ public class SettingS {
             public void add(Table table) {
                 final String[] str = {""};
                 Table table1 = new Table(t -> {
-                    final float[] value = new float[1];
+                    final float[] value = {def};
                     t.add(new Label(title + ": ")).left().padRight(5)
                             .update(a -> a.setColor(condition.get() ? Color.white : Color.gray));
 
@@ -95,7 +95,7 @@ public class SettingS {
         BaseDialog dialog = new BaseDialog("UnitInfo Setting");
         dialog.addCloseButton();
         sharset = new SettingsMenuDialog.SettingsTable();
-        dialog.cont.center().add(sharset);
+        dialog.cont.center().add(new Table(t -> t.pane(sharset).grow().row()));
         ui.settings.shown(() -> {
             Table settingUi = (Table)((Group)((Group)(ui.settings.getChildren().get(1))).getChildren().get(0)).getChildren().get(0); //This looks so stupid lol - lmfao
             settingUi.row();
@@ -108,7 +108,7 @@ public class SettingS {
         addGraphicSlideSetting("barstyle", 0, 0, 5, 1, s -> s == 0 ? "default bar" : s + "th bar", tapSeq);
         addGraphicSlideSetting("infoUiScale", 75, 50, 100, 5, s -> s + "%", tapSeq);
         addGraphicSlideSetting("coreItemCheckRate", 60, 6, 180, 6, s -> Strings.fixed(s/60f,1) + "sec", tapSeq);
-        addGraphicTypeSetting("wavemax", 0, 100,200, true, () -> true, s -> s + "waves", tapSeq);
+        addGraphicTypeSetting("wavemax", 0, 200,100, true, () -> true, s -> s + "waves", tapSeq);
         addGraphicCheckSetting("infoui", true, tapSeq);
         addGraphicCheckSetting("pastwave", false, tapSeq);
         addGraphicCheckSetting("emptywave", true, tapSeq);
@@ -145,7 +145,7 @@ public class SettingS {
         settingSeq.add(drawSeq, etcSeq);
 
         sharset.table(t -> {
-            Seq<Button> buttons = new Seq<>();
+            Seq<TextButton> buttons = new Seq<>();
             buttons.add(new TextButton(bundle.get("setting.shar-wave"), Styles.clearToggleMenut));
             buttons.add(new TextButton(bundle.get("setting.shar-range"), Styles.clearToggleMenut));
             buttons.add(new TextButton(bundle.get("setting.shar-opacity"), Styles.clearToggleMenut));
@@ -155,7 +155,8 @@ public class SettingS {
             t.table(Styles.black8, bt -> {
                 bt.top().align(Align.top);
                 buttons.each(b -> {
-                    bt.add(b).minHeight(60f).minWidth(150f).top();
+                    b.getLabel().setFontScale(0.85f);
+                    bt.add(b).minHeight(60f * 0.85f).minWidth(150f * 0.85f).top();
                 });
             }).grow().row();
 
@@ -174,6 +175,7 @@ public class SettingS {
                 }));
             }
             t.add(stack);
+            t.fillParent = true;
         });
     }
 }

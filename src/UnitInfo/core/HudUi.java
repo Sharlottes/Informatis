@@ -233,7 +233,7 @@ public class HudUi {
 
         Table waveTable = (Table) scene.find("waves");
         Table table = (Table)waveTable.getChildren().first(); //HudFragment#198, name: x
-        Table statusTable = (Table)waveTable.getChildren().get(1); // TODO: Use scene.find("statustable") when https://github.com/Anuken/Mindustry/pull/5904 is merged
+        Table statusTable = Version.number >= 131 ? (Table)scene.find("statustable") : (Table)waveTable.getChildren().get(1);
         waveTable.removeChild(statusTable);
         table.row();
         table.stack(waveInfoTable, statusTable.top(), pathlineTable).fillX().colspan(table.getColumns());
@@ -703,6 +703,7 @@ public class HudUi {
 
                     int row = 0;
                     for(SpawnGroup group : groupsTmp.keys()){
+                        int spawners = state.rules.waveTeam.cores().size + (group.type.flying ? spawner.countFlyerSpawns() : spawner.countGroundSpawns());
                         int amount = groupsTmp.get(group);
                         tx.table(tt -> {
                             Image image = new Image(group.type.uiIcon).setScaling(Scaling.fit);
@@ -716,8 +717,11 @@ public class HudUi {
                                 new Table(ttt -> {
                                     ttt.bottom().left();
                                     Label label = new Label(() -> amount + "");
-                                    label.setFontScale(Scl.scl(modUiScale) * 0.85f);
+                                    label.setFontScale(Scl.scl(modUiScale) * 0.9f);
+                                    Label multi = new Label(() -> "[gray]x" + spawners);
+                                    multi.setFontScale(Scl.scl(modUiScale) * 0.8f);
                                     ttt.add(label);
+                                    ttt.add(multi).padTop(8f);
                                     ttt.pack();
                                 }),
 
@@ -752,7 +756,7 @@ public class HudUi {
                             tt.addListener(new Tooltip(t -> t.background(Tex.button).table(to -> {
                                 to.left();
                                 to.table(Tex.underline2, tot -> tot.add("[stat]" + group.type.localizedName + "[]")).row();
-                                to.add(bundle.format("shar-stat-waveAmount", amount)).row();
+                                to.add(bundle.format("shar-stat-waveAmount", amount + " [lightgray]x" + spawners + "[]")).row();
                                 to.add(bundle.format("shar-stat-waveShield", group.getShield(j))).row();
                                 if(group.effect != null) {
                                     if(group.effect == StatusEffects.none) return;
@@ -810,7 +814,7 @@ public class HudUi {
     public void addWaveTable(){
         if(uiIndex != 1) return;
         waveTable = new Table(table -> {
-            table.defaults().width(Scl.scl(modUiScale) * 54 * 8f).height(unitTable.getHeight());
+            table.defaults().width(Scl.scl(modUiScale) * 54 * 8f).height(unitTable.getHeight() * Scl.scl(modUiScale));
             table.add(new Table(Tex.button, t -> {
                 ScrollPane pane = t.pane(new ScrollPane.ScrollPaneStyle(){{
                     vScroll = Tex.clear;
@@ -862,7 +866,7 @@ public class HudUi {
     public void addItemTable(){
         if(uiIndex != 2) return;
         itemTable = new Table(table -> {
-            table.left().defaults().width(Scl.scl(modUiScale) * 54 * 8f).height(unitTable.getHeight());
+            table.left().defaults().width(Scl.scl(modUiScale) * 54 * 8f).height(unitTable.getHeight() * Scl.scl(modUiScale));
             table.table(Tex.button, t -> {
                 ScrollPane pane = t.pane(new ScrollPane.ScrollPaneStyle(){{
                     vScroll = Tex.clear;
