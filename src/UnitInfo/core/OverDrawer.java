@@ -60,6 +60,9 @@ public class OverDrawer {
 
     public static void setEvent(){
         Events.run(EventType.Trigger.draw, () -> {
+            float sin = Mathf.absin(Time.time, 6f, 1f);
+            Draw.z(Layer.overlayUI + 1);
+
             int[] units = {0};
             if(pathLine || unitLine || logicLine) Groups.unit.each(u -> {
                 UnitController c = u.controller();
@@ -93,7 +96,6 @@ public class OverDrawer {
                     if(i + 1 >= pathTiles.size) continue; //prevent IndexOutException
                     Tile tile1 = pathTiles.get(i);
                     Tile tile2 = pathTiles.get(i + 1);
-                    Draw.z(Layer.overlayUI);
                     Lines.stroke(1, u.team.color);
                     Lines.line(tile1.worldx(), tile1.worldy(), tile2.worldx(), tile2.worldy());
                 }
@@ -111,12 +113,16 @@ public class OverDrawer {
                         if(i + 1 >= pathTiles.size) continue; //prevent IndexOutException
                         Tile tile1 = pathTiles.get(i);
                         Tile tile2 = pathTiles.get(i + 1);
-                        Draw.z(Layer.overlayUI);
                         Lines.stroke(1, enemyTeam.color);
                         Lines.line(tile1.worldx(), tile1.worldy(), tile2.worldx(), tile2.worldy());
                     }
                     pathTiles.clear();
                 }
+            });
+
+            if(settings.getBool("spawnerarrow")) spawner.getSpawns().each(t -> {
+                Drawf.circles(camera.position.x, camera.position.y, (player.unit() != null && player.unit().hitSize > 4 * 8f ? player.unit().hitSize * 1.5f : 4 * 8f) + sin - 4f);
+                Drawf.arrow(camera.position.x, camera.position.y, t.x * 8f, t.y * 8f,  (player.unit() != null && player.unit().hitSize > 4 * 8f ? player.unit().hitSize * 1.5f : 4 * 8f) + sin, (Math.min(200 * 8f, Mathf.dst(camera.position.x, camera.position.y, t.x * 8f, t.y * 8f)) / (200 * 8f)) * (5f + sin));
             });
 
             if(settings.getBool("blockstatus")) Groups.build.each(build -> {
@@ -128,7 +134,6 @@ public class OverDrawer {
                     float brcx = build.x + (block.size * tilesize / 2f) - (tilesize * multiplier / 2f);
                     float brcy = build.y - (block.size * tilesize / 2f) + (tilesize * multiplier / 2f);
 
-                    Draw.z(Layer.power + 1);
                     Draw.color(Pal.gray);
                     Fill.square(brcx, brcy, 2.5f * multiplier, 45);
                     Draw.color(build.status().color);
@@ -234,29 +239,29 @@ public class OverDrawer {
                 for(int i = 0; i < 4; i++){
                     float rot = i * 90f + 45f + (-Time.time) % 360f;
                     float length = (entity instanceof Unit ? ((Unit)entity).hitSize : entity instanceof Building ? ((Building)entity).block.size * tilesize : 0) * 1.5f + 2.5f;
-                    Draw.color(Tmp.c1.set(hud.locked ? Color.orange : Color.darkGray).lerp(hud.locked ? Color.scarlet : Color.gray, Mathf.absin(Time.time, 2f, 1f)).a(settings.getInt("selectopacity") / 100f));
+                    Draw.color(Tmp.c1.set(hud.locked ? Color.orange : Color.darkGray).lerp(hud.locked ? Color.scarlet : Color.gray, Mathf.absin(Time.time, 3f, 1f)).a(settings.getInt("selectopacity") / 100f));
                     Draw.rect("select-arrow", entity.x() + Angles.trnsx(rot, length), entity.y() + Angles.trnsy(rot, length), length / 1.9f, length / 1.9f, rot - 135f);
                 }
                 if(settings.getBool("distanceLine") && player.unit() != null && !player.unit().dead && getTarget() != player.unit()) { //need selected other unit with living player
                     Teamc from = player.unit();
                     Teamc to = getTarget();
-                    float sin = Mathf.absin(Time.time, 6f, 1f);
                     if(player.unit() instanceof BlockUnitUnit bu) Tmp.v1.set(bu.x() + bu.tile().block.offset, bu.y() + bu.tile().block.offset).sub(to.x(), to.y()).limit(bu.tile().block.size * tilesize + sin + 0.5f);
                     else Tmp.v1.set(from.x(), from.y()).sub(to.x(), to.y()).limit(player.unit().hitSize + sin + 0.5f);
 
                     float x2 = from.x() - Tmp.v1.x, y2 = from.y() - Tmp.v1.y,
                             x1 = to.x() + Tmp.v1.x, y1 = to.y() + Tmp.v1.y;
                     int segs = (int) (to.dst(from.x(), from.y()) / tilesize);
+                    if(segs > 0){
+                        Lines.stroke(2.5f, Pal.gray);
+                        Lines.dashLine(x1, y1, x2, y2, segs);
+                        Lines.stroke(1f, Pal.placing);
+                        Lines.dashLine(x1, y1, x2, y2, segs);
 
-                    Lines.stroke(2.5f, Pal.gray);
-                    Lines.dashLine(x1, y1, x2, y2, segs);
-                    Lines.stroke(1f, Pal.placing);
-                    Lines.dashLine(x1, y1, x2, y2, segs);
-
-                    Fonts.outline.draw(Strings.fixed(to.dst(from.x(), from.y()), 2) + " (" + segs + "tiles)",
-                            from.x() + Angles.trnsx(Angles.angle(from.x(), from.y(), to.x(), to.y()), player.unit().hitSize() + 40),
-                            from.y() + Angles.trnsy(Angles.angle(from.x(), from.y(), to.x(), to.y()), player.unit().hitSize() + 40) - 3,
-                            Pal.accent, 0.25f, false, Align.center);
+                        Fonts.outline.draw(Strings.fixed(to.dst(from.x(), from.y()), 2) + " (" + segs + "tiles)",
+                                from.x() + Angles.trnsx(Angles.angle(from.x(), from.y(), to.x(), to.y()), player.unit().hitSize() + 40),
+                                from.y() + Angles.trnsy(Angles.angle(from.x(), from.y(), to.x(), to.y()), player.unit().hitSize() + 40) - 3,
+                                Pal.accent, 0.25f, false, Align.center);
+                    }
                 }
             }
 
@@ -328,6 +333,7 @@ public class OverDrawer {
     }
 
     public static void drawMassPayloadLink(PayloadMassDriver.PayloadDriverBuild from){
+        float sin = Mathf.absin(Time.time, 6f, 1f);
         Groups.build.each(b -> b instanceof PayloadMassDriver.PayloadDriverBuild fromMass &&
                 world.build(fromMass.link) == from &&
                 from.within(fromMass.x, fromMass.y, ((PayloadMassDriver)fromMass.block).range) &&
@@ -338,7 +344,6 @@ public class OverDrawer {
 
         if(world.build(from.link) instanceof PayloadMassDriver.PayloadDriverBuild to && from != to &&
                 to.within(from.x, from.y, ((PayloadMassDriver)from.block).range)){
-            float sin = Mathf.absin(Time.time, 6f, 1f);
             Tmp.v1.set(from.x + from.block.offset, from.y + from.block.offset).sub(to.x, to.y).limit(from.block.size * tilesize + sin + 0.5f);
             float x2 = from.x - Tmp.v1.x, y2 = from.y - Tmp.v1.y,
                     x1 = to.x + Tmp.v1.x, y1 = to.y + Tmp.v1.y;
@@ -369,6 +374,7 @@ public class OverDrawer {
     }
 
     public static void drawMassLink(MassDriver.MassDriverBuild from){
+        float sin = Mathf.absin(Time.time, 6f, 1f);
         Groups.build.each(b -> b instanceof MassDriver.MassDriverBuild fromMass &&
                 world.build(fromMass.link) == from &&
                 from.within(fromMass.x, fromMass.y, ((MassDriver)fromMass.block).range) &&
@@ -378,7 +384,6 @@ public class OverDrawer {
         });
 
         if(world.build(from.link) instanceof MassDriver.MassDriverBuild to && from != to && to.within(from.x, from.y, ((MassDriver)from.block).range)){
-            float sin = Mathf.absin(Time.time, 6f, 1f);
             Tmp.v1.set(from.x + from.block.offset, from.y + from.block.offset).sub(to.x, to.y).limit(from.block.size * tilesize + sin + 0.5f);
             float x2 = from.x - Tmp.v1.x, y2 = from.y - Tmp.v1.y,
                     x1 = to.x + Tmp.v1.x, y1 = to.y + Tmp.v1.y;
