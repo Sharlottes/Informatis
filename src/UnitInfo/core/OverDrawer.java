@@ -16,6 +16,7 @@ import mindustry.ai.types.*;
 import mindustry.content.Fx;
 import mindustry.core.Renderer;
 import mindustry.entities.*;
+import mindustry.entities.bullet.BulletType;
 import mindustry.entities.units.AIController;
 import mindustry.entities.units.UnitCommand;
 import mindustry.entities.units.UnitController;
@@ -28,9 +29,7 @@ import mindustry.ui.Fonts;
 import mindustry.world.Block;
 import mindustry.world.Tile;
 import mindustry.world.blocks.ControlBlock;
-import mindustry.world.blocks.defense.turrets.BaseTurret;
-import mindustry.world.blocks.defense.turrets.TractorBeamTurret;
-import mindustry.world.blocks.defense.turrets.Turret;
+import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.blocks.distribution.MassDriver;
 import mindustry.world.blocks.payloads.PayloadMassDriver;
 import mindustry.world.blocks.power.PowerNode;
@@ -157,7 +156,7 @@ public class OverDrawer {
             });
 
             // Turret Ranges
-            if(settings.getBool("rangeNearby") && player != null) {
+            if(settings.getBool("rangeNearby") && player != null && player.unit() != null && !player.unit().dead) {
                 Team team = player.team();
                 Unit unit = player.unit();
                 Groups.build.each(e -> {
@@ -174,12 +173,16 @@ public class OverDrawer {
                     if(control.input.block != null && dst <= max) canHit = e.block instanceof Turret t && t.targetGround;
                     if(player.dst(e) <= max || (control.input.block != null && dst <= max)) {
                         if(canHit || settings.getBool("allTargetRange")){
-                            if(settings.getBool("softRangeDrawing")){
-                                Lines.stroke(Scl.scl(), Tmp.c1.set(canHit ? e.team.color : Team.derelict.color).a(0.5f));
-                                Lines.poly(e.x, e.y, Lines.circleVertices(range), range);
-                                Fill.light(e.x, e.y, Lines.circleVertices(range), range, Color.clear, Tmp.c1.a(Mathf.clamp(1-((control.input.block != null && dst <= max ? dst : player.dst(e))/max), 0, settings.getInt("softRangeOpacity")/100f)));
+                            if(e instanceof Turret.TurretBuild t){
+                                Lines.stroke(1.5f, Tmp.c1.set(canHit ? e.team.color : Team.derelict.color).a(0.75f));
+                                Tmp.v1.set(e.x, e.y).trns(((BaseTurret.BaseTurretBuild)e).rotation+((Turret)t.block).shootCone, range);
+                                Lines.line(e.x, e.y, e.x + Tmp.v1.x, e.y + Tmp.v1.y);
+                                Tmp.v1.set(e.x, e.y).trns(((BaseTurret.BaseTurretBuild)e).rotation-((Turret)t.block).shootCone, range);
+                                Lines.line(e.x, e.y, e.x + Tmp.v1.x, e.y + Tmp.v1.y);
                             }
-                            else Drawf.dashCircle(e.x, e.y, range, canHit ? e.team.color : Team.derelict.color);
+                            Lines.stroke(1, Tmp.c1.set(canHit ? e.team.color : Team.derelict.color).a(0.5f));
+                            Lines.poly(e.x, e.y, Lines.circleVertices(range), range);
+                            Fill.light(e.x, e.y, Lines.circleVertices(range), range, Color.clear, Tmp.c1.a(Mathf.clamp(1-((control.input.block != null && dst <= max ? dst : player.dst(e))/max), 0, settings.getInt("softRangeOpacity")/100f)));
                         }
                     }
                 });
@@ -196,12 +199,9 @@ public class OverDrawer {
 
                         if(Vars.player.dst(u) <= max) {
                             if (canHit || settings.getBool("allTargetRange")) // Same as above
-                                if(settings.getBool("softRangeDrawing")){
-                                    Lines.stroke(Scl.scl(), Tmp.c1.set(canHit ? u.team.color : Team.derelict.color).a(0.5f));
+                                    Lines.stroke(1, Tmp.c1.set(canHit ? u.team.color : Team.derelict.color).a(0.5f));
                                     Lines.poly(u.x, u.y, Lines.circleVertices(range), range);
                                     Fill.light(u.x, u.y, Lines.circleVertices(range), range, Color.clear, Tmp.c1.a(Math.min(settings.getInt("softRangeOpacity")/100f, 1-Vars.player.dst(u)/max)));
-                                }
-                                else Drawf.dashCircle(u.x, u.y, range, canHit ? u.team.color : Team.derelict.color);
                         }
                     });
                 }
