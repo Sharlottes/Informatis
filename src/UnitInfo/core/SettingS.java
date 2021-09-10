@@ -129,7 +129,7 @@ public class SettingS {
         addGraphicSlideSetting("softRangeOpacity", 10, 0, 25, 1, s -> s + "%", opacitySeq);
 
         Seq<SharSetting> drawSeq = new Seq<>();
-        addGraphicTypeSetting("unitlinelimit", 0, 500, 50, true, () -> true, s -> s + "units", drawSeq);
+        addGraphicTypeSetting("unitlinelimit", 0, 5000, 50, true, () -> true, s -> s + "units", drawSeq);
         addGraphicCheckSetting("gaycursor", false, drawSeq);
         addGraphicCheckSetting("unithealthui", true, drawSeq);
         addGraphicCheckSetting("linkedMass", true, drawSeq);
