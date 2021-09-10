@@ -16,7 +16,6 @@ import mindustry.ai.types.*;
 import mindustry.content.Fx;
 import mindustry.core.Renderer;
 import mindustry.entities.*;
-import mindustry.entities.bullet.BulletType;
 import mindustry.entities.units.AIController;
 import mindustry.entities.units.UnitCommand;
 import mindustry.entities.units.UnitController;
@@ -62,13 +61,16 @@ public class OverDrawer {
             float sin = Mathf.absin(Time.time, 6f, 1f);
             Draw.z(Layer.overlayUI + 1);
 
+            int[] paths = {0};
             int[] units = {0};
+            int[] logics = {0};
             if(pathLine || unitLine || logicLine) Groups.unit.each(u -> {
                 UnitController c = u.controller();
                 UnitCommand com = u.team.data().command;
 
                 if(c instanceof LogicAI ai){
-                    if(logicLine && (ai.control == LUnitControl.approach || ai.control == LUnitControl.move)) {
+                    if(logics[0] <= settings.getInt("logiclinelimit") || (logicLine && (ai.control == LUnitControl.approach || ai.control == LUnitControl.move))) {
+                        logics[0]++;
                         Lines.stroke(1, u.team.color);
                         Lines.line(u.x(), u.y(), ai.moveX, ai.moveY);
                         Lines.stroke(0.5f + Mathf.absin(6f, 0.5f), Tmp.c1.set(Pal.logicOperations).lerp(Pal.sap, Mathf.absin(6f, 0.5f)));
@@ -77,7 +79,7 @@ public class OverDrawer {
                     return;
                 }
 
-                if(++units[0] > settings.getInt("unitlinelimit") || //prevent lag
+                if(units[0] > settings.getInt("unitlinelimit") || //prevent lag
                         !unitLine || //disabled
                         u.type.flying || //not flying
                         c instanceof MinerAI || //not mono
@@ -87,7 +89,7 @@ public class OverDrawer {
                         c instanceof FormationAI || //not commanded unit by player
                         c instanceof FlyingAI || //not flying anyway
                         com == UnitCommand.idle) return; //not idle
-
+                units[0]++;
                 otherCores = Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != u.team);
                 getNextTile(u.tileOn(), u.pathType(), u.team, com.ordinal());
                 pathTiles.filter(Objects::nonNull);
@@ -102,6 +104,8 @@ public class OverDrawer {
             });
 
             if(pathLine) spawner.getSpawns().each(t -> {
+                if(paths[0] > settings.getInt("pathlinelimit")) return;
+                paths[0]++;
                 Team enemyTeam = state.rules.waveTeam;
                 for(int p = 0; p < 3; p++) {
                     otherCores = Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != enemyTeam);
@@ -119,7 +123,10 @@ public class OverDrawer {
                 }
             });
 
+            int[] arrows = {0};
             if(settings.getBool("spawnerarrow")) spawner.getSpawns().each(t -> {
+                if(arrows[0] > settings.getInt("spawnarrowlimit")) return;
+                arrows[0]++;
                 Drawf.circles(camera.position.x, camera.position.y, (player.unit() != null && player.unit().hitSize > 4 * 8f ? player.unit().hitSize * 1.5f : 4 * 8f) + sin - 4f);
                 Drawf.arrow(camera.position.x, camera.position.y, t.x * 8f, t.y * 8f,  (player.unit() != null && player.unit().hitSize > 4 * 8f ? player.unit().hitSize * 1.5f : 4 * 8f) + sin, (Math.min(200 * 8f, Mathf.dst(camera.position.x, camera.position.y, t.x * 8f, t.y * 8f)) / (200 * 8f)) * (5f + sin));
             });
