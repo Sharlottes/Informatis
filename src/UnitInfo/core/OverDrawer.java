@@ -116,8 +116,8 @@ public class OverDrawer {
                 if(arrows[0] > settings.getInt("spawnarrowlimit")) return;
                 arrows[0]++;
                 float leng = (player.unit() != null && player.unit().hitSize > 4 * 8f ? player.unit().hitSize * 1.5f : 4 * 8f) + sin;
-                float camx = camera.position.x;
-                float camy = camera.position.y;
+                float camx = player.unit() != null ? player.unit().x : camera.position.x;
+                float camy = player.unit() != null ? player.unit().y : camera.position.y;
                 Lines.stroke(1f + sin/2, Pal.accent);
                 Lines.circle(camx, camy, leng - 4f);
                 Drawf.arrow(camx, camy, t.worldx(), t.worldy(), leng, (Math.min(200 * 8f, Mathf.dst(camx, camy, t.worldx(), t.worldy())) / (200 * 8f)) * (5f + sin));
