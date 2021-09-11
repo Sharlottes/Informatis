@@ -18,11 +18,13 @@ import arc.util.*;
 import mindustry.*;
 import mindustry.content.*;
 import mindustry.core.*;
+import mindustry.entities.Units;
 import mindustry.entities.units.*;
 import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.input.*;
+import mindustry.logic.Ranged;
 import mindustry.type.*;
 import mindustry.ui.*;
 import mindustry.world.*;
@@ -52,6 +54,7 @@ public class HudUi {
     float waveScrollPos;
     float itemScrollPos;
 
+    Teamc shotTarget;
     Teamc lockedTarget;
     ImageButton lockButton;
     boolean locked = false;
@@ -98,8 +101,9 @@ public class HudUi {
     }
 
     public void setEvents() {
-
         Events.run(EventType.Trigger.update, ()->{
+            OverDrawer.target = getTarget();
+            OverDrawer.locked = locked;
             if(settings.getBool("deadTarget") && locked && lockedTarget != null && !Groups.all.contains(e -> e == lockedTarget)) {
                 lockedTarget = null;
                 locked = false;
@@ -115,10 +119,60 @@ public class HudUi {
             if((input.keyDown(KeyCode.shiftRight) || input.keyDown(KeyCode.shiftLeft))){
                 if(input.keyTap(KeyCode.r)) lockButton.change();
             }
+
+            if(settings.getBool("autoShooting")) {
+                Unit unit = player.unit();
+                if (unit.type == null) return;
+                boolean omni = unit.type.omniMovement;
+                boolean validHealTarget = unit.type.canHeal && shotTarget instanceof Building b && b.isValid() && b.damaged() && shotTarget.team() == unit.team && shotTarget.within(unit, unit.type.range);
+                boolean boosted = (unit instanceof Mechc && unit.isFlying());
+                if ((unit.type != null && Units.invalidateTarget(shotTarget, unit, unit.type.range) && !validHealTarget) || state.isEditor()) {
+                    shotTarget = null;
+                }
+
+                float mouseAngle = unit.angleTo(unit.aimX(), unit.aimY());
+                boolean aimCursor = omni && player.shooting && unit.type.hasWeapons() && unit.type.faceTarget && !boosted && unit.type.rotateShooting;
+                unit.lookAt(aimCursor ? mouseAngle : unit.prefRotation());
+
+                //update shooting if not building + not mining
+                if(!player.unit().activelyBuilding() && player.unit().mineTile == null) {
+                    if(input.keyDown(KeyCode.mouseLeft)) {
+                        player.shooting = !boosted;
+                        unit.aim(player.mouseX = input.mouseWorldX(), player.mouseY = input.mouseWorldY());
+                    } else if(shotTarget == null) {
+                        player.shooting = false;
+                        if(unit instanceof BlockUnitUnit b) {
+                            if(b.tile() instanceof ControlBlock c && !c.shouldAutoTarget()) {
+                                Building build = b.tile();
+                                float range = build instanceof Ranged ? ((Ranged) build).range() : 0f;
+                                boolean targetGround = build instanceof Turret.TurretBuild && ((Turret) build.block).targetAir;
+                                boolean targetAir = build instanceof Turret.TurretBuild && ((Turret) build.block).targetGround;
+                                shotTarget = Units.closestTarget(build.team, build.x, build.y, range, u -> u.checkTarget(targetAir, targetGround), u -> targetGround);
+                            }
+                            else shotTarget = null;
+                        } else if(unit.type != null) {
+                            float range = unit.hasWeapons() ? unit.range() : 0f;
+                            shotTarget = Units.closestTarget(unit.team, unit.x, unit.y, range, u -> u.checkTarget(unit.type.targetAir, unit.type.targetGround), u -> unit.type.targetGround);
+
+                            if(unit.type.canHeal && shotTarget == null) {
+                                shotTarget = Geometry.findClosest(unit.x, unit.y, indexer.getDamaged(Team.sharded));
+                                if (shotTarget != null && !unit.within(shotTarget, range)) {
+                                    shotTarget = null;
+                                }
+                            }
+                        }
+                    } else {
+                        player.shooting = !boosted;
+                        unit.rotation(Angles.angle(unit.x, unit.y, shotTarget.x(), shotTarget.y()));
+                        unit.aim(shotTarget.x(), shotTarget.y());
+                    }
+                }
+                unit.controlWeapons(player.shooting && !boosted);
+            }
         });
 
         Events.on(EventType.BlockDestroyEvent.class, e -> {
-            if(e.tile.block() instanceof CoreBlock)coreItems.resetUsed();
+            if(e.tile.block() instanceof CoreBlock) coreItems.resetUsed();
         });
         Events.on(EventType.CoreChangeEvent.class, e -> coreItems.resetUsed());
         Events.on(EventType.ResetEvent.class, e -> coreItems.resetUsed());
@@ -292,8 +346,8 @@ public class HudUi {
 
     public TextureRegion getRegions(int i){
         Teamc target = getTarget();
-
         TextureRegion region = clear;
+
         if(i == 0){
             if(target instanceof Healthc) region = SIcons.health;
         } else if(i == 1){
@@ -541,20 +595,19 @@ public class HudUi {
                         }));
 
                         add(new Table(ttt -> {
-                            ttt.add(new Stack(){{
-                                add(new Table(temp -> {
+                            ttt.stack(
+                                new Table(temp -> {
                                     temp.image(new ScaledNinePatchDrawable(new NinePatch(Icon.defenseSmall.getRegion()), modUiScale));
                                     temp.visibility = () -> getTarget() instanceof Unit;
-                                }));
-
-                                add(new Table(temp -> {
+                                }),
+                                new Table(temp -> {
                                     Label label = new Label(() -> (getTarget() instanceof Unit u && u.type != null ? (int) u.type.armor + "" : ""));
                                     label.setColor(Pal.surge);
                                     label.setFontScale(Scl.scl(modUiScale) * 0.5f);
                                     temp.add(label).center();
                                     temp.pack();
-                                }));
-                            }}).padLeft(Scl.scl(modUiScale) * 2 * 8f).padBottom(Scl.scl(modUiScale) * 2 * 8f);
+                                })
+                            ).padLeft(Scl.scl(modUiScale) * 2 * 8f).padBottom(Scl.scl(modUiScale) * 2 * 8f);
                         }));
                     }};
 

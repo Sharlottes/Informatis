@@ -123,7 +123,7 @@ public class BarInfo {
             numbers.set(1, node.power.graph.getLastPowerStored() / node.power.graph.getLastCapacity());
         }
         else if(target instanceof PowerGenerator.GeneratorBuild generator){
-            strings.set(1, bundle.format("shar-stat.power", floatFormat(generator.getPowerProduction() * generator.timeScale() * 60f)));
+            strings.set(1, bundle.format("shar-stat.powerIn", floatFormat(generator.getPowerProduction() * generator.timeScale() * 60f)));
             colors.set(1, Pal.powerBar);
             numbers.set(1, generator.productionEfficiency);
         }
@@ -232,7 +232,7 @@ public class BarInfo {
         }
 
 
-        if(target instanceof Unit unit && target instanceof Payloadc pay && unit.type != null){
+        if(target instanceof Unit unit && unit.type != null && target instanceof Payloadc pay){
             strings.set(4, bundle.format("shar-stat.payloadCapacity", floatFormat(Mathf.round(Mathf.sqrt(pay.payloadUsed()))), floatFormat(Mathf.round(Mathf.sqrt(unit.type().payloadCapacity)))));
             colors.set(4, Pal.items);
             numbers.set(4, pay.payloadUsed() / unit.type().payloadCapacity);

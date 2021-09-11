@@ -4,9 +4,8 @@ import UnitInfo.ui.FreeBar;
 import arc.*;
 import arc.graphics.Color;
 import arc.graphics.g2d.*;
-import arc.input.KeyCode;
 import arc.math.*;
-import arc.math.geom.Geometry;
+import arc.math.geom.Position;
 import arc.scene.ui.layout.Scl;
 import arc.struct.Seq;
 import arc.util.*;
@@ -15,19 +14,14 @@ import mindustry.ai.Pathfinder;
 import mindustry.ai.types.*;
 import mindustry.content.Fx;
 import mindustry.core.Renderer;
-import mindustry.entities.*;
-import mindustry.entities.units.AIController;
-import mindustry.entities.units.UnitCommand;
-import mindustry.entities.units.UnitController;
+import mindustry.entities.units.*;
 import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.logic.LUnitControl;
-import mindustry.logic.Ranged;
 import mindustry.ui.Fonts;
 import mindustry.world.Block;
 import mindustry.world.Tile;
-import mindustry.world.blocks.ControlBlock;
 import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.blocks.distribution.MassDriver;
 import mindustry.world.blocks.payloads.PayloadMassDriver;
@@ -39,22 +33,17 @@ import java.util.Objects;
 
 import static UnitInfo.SVars.*;
 import static arc.Core.*;
-import static arc.Core.input;
 import static mindustry.Vars.*;
-import static mindustry.Vars.player;
 
 public class OverDrawer {
-    @Nullable public static Teamc target;
+    public static Teamc target;
     public static Seq<MassDriver.MassDriverBuild> linkedMasses = new Seq<>();
     public static Seq<PayloadMassDriver.PayloadDriverBuild> linkedPayloadMasses = new Seq<>();
     public static Seq<Building> linkedNodes = new Seq<>();
-    public static int otherCores;
+    public static Seq<Building> linkedBuilds = new Seq<>();
     public static Seq<Tile> pathTiles = new Seq<>();
-
-    @SuppressWarnings("unchecked")
-    public static <T extends Teamc> T getTarget(){
-        return (T) (target = hud.getTarget());
-    }
+    public static int otherCores;
+    public static boolean locked;
 
     public static void setEvent(){
         Events.run(EventType.Trigger.draw, () -> {
@@ -64,19 +53,18 @@ public class OverDrawer {
             int[] paths = {0};
             int[] units = {0};
             int[] logics = {0};
-            if(pathLine || unitLine || logicLine) Groups.unit.each(u -> {
+            if(unitLine || logicLine) Groups.unit.each(u -> {
                 UnitController c = u.controller();
                 UnitCommand com = u.team.data().command;
 
-                if(c instanceof LogicAI ai){
-                    if(logics[0] <= settings.getInt("logiclinelimit") || (logicLine && (ai.control == LUnitControl.approach || ai.control == LUnitControl.move))) {
-                        logics[0]++;
-                        Lines.stroke(1, u.team.color);
-                        Lines.line(u.x(), u.y(), ai.moveX, ai.moveY);
-                        Lines.stroke(0.5f + Mathf.absin(6f, 0.5f), Tmp.c1.set(Pal.logicOperations).lerp(Pal.sap, Mathf.absin(6f, 0.5f)));
-                        Lines.line(u.x(), u.y(), ai.controller.x, ai.controller.y);
-                    }
-                    return;
+                if(c instanceof LogicAI ai &&
+                        logics[0] <= settings.getInt("logiclinelimit") &&
+                        logicLine && (ai.control == LUnitControl.approach || ai.control == LUnitControl.move)) {
+                    logics[0]++;
+                    Lines.stroke(1, u.team.color);
+                    Lines.line(u.x(), u.y(), ai.moveX, ai.moveY);
+                    Lines.stroke(0.5f + Mathf.absin(6f, 0.5f), Tmp.c1.set(Pal.logicOperations).lerp(Pal.sap, Mathf.absin(6f, 0.5f)));
+                    Lines.line(u.x(), u.y(), ai.controller.x, ai.controller.y);
                 }
 
                 if(units[0] > settings.getInt("unitlinelimit") || //prevent lag
@@ -86,7 +74,7 @@ public class OverDrawer {
                         c instanceof BuilderAI || //not poly
                         c instanceof RepairAI || //not mega
                         c instanceof DefenderAI || //not oct
-                        c instanceof FormationAI || //not commanded unit by player
+                        c instanceof FormationAI || //not commanded unit
                         c instanceof FlyingAI || //not flying anyway
                         com == UnitCommand.idle) return; //not idle
                 units[0]++;
@@ -127,12 +115,16 @@ public class OverDrawer {
             if(settings.getBool("spawnerarrow")) spawner.getSpawns().each(t -> {
                 if(arrows[0] > settings.getInt("spawnarrowlimit")) return;
                 arrows[0]++;
-                Drawf.circles(camera.position.x, camera.position.y, (player.unit() != null && player.unit().hitSize > 4 * 8f ? player.unit().hitSize * 1.5f : 4 * 8f) + sin - 4f);
-                Drawf.arrow(camera.position.x, camera.position.y, t.x * 8f, t.y * 8f,  (player.unit() != null && player.unit().hitSize > 4 * 8f ? player.unit().hitSize * 1.5f : 4 * 8f) + sin, (Math.min(200 * 8f, Mathf.dst(camera.position.x, camera.position.y, t.x * 8f, t.y * 8f)) / (200 * 8f)) * (5f + sin));
+                float leng = (player.unit() != null && player.unit().hitSize > 4 * 8f ? player.unit().hitSize * 1.5f : 4 * 8f) + sin;
+                float camx = camera.position.x;
+                float camy = camera.position.y;
+                Lines.stroke(1f + sin/2, Pal.accent);
+                Lines.circle(camx, camy, leng - 4f);
+                Drawf.arrow(camx, camy, t.worldx(), t.worldy(), leng, (Math.min(200 * 8f, Mathf.dst(camx, camy, t.worldx(), t.worldy())) / (200 * 8f)) * (5f + sin));
             });
 
             if(settings.getBool("blockstatus")) Groups.build.each(build -> {
-                if(Vars.player != null && Vars.player.team() == build.team) return;
+                if(Vars.player != null && player.team() == build.team) return;
 
                 Block block = build.block;
                 if(block.enableDrawStatus && block.consumes.any()){
@@ -148,8 +140,7 @@ public class OverDrawer {
                 }
             });
 
-            if(Core.settings.getBool("unithealthui"))
-                Groups.unit.each(unit -> new FreeBar().draw(unit));
+            if(Core.settings.getBool("unithealthui")) Groups.unit.each(FreeBar::draw);
 
             if(!mobile && !Vars.state.isPaused() && settings.getBool("gaycursor"))
                 Fx.mine.at(Core.input.mouseWorldX(), Core.input.mouseWorldY(), Tmp.c2.set(Color.red).shiftHue(Time.time * 1.5f));
@@ -226,37 +217,37 @@ public class OverDrawer {
             }
 
             if(settings.getBool("linkedMass")){
-                if(getTarget() instanceof MassDriver.MassDriverBuild mass) {
+                if(target instanceof MassDriver.MassDriverBuild mass) {
                     linkedMasses.clear();
                     drawMassLink(mass);
                 }
-                else if(getTarget() instanceof PayloadMassDriver.PayloadDriverBuild mass) {
+                else if(target instanceof PayloadMassDriver.PayloadDriverBuild mass) {
                     linkedPayloadMasses.clear();
                     drawMassPayloadLink(mass);
                 }
             }
 
-            if(settings.getBool("linkedNode") && getTarget() instanceof Building node){
+            if(settings.getBool("linkedNode") && target instanceof Building node){
                 linkedNodes.clear();
                 drawNodeLink(node);
             }
 
-            if(settings.getBool("select") && getTarget() != null) {
-                Posc entity = getTarget();
+            if(settings.getBool("select") && target != null) {
                 for(int i = 0; i < 4; i++){
                     float rot = i * 90f + 45f + (-Time.time) % 360f;
-                    float length = (entity instanceof Unit ? ((Unit)entity).hitSize : entity instanceof Building ? ((Building)entity).block.size * tilesize : 0) * 1.5f + 2.5f;
-                    Draw.color(Tmp.c1.set(hud.locked ? Color.orange : Color.darkGray).lerp(hud.locked ? Color.scarlet : Color.gray, Mathf.absin(Time.time, 3f, 1f)).a(settings.getInt("selectopacity") / 100f));
-                    Draw.rect("select-arrow", entity.x() + Angles.trnsx(rot, length), entity.y() + Angles.trnsy(rot, length), length / 1.9f, length / 1.9f, rot - 135f);
+                    float length = (target instanceof Unit u ? u.hitSize : target instanceof Building b ? b.block.size * tilesize : 0) * 1.5f + 2.5f;
+                    Draw.color(Tmp.c1.set(locked ? Color.orange : Color.darkGray).lerp(locked ? Color.scarlet : Color.gray, Mathf.absin(Time.time, 3f, 1f)).a(settings.getInt("selectopacity") / 100f));
+                    Draw.rect("select-arrow", target.x() + Angles.trnsx(rot, length), target.y() + Angles.trnsy(rot, length), length / 1.9f, length / 1.9f, rot - 135f);
                 }
-                if(settings.getBool("distanceLine") && player.unit() != null && !player.unit().dead && getTarget() != player.unit()) { //need selected other unit with living player
+                if(settings.getBool("distanceLine") && player.unit() != null && !player.unit().dead && target != null) { //need selected other unit with living player
                     Teamc from = player.unit();
-                    Teamc to = getTarget();
-                    if(player.unit() instanceof BlockUnitUnit bu) Tmp.v1.set(bu.x() + bu.tile().block.offset, bu.y() + bu.tile().block.offset).sub(to.x(), to.y()).limit(bu.tile().block.size * tilesize + sin + 0.5f);
-                    else Tmp.v1.set(from.x(), from.y()).sub(to.x(), to.y()).limit(player.unit().hitSize + sin + 0.5f);
+                    Position to = target;
+                    if(to == from) to = input.mouseWorld();
+                    if(player.unit() instanceof BlockUnitUnit bu) Tmp.v1.set(bu.x() + bu.tile().block.offset, bu.y() + bu.tile().block.offset).sub(to.getX(), to.getY()).limit(bu.tile().block.size * tilesize + sin + 0.5f);
+                    else Tmp.v1.set(from.x(), from.y()).sub(to.getX(), to.getY()).limit(player.unit().hitSize + sin + 0.5f);
 
                     float x2 = from.x() - Tmp.v1.x, y2 = from.y() - Tmp.v1.y,
-                            x1 = to.x() + Tmp.v1.x, y1 = to.y() + Tmp.v1.y;
+                            x1 = to.getX() + Tmp.v1.x, y1 = to.getY() + Tmp.v1.y;
                     int segs = (int) (to.dst(from.x(), from.y()) / tilesize);
                     if(segs > 0){
                         Lines.stroke(2.5f, Pal.gray);
@@ -265,8 +256,8 @@ public class OverDrawer {
                         Lines.dashLine(x1, y1, x2, y2, segs);
 
                         Fonts.outline.draw(Strings.fixed(to.dst(from.x(), from.y()), 2) + " (" + segs + "tiles)",
-                                from.x() + Angles.trnsx(Angles.angle(from.x(), from.y(), to.x(), to.y()), player.unit().hitSize() + 40),
-                                from.y() + Angles.trnsy(Angles.angle(from.x(), from.y(), to.x(), to.y()), player.unit().hitSize() + 40) - 3,
+                                from.x() + Angles.trnsx(Angles.angle(from.x(), from.y(), to.getX(), to.getY()), player.unit().hitSize() + Math.min(segs, 6) * 8f),
+                                from.y() + Angles.trnsy(Angles.angle(from.x(), from.y(), to.getX(), to.getY()), player.unit().hitSize() + Math.min(segs, 6) * 8f) - 3,
                                 Pal.accent, 0.25f, false, Align.center);
                     }
                 }
@@ -275,57 +266,7 @@ public class OverDrawer {
             Draw.reset();
         });
 
-        Events.run(EventType.Trigger.update, ()->{
-            if(settings.getBool("autoShooting")) {
-                Unit unit = player.unit();
-                if (unit.type == null) return;
-                boolean omni = unit.type.omniMovement;
-                boolean validHealTarget = unit.type.canHeal && target instanceof Building && ((Building) target).isValid() && target.team() == unit.team && ((Building) target).damaged() && target.within(unit, unit.type.range);
-                boolean boosted = (unit instanceof Mechc && unit.isFlying());
-                if ((unit.type != null && Units.invalidateTarget(target, unit, unit.type.range) && !validHealTarget) || state.isEditor()) {
-                    target = null;
-                }
 
-                float mouseAngle = unit.angleTo(unit.aimX(), unit.aimY());
-                boolean aimCursor = omni && player.shooting && unit.type.hasWeapons() && unit.type.faceTarget && !boosted && unit.type.rotateShooting;
-                unit.lookAt(aimCursor ? mouseAngle : unit.prefRotation());
-
-                //update shooting if not building + not mining
-                if(!player.unit().activelyBuilding() && player.unit().mineTile == null) {
-                    if(input.keyDown(KeyCode.mouseLeft)) {
-                        player.shooting = !boosted;
-                        unit.aim(player.mouseX = input.mouseWorldX(), player.mouseY = input.mouseWorldY());
-                    } else if(target == null) {
-                        player.shooting = false;
-                        if(unit instanceof BlockUnitUnit b) {
-                            if(b.tile() instanceof ControlBlock c && !c.shouldAutoTarget()) {
-                                Building build = b.tile();
-                                float range = build instanceof Ranged ? ((Ranged) build).range() : 0f;
-                                boolean targetGround = build instanceof Turret.TurretBuild && ((Turret) build.block).targetAir;
-                                boolean targetAir = build instanceof Turret.TurretBuild && ((Turret) build.block).targetGround;
-                                target = Units.closestTarget(build.team, build.x, build.y, range, u -> u.checkTarget(targetAir, targetGround), u -> targetGround);
-                            }
-                            else target = null;
-                        } else if(unit.type != null) {
-                            float range = unit.hasWeapons() ? unit.range() : 0f;
-                            target = Units.closestTarget(unit.team, unit.x, unit.y, range, u -> u.checkTarget(unit.type.targetAir, unit.type.targetGround), u -> unit.type.targetGround);
-
-                            if(unit.type.canHeal && target == null) {
-                                target = Geometry.findClosest(unit.x, unit.y, indexer.getDamaged(Team.sharded));
-                                if (target != null && !unit.within(target, range)) {
-                                    target = null;
-                                }
-                            }
-                        }
-                    } else {
-                        player.shooting = !boosted;
-                        unit.rotation(Angles.angle(unit.x, unit.y, target.x(), target.y()));
-                        unit.aim(target.x(), target.y());
-                    }
-                }
-                unit.controlWeapons(player.shooting && !boosted);
-            }
-        });
     }
 
     public static Tile getNextTile(Tile tile, int cost, Team team, int finder) {
@@ -421,7 +362,7 @@ public class OverDrawer {
     }
 
     public static Seq<Building> getPowerLinkedBuilds(Building build) {
-        Seq<Building> linkedBuilds = new Seq<>();
+        linkedBuilds.clear();
         build.power.links.each(i -> linkedBuilds.add(world.build(i)));
         build.proximity().each(linkedBuilds::add);
         linkedBuilds.filter(b -> b != null && b.power != null);
