@@ -620,7 +620,7 @@ public class HudUi {
                             if(getTarget() instanceof ConstructBlock.ConstructBuild cb) name = cb.current.localizedName;
                             else name = b.block.localizedName;
                         }
-                        return "[accent]" + (name.length() > 10 ? name.substring(0, 10) + "..." : name) + "[]";
+                        return "[accent]" + (name.length() > 13 ? name.substring(0, 13) + "..." : name) + "[]";
                     });
                     label.setFontScale(Scl.scl(modUiScale) * 0.75f);
 

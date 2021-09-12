@@ -22,15 +22,19 @@ import mindustry.logic.LUnitControl;
 import mindustry.ui.Fonts;
 import mindustry.world.Block;
 import mindustry.world.Tile;
+import mindustry.world.blocks.defense.ForceProjector;
 import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.blocks.distribution.MassDriver;
 import mindustry.world.blocks.payloads.PayloadMassDriver;
 import mindustry.world.blocks.power.PowerNode;
 import mindustry.world.blocks.storage.CoreBlock;
 import mindustry.world.blocks.units.CommandCenter;
+import mindustry.world.blocks.units.Reconstructor;
+import mindustry.world.blocks.units.UnitFactory;
 
 import java.util.Objects;
 
+import static UnitInfo.SUtils.floatFormat;
 import static UnitInfo.SVars.*;
 import static arc.Core.*;
 import static mindustry.Vars.*;
@@ -126,7 +130,32 @@ public class OverDrawer {
             if(Core.settings.getBool("unithealthui")) {
                 Groups.unit.each(FreeBar::draw);
                 indexer.eachBlock(null, camera.position.x, camera.position.y, 400, b -> true, b -> {
-                    Fonts.outline.draw((int)b.health + " / " + (int)b.maxHealth,
+
+                    if(b instanceof ForceProjector.ForceBuild force) {
+                        ForceProjector forceBlock = (ForceProjector) force.block;
+                        float max = forceBlock.shieldHealth + forceBlock.phaseShieldBoost * force.phaseHeat;
+
+                        Fonts.outline.draw((int)b.health + " / " + (int)b.maxHealth,
+                                b.x, b.y - b.block.size * 8 * 0.25f - 2,
+                                Tmp.c1.set(Pal.items).lerp(Pal.health, 1-b.healthf()), (b.block.size == 1 ? 0.3f : 0.25f) * 0.25f * b.block.size, false, Align.center);
+                        Fonts.outline.draw((int)(max-force.buildup) + " / " + (int)max,
+                                b.x, b.y - b.block.size * 8 * 0.25f + 2,
+                                Tmp.c1.set(Pal.shield).lerp(Pal.gray, 1-((max-force.buildup) / max)), (b.block.size == 1 ? 0.3f : 0.25f) * 0.25f * b.block.size, false, Align.center);
+                    }
+                    else if(b instanceof ReloadTurret.ReloadTurretBuild || b instanceof UnitFactory.UnitFactoryBuild || b instanceof Reconstructor.ReconstructorBuild) {
+                        float progress = 0f;
+                        if(b instanceof ReloadTurret.ReloadTurretBuild turret) progress = turret.reload / ((ReloadTurret)turret.block).reloadTime * 100;
+                        if(b instanceof UnitFactory.UnitFactoryBuild factory) progress = factory.fraction() * 100;
+                        if(b instanceof Reconstructor.ReconstructorBuild reconstructor) progress = reconstructor.fraction() * 100;
+
+                        Fonts.outline.draw((int)b.health + " / " + (int)b.maxHealth,
+                                b.x, b.y - b.block.size * 8 * 0.25f - 2,
+                                Tmp.c1.set(Pal.items).lerp(Pal.health, 1-b.healthf()), (b.block.size == 1 ? 0.3f : 0.25f) * 0.25f * b.block.size, false, Align.center);
+                        Fonts.outline.draw((int)progress + "%",
+                                b.x, b.y - b.block.size * 8 * 0.25f + 2,
+                                Tmp.c1.set(Color.lightGray).lerp(Pal.accent, progress/100), (b.block.size == 1 ? 0.3f : 0.25f) * 0.25f * b.block.size, false, Align.center);
+                    }
+                    else Fonts.outline.draw((int)b.health + " / " + (int)b.maxHealth,
                         b.x, b.y - b.block.size * 8 * 0.25f,
                         Tmp.c1.set(Pal.items).lerp(Pal.health, 1-b.healthf()), (b.block.size == 1 ? 0.3f : 0.25f) * 0.25f * b.block.size, false, Align.center);
                 });
