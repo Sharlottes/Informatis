@@ -123,6 +123,15 @@ public class OverDrawer {
                 Drawf.arrow(camx, camy, t.worldx(), t.worldy(), leng, (Math.min(200 * 8f, Mathf.dst(camx, camy, t.worldx(), t.worldy())) / (200 * 8f)) * (5f + sin));
             });
 
+            if(Core.settings.getBool("unithealthui")) {
+                Groups.unit.each(FreeBar::draw);
+                indexer.eachBlock(null, camera.position.x, camera.position.y, 400, b -> true, b -> {
+                    Fonts.outline.draw((int)b.health + " / " + (int)b.maxHealth,
+                        b.x, b.y - b.block.size * 8 * 0.25f,
+                        Tmp.c1.set(Pal.items).lerp(Pal.health, 1-b.healthf()), (b.block.size == 1 ? 0.3f : 0.25f) * 0.25f * b.block.size, false, Align.center);
+                });
+            }
+
             if(settings.getBool("blockstatus")) Groups.build.each(build -> {
                 if(Vars.player != null && player.team() == build.team) return;
 
@@ -140,8 +149,6 @@ public class OverDrawer {
                 }
             });
 
-            if(Core.settings.getBool("unithealthui")) Groups.unit.each(FreeBar::draw);
-
             if(!mobile && !Vars.state.isPaused() && settings.getBool("gaycursor"))
                 Fx.mine.at(Core.input.mouseWorldX(), Core.input.mouseWorldY(), Tmp.c2.set(Color.red).shiftHue(Time.time * 1.5f));
 
@@ -150,7 +157,6 @@ public class OverDrawer {
                         unit.x + Angles.trnsx(unit.rotation + 180f, unit.type.itemOffsetY),
                         unit.y + Angles.trnsy(unit.rotation + 180f, unit.type.itemOffsetY) - 3,
                         Pal.accent, 0.25f * unit.itemTime / Scl.scl(1f), false, Align.center);
-                Draw.reset();
             });
 
             // Turret Ranges

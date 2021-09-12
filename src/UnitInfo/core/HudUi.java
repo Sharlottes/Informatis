@@ -53,6 +53,7 @@ public class HudUi {
     Table waveInfoTable = new Table();
     float waveScrollPos;
     float itemScrollPos;
+    float weaponScrollPos;
 
     Teamc shotTarget;
     Teamc lockedTarget;
@@ -303,7 +304,7 @@ public class HudUi {
         addItemTable();
         table.removeChild(baseTable);
         labelTable.setPosition(buttons.items[uiIndex].x, buttons.items[uiIndex].y);
-        baseTable = table.table(tt -> tt.stack(unitTable, waveTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
+        baseTable = table.table(tt -> tt.stack(unitTable, waveTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).left().get();
         a = 1f;
     }
 
@@ -336,7 +337,7 @@ public class HudUi {
                     t.row();
                 }
             });
-            baseTable = table.table(tt -> tt.stack(unitTable, waveTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).get();
+            baseTable = table.table(tt -> tt.stack(unitTable, waveTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).left().get();
             table.fillParent = true;
 
             table.visibility = () -> ui.hudfrag.shown && !ui.minimapfrag.shown();
@@ -456,7 +457,7 @@ public class HudUi {
                         }
                         Draw.reset();
                     }
-                }).size(iconMed * Scl.scl(modUiScale)).padRight(Scl.scl(modUiScale) * 8f);
+                }).size(iconMed * Scl.scl(modUiScale) * 0.75f);
             }));
         }};
     }
@@ -524,7 +525,6 @@ public class HudUi {
 
             float[] count = new float[]{-1};
             table1.table().update(t -> {
-                if(!Core.settings.getBool("infoui")) return;
                 if(getTarget() instanceof Payloadc payload){
                     if(count[0] != payload.payloadUsed()){
                         t.clear();
@@ -552,7 +552,7 @@ public class HudUi {
 
             Bits statuses = new Bits();
             table1.table().update(t -> {
-                if(!Core.settings.getBool("infoui")) return;
+                
                 t.left();
                 if(getTarget() instanceof Statusc st){
                     Bits applied = st.statusBits();
@@ -577,10 +577,11 @@ public class HudUi {
     public void addUnitTable(){
         if(uiIndex != 0) return;
         unitTable = new Table(table -> {
-            table.left().defaults().width(Scl.scl(modUiScale) * 27 * 8f).maxHeight(Scl.scl(modUiScale) * 35 * 8f);
+            table.left().defaults().width(Scl.scl(modUiScale) * 35 * 8f).height(Scl.scl(modUiScale) * 35 * 8f);
             addBars();
             Table table1 = new Table(Tex.button, t -> {
                 t.table(Tex.underline2, tt -> {
+                    tt.setWidth(Scl.scl(modUiScale) * 35 * 8f);
                     Stack stack = new Stack(){{
                         add(new Table(ttt -> {
                             ttt.image(() -> {
@@ -619,9 +620,9 @@ public class HudUi {
                             if(getTarget() instanceof ConstructBlock.ConstructBuild cb) name = cb.current.localizedName;
                             else name = b.block.localizedName;
                         }
-                        return "[accent]" + (name.length() > 12 ? name.substring(0, 12) + "..." : name) + "[]";
+                        return "[accent]" + (name.length() > 10 ? name.substring(0, 10) + "..." : name) + "[]";
                     });
-                    label.setFontScale(Scl.scl(modUiScale));
+                    label.setFontScale(Scl.scl(modUiScale) * 0.75f);
 
                     TextButton button = Elem.newButton("?", Styles.clearPartialt, () -> {
                         if(getTarget() instanceof Unit u && u.type != null)
@@ -632,7 +633,6 @@ public class HudUi {
                     });
                     button.visibility = () -> getTarget() != null;
                     button.update(() -> {
-                        if(!Core.settings.getBool("infoui")) return;
                         lockButton.getStyle().imageUp = Icon.lock.tint(locked ? Pal.accent : Color.white);
                     });
                     button.getLabel().setFontScale(Scl.scl(modUiScale));
@@ -646,7 +646,7 @@ public class HudUi {
                     tt.top();
                     tt.add(stack);
                     tt.add(label);
-                    tt.add(button).size(Scl.scl(modUiScale) * 5 * 8f);
+                    tt.add(button).size(Scl.scl(modUiScale) * 3 * 8f);
                     tt.add(lockButton);
 
                     tt.clicked(()->{
@@ -673,31 +673,38 @@ public class HudUi {
                         to.add(label2);
                     })));
                     tt.update(() -> {
-                        if(!Core.settings.getBool("infoui")) return;
                         tt.setBackground(((NinePatchDrawable)Tex.underline2).tint(getTarget().isNull() ? Color.gray : getTarget().team().color));
                     });
                 });
                 t.row();
-                t.table(tt -> {
-                    tt.defaults().width(Scl.scl(modUiScale) * 30f * 8f).height(Scl.scl(modUiScale) * 4f * 8f).pad(0,4,0,4).top();
+                ScrollPane pane = t.pane(Styles.nonePane, new Table(tt -> {
                     for(Element bar : bars){
                         bar.setScale(Scl.scl(modUiScale));
                         tt.add(bar).growX().left();
                         tt.row();
                     }
+                    tt.row();
+                    addWeaponTable(tt);
+                }).left()).get();
+                pane.update(() -> {
+                    Element result = scene.hit(input.mouseX(), input.mouseY(), true);
+                    if(pane.hasScroll() && (result == null || !result.isDescendantOf(pane)))
+                        scene.setScrollFocus(null);
+                    weaponScrollPos = pane.getScrollY();
                 });
-                t.row();
-                addWeaponTable(t);
+
+                pane.setOverscroll(false, false);
+                pane.setScrollingDisabled(true, false);
+                pane.setScrollYForce(weaponScrollPos);
+
                 t.update(() -> {
-                    if(!Core.settings.getBool("infoui")) return;
                     NinePatchDrawable patch = (NinePatchDrawable)Tex.button;
                     t.setBackground(patch.tint(Tmp.c1.set(patch.getPatch().getColor()).a(settings.getInt("uiopacity") / 100f)));
                 });
             });
-            table.table(t -> t.stack(table1, addInfoTable(t))).padLeft(3f * 8f);
+            table.table(t -> t.stack(table1, addInfoTable(t)).padRight(Scl.scl(modUiScale) * 8 * 8f));
 
             table.update(() -> {
-                if(!Core.settings.getBool("infoui")) return;
                 try {
                     BarInfo.getInfo(getTarget());
                 } catch (IllegalAccessException | NoSuchFieldException e) {
@@ -713,152 +720,110 @@ public class HudUi {
     }
 
     public void setWave(Table table){
-        table.defaults().minWidth(Scl.scl(modUiScale) * 46 * 8f);
         int winWave = state.isCampaign() && state.rules.winWave > 0 ? state.rules.winWave : Integer.MAX_VALUE;
         waveamount = settings.getInt("wavemax");
         for(int i = settings.getBool("pastwave") ? 0 : state.wave - 1; i <= Math.min(state.wave + waveamount, winWave - 2); i++){
             final int j = i;
             if(!settings.getBool("emptywave") && state.rules.spawns.find(g -> g.getSpawned(j) > 0) == null) continue;
             table.table(table1 -> {
-                table1.left();
-                table1.table(t -> {
-                    Label label = new Label(() -> "[#" + (state.wave == j+1 ? Color.red.toString() : Pal.accent.toString()) + "]" + (j+1) + "[]");
-                    label.setFontScale(Scl.scl(modUiScale));
-                    t.add(label);
-                });
-                table1.table(Tex.underline, tx -> {
-                    tx.defaults().marginRight(2 * 8f);
-                    tx.fillParent = true;
-                    if(settings.getBool("emptywave") && state.rules.spawns.find(g -> g.getSpawned(j) > 0) == null) {
-                        tx.center();
-                        Label label = new Label("[lightgray]<Empty>[]");
+                table1.defaults().width(Scl.scl(modUiScale) * 30 * 8f);
+                table1.stack(
+                    new Table(t -> {
+                        Label label = new Label(() -> "[#" + (state.wave == j ? Color.red.toString() : Pal.accent.toString()) + "]" + j + "[]");
                         label.setFontScale(Scl.scl(modUiScale));
-                        tx.add(label);
-                        return;
-                    }
+                        t.add(label).padRight(Scl.scl(modUiScale) * 24 * 8f);
+                    }),
+                    new Table(Tex.underline, t -> {
+                        t.marginLeft(Scl.scl(modUiScale) * 3 * 8f);
+                        if(settings.getBool("emptywave") && state.rules.spawns.find(g -> g.getSpawned(j) > 0) == null) {
+                            t.center();
+                            Label label = new Label("[lightgray]<Empty>[]");
+                            label.setFontScale(Scl.scl(modUiScale));
+                            t.add(label);
+                            return;
+                        }
 
-                    ObjectIntMap<SpawnGroup> groups = new ObjectIntMap<>();
-                    for(SpawnGroup group : state.rules.spawns) {
-                        if(group.getSpawned(j) <= 0) continue;
-                        SpawnGroup sameTypeKey = groups.keys().toArray().find(g -> g.type == group.type && g.effect != StatusEffects.boss);
-                        if(sameTypeKey != null) groups.increment(sameTypeKey, sameTypeKey.getSpawned(j));
-                        else groups.put(group, group.getSpawned(j));
-                    }
-                    Seq<SpawnGroup> groupSorted = groups.keys().toArray().copy().sort((g1, g2) -> {
-                        int boss = Boolean.compare(g1.effect != StatusEffects.boss, g2.effect != StatusEffects.boss);
-                        if(boss != 0) return boss;
-                        int hitSize = Float.compare(-g1.type.hitSize, -g2.type.hitSize);
-                        if(hitSize != 0) return hitSize;
-                        return Integer.compare(-g1.type.id, -g2.type.id);
-                    });
-                    ObjectIntMap<SpawnGroup> groupsTmp = new ObjectIntMap<>();
-                    groupSorted.each(g -> groupsTmp.put(g, groups.get(g)));
-
-                    int row = 0;
-                    for(SpawnGroup group : groupsTmp.keys()){
-                        int spawners = state.rules.waveTeam.cores().size + (group.type.flying ? spawner.countFlyerSpawns() : spawner.countGroundSpawns());
-                        int amount = groupsTmp.get(group);
-                        tx.table(tt -> {
-                            Image image = new Image(group.type.uiIcon).setScaling(Scaling.fit);
-                            tt.stack(
-                                new Table(ttt -> {
-                                    ttt.center();
-                                    ttt.add(image).size(iconMed * Scl.scl(modUiScale));
-                                    ttt.pack();
-                                }),
-
-                                new Table(ttt -> {
-                                    ttt.bottom().left();
-                                    Label label = new Label(() -> amount + "");
-                                    label.setFontScale(Scl.scl(modUiScale) * 0.9f);
-                                    Label multi = new Label(() -> "[gray]x" + spawners);
-                                    multi.setFontScale(Scl.scl(modUiScale) * 0.8f);
-                                    ttt.add(label);
-                                    ttt.add(multi).padTop(8f);
-                                    ttt.pack();
-                                }),
-
-                                new Table(ttt -> {
-                                    ttt.top().right();
-                                    Image image1 = new Image(Icon.warning.getRegion()).setScaling(Scaling.fit);
-                                    image1.update(() -> {
-                                        if(!Core.settings.getBool("infoui")) return;
-                                        image1.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f)));
-                                    });
-                                    ttt.add(image1).size(Scl.scl(modUiScale) * 12f);
-                                    ttt.visible(() -> group.effect == StatusEffects.boss);
-                                    ttt.pack();
-                                })
-                            ).pad(2f * Scl.scl(modUiScale));
-                            tt.clicked(() -> {
-                                if(input.keyDown(KeyCode.shiftLeft) && Fonts.getUnicode(group.type.name) != 0){
-                                    app.setClipboardText((char)Fonts.getUnicode(group.type.name) + "");
-                                    ui.showInfoFade("@copied");
-                                }else{
-                                    ui.content.show(group.type);
-                                }
-                            });
-                            if(!mobile){
-                                HandCursorListener listener1 = new HandCursorListener();
-                                tt.addListener(listener1);
-                                tt.update(() -> {
-                                    if(!Core.settings.getBool("infoui")) return;
-                                    image.color.lerp(!listener1.isOver() ? Color.lightGray : Color.white, Mathf.clamp(0.4f * Time.delta));
-                                });
-                            }
-                            tt.addListener(new Tooltip(t -> t.background(Tex.button).table(to -> {
-                                to.left();
-                                to.table(Tex.underline2, tot -> tot.add("[stat]" + group.type.localizedName + "[]")).row();
-                                to.add(bundle.format("shar-stat-waveAmount", amount + " [lightgray]x" + spawners + "[]")).row();
-                                to.add(bundle.format("shar-stat-waveShield", group.getShield(j))).row();
-                                if(group.effect != null) {
-                                    if(group.effect == StatusEffects.none) return;
-                                    Image status = new Image(group.effect.uiIcon).setScaling(Scaling.fit);
-                                    if(group.effect == StatusEffects.boss){
-                                        status = new Image(Icon.warning.getRegion()).setScaling(Scaling.fit);
-                                        Image finalStatus = status;
-                                        status.update(() -> {
-                                            if(!Core.settings.getBool("infoui")) return;
-                                            finalStatus.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f)));
-                                        });
-                                    }
-                                    Image finalStatus = status;
-                                    to.table(tot -> {
-                                        tot.left();
-                                        tot.add(bundle.get("shar-stat.waveStatus"));
-                                        tot.add(finalStatus).size(Scl.scl(modUiScale) * 3 * 8f);
-                                        if(!mobile){
-                                            HandCursorListener listener = new HandCursorListener();
-                                            finalStatus.addListener(listener);
-                                            finalStatus.update(() -> {
-                                                if(!Core.settings.getBool("infoui")) return;
-                                                finalStatus.color.lerp(!listener.isOver() ? Color.lightGray : Color.white, Mathf.clamp(0.4f * Time.delta));
-                                            });
-                                        }
-                                        tot.add("[stat]" + group.effect.localizedName);
-                                    }).size(iconMed * Scl.scl(modUiScale));
-                                    to.row();
-                                }
-                                if(group.items != null) {
-                                    to.table(tot -> {
-                                        tot.left();
-                                        ItemStack stack = group.items;
-                                        tot.add(bundle.get("shar-stat.waveItem"));
-                                        tot.add(new ItemImage(stack)).size(Scl.scl(modUiScale) * 3 * 8f);
-                                        if(!mobile){
-                                            HandCursorListener listener = new HandCursorListener();
-                                            tot.addListener(listener);
-                                            tot.update(() -> tot.color.lerp(!listener.isOver() ? Color.lightGray : Color.white, Mathf.clamp(0.4f * Time.delta)));
-                                        }
-                                        tot.add("[stat]" + stack.item.localizedName);
-                                    }).size(iconMed * Scl.scl(modUiScale));
-                                    to.row();
-                                }
-                            })));
+                        ObjectIntMap<SpawnGroup> groups = new ObjectIntMap<>();
+                        for(SpawnGroup group : state.rules.spawns) {
+                            if(group.getSpawned(j) <= 0) continue;
+                            SpawnGroup sameTypeKey = groups.keys().toArray().find(g -> g.type == group.type && g.effect != StatusEffects.boss);
+                            if(sameTypeKey != null) groups.increment(sameTypeKey, sameTypeKey.getSpawned(j));
+                            else groups.put(group, group.getSpawned(j));
+                        }
+                        Seq<SpawnGroup> groupSorted = groups.keys().toArray().copy().sort((g1, g2) -> {
+                            int boss = Boolean.compare(g1.effect != StatusEffects.boss, g2.effect != StatusEffects.boss);
+                            if(boss != 0) return boss;
+                            int hitSize = Float.compare(-g1.type.hitSize, -g2.type.hitSize);
+                            if(hitSize != 0) return hitSize;
+                            return Integer.compare(-g1.type.id, -g2.type.id);
                         });
-                        if(++row % 8 == 0) tx.row();
-                    }
-                });
+                        ObjectIntMap<SpawnGroup> groupsTmp = new ObjectIntMap<>();
+                        groupSorted.each(g -> groupsTmp.put(g, groups.get(g)));
+
+                        int row = 0;
+                        for(SpawnGroup group : groupsTmp.keys()){
+                            int spawners = state.rules.waveTeam.cores().size + (group.type.flying ? spawner.countFlyerSpawns() : spawner.countGroundSpawns());
+                            int amount = groupsTmp.get(group);
+                            t.table(tt -> {
+                                Image image = new Image(group.type.uiIcon).setScaling(Scaling.fit);
+                                tt.stack(
+                                        new Table(ttt -> {
+                                            ttt.center();
+                                            ttt.add(image).size(iconMed * Scl.scl(modUiScale));
+                                            ttt.pack();
+                                        }),
+
+                                        new Table(ttt -> {
+                                            ttt.bottom().left();
+                                            Label label = new Label(() -> amount + "");
+                                            label.setFontScale(Scl.scl(modUiScale) * 0.9f);
+                                            Label multi = new Label(() -> "[gray]x" + spawners);
+                                            multi.setFontScale(Scl.scl(modUiScale) * 0.8f);
+                                            ttt.add(label).padTop(2f);
+                                            ttt.add(multi).padTop(10f);
+                                            ttt.pack();
+                                        }),
+
+                                        new Table(ttt -> {
+                                            ttt.top().right();
+                                            Image image1 = new Image(Icon.warning.getRegion()).setScaling(Scaling.fit);
+                                            image1.update(() -> {
+                                                image1.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f)));
+                                            });
+                                            ttt.add(image1).size(Scl.scl(modUiScale) * 12f);
+                                            ttt.visible(() -> group.effect == StatusEffects.boss);
+                                            ttt.pack();
+                                        })
+                                ).pad(2f * Scl.scl(modUiScale));
+                                tt.clicked(() -> {
+                                    if(input.keyDown(KeyCode.shiftLeft) && Fonts.getUnicode(group.type.name) != 0){
+                                        app.setClipboardText((char)Fonts.getUnicode(group.type.name) + "");
+                                        ui.showInfoFade("@copied");
+                                    }else{
+                                        ui.content.show(group.type);
+                                    }
+                                });
+                                if(!mobile){
+                                    HandCursorListener listener = new HandCursorListener();
+                                    tt.addListener(listener);
+                                    tt.update(() -> {
+                                        image.color.lerp(!listener.isOver() ? Color.lightGray : Color.white, Mathf.clamp(0.4f * Time.delta));
+                                    });
+                                }
+                                tt.addListener(new Tooltip(ttt -> ttt.table(Styles.black6, to -> {
+                                    to.margin(4f).left();
+                                    to.add("[stat]" + group.type.localizedName + "[]").row();
+                                    to.row();
+                                    to.add(bundle.format("shar-stat-waveAmount", amount + " [lightgray]x" + spawners + "[]")).row();
+                                    to.add(bundle.format("shar-stat-waveShield", group.getShield(j))).row();
+                                    if(group.effect != null && group.effect != StatusEffects.none)
+                                        to.add(bundle.get("shar-stat.waveStatus") + group.effect.emoji() + "[stat]" + group.effect.localizedName).row();
+                                })));
+                            });
+                            if(++row % 4 == 0) t.row();
+                        }
+                    })
+                );
             });
             table.row();
         }
@@ -867,14 +832,14 @@ public class HudUi {
     public void addWaveTable(){
         if(uiIndex != 1) return;
         waveTable = new Table(table -> {
-            table.defaults().width(Scl.scl(modUiScale) * 54 * 8f).height(unitTable.getHeight() * Scl.scl(modUiScale));
+            table.defaults().width(Scl.scl(modUiScale) * 35 * 8f).height(unitTable.getHeight() * Scl.scl(modUiScale));
             table.add(new Table(Tex.button, t -> {
                 ScrollPane pane = t.pane(new ScrollPane.ScrollPaneStyle(){{
                     vScroll = Tex.clear;
                     vScrollKnob = new ScaledNinePatchDrawable(new NinePatch(((TextureRegionDrawable) scrollKnobVerticalThin).getRegion()), modUiScale);
                 }}, new Table(this::setWave)).get();
                 pane.update(() -> {
-                    if(!Core.settings.getBool("infoui")) return;
+                    
                     if(pane.hasScroll()){
                         Element result = scene.hit(input.mouseX(), input.mouseY(), true);
                         if(result == null || !result.isDescendantOf(pane)){
@@ -893,7 +858,7 @@ public class HudUi {
                     NinePatchDrawable patch = (NinePatchDrawable)Tex.button;
                     t.setBackground(patch.tint(Tmp.c1.set(patch.getPatch().getColor()).a(settings.getInt("uiopacity") / 100f)));
                 });
-            })).padRight(Scl.scl(modUiScale) * 39 * 8f);
+            })).padRight(Scl.scl(modUiScale) * 72 * 8f);
 
             table.fillParent = true;
             table.visibility = () -> uiIndex == 1;
@@ -907,7 +872,7 @@ public class HudUi {
                 if((state.rules.pvp && coreItems.teams[i] != player.team()) || coreItems.teams[i].cores().isEmpty()) continue;
                 int finalI = i;
                 t.table(tt -> {
-                    tt.center().defaults().width(Scl.scl(modUiScale) * 46 * 8f);
+                    tt.center().defaults().width(Scl.scl(modUiScale) * 44 * 8f);
                     coreItems.tables.get(finalI).setBackground(((NinePatchDrawable)Tex.underline2).tint(coreItems.teams[finalI].color));
                     tt.add(coreItems.tables.get(finalI)).left();
                 }).pad(4);
@@ -919,11 +884,11 @@ public class HudUi {
     public void addItemTable(){
         if(uiIndex != 2) return;
         itemTable = new Table(table -> {
-            table.left().defaults().width(Scl.scl(modUiScale) * 54 * 8f).height(unitTable.getHeight() * Scl.scl(modUiScale));
+            table.left().defaults().height(unitTable.getHeight() * Scl.scl(modUiScale));
             table.table(Tex.button, t -> {
                 ScrollPane pane = t.pane(new ScrollPane.ScrollPaneStyle(){{
                     vScroll = Tex.clear;
-                    vScrollKnob = new ScaledNinePatchDrawable(new NinePatch(((TextureRegionDrawable) scrollKnobVerticalThin).getRegion()), modUiScale);
+                    vScrollKnob = new ScaledNinePatchDrawable(new NinePatch(((TextureRegionDrawable) scrollKnobVerticalThin).getRegion()), modUiScale * 0.75f);
                 }}, new Table(this::setItem).left()).get();
                 pane.update(() -> {
                     Element result = scene.hit(input.mouseX(), input.mouseY(), true);

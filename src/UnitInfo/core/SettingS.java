@@ -76,11 +76,12 @@ public class SettingS {
                             .update(a -> a.setColor(condition.get() ? Color.white : Color.gray));
 
                     t.field((integer ? String.valueOf(value[0]).split("[.]")[0] : value[0]) + str[0], s -> {
-                                value[0] = Strings.parseFloat(s);
                                 str[0] = h.get(s);
+                                value[0] = s.isEmpty() ? def : Strings.parseFloat(s);
 
-                                if(integer) settings.put(key, Strings.parseInt(s.split("[.]")[0]));
-                                else settings.put(key, Strings.parseFloat(s));
+                                if(integer) settings.put(key, (int)value[0]);
+                                else settings.put(key, value[0]);
+
                             }).update(a -> a.setDisabled(!condition.get()))
                             .valid(f -> Strings.canParsePositiveFloat(f) && Strings.parseFloat(f) >= min && Strings.parseFloat(f) <= max).width(120f).left();
                 });
@@ -120,7 +121,6 @@ public class SettingS {
         addGraphicCheckSetting("allTargetRange", false, rangeSeq);
         addGraphicCheckSetting("coreRange", false, rangeSeq);
         addGraphicCheckSetting("unitRange", false, rangeSeq);
-        addGraphicCheckSetting("softRangeDrawing", false, rangeSeq);
 
         Seq<SharSetting> opacitySeq = new Seq<>();
         addGraphicSlideSetting("selectopacity", 50, 0, 100, 5, s -> s + "%", opacitySeq);
