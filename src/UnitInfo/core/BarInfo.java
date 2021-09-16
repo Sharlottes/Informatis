@@ -203,7 +203,7 @@ public class BarInfo {
             colors.set(3, Pal.ammo);
             numbers.set(3, block.boostScale * crafter.attrsum / block.maxBoost);
         }
-        else if(target instanceof SolidPump.SolidPumpBuild crafter){
+        else if(target instanceof SolidPump.SolidPumpBuild crafter && ((SolidPump)crafter.block).attribute != null){
             SolidPump block = (SolidPump) crafter.block;
             float fraction = Math.max(crafter.validTiles + crafter.boost + (block.attribute == null ? 0 : block.attribute.env()), 0);
             float max = content.blocks().max(b -> b instanceof Floor f && f.attributes != null ? f.attributes.get(block.attribute) : 0).asFloor().attributes.get(block.attribute);
