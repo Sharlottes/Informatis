@@ -60,6 +60,8 @@ public class HudUi {
     ImageButton lockButton;
     boolean locked = false;
 
+    boolean waveShown;
+
     float a;
     int uiIndex = 0;
 
@@ -291,7 +293,12 @@ public class HudUi {
         Table statusTable = Version.number >= 131 ? (Table)scene.find("statustable") : (Table)waveTable.getChildren().get(1);
         waveTable.removeChild(statusTable);
         table.row();
-        table.stack(waveInfoTable, statusTable.top(), pathlineTable).fillX().colspan(table.getColumns());
+        table.stack(
+            new Table(tt -> tt.collapser(t -> t.stack(waveInfoTable, statusTable.top(), pathlineTable), true, () -> waveShown)).top(),
+            new Table(tt -> tt.button(Icon.downOpen, Styles.clearToggleTransi, () -> waveShown = !waveShown).size(4 * 8f).checked(b -> {
+                b.getImage().setDrawable(waveShown ? Icon.upOpen : Icon.downOpen);
+                return waveShown;
+            })).left().top());
     }
 
     public void reset(int index, Seq<Button> buttons, Label label, Table table, Table labelTable, String hud){

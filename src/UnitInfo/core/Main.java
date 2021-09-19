@@ -1,5 +1,6 @@
 package UnitInfo.core;
 
+import UnitInfo.shaders.LineShader;
 import UnitInfo.shaders.RangeShader;
 import arc.*;
 import mindustry.*;
@@ -14,6 +15,7 @@ public class Main extends Mod {
     @Override
     public void init(){
         turretRange = new RangeShader();
+        lineShader = new LineShader();
         Core.app.post(() -> {
             Mods.ModMeta meta = Vars.mods.locateMod("unitinfo").meta;
             meta.displayName = "[#B5FFD9]Unit Information[]";

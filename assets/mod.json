@@ -5,7 +5,7 @@
   "description": "The mod displays more information in-game, such as unit/building, wave, core, tile, item/unit total info etc",
   "version": "1.4",
   "main": "UnitInfo.core.Main",
-  "minGameVersion": "130.1",
+  "minGameVersion": "131",
   "dependencies": [],
   "hidden": true,
   "java": true

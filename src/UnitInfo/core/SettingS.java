@@ -115,7 +115,7 @@ public class SettingS {
         addGraphicCheckSetting("emptywave", true, tapSeq);
 
         Seq<SharSetting> rangeSeq = new Seq<>();
-        addGraphicTypeSetting("rangeRadius", 0, 50, 20, true, () -> true, s -> s + "tiles", rangeSeq);
+        addGraphicTypeSetting("rangeRadius", 0, 500, 20, true, () -> true, s -> s + "tiles", rangeSeq);
         addGraphicCheckSetting("rangeNearby", true, rangeSeq);
         addGraphicCheckSetting("allTeamRange", false, rangeSeq);
         addGraphicCheckSetting("allTargetRange", false, rangeSeq);
