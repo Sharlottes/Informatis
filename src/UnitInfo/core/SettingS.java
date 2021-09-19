@@ -107,7 +107,7 @@ public class SettingS {
         Seq<Seq<SharSetting>> settingSeq = new Seq<>();
         Seq<SharSetting> tapSeq = new Seq<>();
         addGraphicSlideSetting("barstyle", 0, 0, 5, 1, s -> s == 0 ? "default bar" : s + "th bar", tapSeq);
-        addGraphicSlideSetting("infoUiScale", 75, 50, 100, 5, s -> s + "%", tapSeq);
+        addGraphicSlideSetting("infoUiScale", mobile ? 50 : 75, 50, 100, 5, s -> s + "%", tapSeq);
         addGraphicSlideSetting("coreItemCheckRate", 60, 6, 180, 6, s -> Strings.fixed(s/60f,1) + "sec", tapSeq);
         addGraphicTypeSetting("wavemax", 0, 200,100, true, () -> true, s -> s + "waves", tapSeq);
         addGraphicCheckSetting("infoui", true, tapSeq);
