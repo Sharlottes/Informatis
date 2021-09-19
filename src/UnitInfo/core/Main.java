@@ -1,5 +1,6 @@
 package UnitInfo.core;
 
+import UnitInfo.shaders.RangeShader;
 import arc.*;
 import mindustry.*;
 import mindustry.game.EventType.*;
@@ -12,6 +13,7 @@ public class Main extends Mod {
 
     @Override
     public void init(){
+        turretRange = new RangeShader();
         Core.app.post(() -> {
             Mods.ModMeta meta = Vars.mods.locateMod("unitinfo").meta;
             meta.displayName = "[#B5FFD9]Unit Information[]";

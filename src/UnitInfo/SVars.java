@@ -1,19 +1,11 @@
 package UnitInfo;
 
 import UnitInfo.core.*;
-import arc.Core;
-import arc.files.*;
+import UnitInfo.shaders.RangeShader;
 import arc.graphics.g2d.TextureRegion;
-import arc.math.geom.Rect;
-import arc.scene.ui.TextButton;
-import arc.scene.ui.layout.Scl;
-import arc.scene.ui.layout.Table;
-import arc.struct.*;
-import mindustry.world.Tile;
 
 import static arc.Core.atlas;
 import static arc.Core.settings;
-import static mindustry.Vars.*;
 
 public class SVars {
     public static HudUi hud = new HudUi();
@@ -21,6 +13,6 @@ public class SVars {
     public static boolean pathLine = false, unitLine = false, logicLine = false;
     public static TextureRegion clear = atlas.find("clear");
     public static TextureRegion error = atlas.find("error");
-
+    public static RangeShader turretRange;
     public static boolean jsonGen = false;
 }

@@ -121,12 +121,13 @@ public class SettingS {
         addGraphicCheckSetting("allTargetRange", false, rangeSeq);
         addGraphicCheckSetting("coreRange", false, rangeSeq);
         addGraphicCheckSetting("unitRange", false, rangeSeq);
+        addGraphicCheckSetting("RangeShader", true, rangeSeq);
 
         Seq<SharSetting> opacitySeq = new Seq<>();
         addGraphicSlideSetting("selectopacity", 50, 0, 100, 5, s -> s + "%", opacitySeq);
         addGraphicSlideSetting("baropacity", 50, 0, 100, 5, s -> s + "%", opacitySeq);
         addGraphicSlideSetting("uiopacity", 50, 0, 100, 5, s -> s + "%", opacitySeq);
-        addGraphicSlideSetting("softRangeOpacity", 10, 0, 25, 1, s -> s + "%", opacitySeq);
+        addGraphicSlideSetting("softRangeOpacity", 60, 0, 100, 10, s -> s + "%", opacitySeq);
 
         Seq<SharSetting> drawSeq = new Seq<>();
         addGraphicTypeSetting("pathlinelimit", 0, 5000, 50, true, () -> true, s -> s + "lines", drawSeq);
