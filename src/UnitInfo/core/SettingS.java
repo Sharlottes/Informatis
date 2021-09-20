@@ -111,6 +111,7 @@ public class SettingS {
         addGraphicSlideSetting("coreItemCheckRate", 60, 6, 180, 6, s -> Strings.fixed(s/60f,1) + "sec", tapSeq);
         addGraphicTypeSetting("wavemax", 0, 200,100, true, () -> true, s -> s + "waves", tapSeq);
         addGraphicCheckSetting("infoui", true, tapSeq);
+        addGraphicCheckSetting("waveui", true, tapSeq);
         addGraphicCheckSetting("pastwave", false, tapSeq);
         addGraphicCheckSetting("emptywave", true, tapSeq);
 
@@ -151,7 +152,7 @@ public class SettingS {
 
         sharset.table(t -> {
             Seq<TextButton> buttons = new Seq<>();
-            buttons.add(new TextButton(bundle.get("setting.shar-wave"), Styles.clearToggleMenut));
+            buttons.add(new TextButton(bundle.get("setting.shar-ui"), Styles.clearToggleMenut));
             buttons.add(new TextButton(bundle.get("setting.shar-range"), Styles.clearToggleMenut));
             buttons.add(new TextButton(bundle.get("setting.shar-opacity"), Styles.clearToggleMenut));
             buttons.add(new TextButton(bundle.get("setting.shar-draw"), Styles.clearToggleMenut));

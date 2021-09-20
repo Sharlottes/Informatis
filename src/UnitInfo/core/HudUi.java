@@ -298,7 +298,7 @@ public class HudUi {
             new Table(tt -> tt.button(Icon.downOpen, Styles.clearToggleTransi, () -> waveShown = !waveShown).size(4 * 8f).checked(b -> {
                 b.getImage().setDrawable(waveShown ? Icon.upOpen : Icon.downOpen);
                 return waveShown;
-            })).left().top());
+            })).left().top()).visible(() -> settings.getBool("waveui"));
     }
 
     public void reset(int index, Seq<Button> buttons, Label label, Table table, Table labelTable, String hud){

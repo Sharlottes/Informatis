@@ -16,6 +16,7 @@ public class Main extends Mod {
     public void init(){
         turretRange = new RangeShader();
         lineShader = new LineShader();
+
         Core.app.post(() -> {
             Mods.ModMeta meta = Vars.mods.locateMod("unitinfo").meta;
             meta.displayName = "[#B5FFD9]Unit Information[]";
