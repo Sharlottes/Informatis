@@ -24,7 +24,6 @@ import mindustry.entities.units.*;
 import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
-import mindustry.input.*;
 import mindustry.logic.Ranged;
 import mindustry.type.*;
 import mindustry.ui.*;
@@ -40,8 +39,6 @@ import mindustry.world.blocks.production.*;
 import mindustry.world.blocks.storage.*;
 import mindustry.world.blocks.units.*;
 
-import java.util.regex.Pattern;
-
 import static UnitInfo.SVars.*;
 import static arc.Core.*;
 import static mindustry.Vars.*;
@@ -56,11 +53,7 @@ public class HudUi {
     Table itemTable = new Table();
     Table waveInfoTable = new Table();
     Table schemListTable = new Table();
-    Table notifs = new Table();
-    float waveScrollPos;
-    float itemScrollPos;
-    float weaponScrollPos;
-    float schemScrollPos;
+    float waveScrollPos, itemScrollPos, weaponScrollPos, schemScrollPos, tagScrollPos;
 
     Teamc shotTarget;
     Teamc lockedTarget;
@@ -69,6 +62,8 @@ public class HudUi {
 
     boolean waveShown, schemShown;
     private Schematic firstSchematic;
+    private Seq<String> selectedTags = new Seq<>();
+    private Runnable rebuildList = () -> {};
 
     float a;
     int uiIndex = 0;
@@ -85,6 +80,7 @@ public class HudUi {
     CoresItemsDisplay coreItems = new CoresItemsDisplay(Team.baseTeams);
 
     public final Rect scissor = new Rect();
+
 
     @SuppressWarnings("unchecked")
     public <T extends Teamc> T getTarget(){
@@ -255,98 +251,122 @@ public class HudUi {
         });
     }
 
-    public void addSchemTable() {
+    public void setSchemTable() {
         schemListTable = new Table(table -> {
             table.right();
             table.button("Schemtic List", Icon.downOpen, Styles.squareTogglet, () -> {
-                    schemShown = !schemShown;
-                    rebuildList();
-                }).width(160f).height(60f)
-                .checked(b -> {
-                    Image image = (Image)b.getCells().first().get();
-                    image.setDrawable(schemShown ? Icon.upOpen : Icon.downOpen);
-                    return schemShown;
-                }).row();
+                schemShown = !schemShown;
+                setSchemTable();
+            }).width(160f).height(60f).checked(b -> {
+                Image image = (Image)b.getCells().first().get();
+                image.setDrawable(schemShown ? Icon.upOpen : Icon.downOpen);
+                return schemShown;
+            }).row();
             table.collapser(t -> {
-                t.background(Styles.black8);
-                notifs = t;
-                rebuildList();
-            }, true, () -> schemShown);
+                t.background(Styles.black8).defaults().maxHeight(72 * 8f).maxWidth(160f);
+                rebuildList = () -> {
+                    t.clearChildren();
+                    ScrollPane pane1 = t.pane(Styles.nonePane, p -> {
+                        p.left().defaults().pad(2).height(42f);
+                        try {
+                            for(String tag : (Seq<String>)SUtils.invoke(ui.schematics, "tags")){
+                                p.button(tag, Styles.togglet, () -> {
+                                    if(selectedTags.contains(tag)){
+                                        selectedTags.remove(tag);
+                                    }else{
+                                        selectedTags.add(tag);
+                                    }
+                                    rebuildList.run();
+                                }).checked(selectedTags.contains(tag)).with(c -> c.getLabel().setWrap(false));
+                            }
+                        } catch (IllegalAccessException | NoSuchFieldException e) {
+                            e.printStackTrace();
+                        }
+                    }).fillX().height(42f).get();
+                    pane1.update(() -> {
+                        Element result = scene.hit(input.mouseX(), input.mouseY(), true);
+                        if(pane1.hasScroll() && (result == null || !result.isDescendantOf(pane1)))
+                            scene.setScrollFocus(null);
+                        tagScrollPos = pane1.getScrollY();
+                    });
 
+                    pane1.setOverscroll(false, false);
+                    pane1.setScrollingDisabled(false, true);
+                    pane1.setScrollYForce(tagScrollPos);
+
+                    t.row();
+
+                    ScrollPane pane = t.pane(Styles.nonePane, p -> {
+                        p.table().update(tt -> {
+                            tt.clear();
+
+                            firstSchematic = null;
+
+                            for(Schematic s : schematics.all()){
+                                if(selectedTags.any() && !s.labels.containsAll(selectedTags)) continue;
+                                if(firstSchematic == null) firstSchematic = s;
+
+                                Button[] sel = {null};
+                                sel[0] = tt.button(b -> {
+                                    b.top();
+                                    b.margin(0f);
+                                    b.stack(new SchematicsDialog.SchematicImage(s).setScaling(Scaling.fit), new Table(n -> {
+                                        n.top();
+                                        n.table(Styles.black3, c -> {
+                                            Label label = c.add(s.name()).style(Styles.outlineLabel).color(Color.white).top().growX().maxWidth(200f - 8f).get();
+                                            label.setEllipsis(true);
+                                            label.setAlignment(Align.center);
+                                        }).growX().margin(1).pad(4).maxWidth(Scl.scl(160f - 8f)).padBottom(0);
+                                    })).size(160f);
+                                }, () -> {
+                                    if(sel[0].childrenPressed()) return;
+                                    if(state.isMenu()){
+                                        try {
+                                            ((SchematicsDialog.SchematicInfoDialog)SUtils.invoke(ui.schematics, "info")).show(s);
+                                        } catch (IllegalAccessException | NoSuchFieldException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }else{
+                                        if(!Vars.state.rules.schematicsAllowed){
+                                            ui.showInfo("@schematic.disabled");
+                                        }else{
+                                            control.input.useSchematic(s);
+                                        }
+                                    }
+                                }).pad(4).style(Styles.cleari).get();
+
+                                sel[0].getStyle().up = Tex.pane;
+                                tt.row();
+                            }
+
+                            if(firstSchematic == null){
+                                tt.add("@none");
+                            }
+                        });
+                    }).grow().get();
+
+                    pane.update(() -> {
+                        Element result = scene.hit(input.mouseX(), input.mouseY(), true);
+                        if(pane.hasScroll() && (result == null || !result.isDescendantOf(pane)))
+                            scene.setScrollFocus(null);
+                        schemScrollPos = pane.getScrollY();
+                    });
+
+                    pane.setOverscroll(false, false);
+                    pane.setScrollingDisabled(true, false);
+                    pane.setScrollYForce(schemScrollPos);
+                };
+                rebuildList.run();
+            }, true, () -> schemShown);
         });
+    }
+
+    public void addSchemTable() {
+        setSchemTable();
 
         Table table = (Table) scene.find("minimap/position");
         table.row();
         table.add(schemListTable);
-    }
-
-    public void rebuildList() {
-        if(notifs == null) return;
-
-        notifs.clear();
-        notifs.defaults().maxHeight(72 * 8f);
-        ScrollPane pane = notifs.pane(Styles.nonePane, p -> {
-            firstSchematic = null;
-
-            for(Schematic s : schematics.all()){
-                //make sure *tags* fit
-                Seq<String> seq = null;
-                try {
-                    seq = (Seq<String>) SUtils.invoke(ui.schematics, "selectedTags");
-                } catch (IllegalAccessException | NoSuchFieldException e) {
-                    e.printStackTrace();
-                }
-                if(seq != null && seq.any() && !s.labels.containsAll(seq)) continue;
-                if(firstSchematic == null) firstSchematic = s;
-
-                Button[] sel = {null};
-                sel[0] = p.button(b -> {
-                    b.top();
-                    b.margin(0f);
-                    b.stack(new SchematicsDialog.SchematicImage(s).setScaling(Scaling.fit), new Table(n -> {
-                        n.top();
-                        n.table(Styles.black3, c -> {
-                            Label label = c.add(s.name()).style(Styles.outlineLabel).color(Color.white).top().growX().maxWidth(200f - 8f).get();
-                            label.setEllipsis(true);
-                            label.setAlignment(Align.center);
-                        }).growX().margin(1).pad(4).maxWidth(Scl.scl(160f - 8f)).padBottom(0);
-                    })).size(160f);
-                }, () -> {
-                    if(sel[0].childrenPressed()) return;
-                    if(state.isMenu()){
-                        try {
-                            ((SchematicsDialog.SchematicInfoDialog)SUtils.invoke(ui.schematics, "info")).show(s);
-                        } catch (IllegalAccessException | NoSuchFieldException e) {
-                            e.printStackTrace();
-                        }
-                    }else{
-                        if(!Vars.state.rules.schematicsAllowed){
-                            ui.showInfo("@schematic.disabled");
-                        }else{
-                            control.input.useSchematic(s);
-                        }
-                    }
-                }).pad(4).style(Styles.cleari).get();
-
-                sel[0].getStyle().up = Tex.pane;
-                p.row();
-            }
-
-            if(firstSchematic == null){
-                p.add("@none");
-            }
-        }).grow().get();
-
-        pane.update(() -> {
-            Element result = scene.hit(input.mouseX(), input.mouseY(), true);
-            if(pane.hasScroll() && (result == null || !result.isDescendantOf(pane)))
-                scene.setScrollFocus(null);
-            schemScrollPos = pane.getScrollY();
-        });
-
-        pane.setOverscroll(false, false);
-        pane.setScrollingDisabled(true, false);
-        pane.setScrollYForce(schemScrollPos);
     }
 
     public void addWaveInfoTable() {
