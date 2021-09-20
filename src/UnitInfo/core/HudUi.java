@@ -1,5 +1,6 @@
 package UnitInfo.core;
 
+import UnitInfo.SUtils;
 import UnitInfo.ui.*;
 import arc.*;
 import arc.graphics.*;
@@ -27,6 +28,7 @@ import mindustry.input.*;
 import mindustry.logic.Ranged;
 import mindustry.type.*;
 import mindustry.ui.*;
+import mindustry.ui.dialogs.SchematicsDialog;
 import mindustry.world.*;
 import mindustry.world.blocks.*;
 import mindustry.world.blocks.defense.*;
@@ -37,6 +39,8 @@ import mindustry.world.blocks.power.*;
 import mindustry.world.blocks.production.*;
 import mindustry.world.blocks.storage.*;
 import mindustry.world.blocks.units.*;
+
+import java.util.regex.Pattern;
 
 import static UnitInfo.SVars.*;
 import static arc.Core.*;
@@ -51,16 +55,20 @@ public class HudUi {
     Table waveTable = new Table();
     Table itemTable = new Table();
     Table waveInfoTable = new Table();
+    Table schemListTable = new Table();
+    Table notifs = new Table();
     float waveScrollPos;
     float itemScrollPos;
     float weaponScrollPos;
+    float schemScrollPos;
 
     Teamc shotTarget;
     Teamc lockedTarget;
     ImageButton lockButton;
     boolean locked = false;
 
-    boolean waveShown;
+    boolean waveShown, schemShown;
+    private Schematic firstSchematic;
 
     float a;
     int uiIndex = 0;
@@ -247,6 +255,100 @@ public class HudUi {
         });
     }
 
+    public void addSchemTable() {
+        schemListTable = new Table(table -> {
+            table.right();
+            table.button("Schemtic List", Icon.downOpen, Styles.squareTogglet, () -> {
+                    schemShown = !schemShown;
+                    rebuildList();
+                }).width(160f).height(60f)
+                .checked(b -> {
+                    Image image = (Image)b.getCells().first().get();
+                    image.setDrawable(schemShown ? Icon.upOpen : Icon.downOpen);
+                    return schemShown;
+                }).row();
+            table.collapser(t -> {
+                t.background(Styles.black8);
+                notifs = t;
+                rebuildList();
+            }, true, () -> schemShown);
+
+        });
+
+        Table table = (Table) scene.find("minimap/position");
+        table.row();
+        table.add(schemListTable);
+    }
+
+    public void rebuildList() {
+        if(notifs == null) return;
+
+        notifs.clear();
+        notifs.defaults().maxHeight(72 * 8f);
+        ScrollPane pane = notifs.pane(Styles.nonePane, p -> {
+            firstSchematic = null;
+
+            for(Schematic s : schematics.all()){
+                //make sure *tags* fit
+                Seq<String> seq = null;
+                try {
+                    seq = (Seq<String>) SUtils.invoke(ui.schematics, "selectedTags");
+                } catch (IllegalAccessException | NoSuchFieldException e) {
+                    e.printStackTrace();
+                }
+                if(seq != null && seq.any() && !s.labels.containsAll(seq)) continue;
+                if(firstSchematic == null) firstSchematic = s;
+
+                Button[] sel = {null};
+                sel[0] = p.button(b -> {
+                    b.top();
+                    b.margin(0f);
+                    b.stack(new SchematicsDialog.SchematicImage(s).setScaling(Scaling.fit), new Table(n -> {
+                        n.top();
+                        n.table(Styles.black3, c -> {
+                            Label label = c.add(s.name()).style(Styles.outlineLabel).color(Color.white).top().growX().maxWidth(200f - 8f).get();
+                            label.setEllipsis(true);
+                            label.setAlignment(Align.center);
+                        }).growX().margin(1).pad(4).maxWidth(Scl.scl(160f - 8f)).padBottom(0);
+                    })).size(160f);
+                }, () -> {
+                    if(sel[0].childrenPressed()) return;
+                    if(state.isMenu()){
+                        try {
+                            ((SchematicsDialog.SchematicInfoDialog)SUtils.invoke(ui.schematics, "info")).show(s);
+                        } catch (IllegalAccessException | NoSuchFieldException e) {
+                            e.printStackTrace();
+                        }
+                    }else{
+                        if(!Vars.state.rules.schematicsAllowed){
+                            ui.showInfo("@schematic.disabled");
+                        }else{
+                            control.input.useSchematic(s);
+                        }
+                    }
+                }).pad(4).style(Styles.cleari).get();
+
+                sel[0].getStyle().up = Tex.pane;
+                p.row();
+            }
+
+            if(firstSchematic == null){
+                p.add("@none");
+            }
+        }).grow().get();
+
+        pane.update(() -> {
+            Element result = scene.hit(input.mouseX(), input.mouseY(), true);
+            if(pane.hasScroll() && (result == null || !result.isDescendantOf(pane)))
+                scene.setScrollFocus(null);
+            schemScrollPos = pane.getScrollY();
+        });
+
+        pane.setOverscroll(false, false);
+        pane.setScrollingDisabled(true, false);
+        pane.setScrollYForce(schemScrollPos);
+    }
+
     public void addWaveInfoTable() {
         waveInfoTable = new Table(Tex.buttonEdge4, t -> {
             t.defaults().width(34 * 8f).center();
@@ -345,8 +447,8 @@ public class HudUi {
                 }
             });
             baseTable = table.table(tt -> tt.stack(unitTable, waveTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).left().get();
-            table.fillParent = true;
 
+            table.fillParent = true;
             table.visibility = () -> ui.hudfrag.shown && !ui.minimapfrag.shown();
         });
         ui.hudGroup.addChild(mainTable);
@@ -656,11 +758,6 @@ public class HudUi {
                     tt.add(button).size(Scl.scl(modUiScale) * 3 * 8f);
                     tt.add(lockButton);
 
-                    tt.clicked(()->{
-                        if(getTarget() == null) return;
-                        if(control.input instanceof DesktopInput d) d.panning = true;
-                        Core.camera.position.set(getTarget().x(), getTarget().y());
-                    });
                     tt.addListener(new Tooltip(tool -> tool.background(Tex.button).table(to -> {
                         to.table(Tex.underline2, tool2 -> {
                             Label label2 = new Label(()->{

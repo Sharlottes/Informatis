@@ -31,6 +31,7 @@ public class Main extends Mod {
             hud.addUnitTable();
             hud.addTable();
             hud.addWaveInfoTable();
+            hud.addSchemTable();
             hud.setEvents();
             OverDrawer.setEvent();
             if(jsonGen) ContentJSON.save();
