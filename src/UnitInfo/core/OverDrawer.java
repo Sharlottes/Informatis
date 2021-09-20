@@ -1,42 +1,37 @@
 package UnitInfo.core;
 
-import UnitInfo.ui.FreeBar;
+import UnitInfo.ui.*;
 import arc.*;
-import arc.graphics.Color;
+import arc.graphics.*;
 import arc.graphics.g2d.*;
-import arc.graphics.gl.FrameBuffer;
+import arc.graphics.gl.*;
 import arc.math.*;
-import arc.math.geom.Position;
-import arc.scene.ui.layout.Scl;
-import arc.struct.Seq;
+import arc.math.geom.*;
+import arc.scene.ui.layout.*;
+import arc.struct.*;
 import arc.util.*;
-import mindustry.Vars;
-import mindustry.ai.Pathfinder;
+import mindustry.*;
+import mindustry.ai.*;
 import mindustry.ai.types.*;
-import mindustry.content.Fx;
-import mindustry.core.Renderer;
+import mindustry.content.*;
+import mindustry.core.*;
 import mindustry.entities.units.*;
 import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
-import mindustry.logic.LUnitControl;
-import mindustry.ui.Fonts;
-import mindustry.world.Block;
-import mindustry.world.Tile;
-import mindustry.world.blocks.defense.ForceProjector;
+import mindustry.logic.*;
+import mindustry.ui.*;
+import mindustry.world.*;
+import mindustry.world.blocks.defense.*;
 import mindustry.world.blocks.defense.turrets.*;
-import mindustry.world.blocks.distribution.MassDriver;
-import mindustry.world.blocks.payloads.PayloadMassDriver;
-import mindustry.world.blocks.power.PowerNode;
-import mindustry.world.blocks.storage.CoreBlock;
-import mindustry.world.blocks.units.CommandCenter;
-import mindustry.world.blocks.units.Reconstructor;
-import mindustry.world.blocks.units.UnitFactory;
+import mindustry.world.blocks.distribution.*;
+import mindustry.world.blocks.payloads.*;
+import mindustry.world.blocks.power.*;
+import mindustry.world.blocks.storage.*;
+import mindustry.world.blocks.units.*;
 
-import java.util.Comparator;
 import java.util.Objects;
 
-import static UnitInfo.SUtils.floatFormat;
 import static UnitInfo.SVars.*;
 import static arc.Core.*;
 import static mindustry.Vars.*;
@@ -195,12 +190,12 @@ public class OverDrawer {
             if(!mobile && !Vars.state.isPaused() && settings.getBool("gaycursor"))
                 Fx.mine.at(Core.input.mouseWorldX(), Core.input.mouseWorldY(), Tmp.c2.set(Color.red).shiftHue(Time.time * 1.5f));
 
-            if(!renderer.pixelator.enabled()) Groups.unit.each(unit -> unit.item() != null && unit.itemTime > 0.01f, unit -> {
+            if(!renderer.pixelator.enabled()) Groups.unit.each(unit -> unit.item() != null && unit.itemTime > 0.01f, unit ->
                 Fonts.outline.draw(unit.stack.amount + "",
                         unit.x + Angles.trnsx(unit.rotation + 180f, unit.type.itemOffsetY),
                         unit.y + Angles.trnsy(unit.rotation + 180f, unit.type.itemOffsetY) - 3,
-                        Pal.accent, 0.25f * unit.itemTime / Scl.scl(1f), false, Align.center);
-            });
+                        Pal.accent, 0.25f * unit.itemTime / Scl.scl(1f), false, Align.center)
+            );
 
             if(!state.rules.polygonCoreProtection && settings.getBool("coreRange") && player != null){
                 state.teams.eachEnemyCore(player.team(), core -> {
