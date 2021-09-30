@@ -758,7 +758,7 @@ public class HudUi {
         });
 
         Table waveTable = (Table) scene.find("waves");
-        Table infoTable = (Table) waveTable.getChildren().get(1);
+        Table infoTable = (Table) scene.find("infotable");
         waveTable.removeChild(infoTable);
         waveTable.row();
         waveTable.stack(
