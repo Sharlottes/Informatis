@@ -758,16 +758,15 @@ public class HudUi {
         });
 
         Table waveTable = (Table) scene.find("waves");
-        Table table = (Table)waveTable.getChildren().first(); //HudFragment#198, name: x
-        Table statusTable = Version.number >= 131 ? (Table)scene.find("statustable") : (Table)waveTable.getChildren().get(1);
-        waveTable.removeChild(statusTable);
-        table.row();
-        table.stack(
-            new Table(tt -> tt.collapser(t -> t.stack(waveInfoTable, statusTable.top(), pathlineTable), true, () -> waveShown)).top(),
+        Table infoTable = (Table) scene.find("infotable");
+        waveTable.removeChild(infoTable);
+        waveTable.row();
+        waveTable.stack(
+            new Table(tt -> tt.collapser(t -> t.stack(waveInfoTable, infoTable, pathlineTable).growX(), true, () -> waveShown).growX()).top(),
             new Table(tt -> tt.button(Icon.downOpen, Styles.clearToggleTransi, () -> waveShown = !waveShown).size(4 * 8f).checked(b -> {
                 b.getImage().setDrawable(waveShown ? Icon.upOpen : Icon.downOpen);
                 return waveShown;
-            })).left().top()).visible(() -> settings.getBool("waveui"));
+            })).left().top()).fillX().visible(() -> settings.getBool("waveui"));
     }
 
     public void reset(int index, Seq<Button> buttons, Label label, Table table, Table labelTable, String hud){
