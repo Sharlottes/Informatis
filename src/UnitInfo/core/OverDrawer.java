@@ -46,6 +46,8 @@ public class OverDrawer {
     public static FrameBuffer effectBuffer = new FrameBuffer();
     public static int otherCores;
     public static boolean locked;
+    public static ObjectMap<Team, Seq<Building>> tmpbuildobj = new ObjectMap<>();
+    public static ObjectMap<Team, Seq<Unit>> tmpunitobj = new ObjectMap<>();
 
     public static void setEvent(){
         Events.run(EventType.Trigger.draw, () -> {
@@ -53,12 +55,12 @@ public class OverDrawer {
 
             float sin = Mathf.absin(Time.time, 6f, 1f);
 
-            Draw.drawRange(169, 1f, () -> effectBuffer.begin(Color.clear), () -> {
+            Draw.drawRange(158, 1f, () -> effectBuffer.begin(Color.clear), () -> {
                 effectBuffer.end();
                 effectBuffer.blit(lineShader);
             });
 
-            Draw.z(169);
+            Draw.z(158);
 
             int[] paths = {0};
             int[] units = {0};
@@ -107,7 +109,7 @@ public class OverDrawer {
                 if(paths[0] > settings.getInt("pathlinelimit")) return;
                 paths[0]++;
                 Team enemyTeam = state.rules.waveTeam;
-                for(int p = 0; p < 3; p++) {
+                for(int p = 0; p < (Vars.state.rules.spawns.count(g->g.type.naval)>0?3:2); p++) {
                     otherCores = Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != enemyTeam);
 
                     getNextTile(t, p, enemyTeam, Pathfinder.fieldCore);
@@ -139,6 +141,9 @@ public class OverDrawer {
 
             if(Core.settings.getBool("unithealthui")) {
                 Groups.unit.each(FreeBar::draw);
+            }
+
+            if(Core.settings.getBool("blockfont")) {
                 indexer.eachBlock(null, camera.position.x, camera.position.y, 400, b -> true, b -> {
                     if(b instanceof ForceProjector.ForceBuild force) {
                         ForceProjector forceBlock = (ForceProjector) force.block;
@@ -165,8 +170,8 @@ public class OverDrawer {
                                 Tmp.c1.set(Color.lightGray).lerp(Pal.accent, progress/100), (b.block.size == 1 ? 0.3f : 0.25f) * 0.25f * b.block.size, false, Align.center);
                     }
                     else Fonts.outline.draw((int)b.health + " / " + (int)b.maxHealth,
-                        b.x, b.y - b.block.size * 8 * 0.25f,
-                        Tmp.c1.set(Pal.items).lerp(Pal.health, 1-b.healthf()), (b.block.size == 1 ? 0.3f : 0.25f) * 0.25f * b.block.size, false, Align.center);
+                                b.x, b.y - b.block.size * 8 * 0.25f,
+                                Tmp.c1.set(Pal.items).lerp(Pal.health, 1-b.healthf()), (b.block.size == 1 ? 0.3f : 0.25f) * 0.25f * b.block.size, false, Align.center);
                 });
             }
 
@@ -255,65 +260,42 @@ public class OverDrawer {
                 }
             }
 
-            if(settings.getBool("RangeShader")) {
-                Draw.drawRange(166, 1f, () -> effectBuffer.begin(Color.clear), () -> {
-                    effectBuffer.end();
-                    effectBuffer.blit(turretRange);
-                });
-            }
-
             if(settings.getBool("rangeNearby") && player != null && player.unit() != null && !player.unit().dead) {
-                Draw.z(166);
                 Unit unit = player.unit();
-                Groups.build.each(e -> {
-                    if(!settings.getBool("allTeamRange") && e.team == player.team()) return; // Don't draw own turrets
-                    if(!(e instanceof BaseTurret.BaseTurretBuild)) return; // Not a turret
-                    if((e instanceof Turret.TurretBuild t && !t.hasAmmo()) || !e.cons.valid()) return; // No ammo
+                tmpbuildobj.clear();
+                for(int i = 0; i < Team.baseTeams.length; i++){
+                    int finalI = i;
+                    tmpbuildobj.put(Team.baseTeams[i], Groups.build.copy(new Seq<Building>()).filter(b -> {
+                        if(!(b instanceof BaseTurret.BaseTurretBuild)) return false;
+                        boolean canHit = unit == null || (b.block instanceof Turret t ? unit.isFlying() ? t.targetAir : t.targetGround :
+                                b.block instanceof TractorBeamTurret tu && (unit.isFlying() ? tu.targetAir : tu.targetGround));
+                        float range = ((BaseTurret.BaseTurretBuild) b).range();
+                        float max = range + settings.getInt("rangeRadius") * tilesize + b.block.offset;
+                        float dst = Mathf.dst(control.input.getMouseX(), control.input.getMouseY(), b.x, b.y);
+                        if(control.input.block != null && dst <= max) canHit = b.block instanceof Turret t && t.targetGround;
 
-                    boolean canHit = unit == null || (e.block instanceof Turret t ? unit.isFlying() ? t.targetAir : t.targetGround :
-                            e.block instanceof TractorBeamTurret tu && (unit.isFlying() ? tu.targetAir : tu.targetGround));
-                    float range = ((BaseTurret.BaseTurretBuild) e).range();
-                    float max = range + settings.getInt("rangeRadius") * tilesize + e.block.offset;
-                    float dst = Mathf.dst(control.input.getMouseX(), control.input.getMouseY(), e.x, e.y);
-
-                    if(control.input.block != null && dst <= max) canHit = e.block instanceof Turret t && t.targetGround;
-                    if(camera.position.dst(e) <= max || (control.input.block != null && dst <= max)) {
-                        if(canHit || settings.getBool("allTargetRange")){
-                            if(e instanceof Turret.TurretBuild t){
-                                Lines.stroke(1.5f, Tmp.c1.set(canHit ? e.team.color : Team.derelict.color).a(0.75f));
-                                Tmp.v1.set(e.x, e.y).trns(((BaseTurret.BaseTurretBuild)e).rotation+((Turret)t.block).shootCone, range);
-                                Lines.line(e.x, e.y, e.x + Tmp.v1.x, e.y + Tmp.v1.y);
-                                Tmp.v1.set(e.x, e.y).trns(((BaseTurret.BaseTurretBuild)e).rotation-((Turret)t.block).shootCone, range);
-                                Lines.line(e.x, e.y, e.x + Tmp.v1.x, e.y + Tmp.v1.y);
-                            }
-                            if(settings.getBool("RangeShader")) {
-                                Draw.color(Tmp.c1.a(1));
-                                Fill.poly(e.x, e.y, Lines.circleVertices(range), range);
-                            }
-                            else Fill.light(e.x, e.y, Lines.circleVertices(range), range, Color.clear, Tmp.c1.a(Mathf.clamp(1-((control.input.block != null && dst <= max ? dst : camera.position.dst(e))/max), 0, settings.getInt("softRangeOpacity")/100f)));
-                        }
-                    }
-                });
-
-                // Unit Ranges (Only works when turret ranges are enabled)
-                if(settings.getBool("unitRange") || (settings.getBool("allTeamRange"))) {
-                    Groups.unit.each(u -> {
-                        if(!settings.getBool("unitRange") && settings.getBool("allTeamRange")) return; //player unit rule
-                        if(!settings.getBool("allTeamRange") && u.team == player.team()) return; // Don't draw own units
-                        if(u.controller() instanceof AIController ai && (ai instanceof BuilderAI || ai instanceof MinerAI)) return; //don't draw poly and mono
-                        boolean canHit = unit == null || (unit.isFlying() ? u.type.targetAir : u.type.targetGround);
-                        float range = u.range();
-                        float max = range + settings.getInt("rangeRadius") * tilesize;
-
-                        if(camera.position.dst(u) <= max && (canHit || settings.getBool("allTargetRange"))) { // Same as above
-                            if(settings.getBool("RangeShader")) {
-                                Draw.color(Tmp.c1.set(canHit ? u.team.color : Team.derelict.color));
-                                Fill.poly(u.x, u.y, Lines.circleVertices(range), range);
-                            }
-                            else Fill.light(u.x, u.y, Lines.circleVertices(range), range, Color.clear, Tmp.c1.a(Math.min(settings.getInt("softRangeOpacity")/100f, 1.5f-camera.position.dst(u)/max)));
-                        }
-                    });
+                        return ((finalI == 0 && (!canHit&&b.team!=Vars.player.team())) || (b.team == Team.baseTeams[finalI] && (b.team==Vars.player.team()||canHit))) &&
+                        ((b instanceof Turret.TurretBuild t && t.hasAmmo()) || b.cons.valid()) &&
+                        (camera.position.dst(b) <= max || (control.input.block != null && dst <= max)) &&
+                        (canHit || settings.getBool("allTargetRange"));
+                    }));
                 }
+                tmpbuildobj.each((t, bseq) -> {
+                    Draw.drawRange(166+t.id*3, 1, () -> effectBuffer.begin(Color.clear), () -> {
+                        effectBuffer.end();
+                        effectBuffer.blit(turretRange);
+                    });
+                    if(t==Team.derelict) Log.info(t.color);
+                    Draw.color(t.color);
+                    bseq.each(b -> {
+                        float range = ((BaseTurret.BaseTurretBuild)b).range();
+                        if(settings.getBool("RangeShader")) {
+                            Draw.z(166+t.id*3);
+                            Fill.poly(b.x, b.y, Lines.circleVertices(range), range);
+                        }
+                        else Lines.circle(b.x, b.y, range);
+                    });
+                });
             }
         });
     }

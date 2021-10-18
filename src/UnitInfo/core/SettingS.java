@@ -107,21 +107,18 @@ public class SettingS {
         Seq<Seq<SharSetting>> settingSeq = new Seq<>();
         Seq<SharSetting> tapSeq = new Seq<>();
         addGraphicSlideSetting("barstyle", 0, 0, 5, 1, s -> s == 0 ? "default bar" : s + "th bar", tapSeq);
-        addGraphicSlideSetting("infoUiScale", mobile ? 50 : 75, 50, 100, 5, s -> s + "%", tapSeq);
+        addGraphicSlideSetting("infoUiScale", mobile ? 25 : 50, 25, 100, 5, s -> s + "%", tapSeq);
         addGraphicSlideSetting("coreItemCheckRate", 60, 6, 180, 6, s -> Strings.fixed(s/60f,1) + "sec", tapSeq);
         addGraphicTypeSetting("wavemax", 0, 200,100, true, () -> true, s -> s + "waves", tapSeq);
         addGraphicCheckSetting("infoui", true, tapSeq);
-        addGraphicCheckSetting("waveui", true, tapSeq);
         addGraphicCheckSetting("pastwave", false, tapSeq);
         addGraphicCheckSetting("emptywave", true, tapSeq);
 
         Seq<SharSetting> rangeSeq = new Seq<>();
         addGraphicTypeSetting("rangeRadius", 0, 500, 70, true, () -> true, s -> s + "tiles", rangeSeq);
         addGraphicCheckSetting("rangeNearby", true, rangeSeq);
-        addGraphicCheckSetting("allTeamRange", false, rangeSeq);
         addGraphicCheckSetting("allTargetRange", false, rangeSeq);
         addGraphicCheckSetting("coreRange", false, rangeSeq);
-        addGraphicCheckSetting("unitRange", false, rangeSeq);
         addGraphicCheckSetting("RangeShader", true, rangeSeq);
 
         Seq<SharSetting> opacitySeq = new Seq<>();
@@ -137,12 +134,13 @@ public class SettingS {
         addGraphicTypeSetting("spawnarrowlimit", 0, 5000, 50, true, () -> true, s -> s + "arrows", drawSeq);
         addGraphicCheckSetting("gaycursor", false, drawSeq);
         addGraphicCheckSetting("unithealthui", true, drawSeq);
+        addGraphicCheckSetting("blockfont", false, drawSeq);
         addGraphicCheckSetting("linkedMass", true, drawSeq);
         addGraphicCheckSetting("linkedNode", false, drawSeq);
-        addGraphicCheckSetting("select", true, drawSeq);
+        addGraphicCheckSetting("select", false, drawSeq);
         addGraphicCheckSetting("deadTarget", false, drawSeq);
-        addGraphicCheckSetting("distanceLine", true, drawSeq);
-        addGraphicCheckSetting("spawnerarrow", true, drawSeq);
+        addGraphicCheckSetting("distanceLine", false, drawSeq);
+        addGraphicCheckSetting("spawnerarrow", false, drawSeq);
 
         Seq<SharSetting> etcSeq = new Seq<>();
         addGraphicCheckSetting("autoShooting", false, etcSeq);

@@ -766,7 +766,7 @@ public class HudUi {
             new Table(tt -> tt.button(Icon.downOpen, Styles.clearToggleTransi, () -> waveShown = !waveShown).size(4 * 8f).checked(b -> {
                 b.getImage().setDrawable(waveShown ? Icon.upOpen : Icon.downOpen);
                 return waveShown;
-            })).left().top()).fillX().visible(() -> settings.getBool("waveui"));
+            })).left().top()).fillX();
     }
 
     public void reset(int index, Seq<Button> buttons, Label label, Table table, Table labelTable, String hud){
@@ -890,6 +890,7 @@ public class HudUi {
 
         return region;
     }
+
     public Element addBar(int i){
         return new Stack(){{
             add(new Table(t -> {
@@ -936,6 +937,7 @@ public class HudUi {
             }));
         }};
     }
+
     public void addBars(){
         bars.clear();
         for(int i = 0; i < 6; i++) bars.add(addBar(i));
@@ -944,7 +946,7 @@ public class HudUi {
     public void addWeaponTable(Table table){
         table.table().update(tt -> {
             tt.clear();
-            if(getTarget() instanceof Unit u && u.type != null) {
+            if(getTarget() instanceof Unit u && u.type != null && u.hasWeapons()) {
                 for(int r = 0; r < u.type.weapons.size; r++){
                     Weapon weapon = u.type.weapons.get(r);
                     WeaponMount mount = u.mounts[r];
@@ -1302,7 +1304,7 @@ public class HudUi {
     public void addWaveTable(){
         if(uiIndex != 1) return;
         waveTable = new Table(table -> {
-            table.defaults().width(Scl.scl(modUiScale) * 35 * 8f).height(unitTable.getHeight() * Scl.scl(modUiScale));
+            table.defaults().width(Scl.scl(modUiScale) * 35 * 8f).height(35f * 8f * Scl.scl(modUiScale));
             table.add(new Table(Tex.button, t -> {
                 ScrollPane pane = t.pane(new ScrollPane.ScrollPaneStyle(){{
                     vScroll = Tex.clear;
@@ -1354,7 +1356,7 @@ public class HudUi {
     public void addItemTable(){
         if(uiIndex != 2) return;
         itemTable = new Table(table -> {
-            table.left().defaults().height(unitTable.getHeight() * Scl.scl(modUiScale));
+            table.left().defaults().height(35f * 8f * Scl.scl(modUiScale));
             table.table(Tex.button, t -> {
                 ScrollPane pane = t.pane(new ScrollPane.ScrollPaneStyle(){{
                     vScroll = Tex.clear;
