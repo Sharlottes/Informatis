@@ -71,7 +71,7 @@ public class HudUi {
     private Runnable rebuildList = () -> {};
 
     float a;
-    int uiIndex = 0;
+    int uiIndex = 3;
 
     //to update tables
     int waveamount;

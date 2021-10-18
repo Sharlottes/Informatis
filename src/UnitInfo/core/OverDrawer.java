@@ -285,7 +285,6 @@ public class OverDrawer {
                         effectBuffer.end();
                         effectBuffer.blit(turretRange);
                     });
-                    if(t==Team.derelict) Log.info(t.color);
                     Draw.color(t.color);
                     bseq.each(b -> {
                         float range = ((BaseTurret.BaseTurretBuild)b).range();
