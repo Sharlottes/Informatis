@@ -129,7 +129,7 @@ public class HudUi {
             }
 
             if((input.keyDown(KeyCode.shiftRight) || input.keyDown(KeyCode.shiftLeft))){
-                if(input.keyTap(KeyCode.r)) lockButton.change();
+                if(input.keyTap(KeyCode.r) && lockButton != null) lockButton.change();
             }
 
             if(settings.getBool("autoShooting")) {
