@@ -194,14 +194,14 @@ public class HudUi {
         table.table(t -> {
             t.center();
             int[] i = {0};
-            enemyamount = Groups.unit.count(u -> u.team == state.rules.waveTeam);
-            content.units().each(type -> Groups.unit.contains(u -> u.type == type && u.team == state.rules.waveTeam && u.isBoss()), type -> {
+            enemyamount = Groups.unit.count(u -> state.rules.pvp ? (u.team != player.team()) : (u.team == state.rules.waveTeam));
+            content.units().each(type -> Groups.unit.contains(u -> u.type == type && (state.rules.pvp ? (u.team != player.team()) : (u.team == state.rules.waveTeam)) && u.isBoss()), type -> {
                 t.table(tt ->
                     tt.stack(
                         new Table(ttt -> ttt.image(type.uiIcon).size(iconSmall)),
                         new Table(ttt -> {
                             ttt.right().bottom();
-                            Label label = new Label(() -> Groups.unit.count(u -> u.type == type && u.team == state.rules.waveTeam && u.isBoss()) + "");
+                            Label label = new Label(() -> Groups.unit.count(u -> u.type == type && (state.rules.pvp ? (u.team != player.team()) : (u.team == state.rules.waveTeam)) && u.isBoss()) + "");
                             label.setFontScale(0.75f);
                             ttt.add(label);
                             ttt.pack();
@@ -219,13 +219,13 @@ public class HudUi {
             });
             t.row();
             i[0] = 0;
-            content.units().each(type -> Groups.unit.contains(u -> u.type == type && u.team == state.rules.waveTeam && !u.isBoss()), type -> {
+            content.units().each(type -> Groups.unit.contains(u -> u.type == type && (state.rules.pvp ? (u.team != player.team()) : (u.team == state.rules.waveTeam)) && !u.isBoss()), type -> {
                 t.table(tt ->
                     tt.add(new Stack() {{
                         add(new Table(ttt -> ttt.add(new Image(type.uiIcon)).size(iconSmall)));
                         add(new Table(ttt -> {
                             ttt.right().bottom();
-                            Label label = new Label(() -> Groups.unit.count(u -> u.type == type && u.team == state.rules.waveTeam && !u.isBoss()) + "");
+                            Label label = new Label(() -> Groups.unit.count(u -> u.type == type &&(state.rules.pvp ? (u.team != player.team()) : (u.team == state.rules.waveTeam)) && !u.isBoss()) + "");
                             label.setFontScale(0.75f);
                             ttt.add(label);
                             ttt.pack();
@@ -1000,6 +1000,75 @@ public class HudUi {
         return table.table(table1 -> {
             table1.left().top();
 
+                table1.table().update(t -> {
+                    t.clear();
+                    if(getTarget() instanceof Unit u && u.item() != null) {
+                        if(state.rules.damageExplosions)  {
+                            float power = u.item().charge * Mathf.pow(u.stack().amount, 1.11f) * 160f;
+                            int powerAmount = (int)Mathf.clamp(power / 700, 0, 8);
+                            int powerLength = 5 + Mathf.clamp((int)(Mathf.pow(power, 0.98f) / 500), 1, 18);
+                            float powerDamage = 3 + Mathf.pow(power, 0.35f);
+
+                            if(powerAmount > 0) {
+                                t.stack(
+                                    new Table(tt -> {
+                                        tt.image(Icon.power.getRegion()).size(8 * 3f * Scl.scl(modUiScale));
+                                    }),
+                                    new Table(tt -> {
+                                        tt.right().top();
+                                        Label label = new Label(()->powerAmount + "");
+                                        label.setFontScale(0.75f * Scl.scl(modUiScale));
+                                        tt.add(label).padBottom(4f).padLeft(4f);
+                                        tt.pack();
+                                    })
+                                ).pad(4).visible(() -> state.rules.damageExplosions&&powerAmount > 0);
+                            }
+
+                            if(u.item().flammability > 1) {
+                                float flammability = u.item().flammability * u.stack().amount / 1.9f;
+                                int fireAmount = (int)Mathf.clamp(flammability / 4, 0, 30);
+                                t.stack(
+                                    new Table(tt -> {
+                                        tt.image(StatusEffects.burning.uiIcon).size(8 * 3f * Scl.scl(modUiScale));
+                                    }),
+                                    new Table(tt -> {
+                                        tt.right().top();
+                                        Label label = new Label(()->fireAmount+"");
+                                        label.setFontScale(0.75f * Scl.scl(modUiScale));
+                                        tt.add(label).padBottom(4f).padLeft(4f);
+                                        tt.pack();
+                                    })
+                                ).pad(4).visible(() -> state.rules.damageExplosions&&u.item().flammability > 1);
+                            }
+                        }
+
+                        float explosiveness = 2f + u.item().explosiveness * u.stack().amount * 1.53f;
+                        float explosivenessMax = 2f + u.item().explosiveness * u.stack().amount * 1.53f;
+                        int exploAmount = explosiveness <= 2 ? 0 : Mathf.clamp((int)(explosiveness / 11), 1, 25);
+                        int exploAmountMax = explosivenessMax <= 2 ? 0 : Mathf.clamp((int)(explosivenessMax / 11), 1, 25);
+                        float exploRadiusMin = Mathf.clamp(u.bounds() / 2f + explosiveness, 0, 50f) * (1f / exploAmount);
+                        float exploRadiusMax = Mathf.clamp(u.bounds() / 2f + explosiveness, 0, 50f);
+                        float exploDamage = explosiveness / 2f;
+
+                        if(exploAmount > 0){
+                            t.stack(
+                                new Table(tt -> {
+                                    tt.image(Icon.modeAttack.getRegion()).size(8 * 3f * Scl.scl(modUiScale));
+                                }),
+                                new Table(tt -> {
+                                    tt.right().top();
+                                    Label label = new Label(()->""+ Strings.fixed(exploDamage * exploAmount, 1));
+                                    label.setFontScale(0.75f * Scl.scl(modUiScale));
+                                    label.setColor(Tmp.c1.set(Color.white).lerp(Pal.health, (exploAmount*1f)/exploAmountMax));
+                                    tt.add(label).padBottom(4f).padLeft(8f);
+                                    tt.pack();
+                                })
+                            ).pad(4).visible(() -> exploAmount>0);
+                        }
+                    }
+                }).growX().visible(() -> getTarget() instanceof Unit);
+                table1.row();
+
             float[] count = new float[]{-1};
             table1.table().update(t -> {
                 if(getTarget() instanceof Payloadc payload){
@@ -1029,7 +1098,6 @@ public class HudUi {
 
             Bits statuses = new Bits();
             table1.table().update(t -> {
-                
                 t.left();
                 if(getTarget() instanceof Statusc st){
                     Bits applied = st.statusBits();
