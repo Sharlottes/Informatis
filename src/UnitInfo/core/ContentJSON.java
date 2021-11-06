@@ -1,6 +1,7 @@
 package UnitInfo.core;
 
 import arc.Core;
+import arc.struct.ObjectMap;
 import arc.struct.Seq;
 import arc.util.*;
 import mindustry.*;
@@ -12,7 +13,7 @@ import java.lang.reflect.*;
 import static mindustry.Vars.modDirectory;
 
 public class ContentJSON {
-    public static void collect(String name, Object object, JsonObject obj) {
+    public static void collect(String name, Object object, JsonObject obj, boolean isloop) {
         Object preval = obj.get(name);
         if(preval != null) obj.set(name, preval + " or " + object);
         else {
@@ -25,7 +26,25 @@ public class ContentJSON {
                 else if(object instanceof String val) obj.add(name, val);
                 else if(object instanceof Boolean val) obj.add(name, val);
                 else if(object instanceof Content cont){ //create new json object
-                    //obj.add(name, getContent(cont, new JsonObject()));
+                    try {
+                        obj.add(name, getContent(cont, new JsonObject(), isloop));
+                    } catch(Throwable e) {
+                        Log.info(e.getMessage() + " ### " + cont);
+                    }
+                }
+                else if(object instanceof ObjectMap map){ //create new json object
+                    /*
+                    try {
+                        JsonObject object1 = new JsonObject();
+                        map.each((k, v) -> {
+                            object1.add(k.toString(), getContent(v, new JsonObject(), isloop))
+                        });
+                        obj.add(name, getContent(cont, new JsonObject(), isloop));
+                    } catch(Throwable e) {
+                        Log.info(e.getMessage() + " ### " + cont);
+
+                    }
+                    */
                 }
                 else if(object instanceof Seq seq && seq.any()) {
                     StringBuilder str = new StringBuilder("[");
@@ -51,12 +70,12 @@ public class ContentJSON {
         }
     }
 
-    public static JsonObject getContent(Content cont, JsonObject obj) {
-        for(Field field : cont.getClass().getFields()){
+    public static JsonObject getContent(Content cont, JsonObject obj, boolean isloop) {
+         for(Field field : cont.getClass().getFields()){
             try {
-                collect(field.getName(), field.get(cont), obj);
+                if(!isloop) collect(field.getName(), field.get(cont), obj, true);
             } catch(Throwable e) {
-                Log.warn(e.getMessage() + "on " + cont);
+                Log.info(e.getMessage() + " ### " + cont);
                 obj.add(field.getName(), "### ERROR ###");
             }
         }
@@ -72,7 +91,7 @@ public class ContentJSON {
             content.each(cont -> {
                 JsonObject obj = new JsonObject();
                 obj.add("type", cont.getClass().getName());
-                getContent(cont, obj);
+                getContent(cont, obj, false);
 
                 String name = cont.toString();
                 if(cont instanceof MappableContent mapCont) name = mapCont.name;
