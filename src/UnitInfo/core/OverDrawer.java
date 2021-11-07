@@ -2,6 +2,7 @@ package UnitInfo.core;
 
 import UnitInfo.ui.*;
 import arc.*;
+import arc.audio.Sound;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.graphics.gl.*;
