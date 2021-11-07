@@ -1,11 +1,14 @@
 package UnitInfo.core;
 
 import arc.Core;
-import arc.struct.ObjectMap;
 import arc.struct.Seq;
 import arc.util.*;
 import mindustry.*;
 import mindustry.ctype.*;
+import mindustry.entities.abilities.*;
+import mindustry.entities.bullet.*;
+import mindustry.type.*;
+import mindustry.world.*;
 import org.hjson.*;
 
 import java.lang.reflect.*;
@@ -13,69 +16,67 @@ import java.lang.reflect.*;
 import static mindustry.Vars.modDirectory;
 
 public class ContentJSON {
-    public static void collect(String name, Object object, JsonObject obj, boolean isloop) {
-        Object preval = obj.get(name);
-        if(preval != null) obj.set(name, preval + " or " + object);
+    static JsonValue parse(Object object) {
+        if(object instanceof Integer val) return JsonObject.valueOf(val);
+        else if(object instanceof Double val) return JsonObject.valueOf(val);
+        else if(object instanceof Float val) return JsonObject.valueOf(val);
+        else if(object instanceof Long val) return JsonObject.valueOf(val);
+        else if(object instanceof String val) return JsonObject.valueOf(val);
+        else if(object instanceof Boolean val) return JsonObject.valueOf(val);
+        else if(object instanceof Content) {
+            if(object instanceof Block c) return getContent(c, Block.class, new JsonObject());
+            if(object instanceof BulletType c) return getContent(c, BulletType.class, new JsonObject());
+            if(object instanceof Item c) return getContent(c, Item.class, new JsonObject());
+            if(object instanceof Liquid c) return getContent(c, Liquid.class, new JsonObject());
+            if(object instanceof UnitType c) return getContent(c, UnitType.class, new JsonObject());
+            if(object instanceof Weather c) return getContent(c, Weather.class, new JsonObject());
+        }
+        else if(object instanceof Weapon val) return getContent(val, new JsonObject());
+        else if(object instanceof Ability val) return getContent(val, new JsonObject());
+        else if(object instanceof Seq seq && seq.any()) {
+            JsonArray array = new JsonArray();
+            for(int i = 0; i < seq.size; i++) {
+                if(seq.get(i) != null) array.add(parse(seq.get(i)));
+            }
+            return array;
+        }
         else {
-            if(object == null) obj.add(name, "null");
-            else if(!Modifier.isStatic(object.getClass().getModifiers())) { //no static
-                if(object instanceof Integer val) obj.add(name, val);
-                else if(object instanceof Double val) obj.add(name, val);
-                else if(object instanceof Float val) obj.add(name, val);
-                else if(object instanceof Long val) obj.add(name, val);
-                else if(object instanceof String val) obj.add(name, val);
-                else if(object instanceof Boolean val) obj.add(name, val);
-                else if(object instanceof Content cont){ //create new json object
-                    try {
-                        obj.add(name, getContent(cont, new JsonObject(), isloop));
-                    } catch(Throwable e) {
-                        Log.info(e.getMessage() + " ### " + cont);
-                    }
+            if(object.getClass().isArray()) {
+                JsonArray array = new JsonArray();
+                for(int i = 0; i < Array.getLength(object); i++) {
+                    if(Array.get(object, i) != null) array.add(parse(Array.get(object, i)));
                 }
-                else if(object instanceof ObjectMap map){ //create new json object
-                    /*
-                    try {
-                        JsonObject object1 = new JsonObject();
-                        map.each((k, v) -> {
-                            object1.add(k.toString(), getContent(v, new JsonObject(), isloop))
-                        });
-                        obj.add(name, getContent(cont, new JsonObject(), isloop));
-                    } catch(Throwable e) {
-                        Log.info(e.getMessage() + " ### " + cont);
-
-                    }
-                    */
-                }
-                else if(object instanceof Seq seq && seq.any()) {
-                    StringBuilder str = new StringBuilder("[");
-                    for(int i = 0; i < seq.size; i++) {
-                        if(seq.get(i) != null) str.append(seq.get(i).toString()).append(i+1==seq.size ? "" : ", ");
-                    }
-                    str.append("]");
-                    obj.add(name, str.toString());
-                }
-                else {
-                    if(object.getClass().isArray()) {
-                        StringBuilder str = new StringBuilder("[");
-                        for(int i = 0; i < Array.getLength(object); i++) {
-                            if(Array.get(object, i) != null) str.append(Array.get(object, i).toString()).append(i+1==Array.getLength(object) ? "" : ", ");
-                        }
-                        str.append("]");
-                        obj.add(name, str.toString());
-                    } else {
-                        obj.add(name, object.toString());
-                    }
-                }
+                return array;
             }
         }
+        return JsonObject.valueOf(object.toString());
     }
 
-    public static JsonObject getContent(Content cont, JsonObject obj, boolean isloop) {
-         for(Field field : cont.getClass().getFields()){
+    static <T extends Object> JsonObject getContent(T cont, JsonObject obj) {
+        return getContent(cont, cont.getClass(), obj);
+    }
+
+    static JsonObject getContent(Object cont, Class objClass, JsonObject obj) {
+        obj.add("type", objClass.getName());
+        for(Field field : objClass.getFields()){
+            if(Modifier.isStatic(field.getModifiers())) continue;
             try {
-                if(!isloop) collect(field.getName(), field.get(cont), obj, true);
+                String name = field.getName();
+                Object object = field.get(cont);
+                Object preval = obj.get(name);
+                if(preval != null) obj.set(name, preval + " or " + object);
+                else {
+                    if(object == null) obj.add(name, "null");
+                    else if(!cont.getClass().isAssignableFrom(field.get(cont).getClass()) && !field.get(cont).getClass().isAssignableFrom(cont.getClass())){
+                        obj.add(name, parse(object));
+                    }
+                }
             } catch(Throwable e) {
-                Log.info(e.getMessage() + " ### " + cont);
+                try {
+                    Log.info(e + " ### " + cont + " ### " + objClass + " ### " + cont.getClass() + " ### " + field.get(cont));
+                } catch (IllegalAccessException ex) {
+                    ex.printStackTrace();
+                }
                 obj.add(field.getName(), "### ERROR ###");
             }
         }
@@ -83,15 +84,14 @@ public class ContentJSON {
         return obj;
     }
 
-    public static void save() {
+    static void save() {
         for(Seq<Content> content : Vars.content.getContentMap()) {
             if(content.isEmpty()) continue;
 
             JsonObject data = new JsonObject();
             content.each(cont -> {
                 JsonObject obj = new JsonObject();
-                obj.add("type", cont.getClass().getName());
-                getContent(cont, obj, false);
+                getContent(cont, obj);
 
                 String name = cont.toString();
                 if(cont instanceof MappableContent mapCont) name = mapCont.name;
