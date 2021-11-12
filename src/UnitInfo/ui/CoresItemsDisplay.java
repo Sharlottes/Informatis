@@ -25,19 +25,18 @@ import static arc.Core.*;
 import static mindustry.Vars.*;
 
 public class CoresItemsDisplay {
-    private final ObjectMap<Team, ObjectSet<Item>> usedItems = new ObjectMap<>();
-    private final ObjectMap<Team, ObjectSet<UnitType>> usedUnits = new ObjectMap<>();
-    private final ObjectMap<Team, Seq<ItemStack>> prevItems = new ObjectMap<>();
-    private final ObjectMap<Team, Seq<ItemStack>> updateItems = new ObjectMap<>();
-    public final ObjectIntMap<Team> coreAmount = new ObjectIntMap<>();
-    private CoreBlock.CoreBuild core;
-    public Team[] teams;
-    public Seq<Table> tables = new Seq<>();
+    static final ObjectMap<Team, ObjectSet<Item>> usedItems = new ObjectMap<>();
+    static final ObjectMap<Team, ObjectSet<UnitType>> usedUnits = new ObjectMap<>();
+    static final ObjectMap<Team, Seq<ItemStack>> prevItems = new ObjectMap<>();
+    static final ObjectMap<Team, Seq<ItemStack>> updateItems = new ObjectMap<>();
+    static final ObjectIntMap<Team> coreAmount = new ObjectIntMap<>();
+    static CoreBlock.CoreBuild core;
+    static Seq<Table> tables = new Seq<>();
 
-    float heat;
+    static Team[] teams;
+    static float heat;
 
-    public CoresItemsDisplay(Team[] teams) {
-        this.teams = teams;
+    public CoresItemsDisplay() {
         resetUsed();
     }
 
@@ -77,12 +76,16 @@ public class CoresItemsDisplay {
         return new Table(t -> {
             t.update(() -> {
                 core = team.core();
-                heat += Time.delta;
 
-                if(heat >= settings.getInt("coreItemCheckRate")) {
-                    heat = 0;
-                    updateItem(team);
+                if(settings.getBool("itemcal")) {
+                    heat += Time.delta;
+
+                    if(heat >= settings.getInt("coreItemCheckRate")) {
+                        heat = 0;
+                        updateItem(team);
+                    }
                 }
+
                 if(coreAmount.get(team) != team.cores().size){
                     coreAmount.put(team, team.cores().size);
                     rebuild();
@@ -139,14 +142,16 @@ public class CoresItemsDisplay {
                 final int[] i = {0};
                 for(Item item : content.items()){
                     if(team.core() != null && team.core().items.has(item)) {
-                        itemTable.stack(
-                            new Table(ttt -> {
-                                ttt.image(item.uiIcon).size(iconSmall * modUiScale).tooltip(tttt -> tttt.background(Styles.black6).margin(2f * modUiScale).add(item.localizedName).style(Styles.outlineLabel));
-                                Label label = new Label(() -> core == null ? "0" : UI.formatAmount(core.items.get(item)));
-                                label.setFontScale(modUiScale);
-                                ttt.add(label).minWidth(5 * 8f * modUiScale).left();
-                            }),
-                            new Table(ttt -> {
+                        Table table1 = new Table(ttt -> {
+                            ttt.image(item.uiIcon).size(iconSmall * modUiScale).tooltip(tttt -> tttt.background(Styles.black6).margin(2f * modUiScale).add(item.localizedName).style(Styles.outlineLabel));
+                            Label label = new Label(() -> core == null ? "0" : UI.formatAmount(core.items.get(item)));
+                            label.setFontScale(modUiScale);
+                            ttt.add(label).minWidth(5 * 8f * modUiScale).left();
+                        });
+
+
+                        if(settings.getBool("itemcal")) {
+                            Table table2 = new Table(ttt -> {
                                 ttt.bottom().right();
                                 Label label = new Label(() -> {
                                     int amount = (int)(updateItems.get(team).get(item.id).amount / ((settings.getInt("coreItemCheckRate") * 1f) / 60f));
@@ -155,8 +160,11 @@ public class CoresItemsDisplay {
                                 label.setFontScale(0.65f * modUiScale);
                                 ttt.add(label).bottom().right().padTop(16f * modUiScale);
                                 ttt.pack();
-                            })
-                            ).padRight(3 * modUiScale).left();
+                            });
+
+                            itemTable.stack(table1, table2).padRight(3 * modUiScale).left();
+                        }
+                        else itemTable.add(table1).padRight(3 * modUiScale).left();
                         if(++i[0] % 5 == 0) itemTable.row();
                     }
                 }

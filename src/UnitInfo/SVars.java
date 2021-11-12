@@ -16,5 +16,5 @@ public class SVars {
     public static TextureRegion error = atlas.find("error");
     public static RangeShader turretRange;
     public static LineShader lineShader;
-    public static boolean jsonGen = true;
+    public static boolean jsonGen = false;
 }

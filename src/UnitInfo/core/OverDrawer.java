@@ -48,14 +48,14 @@ public class OverDrawer {
     public static int otherCores;
     public static boolean locked;
     public static ObjectMap<Team, Seq<Building>> tmpbuildobj = new ObjectMap<>();
-    public static ObjectMap<Team, Seq<Unit>> tmpunitobj = new ObjectMap<>();
+
+    static float sin = Mathf.absin(Time.time, 6f, 1f);
 
     public static void setEvent(){
         Events.run(EventType.Trigger.draw, () -> {
+
+
             effectBuffer.resize(graphics.getWidth(), graphics.getHeight());
-
-            float sin = Mathf.absin(Time.time, 6f, 1f);
-
             Draw.drawRange(158, 1f, () -> effectBuffer.begin(Color.clear), () -> {
                 effectBuffer.end();
                 effectBuffer.blit(lineShader);
@@ -125,7 +125,7 @@ public class OverDrawer {
                     pathTiles.clear();
                 }
             });
-
+            Draw.reset();
             Draw.z(Layer.overlayUI);
 
             int[] arrows = {0};
@@ -203,7 +203,7 @@ public class OverDrawer {
                         Pal.accent, 0.25f * unit.itemTime / Scl.scl(1f), false, Align.center)
             );
 
-            if(!state.rules.polygonCoreProtection && settings.getBool("coreRange") && player != null){
+            if(!state.rules.polygonCoreProtection && player != null){
                 state.teams.eachEnemyCore(player.team(), core -> {
                     if(Core.camera.bounds(Tmp.r1).overlaps(Tmp.r2.setCentered(core.x, core.y, state.rules.enemyCoreBuildRadius * 2f))){
                         Draw.color(Color.darkGray);
@@ -265,6 +265,8 @@ public class OverDrawer {
                 Unit unit = player.unit();
                 tmpbuildobj.clear();
                 for(int i = 0; i < Team.baseTeams.length; i++){
+                    if(!settings.getBool("aliceRange") && player.team() == Team.baseTeams[i]) continue;
+
                     int finalI = i;
                     tmpbuildobj.put(Team.baseTeams[i], Groups.build.copy(new Seq<Building>()).filter(b -> {
                         if(!(b instanceof BaseTurret.BaseTurretBuild)) return false;
@@ -282,7 +284,7 @@ public class OverDrawer {
                     }));
                 }
                 tmpbuildobj.each((t, bseq) -> {
-                    Draw.drawRange(166+t.id*3, 1, () -> effectBuffer.begin(Color.clear), () -> {
+                    if(settings.getBool("RangeShader")) Draw.drawRange(166+t.id*3, 1, () -> effectBuffer.begin(Color.clear), () -> {
                         effectBuffer.end();
                         effectBuffer.blit(turretRange);
                     });
@@ -293,10 +295,11 @@ public class OverDrawer {
                             Draw.z(166+t.id*3);
                             Fill.poly(b.x, b.y, Lines.circleVertices(range), range);
                         }
-                        else Lines.circle(b.x, b.y, range);
+                        else Drawf.dashCircle(b.x, b.y, range, t.color);
                     });
                 });
             }
+            Draw.reset();
         });
     }
 

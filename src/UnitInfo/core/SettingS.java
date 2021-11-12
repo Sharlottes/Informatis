@@ -113,13 +113,14 @@ public class SettingS {
         addGraphicCheckSetting("infoui", true, tapSeq);
         addGraphicCheckSetting("pastwave", false, tapSeq);
         addGraphicCheckSetting("emptywave", true, tapSeq);
+        addGraphicCheckSetting("itemcal", false, tapSeq);
 
         Seq<SharSetting> rangeSeq = new Seq<>();
         addGraphicTypeSetting("rangeRadius", 0, 500, 70, true, () -> true, s -> s + "tiles", rangeSeq);
         addGraphicCheckSetting("rangeNearby", true, rangeSeq);
         addGraphicCheckSetting("allTargetRange", false, rangeSeq);
-        addGraphicCheckSetting("coreRange", false, rangeSeq);
-        addGraphicCheckSetting("RangeShader", true, rangeSeq);
+        addGraphicCheckSetting("aliceRange", false, rangeSeq);
+        addGraphicCheckSetting("RangeShader", false, rangeSeq);
 
         Seq<SharSetting> opacitySeq = new Seq<>();
         addGraphicSlideSetting("selectopacity", 50, 0, 100, 5, s -> s + "%", opacitySeq);

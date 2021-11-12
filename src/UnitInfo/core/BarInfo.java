@@ -30,9 +30,9 @@ import static arc.Core.*;
 import static mindustry.Vars.*;
 
 public class BarInfo {
-    static Seq<String> strings = Seq.with("","","","","","");
-    static FloatSeq numbers = FloatSeq.with(0f,0f,0f,0f,0f,0f);
-    static Seq<Color> colors = Seq.with(Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear);
+    public static Seq<String> strings = Seq.with("","","","","","");
+    public static FloatSeq numbers = FloatSeq.with(0f,0f,0f,0f,0f,0f);
+    public static Seq<Color> colors = Seq.with(Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear);
 
     public static <T extends Teamc> void getInfo(T target) throws IllegalAccessException, NoSuchFieldException {
         for(int i = 0; i < 6; i++) { //init
