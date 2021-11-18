@@ -93,12 +93,12 @@ public class SettingS {
     }
 
     public void init(){
-        BaseDialog dialog = new BaseDialog("UnitInfo Setting");
+        BaseDialog dialog = new BaseDialog(bundle.get("setting.shar-title"));
         dialog.addCloseButton();
         sharset = new SettingsMenuDialog.SettingsTable();
         dialog.cont.center().add(new Table(t -> t.pane(sharset).grow().row()));
         ui.settings.shown(() -> {
-            Table settingUi = (Table)((Group)((Group)(ui.settings.getChildren().get(1))).getChildren().get(0)).getChildren().get(0); //This looks so stupid lol - lmfao
+            Table settingUi = (Table)((Group)((Group)(ui.settings.getChildren().get(1))).getChildren().get(0)).getChildren().get(0); //This looks so stupid lol - lmfao - hehe
             settingUi.row();
             settingUi.button(bundle.get("setting.shar-title"), Styles.cleart, dialog::show);
         });
@@ -106,9 +106,9 @@ public class SettingS {
 
         Seq<Seq<SharSetting>> settingSeq = new Seq<>();
         Seq<SharSetting> tapSeq = new Seq<>();
-        addGraphicSlideSetting("barstyle", 0, 0, 5, 1, s -> s == 0 ? "default bar" : s + "th bar", tapSeq);
+        addGraphicSlideSetting("barstyle", 0, 0, 5, 1, s -> s == 0 ? bundle.get("default-bar") : s + bundle.get("th-bar"), tapSeq);
         addGraphicSlideSetting("infoUiScale", mobile ? 25 : 50, 25, 100, 5, s -> s + "%", tapSeq);
-        addGraphicSlideSetting("coreItemCheckRate", 60, 6, 180, 6, s -> Strings.fixed(s/60f,1) + "sec", tapSeq);
+        addGraphicSlideSetting("coreItemCheckRate", 60, 6, 180, 6, s -> Strings.fixed(s/60f,1) + bundle.get("sec"), tapSeq);
         addGraphicTypeSetting("wavemax", 0, 200,100, true, () -> true, s -> s + "waves", tapSeq);
         addGraphicCheckSetting("infoui", true, tapSeq);
         addGraphicCheckSetting("pastwave", false, tapSeq);
