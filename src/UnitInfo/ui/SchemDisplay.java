@@ -21,8 +21,7 @@ import mindustry.graphics.Pal;
 import mindustry.ui.Styles;
 import mindustry.ui.dialogs.*;
 
-import static arc.Core.input;
-import static arc.Core.scene;
+import static arc.Core.*;
 import static mindustry.Vars.*;
 import static mindustry.Vars.ui;
 
@@ -41,7 +40,7 @@ public class SchemDisplay extends Table {
     void setSchemTable() {
        clear();
        right();
-       button("Schematic List", Icon.downOpen, Styles.squareTogglet, () -> schemShown = !schemShown).width(160f).height(60f).checked(b -> {
+       button(bundle.get("hud.schematic-list"), Icon.downOpen, Styles.squareTogglet, () -> schemShown = !schemShown).width(160f).height(60f).checked(b -> {
             Image image = (Image)b.getCells().first().get();
             image.setDrawable(schemShown ? Icon.upOpen : Icon.downOpen);
             return schemShown;
@@ -84,7 +83,7 @@ public class SchemDisplay extends Table {
                     p.table(tt -> {
                         firstSchematic = null;
 
-                        tt.button("Import", Icon.download, this::showImport).width(160f).height(64f).row();
+                        tt.button("@editor.import", Icon.download, this::showImport).width(160f).height(64f).row();
                         for(Schematic s : schematics.all()){
                             if(selectedTags.any() && !s.labels.containsAll(selectedTags)) continue;
                             if(firstSchematic == null) firstSchematic = s;
@@ -177,7 +176,7 @@ public class SchemDisplay extends Table {
                         }
 
                         if(firstSchematic == null){
-                            tt.add("@none");
+                            tt.add(bundle.get("none"));
                         }
                     });
                 }).grow().get();
