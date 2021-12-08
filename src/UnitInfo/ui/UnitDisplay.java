@@ -164,7 +164,7 @@ public class UnitDisplay extends Table {
                 t.setBackground(patch.tint(Tmp.c1.set(patch.getPatch().getColor()).a(settings.getInt("uiopacity") / 100f)));
             });
         });
-        table(t -> t.stack(table1, new UnitInfoDisplay()).padRight(Scl.scl(modUiScale) * 8 * 8f));
+        table(t -> t.stack(new UnitInfoDisplay().marginBottom(80f), table1).padRight(Scl.scl(modUiScale) * 8 * 8f));
 
         update(() -> {
             try {
@@ -340,126 +340,53 @@ public class UnitDisplay extends Table {
     }
     static class UnitInfoDisplay extends Table {
         public UnitInfoDisplay() {
-            table(table1 -> {
-                table1.left().top();
-
-                table1.table().update(t -> {
-                    t.clear();
-                    if(getTarget() instanceof Unit u && u.item() != null) {
-                        if(state.rules.damageExplosions)  {
-                            float power = u.item().charge * Mathf.pow(u.stack().amount, 1.11f) * 160f;
-                            int powerAmount = (int)Mathf.clamp(power / 700, 0, 8);
-                            int powerLength = 5 + Mathf.clamp((int)(Mathf.pow(power, 0.98f) / 500), 1, 18);
-                            float powerDamage = 3 + Mathf.pow(power, 0.35f);
-
-                            if(powerAmount > 0) {
-                                t.stack(
-                                        new Table(tt -> {
-                                            tt.image(Icon.power.getRegion()).size(8 * 3f * Scl.scl(modUiScale));
-                                        }),
-                                        new Table(tt -> {
-                                            tt.right().top();
-                                            Label label = new Label(()->powerAmount + "");
-                                            label.setFontScale(0.75f * Scl.scl(modUiScale));
-                                            tt.add(label).padBottom(4f).padLeft(4f);
-                                            tt.pack();
-                                        })
-                                ).pad(4).visible(() -> state.rules.damageExplosions&&powerAmount > 0);
-                            }
-
-                            if(u.item().flammability > 1) {
-                                float flammability = u.item().flammability * u.stack().amount / 1.9f;
-                                int fireAmount = (int)Mathf.clamp(flammability / 4, 0, 30);
-                                t.stack(
-                                        new Table(tt -> {
-                                            tt.image(StatusEffects.burning.uiIcon).size(8 * 3f * Scl.scl(modUiScale));
-                                        }),
-                                        new Table(tt -> {
-                                            tt.right().top();
-                                            Label label = new Label(()->fireAmount+"");
-                                            label.setFontScale(0.75f * Scl.scl(modUiScale));
-                                            tt.add(label).padBottom(4f).padLeft(4f);
-                                            tt.pack();
-                                        })
-                                ).pad(4).visible(() -> state.rules.damageExplosions&&u.item().flammability > 1);
-                            }
-                        }
-
-                        float explosiveness = 2f + u.item().explosiveness * u.stack().amount * 1.53f;
-                        float explosivenessMax = 2f + u.item().explosiveness * u.stack().amount * 1.53f;
-                        int exploAmount = explosiveness <= 2 ? 0 : Mathf.clamp((int)(explosiveness / 11), 1, 25);
-                        int exploAmountMax = explosivenessMax <= 2 ? 0 : Mathf.clamp((int)(explosivenessMax / 11), 1, 25);
-                        float exploRadiusMin = Mathf.clamp(u.bounds() / 2f + explosiveness, 0, 50f) * (1f / exploAmount);
-                        float exploRadiusMax = Mathf.clamp(u.bounds() / 2f + explosiveness, 0, 50f);
-                        float exploDamage = explosiveness / 2f;
-
-                        if(exploAmount > 0){
-                            t.stack(
-                                    new Table(tt -> {
-                                        tt.image(Icon.modeAttack.getRegion()).size(8 * 3f * Scl.scl(modUiScale));
-                                    }),
-                                    new Table(tt -> {
-                                        tt.right().top();
-                                        Label label = new Label(()->""+ Strings.fixed(exploDamage * exploAmount, 1));
-                                        label.setFontScale(0.75f * Scl.scl(modUiScale));
-                                        label.setColor(Tmp.c1.set(Color.white).lerp(Pal.health, (exploAmount*1f)/exploAmountMax));
-                                        tt.add(label).padBottom(4f).padLeft(8f);
-                                        tt.pack();
-                                    })
-                            ).pad(4).visible(() -> exploAmount>0);
-                        }
-                    }
-                }).growX().visible(() -> getTarget() instanceof Unit);
-                table1.row();
-
-                float[] count = new float[]{-1};
-                table1.table().update(t -> {
-                    if(getTarget() instanceof Payloadc payload){
-                        if(count[0] != payload.payloadUsed()){
-                            t.clear();
-                            t.top().left();
-
-                            float pad = 0;
-                            float items = payload.payloads().size;
-                            if(8 * 2 * items + pad * items > 275f){
-                                pad = (275f - (8 * 2) * items) / items;
-                            }
-                            int i = 0;
-                            for(Payload p : payload.payloads()){
-                                t.image(p.icon()).size(8 * 2).padRight(pad);
-                                if(++i % 12 == 0) t.row();
-                            }
-
-                            count[0] = payload.payloadUsed();
-                        }
-                    }else{
-                        count[0] = -1;
+            top();
+            float[] count = new float[]{-1};
+            table().update(t -> {
+                if(getTarget() instanceof Payloadc payload){
+                    if(count[0] != payload.payloadUsed()){
                         t.clear();
+                        t.top().left();
+
+                        float pad = 0;
+                        float items = payload.payloads().size;
+                        if(8 * 2 * items + pad * items > 275f){
+                            pad = (275f - (8 * 2) * items) / items;
+                        }
+                        int i = 0;
+                        for(Payload p : payload.payloads()){
+                            t.image(p.icon()).size(8 * 2).padRight(pad);
+                            if(++i % 12 == 0) t.row();
+                        }
+
+                        count[0] = payload.payloadUsed();
                     }
-                }).growX().visible(() -> getTarget() instanceof Payloadc p && p.payloadUsed() > 0).colspan(2);
-                table1.row();
+                }else{
+                    count[0] = -1;
+                    t.clear();
+                }
+            }).growX().visible(() -> getTarget() instanceof Payloadc p && p.payloadUsed() > 0).colspan(2).row();
 
-                Bits statuses = new Bits();
-                table1.table().update(t -> {
-                    t.left();
-                    if(getTarget() instanceof Statusc st){
-                        Bits applied = st.statusBits();
-                        if(!statuses.equals(applied)){
-                            t.clear();
+            Bits statuses = new Bits();
+            table().update(t -> {
+                t.left();
+                if(getTarget() instanceof Statusc st){
+                    Bits applied = st.statusBits();
+                    if(!statuses.equals(applied)){
+                        t.clear();
 
-                            if(applied != null){
-                                for(StatusEffect effect : content.statusEffects()){
-                                    if(applied.get(effect.id) && !effect.isHidden()){
-                                        t.image(effect.uiIcon).size(iconSmall).get().addListener(new Tooltip(l -> l.label(() ->
-                                                effect.localizedName + " [lightgray]" + UI.formatTime(st.getDuration(effect))).style(Styles.outlineLabel)));
-                                    }
+                        if(applied != null){
+                            for(StatusEffect effect : content.statusEffects()){
+                                if(applied.get(effect.id) && !effect.isHidden()){
+                                    t.image(effect.uiIcon).size(iconSmall).get()
+                                        .addListener(new Tooltip(l -> l.label(() -> effect.localizedName + " [lightgray]" + UI.formatTime(st.getDuration(effect))).style(Styles.outlineLabel)));
                                 }
-                                statuses.set(applied);
                             }
+                            statuses.set(applied);
                         }
                     }
-                }).left();
-            }).get();
+                }
+            }).left();
         }
     }
 }
