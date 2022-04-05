@@ -88,6 +88,10 @@ public class HudUi {
 
             if(Scl.scl(modUiScale) != settings.getInt("infoUiScale") / 100f){
                 modUiScale = settings.getInt("infoUiScale") / 100f;
+                if(modUiScale <= 0) {
+                    Log.warn("ui scaling reached zero");
+                    modUiScale = 0.25f;
+                }
                 mainTable.clearChildren();
                 addTable();
                 coreItems.rebuild();
