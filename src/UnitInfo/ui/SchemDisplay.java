@@ -37,8 +37,9 @@ public class SchemDisplay extends Table {
     }
 
 
-    void setSchemTable() {
+    public void setSchemTable() {
        clear();
+       if(!settings.getBool(("schem"))) return;
        right();
        button(bundle.get("hud.schematic-list"), Icon.downOpen, Styles.squareTogglet, () -> schemShown = !schemShown).width(160f).height(60f).checked(b -> {
             Image image = (Image)b.getCells().first().get();

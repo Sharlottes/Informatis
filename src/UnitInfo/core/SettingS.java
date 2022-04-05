@@ -114,6 +114,7 @@ public class SettingS {
         addGraphicCheckSetting("pastwave", false, tapSeq);
         addGraphicCheckSetting("emptywave", true, tapSeq);
         addGraphicCheckSetting("itemcal", false, tapSeq);
+        addGraphicCheckSetting("schem", !mobile, tapSeq);
 
         Seq<SharSetting> rangeSeq = new Seq<>();
         addGraphicTypeSetting("rangeRadius", 0, 500, 70, true, () -> true, s -> s + "tiles", rangeSeq);

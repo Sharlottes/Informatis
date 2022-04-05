@@ -37,6 +37,7 @@ public class HudUi {
     public UnitDisplay unitTable;
     public WaveDisplay waveTable;
     public CoreDisplay itemTable;
+    public SchemDisplay schemTable;
 
     public Teamc shotTarget;
     public Teamc lockedTarget;
@@ -73,6 +74,7 @@ public class HudUi {
         return Vars.world.tileWorld(input.mouseWorldX(), input.mouseWorldY());
     }
 
+    float heat = 0;
     public void setEvents() {
         Events.on(EventType.WaveEvent.class, e -> waveTable.rebuild());
         Events.on(EventType.WorldLoadEvent.class, e -> itemTable.rebuild());
@@ -85,6 +87,8 @@ public class HudUi {
                 lockedTarget = null;
                 locked = false;
             }
+            heat+=Time.delta;
+            if(heat>60) schemTable.setSchemTable();
 
             if(Scl.scl(modUiScale) != settings.getInt("infoUiScale") / 100f){
                 modUiScale = settings.getInt("infoUiScale") / 100f;
@@ -218,11 +222,9 @@ public class HudUi {
     }
 
     public void addSchemTable() {
-        if(mobile) return;
-
         Table table = (Table) scene.find("minimap/position");
         table.row();
-        table.add(new SchemDisplay());
+        table.add(schemTable=new SchemDisplay());
     }
 
     public void addWaveInfoTable() {
