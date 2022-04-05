@@ -243,19 +243,19 @@ public class HudUi {
             Button unitBtn = new ImageButton(new ScaledNinePatchDrawable(new NinePatch(Icon.grid.getRegion()), 0.5f), Styles.clearToggleTransi);
             Button logicBtn = new ImageButton(new ScaledNinePatchDrawable(new NinePatch(Icon.grid.getRegion()), 0.5f), Styles.clearToggleTransi);
 
-            pathBtn.addListener(new Tooltip(l -> l.label(() -> "PathLine " + (pathLine ? "[accent]Enabled[]" : "[gray]Disabled[]"))));
+            pathBtn.addListener(new Tooltip(l -> l.label(() -> bundle.get("hud.pathline") + " " + (pathLine ? bundle.get("hud.enabled") : bundle.get("hud.disabled")))));
             pathBtn.clicked(() -> {
                 pathLine = !pathLine;
                 pathBtn.setChecked(pathLine);
             });
 
-            unitBtn.addListener(new Tooltip(l -> l.label(() -> "UnitLine " + (unitLine ? "[accent]Enabled[]" : "[gray]Disabled[]"))));
+            unitBtn.addListener(new Tooltip(l -> l.label(() -> bundle.get("hud.unitline") + " " + (unitLine ? bundle.get("hud.enabled") : bundle.get("hud.disabled")))));
             unitBtn.clicked(() -> {
                 unitLine = !unitLine;
                 unitBtn.setChecked(unitLine);
             });
 
-            logicBtn.addListener(new Tooltip(l -> l.label(() -> "LogicLine " + (logicLine ? "[accent]Enabled[]" : "[gray]Disabled[]"))));
+            logicBtn.addListener(new Tooltip(l -> l.label(() -> bundle.get("hud.logicline") + " " + (logicLine ? bundle.get("hud.enabled") : bundle.get("hud.disabled")))));
             logicBtn.clicked(() -> {
                 logicLine = !logicLine;
                 logicBtn.setChecked(logicLine);

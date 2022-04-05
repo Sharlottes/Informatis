@@ -74,7 +74,7 @@ public class WaveDisplay extends Table {
                         t.marginLeft(Scl.scl(modUiScale) * 3 * 8f);
                         if(settings.getBool("emptywave") && state.rules.spawns.find(g -> g.getSpawned(j) > 0) == null) {
                             t.center();
-                            Label label = new Label("[lightgray]<Empty>[]");
+                            Label label = new Label(bundle.get("empty"));
                             label.setFontScale(Scl.scl(modUiScale));
                             t.add(label);
                             return;

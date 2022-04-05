@@ -36,7 +36,7 @@ public class BarInfo {
 
     public static <T extends Teamc> void getInfo(T target) throws IllegalAccessException, NoSuchFieldException {
         for(int i = 0; i < 6; i++) { //init
-            strings.set(i, "[lightgray]<Empty>[]");
+            strings.set(i, bundle.get("empty"));
             colors.set(i, Color.clear);
             numbers.set(i, 0f);
         }
