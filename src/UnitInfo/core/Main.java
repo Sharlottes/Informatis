@@ -1,25 +1,17 @@
 package UnitInfo.core;
 
 import UnitInfo.shaders.*;
+import UnitInfo.ui.HUDFragment;
+import UnitInfo.ui.MindowsTex;
+import UnitInfo.ui.UnitDisplay;
+import UnitInfo.ui.WindowTables;
 import arc.*;
-import arc.audio.Sound;
-import arc.files.Fi;
-import arc.input.KeyCode;
-import arc.scene.ui.TextArea;
-import arc.struct.Seq;
-import arc.util.Log;
-import arc.util.Nullable;
-import arc.util.Strings;
-import arc.util.Timer;
 import mindustry.*;
 import mindustry.game.EventType.*;
-import mindustry.gen.Call;
-import mindustry.gen.Player;
-import mindustry.gen.Sounds;
 import mindustry.mod.*;
-import mindustry.ui.dialogs.BaseDialog;
 
 import static UnitInfo.SVars.*;
+import static UnitInfo.ui.UnitDisplay.getTarget;
 import static arc.Core.*;
 
 public class Main extends Mod {
@@ -36,8 +28,18 @@ public class Main extends Mod {
             meta.description = bundle.get("shar-description");
         });
 
+        Events.run(Trigger.class, () -> {
+            try {
+                BarInfo.getInfo(getTarget());
+            } catch (IllegalAccessException | NoSuchFieldException err) {
+                err.printStackTrace();
+            }
+        });
+
         Events.on(ClientLoadEvent.class, e -> {
             new SettingS().init();
+            MindowsTex.init();
+            new HUDFragment().build(Vars.ui.hudGroup);
             hud = new HudUi();
             hud.addTable();
             hud.addWaveInfoTable();

@@ -79,7 +79,7 @@ public class HudUi {
         Events.on(EventType.WaveEvent.class, e -> waveTable.rebuild());
         Events.on(EventType.WorldLoadEvent.class, e -> itemTable.rebuild());
         Events.run(EventType.Trigger.update, ()->{
-            unitTable.setEvent();
+            if(unitTable!=null) unitTable.setEvent();
             itemTable.setEvent();
             OverDrawer.target = getTarget();
             OverDrawer.locked = locked;
@@ -286,10 +286,9 @@ public class HudUi {
         label.setText(bundle.get(hud));
         table.removeChild(baseTable);
         labelTable.setPosition(buttons.items[uiIndex].x, buttons.items[uiIndex].y);
-        unitTable = new UnitDisplay();
         waveTable = new WaveDisplay();
         itemTable = new CoreDisplay();
-        baseTable = table.table(tt -> tt.stack(unitTable, waveTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).left().get();
+        baseTable = table.table(tt -> tt.stack(waveTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).left().get();
         a = 1f;
     }
 
@@ -322,10 +321,9 @@ public class HudUi {
                     t.row();
                 }
             });
-            unitTable = new UnitDisplay();
             waveTable = new WaveDisplay();
             itemTable = new CoreDisplay();
-            baseTable = table.table(tt -> tt.stack(unitTable, waveTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).left().get();
+            baseTable = table.table(tt -> tt.stack(waveTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).left().get();
 
             table.fillParent = true;
             table.visibility = () -> ui.hudfrag.shown && !ui.minimapfrag.shown();

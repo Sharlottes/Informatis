@@ -98,7 +98,7 @@ public class SettingS {
         sharset = new SettingsMenuDialog.SettingsTable();
         dialog.cont.center().add(new Table(t -> t.pane(sharset).grow().row()));
         ui.settings.shown(() -> {
-            Table settingUi = (Table)((Group)((Group)(ui.settings.getChildren().get(1))).getChildren().get(0)).getChildren().get(0); //This looks so stupid lol - lmfao - hehe
+            Table settingUi = (Table)((Group)((Group)(ui.settings.getChildren().get(1))).getChildren().get(0)).getChildren().get(0); //This looks so stupid lol
             settingUi.row();
             settingUi.button(bundle.get("setting.shar-title"), Styles.cleart, dialog::show);
         });
