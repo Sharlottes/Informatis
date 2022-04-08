@@ -44,6 +44,7 @@ import static mindustry.Vars.*;
 public class UnitDisplay extends WindowTable implements Updatable {
     static Seq<Color> lastColors = Seq.with(Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear);
     static final Rect scissor = new Rect();
+    float scrollPos;
 
     public UnitDisplay() {
         super("Unit Display", Icon.units, t -> {});
@@ -54,7 +55,6 @@ public class UnitDisplay extends WindowTable implements Updatable {
         top();
         topBar();
 
-        Log.info("called");
         //new UnitInfoDisplay().marginBottom(80f);
         table(Styles.black8, t -> {
             t.table(Tex.underline2, tt -> {
@@ -84,12 +84,11 @@ public class UnitDisplay extends WindowTable implements Updatable {
                             if (target instanceof Unit u && u.type != null) ui.content.show(u.type);
                             else if (target instanceof Building b && b.block != null) ui.content.show(b.block);
                         });
-
                         ttt.add(imagebt).update((i) -> {
                             i.getStyle().imageUp = reg.get().tint(Tmp.c1.set(SVars.hud.locked ? Color.red.shiftHue(2 * 60 % Time.delta) : Color.white));
                             i.getStyle().imageDown = reg.get().tint(Tmp.c1.mul(Color.darkGray));
                             i.layout();
-                        }).size(4 * 8f);
+                        }).size(4 * 8f).get().parent = null;
                     }),
                     new Table(ttt -> {
                         ttt.stack(
@@ -103,7 +102,7 @@ public class UnitDisplay extends WindowTable implements Updatable {
                                 temp.add(label).center();
                                 temp.pack();
                             })
-                        ).padLeft(2 * 8f).padBottom(2 * 8f);
+                        ).padLeft(2 * 8f).padBottom(2 * 8f).get().parent = null;
                     })
                 );
 
@@ -118,7 +117,7 @@ public class UnitDisplay extends WindowTable implements Updatable {
                         else name = b.block.localizedName;
                     }
                     return "[accent]" + (name.length() > 13 ? name.substring(0, 13) + "..." : name) + "[]";
-                });
+                }).get().parent = null;
 
                 tt.addListener(new Tooltip(to -> {
                     Teamc target = getTarget();
@@ -137,14 +136,27 @@ public class UnitDisplay extends WindowTable implements Updatable {
                         ? "(" + 0 + ", " + 0 + ")"
                         : "(" + Strings.fixed(target.x() / tilesize, 2) + ", " + Strings.fixed(target.y() / tilesize, 2) + ")").row();
                 }));
-                //tt.update(() -> tt.setBackground(((NinePatchDrawable) Tex.underline2).tint(getTarget() == null ? Color.gray : getTarget().team().color)));
+                tt.update(() -> tt.setBackground(((NinePatchDrawable) Tex.underline2).tint(getTarget() == null ? Color.gray : getTarget().team().color))).parent = null;
             }).row();
-            for (int i = 0; i < 6; i++) {
-                addBar(t, i);
-                t.row();
-            }
+            ScrollPane pane = t.pane(Styles.nonePane, new Table(tt -> {
+                for (int i = 0; i < 6; i++) {
+                    addBar(tt, i);
+                    tt.row();
+                }
+            }).left()).top().right().grow().get();
+            pane.parent = null;
+            pane.update(() -> {
+                Element result = scene.hit(input.mouseX(), input.mouseY(), true);
+                if(pane.hasScroll() && (result == null || !result.isDescendantOf(pane)))
+                    scene.setScrollFocus(null);
+                scrollPos = pane.getScrollY();
+            });
+
+            pane.setOverscroll(false, false);
+            pane.setScrollingDisabled(true, false);
+            pane.setScrollYForce(scrollPos);
             //tt.add(new WeaponDisplay());
-        }).top().right().grow();
+        }).top().right().grow().get().parent = null;
         resizeButton();
     }
 
