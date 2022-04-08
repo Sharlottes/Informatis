@@ -1,5 +1,6 @@
-package UnitInfo.ui;
+package UnitInfo.ui.windows;
 
+import UnitInfo.ui.SBar;
 import arc.Core;
 import arc.graphics.Color;
 import arc.math.Mathf;
@@ -31,9 +32,9 @@ public class CoresItemsDisplay {
     static final ObjectMap<Team, Seq<ItemStack>> updateItems = new ObjectMap<>();
     static final ObjectIntMap<Team> coreAmount = new ObjectIntMap<>();
     static CoreBlock.CoreBuild core;
-    static Seq<Table> tables = new Seq<>();
+    public static Seq<Table> tables = new Seq<>();
 
-    static Team[] teams;
+    public static Team[] teams;
     static float heat;
 
     public CoresItemsDisplay() {

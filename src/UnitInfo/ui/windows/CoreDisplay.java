@@ -1,7 +1,6 @@
-package UnitInfo.ui;
+package UnitInfo.ui.windows;
 
 import UnitInfo.SVars;
-import arc.graphics.g2d.NinePatch;
 import arc.scene.Element;
 import arc.scene.style.*;
 import arc.scene.ui.ScrollPane;

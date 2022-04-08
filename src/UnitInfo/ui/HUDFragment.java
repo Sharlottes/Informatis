@@ -3,7 +3,7 @@ package UnitInfo.ui;
 import arc.scene.*;
 import mindustry.ui.fragments.*;
 
-import static UnitInfo.ui.WindowTables.unitTable;
+import static UnitInfo.ui.windows.WindowTables.unitTable;
 
 public class HUDFragment extends Fragment{
     @Override

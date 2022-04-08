@@ -1,5 +1,6 @@
 package UnitInfo.ui;
 
+import UnitInfo.ui.windows.WindowTable;
 import arc.func.*;
 import arc.scene.ui.layout.*;
 import mindustry.*;

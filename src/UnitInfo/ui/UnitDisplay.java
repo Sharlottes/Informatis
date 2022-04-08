@@ -2,6 +2,7 @@ package UnitInfo.ui;
 
 import UnitInfo.SVars;
 import UnitInfo.core.BarInfo;
+import UnitInfo.ui.windows.WindowTable;
 import arc.Core;
 import arc.func.Prov;
 import arc.graphics.Color;
@@ -12,8 +13,6 @@ import arc.math.geom.Rect;
 import arc.math.geom.Vec2;
 import arc.math.geom.Vec3;
 import arc.scene.Element;
-import arc.scene.actions.Actions;
-import arc.scene.event.Touchable;
 import arc.scene.style.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;

@@ -1,4 +1,4 @@
-package UnitInfo.ui;
+package UnitInfo.ui.windows;
 
 import UnitInfo.SVars;
 import arc.graphics.Color;

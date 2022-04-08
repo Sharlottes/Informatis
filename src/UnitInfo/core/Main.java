@@ -3,8 +3,6 @@ package UnitInfo.core;
 import UnitInfo.shaders.*;
 import UnitInfo.ui.HUDFragment;
 import UnitInfo.ui.MindowsTex;
-import UnitInfo.ui.UnitDisplay;
-import UnitInfo.ui.WindowTables;
 import arc.*;
 import mindustry.*;
 import mindustry.game.EventType.*;

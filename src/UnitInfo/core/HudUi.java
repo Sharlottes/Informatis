@@ -2,6 +2,10 @@ package UnitInfo.core;
 
 import UnitInfo.ui.*;
 
+import UnitInfo.ui.windows.CoreDisplay;
+import UnitInfo.ui.windows.CoresItemsDisplay;
+import UnitInfo.ui.windows.SchemDisplay;
+import UnitInfo.ui.windows.WaveDisplay;
 import arc.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
