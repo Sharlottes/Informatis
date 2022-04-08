@@ -2,22 +2,22 @@ package UnitInfo.ui;
 
 import UnitInfo.SVars;
 import UnitInfo.core.BarInfo;
+import arc.func.Prov;
 import arc.graphics.Color;
 import arc.graphics.g2d.*;
 import arc.input.KeyCode;
-import arc.math.Mathf;
 import arc.math.geom.Rect;
 import arc.scene.Element;
 import arc.scene.style.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
-import arc.scene.utils.Elem;
 import arc.struct.Bits;
 import arc.struct.Seq;
 import arc.util.Strings;
+import arc.util.Time;
 import arc.util.Tmp;
-import mindustry.content.StatusEffects;
 import mindustry.core.UI;
+import mindustry.ctype.UnlockableContent;
 import mindustry.entities.units.WeaponMount;
 import mindustry.gen.*;
 import mindustry.graphics.Pal;
@@ -37,7 +37,6 @@ import static arc.Core.*;
 import static mindustry.Vars.*;
 
 public class UnitDisplay extends Table {
-    static ImageButton lockButton;
     static float weaponScrollPos;
     static Seq<Element> bars = new Seq<>();
     static Seq<Color> lastColors = Seq.with(Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear);
@@ -55,14 +54,32 @@ public class UnitDisplay extends Table {
                 tt.setWidth(Scl.scl(modUiScale) * 35 * 8f);
                 Stack stack = new Stack(){{
                     add(new Table(ttt -> {
-                        ttt.image(() -> {
+                        Prov<TextureRegionDrawable> reg = () -> {
                             TextureRegion region = clear;
                             if(getTarget() instanceof Unit u && u.type != null) region = u.type.uiIcon;
                             else if(getTarget() instanceof Building b) {
                                 if(getTarget() instanceof ConstructBlock.ConstructBuild cb) region = cb.current.uiIcon;
                                 else if(b.block != null) region = b.block.uiIcon;
                             }
-                            return region;
+                            return new TextureRegionDrawable(region);
+                        };
+                        Drawable img = reg.get();
+                        ImageButton imagebt = new ImageButton(img, img);
+
+                        imagebt.hovered(()->{
+                            Time.run(60*2, ()->{
+                                if(imagebt.isOver()) lockTarget();
+                            });
+                        });
+                        imagebt.clicked(()->{
+                            if(getTarget() instanceof Unit u && u.type != null) ui.content.show(u.type);
+                            else if(getTarget() instanceof Building b && b.block != null) ui.content.show(b.block);
+                        });
+
+                        ttt.add(imagebt).update((i) -> {
+                            i.getStyle().imageUp = reg.get().tint(Tmp.c1.set(SVars.hud.locked ? Color.red.shiftHue(2*60%Time.delta) : Color.white));
+                            i.getStyle().imageDown = reg.get().tint(Tmp.c1.mul(Color.darkGray));
+                            i.layout();
                         }).size(Scl.scl(modUiScale) * 4 * 8f);
                     }));
 
@@ -95,47 +112,37 @@ public class UnitDisplay extends Table {
                 });
                 label.setFontScale(Scl.scl(modUiScale) * 0.75f);
 
-                TextButton button = Elem.newButton("?", Styles.clearPartialt, () -> {
-                    if(getTarget() instanceof Unit u && u.type != null)
-                        ui.content.show(u.type);
-                    if(getTarget() instanceof Building b && b.block != null) {
-                        ui.content.show(b.block);
-                    }
-                });
-                button.visibility = () -> getTarget() != null;
-                button.update(() -> lockButton.getStyle().imageUp = Icon.lock.tint(SVars.hud.locked ? Pal.accent : Color.white));
-                button.getLabel().setFontScale(Scl.scl(modUiScale));
-
-                lockButton = Elem.newImageButton(Styles.clearPartiali, Icon.lock.tint(SVars.hud.locked ? Pal.accent : Color.white), 3 * 8f * Scl.scl(modUiScale), () -> {
-                    SVars.hud.locked = !SVars.hud.locked;
-                    SVars.hud.lockedTarget = SVars.hud.locked ? getTarget() : null;
-                });
-                lockButton.visibility = () -> !getTarget().isNull();
-
                 tt.top();
                 tt.add(stack);
                 tt.add(label);
-                tt.add(button).size(Scl.scl(modUiScale) * 3 * 8f);
-                tt.add(lockButton);
 
-                tt.addListener(new Tooltip(tool -> tool.background(Tex.button).table(to -> {
-                    to.table(Tex.underline2, tool2 -> {
-                        Label label2 = new Label(()->{
-                            if(getTarget() instanceof Unit u){
-                                if(u.isPlayer()) return u.getPlayer().name;
-                                if(u.type != null) return u.type.localizedName;
-                            }
-                            else if(getTarget() instanceof Building b) return b.block.localizedName;
-                            return "";
-                        });
-                        label2.setFontScale(Scl.scl(modUiScale));
-                        tool2.add(label2);
+                tt.addListener(new Tooltip(tool -> {
+                    tool.background(Tex.button).table(to -> {
+                        Teamc target = getTarget();
+                        to.table(Tex.underline2, tool2 -> {
+                            Label targetName = new Label(()->{
+                                if(target instanceof Unit u) return u.type.localizedName;
+                                else if(target instanceof Building b) return b.block.localizedName;
+                                else return "";
+                            });
+                            targetName.setFontScale(Scl.scl(modUiScale));
+                            tool2.add(targetName);
+                        }).row();
+
+                        Label ownerName = new Label(()->target instanceof Unit u && u.isPlayer() ? u.getPlayer().name() : "AI");
+                        ownerName.setFontScale(Scl.scl(modUiScale));
+                        to.add(ownerName).row();
+
+                        Label targetPos = new Label(()->target == null ? "(" + 0 + ", " + 0 + ")" : "(" + Strings.fixed(target.x() / tilesize, 2) + ", " + Strings.fixed(target.y() / tilesize, 2) + ")");
+                        targetPos.setFontScale(Scl.scl(modUiScale));
+                        to.add(targetPos).row();
                     });
-                    to.row();
-                    Label label2 = new Label(()->getTarget() == null ? "(" + 0 + ", " + 0 + ")" : "(" + Strings.fixed(getTarget().x() / tilesize, 2) + ", " + Strings.fixed(getTarget().y() / tilesize, 2) + ")");
-                    label2.setFontScale(Scl.scl(modUiScale));
-                    to.add(label2);
-                })));
+
+                    tool.update(() -> {
+                        NinePatchDrawable patch = (NinePatchDrawable)Tex.button;
+                        tool.setBackground(patch.tint(Tmp.c1.set(patch.getPatch().getColor()).a(settings.getInt("uiopacity") / 100f)));
+                    });
+                }));
                 tt.update(() -> tt.setBackground(((NinePatchDrawable)Tex.underline2).tint(getTarget().isNull() ? Color.gray : getTarget().team().color)));
             });
             t.row();
@@ -179,9 +186,14 @@ public class UnitDisplay extends Table {
         return SVars.hud == null ? null : SVars.hud.getTarget();
     }
 
+    public void lockTarget() {
+        SVars.hud.locked = !SVars.hud.locked;
+        SVars.hud.lockedTarget = SVars.hud.locked ? getTarget() : null;
+    }
+
     public void setEvent() {
         if((input.keyDown(KeyCode.shiftRight) || input.keyDown(KeyCode.shiftLeft))) {
-            if(input.keyTap(KeyCode.r) && lockButton != null) lockButton.change();
+            if(input.keyTap(KeyCode.r)) lockTarget();
         }
     }
 
