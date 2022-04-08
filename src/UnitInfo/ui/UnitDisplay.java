@@ -55,7 +55,7 @@ public class UnitDisplay extends WindowTable implements Updatable {
         top();
         topBar();
 
-        //new UnitInfoDisplay().marginBottom(80f);
+        //TODO: add new UnitInfoDisplay(), new WeaponDisplay();
         table(Styles.black8, t -> {
             t.table(Tex.underline2, tt -> {
                 tt.stack(
@@ -155,7 +155,6 @@ public class UnitDisplay extends WindowTable implements Updatable {
             pane.setOverscroll(false, false);
             pane.setScrollingDisabled(true, false);
             pane.setScrollYForce(scrollPos);
-            //tt.add(new WeaponDisplay());
         }).top().right().grow().get().parent = null;
         resizeButton();
     }

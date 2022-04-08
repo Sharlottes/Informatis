@@ -88,7 +88,10 @@ public class HudUi {
                 locked = false;
             }
             heat+=Time.delta;
-            if(heat>60) schemTable.setSchemTable();
+            if(heat>60) {
+                heat=0;
+                schemTable.setSchemTable();
+            }
 
             if(Scl.scl(modUiScale) != settings.getInt("infoUiScale") / 100f){
                 modUiScale = settings.getInt("infoUiScale") / 100f;
@@ -224,7 +227,8 @@ public class HudUi {
     public void addSchemTable() {
         Table table = (Table) scene.find("minimap/position");
         table.row();
-        table.add(schemTable=new SchemDisplay());
+        schemTable=new SchemDisplay();
+        table.add(schemTable);
     }
 
     public void addWaveInfoTable() {
