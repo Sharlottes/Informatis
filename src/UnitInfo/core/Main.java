@@ -9,7 +9,7 @@ import mindustry.game.EventType.*;
 import mindustry.mod.*;
 
 import static UnitInfo.SVars.*;
-import static UnitInfo.ui.UnitDisplay.getTarget;
+import static UnitInfo.ui.windows.UnitDisplay.getTarget;
 import static arc.Core.*;
 
 public class Main extends Mod {

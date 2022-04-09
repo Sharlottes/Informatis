@@ -1,170 +1,138 @@
 package UnitInfo.ui.windows;
 
-import UnitInfo.SVars;
+import UnitInfo.ui.OverScrollPane;
+import arc.Events;
 import arc.graphics.Color;
 import arc.input.KeyCode;
 import arc.math.Mathf;
-import arc.scene.Element;
+import arc.math.geom.Vec2;
 import arc.scene.event.HandCursorListener;
-import arc.scene.style.NinePatchDrawable;
+import arc.scene.event.Touchable;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
-import arc.struct.ObjectIntMap;
-import arc.struct.Seq;
-import arc.util.Scaling;
-import arc.util.Time;
-import arc.util.Tmp;
+import arc.struct.*;
+import arc.util.*;
 import mindustry.content.StatusEffects;
+import mindustry.game.EventType;
 import mindustry.game.SpawnGroup;
 import mindustry.gen.*;
 import mindustry.graphics.Pal;
 import mindustry.ui.*;
 
-import static UnitInfo.SVars.modUiScale;
 import static arc.Core.*;
 import static arc.Core.settings;
 import static mindustry.Vars.*;
 
 
-public class WaveDisplay extends Table {
-    static float waveScrollPos;
-    static Table table = new Table();
+public class WaveDisplay extends WindowTable {
+    static Vec2 waveScrollPos = new Vec2(0, 0);
 
     public WaveDisplay() {
-        fillParent = true;
-        visibility = () -> 1 == SVars.hud.uiIndex;
+        super("Wave Display", Icon.waves, t -> {});
+    }
 
-        defaults().size(Scl.scl(modUiScale) * 35 * 8f);
-        table(Tex.button, t -> {
-            ScrollPane pane = t.pane(Styles.nonePane, rebuild()).get();
-            pane.update(() -> {
-                if (pane.hasScroll()) {
-                    Element result = scene.hit(input.mouseX(), input.mouseY(), true);
-                    if (result == null || !result.isDescendantOf(pane)) {
-                        scene.setScrollFocus(null);
-                    }
-                }
-                waveScrollPos = pane.getScrollY();
-            });
-            pane.setOverscroll(false, false);
-            pane.setScrollingDisabled(true, false);
-            pane.setScrollYForce(waveScrollPos);
+    @Override
+    public void build() {
+        top();
+        topBar();
 
-            update(() -> {
-                NinePatchDrawable patch = (NinePatchDrawable) Tex.button;
-                t.setBackground(patch.tint(Tmp.c1.set(patch.getPatch().getColor()).a(settings.getInt("uiopacity") / 100f)));
+        table(Styles.black8, t -> {
+            ScrollPane pane = new OverScrollPane(rebuild(), Styles.nonePane, waveScrollPos).disableScroll(true, false);
+            t.add(pane).get().parent = null;
+            Events.on(EventType.WorldLoadEvent.class, e -> {
+                pane.clearChildren();
+                pane.setWidget(rebuild());
             });
-        }).padRight(Scl.scl(modUiScale) * 70 * 8f);
+            Events.on(EventType.WaveEvent.class, e -> {
+                pane.clearChildren();
+                pane.setWidget(rebuild());
+            });
+        }).top().right().grow().get().parent = null;
+
+        resizeButton();
+    }
+
+    public ObjectIntMap<SpawnGroup> getWaveGroup(int index) {
+        ObjectIntMap<SpawnGroup> groups = new ObjectIntMap<>();
+        for (SpawnGroup group : state.rules.spawns) {
+            if (group.getSpawned(index) <= 0) continue;
+            SpawnGroup sameTypeKey = groups.keys().toArray().find(g -> g.type == group.type && g.effect != StatusEffects.boss);
+            if (sameTypeKey != null) groups.increment(sameTypeKey, sameTypeKey.getSpawned(index));
+            else groups.put(group, group.getSpawned(index));
+        }
+        Seq<SpawnGroup> groupSorted = groups.keys().toArray().copy().sort((g1, g2) -> {
+            int boss = Boolean.compare(g1.effect != StatusEffects.boss, g2.effect != StatusEffects.boss);
+            if (boss != 0) return boss;
+            int hitSize = Float.compare(-g1.type.hitSize, -g2.type.hitSize);
+            if (hitSize != 0) return hitSize;
+            return Integer.compare(-g1.type.id, -g2.type.id);
+        });
+        ObjectIntMap<SpawnGroup> groupsTmp = new ObjectIntMap<>();
+        groupSorted.each(g -> groupsTmp.put(g, groups.get(g)));
+
+        return groupsTmp;
     }
 
     public Table rebuild(){
-        table.clear();
-        int winWave = state.isCampaign() && state.rules.winWave > 0 ? state.rules.winWave : Integer.MAX_VALUE;
-        for(int i = settings.getBool("pastwave") ? 0 : state.wave - 1; i <= Math.min(state.wave + settings.getInt("wavemax"), winWave - 2); i++){
-            final int j = i;
-            if(!settings.getBool("emptywave") && state.rules.spawns.find(g -> g.getSpawned(j) > 0) == null) continue;
-            table.table(table1 -> {
-                table1.stack(
+        return new Table(table -> {
+            table.touchable = Touchable.enabled;
+            for (int i = settings.getBool("pastwave") ? 0 : state.wave - 1;
+                 i <= Math.min(state.wave + settings.getInt("wavemax"), (state.isCampaign() && state.rules.winWave > 0 ? state.rules.winWave : Integer.MAX_VALUE) - 2);
+                 i++) {
+                final int j = i;
+
+                table.stack(
                     new Table(t -> {
-                        Label label = new Label(() -> "[#" + (state.wave == j ? Color.red.toString() : Pal.accent.toString()) + "]" + j + "[]");
-                        label.setFontScale(Scl.scl(modUiScale));
-                        t.add(label).padRight(Scl.scl(modUiScale) * 24 * 8f);
+                        t.label(() -> "[#" + (state.wave == j ? Color.red.toString() : Pal.accent.toString()) + "]" + j + "[]").padRight(24 * 8f);
                     }),
                     new Table(Tex.underline, t -> {
-                        t.marginLeft(Scl.scl(modUiScale) * 3 * 8f);
-                        if(settings.getBool("emptywave") && state.rules.spawns.find(g -> g.getSpawned(j) > 0) == null) {
-                            t.center();
-                            Label label = new Label(bundle.get("empty"));
-                            label.setFontScale(Scl.scl(modUiScale));
-                            t.add(label);
+                        if (settings.getBool("emptywave") && state.rules.spawns.find(g -> g.getSpawned(j) > 0) == null) {
+                            t.add(bundle.get("empty")).center();
                             return;
                         }
 
-                        ObjectIntMap<SpawnGroup> groups = new ObjectIntMap<>();
-                        for(SpawnGroup group : state.rules.spawns) {
-                            if(group.getSpawned(j) <= 0) continue;
-                            SpawnGroup sameTypeKey = groups.keys().toArray().find(g -> g.type == group.type && g.effect != StatusEffects.boss);
-                            if(sameTypeKey != null) groups.increment(sameTypeKey, sameTypeKey.getSpawned(j));
-                            else groups.put(group, group.getSpawned(j));
-                        }
-                        Seq<SpawnGroup> groupSorted = groups.keys().toArray().copy().sort((g1, g2) -> {
-                            int boss = Boolean.compare(g1.effect != StatusEffects.boss, g2.effect != StatusEffects.boss);
-                            if(boss != 0) return boss;
-                            int hitSize = Float.compare(-g1.type.hitSize, -g2.type.hitSize);
-                            if(hitSize != 0) return hitSize;
-                            return Integer.compare(-g1.type.id, -g2.type.id);
-                        });
-                        ObjectIntMap<SpawnGroup> groupsTmp = new ObjectIntMap<>();
-                        groupSorted.each(g -> groupsTmp.put(g, groups.get(g)));
+                        ObjectIntMap<SpawnGroup> groups = getWaveGroup(j-2);
 
                         int row = 0;
-                        for(SpawnGroup group : groupsTmp.keys()){
+                        for (SpawnGroup group : groups.keys()) {
                             int spawners = state.rules.waveTeam.cores().size + (group.type.flying ? spawner.countFlyerSpawns() : spawner.countGroundSpawns());
-                            int amount = groupsTmp.get(group);
-                            t.table(tt -> {
-                                Image image = new Image(group.type.uiIcon).setScaling(Scaling.fit);
-                                tt.stack(
-                                    new Table(ttt -> {
-                                        ttt.center();
-                                        ttt.add(image).size(iconMed * Scl.scl(modUiScale));
-                                        ttt.pack();
-                                    }),
+                            int amount = groups.get(group);
+                            t.stack(
+                                new Table(ttt -> {
+                                    ttt.center();
+                                    ttt.image(group.type.uiIcon).size(iconMed);
+                                    ttt.pack();
+                                }),
 
-                                    new Table(ttt -> {
-                                        ttt.bottom().left();
-                                        Label label = new Label(() -> amount + "");
-                                        label.setFontScale(Scl.scl(modUiScale) * 0.9f);
-                                        Label multi = new Label(() -> "[gray]x" + spawners);
-                                        multi.setFontScale(Scl.scl(modUiScale) * 0.7f);
-                                        ttt.add(label).padTop(2f);
-                                        ttt.add(multi).padTop(10f);
-                                        ttt.pack();
-                                    }),
+                                new Table(ttt -> {
+                                    ttt.bottom().left();
+                                    ttt.add(amount+"").padTop(2f).fontScale(0.9f);
+                                    ttt.add("[gray]x"+spawners).padTop(10f).fontScale(0.7f);
+                                    ttt.pack();
+                                }),
 
-                                    new Table(ttt -> {
-                                        ttt.top().right();
-                                        Image image1 = new Image(Icon.warning.getRegion()).setScaling(Scaling.fit);
-                                        image1.update(() -> {
-                                            image1.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f)));
-                                        });
-                                        ttt.add(image1).size(Scl.scl(modUiScale) * 12f);
-                                        ttt.visible(() -> group.effect == StatusEffects.boss);
-                                        ttt.pack();
-                                    })
-                                ).pad(2f * Scl.scl(modUiScale));
-                                tt.clicked(() -> {
-                                    if(input.keyDown(KeyCode.shiftLeft) && Fonts.getUnicode(group.type.name) != 0){
-                                        app.setClipboardText((char)Fonts.getUnicode(group.type.name) + "");
-                                        ui.showInfoFade("@copied");
-                                    }else{
-                                        ui.content.show(group.type);
-                                    }
-                                });
-                                if(!mobile){
-                                    HandCursorListener listener = new HandCursorListener();
-                                    tt.addListener(listener);
-                                    tt.update(() -> {
-                                        image.color.lerp(!listener.isOver() ? Color.lightGray : Color.white, Mathf.clamp(0.4f * Time.delta));
-                                    });
-                                }
-                                tt.addListener(new Tooltip(ttt -> ttt.table(Styles.black6, to -> {
-                                    to.margin(4f).left();
-                                    to.add("[stat]" + group.type.localizedName + "[]").row();
-                                    to.row();
-                                    to.add(bundle.format("shar-stat-waveAmount", amount + " [lightgray]x" + spawners + "[]")).row();
-                                    to.add(bundle.format("shar-stat-waveShield", group.getShield(j))).row();
-                                    if(group.effect != null && group.effect != StatusEffects.none)
-                                        to.add(bundle.get("shar-stat.waveStatus") + group.effect.emoji() + "[stat]" + group.effect.localizedName).row();
-                                })));
-                            });
-                            if(++row % 4 == 0) t.row();
+                                new Table(ttt -> {
+                                    ttt.top().right();
+                                    ttt.image(Icon.warning.getRegion()).update(img->img.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f)))).size(12f);
+                                    ttt.visible(() -> group.effect == StatusEffects.boss);
+                                    ttt.pack();
+                                })
+                            ).pad(2f).get().addListener(new Tooltip(to -> {
+                                to.background(Styles.black6);
+                                to.margin(4f).left();
+                                to.add("[stat]" + group.type.localizedName + "[]").row();
+                                to.row();
+                                to.add(bundle.format("shar-stat-waveAmount", amount + " [lightgray]x" + spawners + "[]")).row();
+                                to.add(bundle.format("shar-stat-waveShield", group.getShield(j))).row();
+                                if (group.effect != null && group.effect != StatusEffects.none)
+                                    to.add(bundle.get("shar-stat.waveStatus") + group.effect.emoji() + "[stat]" + group.effect.localizedName).row();
+                            }));
+                            if (++row % 4 == 0) t.row();
                         }
                     })
                 );
-            });
-            table.row();
-        }
-
-        return table;
+                table.row();
+            }
+        });
     }
 }

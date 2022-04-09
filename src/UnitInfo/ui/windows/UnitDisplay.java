@@ -1,7 +1,10 @@
-package UnitInfo.ui;
+package UnitInfo.ui.windows;
 
 import UnitInfo.SVars;
 import UnitInfo.core.BarInfo;
+import UnitInfo.ui.SBar;
+import UnitInfo.ui.SIcons;
+import UnitInfo.ui.Updatable;
 import UnitInfo.ui.windows.WindowTable;
 import arc.Core;
 import arc.func.Prov;

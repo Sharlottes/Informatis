@@ -1,11 +1,6 @@
 package UnitInfo.core;
 
-import UnitInfo.ui.*;
-
-import UnitInfo.ui.windows.CoreDisplay;
-import UnitInfo.ui.windows.CoresItemsDisplay;
-import UnitInfo.ui.windows.SchemDisplay;
-import UnitInfo.ui.windows.WaveDisplay;
+import UnitInfo.ui.windows.*;
 import arc.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
@@ -38,8 +33,6 @@ public class HudUi {
     public Table mainTable = new Table();
     public Table baseTable = new Table();
     public Table waveInfoTable = new Table();
-    public UnitDisplay unitTable;
-    public WaveDisplay waveTable;
     public CoreDisplay itemTable;
     public SchemDisplay schemTable;
 
@@ -80,10 +73,8 @@ public class HudUi {
 
     float heat = 0;
     public void setEvents() {
-        Events.on(EventType.WaveEvent.class, e -> waveTable.rebuild());
         Events.on(EventType.WorldLoadEvent.class, e -> itemTable.rebuild());
         Events.run(EventType.Trigger.update, ()->{
-            if(unitTable!=null) unitTable.setEvent();
             itemTable.setEvent();
             OverDrawer.target = getTarget();
             OverDrawer.locked = locked;
@@ -294,9 +285,8 @@ public class HudUi {
         label.setText(bundle.get(hud));
         table.removeChild(baseTable);
         labelTable.setPosition(buttons.items[uiIndex].x, buttons.items[uiIndex].y);
-        waveTable = new WaveDisplay();
         itemTable = new CoreDisplay();
-        baseTable = table.table(tt -> tt.stack(waveTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).left().get();
+        baseTable = table.table(tt -> tt.stack(itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).left().get();
         a = 1f;
     }
 
@@ -329,9 +319,8 @@ public class HudUi {
                     t.row();
                 }
             });
-            waveTable = new WaveDisplay();
             itemTable = new CoreDisplay();
-            baseTable = table.table(tt -> tt.stack(waveTable, itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).left().get();
+            baseTable = table.table(tt -> tt.stack(itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).left().get();
 
             table.fillParent = true;
             table.visibility = () -> ui.hudfrag.shown && !ui.minimapfrag.shown();
