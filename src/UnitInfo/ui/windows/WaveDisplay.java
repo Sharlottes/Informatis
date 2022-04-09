@@ -38,7 +38,7 @@ public class WaveDisplay extends WindowTable {
 
         table(Styles.black8, t -> {
             ScrollPane pane = new OverScrollPane(rebuild(), Styles.nonePane, waveScrollPos).disableScroll(true, false);
-            t.add(pane).get().parent = null;
+            t.add(pane);
             Events.on(EventType.WorldLoadEvent.class, e -> {
                 pane.clearChildren();
                 pane.setWidget(rebuild());
@@ -76,22 +76,27 @@ public class WaveDisplay extends WindowTable {
     public Table rebuild(){
         return new Table(table -> {
             table.touchable = Touchable.enabled;
-            for (int i = settings.getBool("pastwave") ? 0 : state.wave - 1;
-                 i <= Math.min(state.wave + settings.getInt("wavemax"), (state.isCampaign() && state.rules.winWave > 0 ? state.rules.winWave : Integer.MAX_VALUE) - 2);
+            for (int i = settings.getBool("pastwave") ? 1 : state.wave;
+                 i <= Math.min(state.wave + settings.getInt("wavemax"), (state.isCampaign() && state.rules.winWave > 0 ? state.rules.winWave : Integer.MAX_VALUE));
                  i++) {
-                final int j = i;
+                final int index = i;
 
-                table.stack(
-                    new Table(t -> {
-                        t.label(() -> "[#" + (state.wave == j ? Color.red.toString() : Pal.accent.toString()) + "]" + j + "[]").padRight(24 * 8f);
-                    }),
-                    new Table(Tex.underline, t -> {
-                        if (settings.getBool("emptywave") && state.rules.spawns.find(g -> g.getSpawned(j) > 0) == null) {
-                            t.add(bundle.get("empty")).center();
+                table.table(waveRow -> {
+                    waveRow.background(Tex.underline);
+                    waveRow.add(index+"").update(label -> {
+                        Color color = Pal.accent;
+                        if (state.wave == index) color = Color.red;
+                        else if (state.wave - 1 == index && state.enemies > 0) color = Color.red.cpy().shiftHue(Time.time);
+
+                        label.setColor(label.color.cpy().lerp(color, Time.delta));
+                    });
+                    waveRow.table(t -> {
+                        if (state.rules.spawns.find(g -> g.getSpawned(index-1) > 0) == null) {
+                            if (settings.getBool("emptywave")) t.add(bundle.get("empty")).center();
                             return;
                         }
 
-                        ObjectIntMap<SpawnGroup> groups = getWaveGroup(j-2);
+                        ObjectIntMap<SpawnGroup> groups = getWaveGroup(index-1);
 
                         int row = 0;
                         for (SpawnGroup group : groups.keys()) {
@@ -106,14 +111,14 @@ public class WaveDisplay extends WindowTable {
 
                                 new Table(ttt -> {
                                     ttt.bottom().left();
-                                    ttt.add(amount+"").padTop(2f).fontScale(0.9f);
-                                    ttt.add("[gray]x"+spawners).padTop(10f).fontScale(0.7f);
+                                    ttt.add(amount + "").padTop(2f).fontScale(0.9f);
+                                    ttt.add("[gray]x" + spawners).padTop(10f).fontScale(0.7f);
                                     ttt.pack();
                                 }),
 
                                 new Table(ttt -> {
                                     ttt.top().right();
-                                    ttt.image(Icon.warning.getRegion()).update(img->img.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f)))).size(12f);
+                                    ttt.image(Icon.warning.getRegion()).update(img -> img.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f)))).size(12f);
                                     ttt.visible(() -> group.effect == StatusEffects.boss);
                                     ttt.pack();
                                 })
@@ -123,14 +128,14 @@ public class WaveDisplay extends WindowTable {
                                 to.add("[stat]" + group.type.localizedName + "[]").row();
                                 to.row();
                                 to.add(bundle.format("shar-stat-waveAmount", amount + " [lightgray]x" + spawners + "[]")).row();
-                                to.add(bundle.format("shar-stat-waveShield", group.getShield(j))).row();
+                                to.add(bundle.format("shar-stat-waveShield", group.getShield(index-1))).row();
                                 if (group.effect != null && group.effect != StatusEffects.none)
                                     to.add(bundle.get("shar-stat.waveStatus") + group.effect.emoji() + "[stat]" + group.effect.localizedName).row();
                             }));
                             if (++row % 4 == 0) t.row();
                         }
-                    })
-                );
+                    });
+                });
                 table.row();
             }
         });

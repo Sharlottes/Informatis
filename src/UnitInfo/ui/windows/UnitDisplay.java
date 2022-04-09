@@ -87,7 +87,7 @@ public class UnitDisplay extends WindowTable implements Updatable {
                             else if (target instanceof Building b && b.block != null) ui.content.show(b.block);
                         });
                         ttt.add(imagebt).update((i) -> {
-                            i.getStyle().imageUp = reg.get().tint(Tmp.c1.set(SVars.hud.locked ? Color.red.shiftHue(2 * 60 % Time.delta) : Color.white));
+                            i.getStyle().imageUp = reg.get().tint(Tmp.c1.set(SVars.hud.locked ? Color.red.cpy().shiftHue(2 * Time.time) : Color.white));
                             i.getStyle().imageDown = reg.get().tint(Tmp.c1.mul(Color.darkGray));
                             i.layout();
                         }).size(4 * 8f).get().parent = null;
