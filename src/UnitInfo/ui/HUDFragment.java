@@ -3,8 +3,7 @@ package UnitInfo.ui;
 import arc.scene.*;
 import mindustry.ui.fragments.*;
 
-import static UnitInfo.ui.windows.WindowTables.unitTable;
-import static UnitInfo.ui.windows.WindowTables.waveTable;
+import static UnitInfo.ui.windows.WindowTables.*;
 
 public class HUDFragment extends Fragment{
     @Override
@@ -17,16 +16,18 @@ public class HUDFragment extends Fragment{
             t.center().right();
             t.add(unitTable).size(250f).visible(false);
             t.add(waveTable).size(250f).visible(false);
+            t.add(coreTable).size(250f).visible(false);
 
             // sidebar
             t.add(new TaskbarTable(
                     unitTable,
-                    waveTable
+                    waveTable,
+                    coreTable
             )).visible(TaskbarTable.visibility);
 
             t.update(()->{
                 for (Element child : t.getChildren()) {
-                    if(child instanceof Updatable u) u.setEvent();
+                    if(child instanceof Updatable u) u.update();
                 }
             });
         });

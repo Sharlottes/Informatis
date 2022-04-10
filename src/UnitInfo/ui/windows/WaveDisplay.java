@@ -25,7 +25,7 @@ import static mindustry.Vars.*;
 
 
 public class WaveDisplay extends WindowTable {
-    static Vec2 waveScrollPos = new Vec2(0, 0);
+    static Vec2 scrollPos = new Vec2(0, 0);
 
     public WaveDisplay() {
         super("Wave Display", Icon.waves, t -> {});
@@ -37,7 +37,7 @@ public class WaveDisplay extends WindowTable {
         topBar();
 
         table(Styles.black8, t -> {
-            ScrollPane pane = new OverScrollPane(rebuild(), Styles.nonePane, waveScrollPos).disableScroll(true, false);
+            ScrollPane pane = new OverScrollPane(rebuild(), Styles.nonePane, scrollPos).disableScroll(true, false);
             t.add(pane);
             Events.on(EventType.WorldLoadEvent.class, e -> {
                 pane.clearChildren();

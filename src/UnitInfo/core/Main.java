@@ -3,6 +3,9 @@ package UnitInfo.core;
 import UnitInfo.shaders.*;
 import UnitInfo.ui.HUDFragment;
 import UnitInfo.ui.MindowsTex;
+import UnitInfo.ui.windows.CoreDisplay;
+import UnitInfo.ui.windows.WindowTable;
+import UnitInfo.ui.windows.WindowTables;
 import arc.*;
 import mindustry.*;
 import mindustry.game.EventType.*;
@@ -37,6 +40,7 @@ public class Main extends Mod {
         Events.on(ClientLoadEvent.class, e -> {
             new SettingS().init();
             MindowsTex.init();
+            WindowTables.init();
             new HUDFragment().build(Vars.ui.hudGroup);
             hud = new HudUi();
             hud.addTable();
@@ -45,6 +49,10 @@ public class Main extends Mod {
             hud.setEvents();
             OverDrawer.setEvent();
             if(jsonGen) ContentJSON.save();
+        });
+
+        Events.on(WorldLoadEvent.class, e -> {
+            ((CoreDisplay) WindowTables.coreTable).resetUsed();
         });
     }
 }

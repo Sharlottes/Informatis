@@ -1,5 +1,5 @@
 package UnitInfo.ui;
 
 public interface Updatable {
-    void setEvent();
+    void update();
 }

@@ -33,7 +33,6 @@ public class HudUi {
     public Table mainTable = new Table();
     public Table baseTable = new Table();
     public Table waveInfoTable = new Table();
-    public CoreDisplay itemTable;
     public SchemDisplay schemTable;
 
     public Teamc shotTarget;
@@ -44,8 +43,6 @@ public class HudUi {
 
     public float a;
     public int uiIndex = 3;
-
-    CoresItemsDisplay coreItems = new CoresItemsDisplay();
 
     @SuppressWarnings("unchecked")
     public <T extends Teamc> T getTarget(){
@@ -73,9 +70,7 @@ public class HudUi {
 
     float heat = 0;
     public void setEvents() {
-        Events.on(EventType.WorldLoadEvent.class, e -> itemTable.rebuild());
         Events.run(EventType.Trigger.update, ()->{
-            itemTable.setEvent();
             OverDrawer.target = getTarget();
             OverDrawer.locked = locked;
             if(settings.getBool("deadTarget") && locked && lockedTarget != null && !Groups.all.contains(e -> e == lockedTarget)) {
@@ -96,7 +91,6 @@ public class HudUi {
                 }
                 mainTable.clearChildren();
                 addTable();
-                coreItems.rebuild();
             }
 
             if(settings.getBool("autoShooting")) {
@@ -149,12 +143,6 @@ public class HudUi {
                 unit.controlWeapons(player.shooting && !boosted);
             }
         });
-
-        Events.on(EventType.BlockDestroyEvent.class, e -> {
-            if(e.tile.block() instanceof CoreBlock) coreItems.resetUsed();
-        });
-        Events.on(EventType.CoreChangeEvent.class, e -> coreItems.resetUsed());
-        Events.on(EventType.ResetEvent.class, e -> coreItems.resetUsed());
     }
 
     public void setLeftUnitTable(Table table) {
@@ -285,8 +273,7 @@ public class HudUi {
         label.setText(bundle.get(hud));
         table.removeChild(baseTable);
         labelTable.setPosition(buttons.items[uiIndex].x, buttons.items[uiIndex].y);
-        itemTable = new CoreDisplay();
-        baseTable = table.table(tt -> tt.stack(itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).left().get();
+        baseTable = table.table(tt -> tt.stack(labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).left().get();
         a = 1f;
     }
 
@@ -319,8 +306,7 @@ public class HudUi {
                     t.row();
                 }
             });
-            itemTable = new CoreDisplay();
-            baseTable = table.table(tt -> tt.stack(itemTable, labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).left().get();
+            baseTable = table.table(tt -> tt.stack(labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).left().get();
 
             table.fillParent = true;
             table.visibility = () -> ui.hudfrag.shown && !ui.minimapfrag.shown();

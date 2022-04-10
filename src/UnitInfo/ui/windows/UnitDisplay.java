@@ -185,7 +185,7 @@ public class UnitDisplay extends WindowTable implements Updatable {
 
     float angle = 360;
     @Override
-    public void setEvent() {
+    public void update() {
         if((input.keyDown(KeyCode.shiftRight) || input.keyDown(KeyCode.shiftLeft))) {
             if(input.keyTap(KeyCode.f)) {
                 showMoving();
