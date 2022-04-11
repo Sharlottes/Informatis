@@ -12,18 +12,18 @@ public class HUDFragment extends Fragment{
             t.name = "Windows";
             t.visible(() -> parent.visible);
 
-            // windows (totally not a copyright violation)
-            t.center().right();
-            t.add(unitTable).size(250f).visible(false);
-            t.add(waveTable).size(250f).visible(false);
-            t.add(coreTable).size(250f).visible(false);
-
+            t.center().left();
             // sidebar
             t.add(new TaskbarTable(
                     unitTable,
                     waveTable,
                     coreTable
             )).visible(TaskbarTable.visibility);
+
+            // windows (totally not a copyright violation)
+            t.add(unitTable).size(250f).visible(false);
+            t.add(waveTable).size(250f).visible(false);
+            t.add(coreTable).size(250f).visible(false);
 
             t.update(()->{
                 for (Element child : t.getChildren()) {

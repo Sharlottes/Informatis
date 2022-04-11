@@ -43,7 +43,6 @@ public class Main extends Mod {
             WindowTables.init();
             new HUDFragment().build(Vars.ui.hudGroup);
             hud = new HudUi();
-            hud.addTable();
             hud.addWaveInfoTable();
             hud.addSchemTable();
             hud.setEvents();

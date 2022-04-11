@@ -11,16 +11,14 @@ public class TaskbarTable extends Table{
 
     public TaskbarTable(WindowTable... items){
         visible = true;
-        table(MindowsTex.sidebar,t -> {
+        table(MindowsTex.sidebar, t -> {
             t.top().center();
             for(WindowTable w : items){
                 t.button(w.icon, Styles.emptyi, () -> {
-                            w.visible(visibility);
-                        }).disabled(b -> w.visible)
-                        .size(40f)
-                        .padLeft(5f);
+                    w.visible(visibility);
+                }).disabled(b -> w.visible).size(40f).padRight(5f);
                 t.row();
             }
-        }).right().center().width(40f);
+        }).left().center().width(40f);
     }
 }

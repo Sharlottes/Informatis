@@ -17,21 +17,17 @@ import mindustry.*;
 import mindustry.entities.Units;
 import mindustry.game.*;
 import mindustry.gen.*;
-import mindustry.graphics.*;
 import mindustry.logic.Ranged;
 import mindustry.ui.*;
 import mindustry.world.*;
 import mindustry.world.blocks.*;
 import mindustry.world.blocks.defense.turrets.*;
-import mindustry.world.blocks.storage.*;
 
 import static UnitInfo.SVars.*;
 import static arc.Core.*;
 import static mindustry.Vars.*;
 
 public class HudUi {
-    public Table mainTable = new Table();
-    public Table baseTable = new Table();
     public Table waveInfoTable = new Table();
     public SchemDisplay schemTable;
 
@@ -42,7 +38,6 @@ public class HudUi {
     public boolean waveShown;
 
     public float a;
-    public int uiIndex = 3;
 
     @SuppressWarnings("unchecked")
     public <T extends Teamc> T getTarget(){
@@ -89,8 +84,6 @@ public class HudUi {
                     Log.warn("ui scaling reached zero");
                     modUiScale = 0.25f;
                 }
-                mainTable.clearChildren();
-                addTable();
             }
 
             if(settings.getBool("autoShooting")) {
@@ -208,9 +201,8 @@ public class HudUi {
     }
 
     public void addSchemTable() {
-        Table table = (Table) scene.find("minimap/position");
-        table.row();
-        schemTable=new SchemDisplay();
+        Table table = ((Table) scene.find("minimap/position")).row();
+        schemTable = new SchemDisplay();
         table.add(schemTable);
     }
 
@@ -265,52 +257,5 @@ public class HudUi {
                 b.getImage().setDrawable(waveShown ? Icon.upOpen : Icon.downOpen);
                 return waveShown;
             })).left().top()).fillX();
-    }
-
-    public void reset(int index, Seq<Button> buttons, Label label, Table table, Table labelTable, String hud){
-        uiIndex = index;
-        buttons.each(b -> b.setChecked(buttons.indexOf(b) == index));
-        label.setText(bundle.get(hud));
-        table.removeChild(baseTable);
-        labelTable.setPosition(buttons.items[uiIndex].x, buttons.items[uiIndex].y);
-        baseTable = table.table(tt -> tt.stack(labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).left().get();
-        a = 1f;
-    }
-
-    public void addTable(){
-        mainTable = new Table(table -> {
-            table.left();
-
-            Label label = new Label("");
-            label.setColor(Pal.stat);
-            label.update(() -> {
-                a = Mathf.lerpDelta(a, 0f, 0.025f);
-                label.color.a = a;
-            });
-            label.setStyle(new Label.LabelStyle(){{
-                font = Fonts.outline;
-                fontColor = Color.white;
-                background = Styles.black8;
-            }});
-            label.setFontScale(Scl.scl(modUiScale));
-            Table labelTable = new Table(t -> t.add(label).left().padRight(Scl.scl(modUiScale) * 40 * 8f));
-
-            table.table(t -> {
-                Seq<Button> buttons = Seq.with(null, null, null, null);
-                Seq<String> strs = Seq.with("hud.unit", "hud.wave", "hud.item", "hud.cancel");
-                Seq<TextureRegionDrawable> icons = Seq.with(Icon.units, Icon.fileText, Icon.copy, Icon.cancel);
-                for(int i = 0; i < buttons.size; i++){
-                    int finalI = i;
-                    buttons.set(i, t.button(new ScaledNinePatchDrawable(new NinePatch(icons.get(i).getRegion()), modUiScale), Styles.clearToggleTransi, () ->
-                        reset(finalI, buttons, label, table, labelTable, strs.get(finalI))).size(Scl.scl(modUiScale) * 5 * 8f).get());
-                    t.row();
-                }
-            });
-            baseTable = table.table(tt -> tt.stack(labelTable).align(Align.left).left().visible(() -> settings.getBool("infoui"))).left().get();
-
-            table.fillParent = true;
-            table.visibility = () -> ui.hudfrag.shown && !ui.minimapfrag.shown();
-        });
-        ui.hudGroup.addChild(mainTable);
     }
 }
