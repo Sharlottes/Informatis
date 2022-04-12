@@ -14,6 +14,7 @@ import arc.struct.*;
 import arc.util.*;
 import mindustry.gen.*;
 import mindustry.graphics.Pal;
+import mindustry.input.DesktopInput;
 import mindustry.ui.*;
 
 import static mindustry.Vars.*;
@@ -21,8 +22,9 @@ import static mindustry.Vars.*;
 
 public class PlayerDisplay extends WindowTable implements Updatable {
     Vec2 scrollPos = new Vec2(0, 0);
-     TextField search;
-     float heat;
+    TextField search;
+    @Nullable Player target;
+    float heat;
 
     public PlayerDisplay() {
         super("Player Display", Icon.players, t -> {});
@@ -53,6 +55,11 @@ public class PlayerDisplay extends WindowTable implements Updatable {
             heat = 0f;
             ScrollPane pane = find("player-pane");
             pane.setWidget(rebuild());
+        }
+        if(target!=null) {
+            if(control.input instanceof DesktopInput)
+            ((DesktopInput) control.input).panning = true;
+            Core.camera.position.set(target.x, target.y);
         }
     }
 
@@ -97,10 +104,14 @@ public class PlayerDisplay extends WindowTable implements Updatable {
                     };
                     table1.margin(8);
                     table1.add(new Image(user.icon()).setScaling(Scaling.bounded)).grow();
+                    table1.clicked(() -> {
+                        if(target==user) target = null;
+                        else target = user;
+                    });
 
                     userTable.add(table1).size(h).name(user.name()); //unit icon
                     userTable.labelWrap(user.name()).color(user.color()).width(170f).pad(10); //name
-                    userTable.image(Icon.admin).padRight(5).visible(()->user.admin);; //admin
+                    userTable.image(Icon.admin).padRight(5).visible(()->user.admin); //admin
                     userTable.button(Icon.hammer, ustyle, () -> { //vote kick
                         ui.showConfirm("@confirm", Core.bundle.format("confirmvotekick",  user.name()), () -> {
                             Call.sendChatMessage("/votekick " + user.name());
