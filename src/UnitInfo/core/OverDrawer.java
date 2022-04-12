@@ -57,7 +57,7 @@ public class OverDrawer {
         Events.run(EventType.Trigger.draw, () -> {
 
             effectBuffer.resize(graphics.getWidth(), graphics.getHeight());
-            Draw.drawRange(158, 1f, () -> effectBuffer.begin(Color.clear), () -> {
+            if(!mobile) Draw.drawRange(158, 1f, () -> effectBuffer.begin(Color.clear), () -> {
                 effectBuffer.end();
                 effectBuffer.blit(lineShader);
             });
@@ -285,14 +285,14 @@ public class OverDrawer {
                     }));
                 }
                 tmpbuildobj.each((t, bseq) -> {
-                    if(settings.getBool("RangeShader")) Draw.drawRange(166+t.id*3, 1, () -> effectBuffer.begin(Color.clear), () -> {
+                    if(!mobile&&settings.getBool("RangeShader")) Draw.drawRange(166+t.id*3, 1, () -> effectBuffer.begin(Color.clear), () -> {
                         effectBuffer.end();
                         effectBuffer.blit(turretRange);
                     });
                     Draw.color(t.color);
                     bseq.each(b -> {
                         float range = ((BaseTurret.BaseTurretBuild)b).range();
-                        if(settings.getBool("RangeShader")) {
+                        if(!mobile&&settings.getBool("RangeShader")) {
                             Draw.z(166+t.id*3);
                             Fill.poly(b.x, b.y, Lines.circleVertices(range), range);
                         }

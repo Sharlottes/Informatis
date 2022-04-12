@@ -1,41 +1,28 @@
 package UnitInfo.core;
 
 import UnitInfo.shaders.*;
-import UnitInfo.ui.ElementDisplay;
-import UnitInfo.ui.HUDFragment;
-import UnitInfo.ui.MindowsTex;
-import UnitInfo.ui.windows.CoreDisplay;
-import UnitInfo.ui.windows.WindowTable;
-import UnitInfo.ui.windows.WindowTables;
+import UnitInfo.ui.*;
+import UnitInfo.ui.windows.*;
 import arc.*;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Lines;
-import arc.scene.Element;
-import arc.scene.Group;
-import arc.scene.event.Touchable;
-import arc.scene.ui.layout.WidgetGroup;
 import arc.struct.Seq;
-import arc.struct.SnapshotSeq;
-import arc.util.Tmp;
 import mindustry.*;
-import mindustry.editor.MapEditorDialog;
 import mindustry.game.EventType.*;
-import mindustry.graphics.Layer;
-import mindustry.logic.LogicDialog;
 import mindustry.mod.*;
-import mindustry.ui.dialogs.*;
-import mindustry.ui.fragments.*;
 
 import static UnitInfo.SVars.*;
 import static UnitInfo.ui.windows.UnitDisplay.getTarget;
 import static arc.Core.*;
+import static mindustry.Vars.mobile;
 import static mindustry.Vars.ui;
 
 public class Main extends Mod {
     @Override
     public void init(){
-        turretRange = new RangeShader();
-        lineShader = new LineShader();
+        if(!mobile) {
+            turretRange = new RangeShader();
+            lineShader = new LineShader();
+        }
+
         Core.app.post(() -> {
             Mods.ModMeta meta = Vars.mods.locateMod("unitinfo").meta;
             meta.displayName = "[#B5FFD9]Unit Information[]";
