@@ -17,13 +17,15 @@ public class HUDFragment extends Fragment{
             t.add(new TaskbarTable(
                     unitTable,
                     waveTable,
-                    coreTable
+                    coreTable,
+                    playerTable
             )).visible(TaskbarTable.visibility);
 
             // windows (totally not a copyright violation)
             t.add(unitTable).size(250f).visible(false);
             t.add(waveTable).size(250f).visible(false);
             t.add(coreTable).size(250f).visible(false);
+            t.add(playerTable).size(250f).visible(false);
 
             t.update(()->{
                 for (Element child : t.getChildren()) {
