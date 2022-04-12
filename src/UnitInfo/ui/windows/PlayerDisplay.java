@@ -95,7 +95,7 @@ public class PlayerDisplay extends WindowTable implements Updatable {
                         public void draw(){
                             super.draw();
 
-                            Draw.color(Pal.gray);
+                            Draw.color(target==user?Pal.accent:Pal.gray);
                             Draw.alpha(parentAlpha);
                             Lines.stroke(Scl.scl(4f));
                             Lines.rect(x, y, width, height);
