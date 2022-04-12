@@ -143,6 +143,8 @@ public class SettingS {
         addGraphicCheckSetting("deadTarget", false, drawSeq);
         addGraphicCheckSetting("distanceLine", false, drawSeq);
         addGraphicCheckSetting("spawnerarrow", false, drawSeq);
+        addGraphicCheckSetting("elementdebug", false, drawSeq);
+        addGraphicCheckSetting("hiddenElem", false, drawSeq);
 
         Seq<SharSetting> etcSeq = new Seq<>();
         addGraphicCheckSetting("autoShooting", false, etcSeq);

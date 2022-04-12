@@ -8,6 +8,8 @@ import arc.graphics.g2d.*;
 import arc.graphics.gl.*;
 import arc.math.*;
 import arc.math.geom.*;
+import arc.scene.Element;
+import arc.scene.Group;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.*;
@@ -53,7 +55,6 @@ public class OverDrawer {
 
     public static void setEvent(){
         Events.run(EventType.Trigger.draw, () -> {
-
 
             effectBuffer.resize(graphics.getWidth(), graphics.getHeight());
             Draw.drawRange(158, 1f, () -> effectBuffer.begin(Color.clear), () -> {
