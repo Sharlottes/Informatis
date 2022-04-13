@@ -49,186 +49,24 @@ public class OverDrawer {
     public static FrameBuffer effectBuffer = new FrameBuffer();
     public static int otherCores;
     public static boolean locked;
-    public static ObjectMap<Team, Seq<Building>> tmpbuildobj = new ObjectMap<>();
+    public static ObjectMap<Team, Seq<BaseTurret.BaseTurretBuild>> tmpbuildobj = new ObjectMap<>();
 
     static float sin = Mathf.absin(Time.time, 6f, 1f);
 
     public static void setEvent(){
         Events.run(EventType.Trigger.draw, () -> {
-
             effectBuffer.resize(graphics.getWidth(), graphics.getHeight());
-            Draw.drawRange(158, 1f, () -> effectBuffer.begin(Color.clear), () -> {
-                effectBuffer.end();
-                effectBuffer.blit(lineShader);
-            });
 
-            Draw.z(158);
+            //local drawing, drawn on player/camera position
+            if(settings.getBool("spawnerarrow")) {
+                spawner.getSpawns().each(t -> {
+                    float leng = (player.unit() != null && player.unit().hitSize > 4 * 8f ? player.unit().hitSize * 1.5f : 4 * 8f) + sin;
 
-            int[] paths = {0};
-            int[] units = {0};
-            int[] logics = {0};
-            if(unitLine || logicLine) Groups.unit.each(u -> {
-                UnitController c = u.controller();
-                UnitCommand com = u.team.data().command;
-
-                if(c instanceof LogicAI ai &&
-                        logics[0] <= settings.getInt("logiclinelimit") &&
-                        logicLine && (ai.control == LUnitControl.approach || ai.control == LUnitControl.move)) {
-                    logics[0]++;
-                    Lines.stroke(1, u.team.color);
-                    Lines.line(u.x(), u.y(), ai.moveX, ai.moveY);
-                    Lines.stroke(0.5f + Mathf.absin(6f, 0.5f), Tmp.c1.set(Pal.logicOperations).lerp(Pal.sap, Mathf.absin(6f, 0.5f)));
-                    Lines.line(u.x(), u.y(), ai.controller.x, ai.controller.y);
-                }
-
-                if(units[0] > settings.getInt("unitlinelimit") || //prevent lag
-                        !unitLine || //disabled
-                        u.type.flying || //not flying
-                        c instanceof MinerAI || //not mono
-                        c instanceof BuilderAI || //not poly
-                        c instanceof RepairAI || //not mega
-                        c instanceof DefenderAI || //not oct
-                        c instanceof FormationAI || //not commanded unit
-                        c instanceof FlyingAI || //not flying anyway
-                        com == UnitCommand.idle) return; //not idle
-                units[0]++;
-                otherCores = Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != u.team);
-                int pathType = u.pathType();
-                if(u.controller() instanceof SuicideAI) pathType = 0;
-                getNextTile(u.tileOn(), pathType, u.team, com.ordinal());
-                pathTiles.filter(Objects::nonNull);
-                for(int i = 1; i < pathTiles.size; i++) {
-                    if(i + 1 >= pathTiles.size) continue; //prevent IndexOutException
-                    Tile tile1 = pathTiles.get(i);
-                    Tile tile2 = pathTiles.get(i + 1);
-                    Lines.stroke(1, u.team.color);
-                    Lines.line(tile1.worldx(), tile1.worldy(), tile2.worldx(), tile2.worldy());
-                }
-                pathTiles.clear();
-            });
-
-            if(pathLine) spawner.getSpawns().each(t -> {
-                if(paths[0] > settings.getInt("pathlinelimit")) return;
-                paths[0]++;
-                Team enemyTeam = state.rules.waveTeam;
-                for(int p = 0; p < (Vars.state.rules.spawns.count(g->g.type.naval)>0?3:2); p++) {
-                    otherCores = Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != enemyTeam);
-
-                    getNextTile(t, p, enemyTeam, Pathfinder.fieldCore);
-                    pathTiles.filter(Objects::nonNull);
-                    for(int i = 1; i < pathTiles.size; i++) {
-                        if(i + 1 >= pathTiles.size) continue; //prevent IndexOutException
-                        Tile tile1 = pathTiles.get(i);
-                        Tile tile2 = pathTiles.get(i + 1);
-                        Lines.stroke(1, enemyTeam.color);
-                        Lines.line(tile1.worldx(), tile1.worldy(), tile2.worldx(), tile2.worldy());
-                    }
-                    pathTiles.clear();
-                }
-            });
-            Draw.reset();
-            Draw.z(Layer.overlayUI);
-
-            int[] arrows = {0};
-            if(settings.getBool("spawnerarrow")) spawner.getSpawns().each(t -> {
-                if(arrows[0] > settings.getInt("spawnarrowlimit")) return;
-                arrows[0]++;
-                float leng = (player.unit() != null && player.unit().hitSize > 4 * 8f ? player.unit().hitSize * 1.5f : 4 * 8f) + sin;
-                float camx = player.unit() != null ? player.unit().x : camera.position.x;
-                float camy = player.unit() != null ? player.unit().y : camera.position.y;
-                Lines.stroke(1f + sin/2, Pal.accent);
-                Lines.circle(camx, camy, leng - 4f);
-                Drawf.arrow(camx, camy, t.worldx(), t.worldy(), leng, (Math.min(200 * 8f, Mathf.dst(camx, camy, t.worldx(), t.worldy())) / (200 * 8f)) * (5f + sin));
-            });
-
-            if(Core.settings.getBool("unithealthui")) {
-                Groups.unit.each(FreeBar::draw);
-            }
-
-            if(Core.settings.getBool("blockfont")) {
-                indexer.eachBlock(null, camera.position.x, camera.position.y, 400, b -> true, b -> {
-                    if(b instanceof ForceProjector.ForceBuild force) {
-                        ForceProjector forceBlock = (ForceProjector) force.block;
-                        float max = forceBlock.shieldHealth + forceBlock.phaseShieldBoost * force.phaseHeat;
-
-                        Fonts.outline.draw((int)b.health + " / " + (int)b.maxHealth,
-                                b.x, b.y - b.block.size * 8 * 0.25f - 2,
-                                Tmp.c1.set(Pal.items).lerp(Pal.health, 1-b.healthf()), (b.block.size == 1 ? 0.3f : 0.25f) * 0.25f * b.block.size, false, Align.center);
-                        Fonts.outline.draw((int)(max-force.buildup) + " / " + (int)max,
-                                b.x, b.y - b.block.size * 8 * 0.25f + 2,
-                                Tmp.c1.set(Pal.shield).lerp(Pal.gray, 1-((max-force.buildup) / max)), (b.block.size == 1 ? 0.3f : 0.25f) * 0.25f * b.block.size, false, Align.center);
-                    }
-                    else if(b instanceof ReloadTurret.ReloadTurretBuild || b instanceof UnitFactory.UnitFactoryBuild || b instanceof Reconstructor.ReconstructorBuild) {
-                        float progress = 0f;
-                        if(b instanceof ReloadTurret.ReloadTurretBuild turret) progress = turret.reload / ((ReloadTurret)turret.block).reloadTime * 100;
-                        if(b instanceof UnitFactory.UnitFactoryBuild factory) progress = factory.fraction() * 100;
-                        if(b instanceof Reconstructor.ReconstructorBuild reconstructor) progress = reconstructor.fraction() * 100;
-
-                        Fonts.outline.draw((int)b.health + " / " + (int)b.maxHealth,
-                                b.x, b.y - b.block.size * 8 * 0.25f - 2,
-                                Tmp.c1.set(Pal.items).lerp(Pal.health, 1-b.healthf()), (b.block.size == 1 ? 0.3f : 0.25f) * 0.25f * b.block.size, false, Align.center);
-                        Fonts.outline.draw((int)progress + "%",
-                                b.x, b.y - b.block.size * 8 * 0.25f + 2,
-                                Tmp.c1.set(Color.lightGray).lerp(Pal.accent, progress/100), (b.block.size == 1 ? 0.3f : 0.25f) * 0.25f * b.block.size, false, Align.center);
-                    }
-                    else Fonts.outline.draw((int)b.health + " / " + (int)b.maxHealth,
-                                b.x, b.y - b.block.size * 8 * 0.25f,
-                                Tmp.c1.set(Pal.items).lerp(Pal.health, 1-b.healthf()), (b.block.size == 1 ? 0.3f : 0.25f) * 0.25f * b.block.size, false, Align.center);
+                    Tmp.v1.set(camera.position);
+                    Lines.stroke(1f + sin / 2, Pal.accent);
+                    Lines.circle(Tmp.v1.x, Tmp.v1.y, leng - 4f);
+                    Drawf.arrow(Tmp.v1.x, Tmp.v1.y, t.worldx(), t.worldy(), leng, (Math.min(200 * 8f, Mathf.dst(Tmp.v1.x, Tmp.v1.y, t.worldx(), t.worldy())) / (200 * 8f)) * (5f + sin));
                 });
-            }
-
-            if(settings.getBool("blockstatus")) Groups.build.each(build -> {
-                if(Vars.player != null && player.team() == build.team) return;
-
-                Block block = build.block;
-                if(block.enableDrawStatus && block.consumes.any()){
-                    float multiplier = block.size > 1 ? 1 : 0.64f;
-                    float brcx = build.x + (block.size * tilesize / 2f) - (tilesize * multiplier / 2f);
-                    float brcy = build.y - (block.size * tilesize / 2f) + (tilesize * multiplier / 2f);
-
-                    Draw.color(Pal.gray);
-                    Fill.square(brcx, brcy, 2.5f * multiplier, 45);
-                    Draw.color(build.status().color);
-                    Fill.square(brcx, brcy, 1.5f * multiplier, 45);
-                    Draw.color();
-                }
-            });
-
-            if(!mobile && !Vars.state.isPaused() && settings.getBool("gaycursor"))
-                Fx.mine.at(Core.input.mouseWorldX(), Core.input.mouseWorldY(), Tmp.c2.set(Color.red).shiftHue(Time.time * 1.5f));
-
-            if(!renderer.pixelator.enabled()) Groups.unit.each(unit -> unit.item() != null && unit.itemTime > 0.01f, unit ->
-                Fonts.outline.draw(unit.stack.amount + "",
-                        unit.x + Angles.trnsx(unit.rotation + 180f, unit.type.itemOffsetY),
-                        unit.y + Angles.trnsy(unit.rotation + 180f, unit.type.itemOffsetY) - 3,
-                        Pal.accent, 0.25f * unit.itemTime / Scl.scl(1f), false, Align.center)
-            );
-
-            if(!state.rules.polygonCoreProtection && player != null){
-                state.teams.eachEnemyCore(player.team(), core -> {
-                    if(Core.camera.bounds(Tmp.r1).overlaps(Tmp.r2.setCentered(core.x, core.y, state.rules.enemyCoreBuildRadius * 2f))){
-                        Draw.color(Color.darkGray);
-                        Lines.circle(core.x, core.y - 2, state.rules.enemyCoreBuildRadius);
-                        Draw.color(Pal.accent, core.team.color, 0.5f + Mathf.absin(Time.time, 10f, 0.5f));
-                        Lines.circle(core.x, core.y, state.rules.enemyCoreBuildRadius);
-                    }
-                });
-            }
-
-            if(settings.getBool("linkedMass")){
-                if(target instanceof MassDriver.MassDriverBuild mass) {
-                    linkedMasses.clear();
-                    drawMassLink(mass);
-                }
-                else if(target instanceof PayloadMassDriver.PayloadDriverBuild mass) {
-                    linkedPayloadMasses.clear();
-                    drawMassPayloadLink(mass);
-                }
-            }
-
-            if(settings.getBool("linkedNode") && target instanceof Building node){
-                linkedNodes.clear();
-                drawNodeLink(node);
             }
 
             if(settings.getBool("select") && target != null) {
@@ -262,46 +100,178 @@ public class OverDrawer {
                 }
             }
 
-            if(settings.getBool("rangeNearby") && player != null && player.unit() != null && !player.unit().dead) {
+            //global drawing, which needs camera-clipping
+            Core.camera.bounds(Tmp.r1);
+            Groups.unit.each(u -> {
+                UnitController c = u.controller();
+                UnitCommand com = u.team.data().command;
+
+                if(logicLine && c instanceof LogicAI ai && (ai.control == LUnitControl.approach || ai.control == LUnitControl.move) && isInCamera(Tmp.r1, u.x, u.y, u.hitSize)) {
+                    Lines.stroke(1, u.team.color);
+                    Lines.line(u.x(), u.y(), ai.moveX, ai.moveY);
+                    Lines.stroke(0.5f + Mathf.absin(6f, 0.5f), Tmp.c1.set(Pal.logicOperations).lerp(Pal.sap, Mathf.absin(6f, 0.5f)));
+                    Lines.line(u.x(), u.y(), ai.controller.x, ai.controller.y);
+                }
+
+                if(!unitLine || u.type.flying || com == UnitCommand.idle ||
+                        c instanceof MinerAI ||
+                        c instanceof BuilderAI ||
+                        c instanceof RepairAI ||
+                        c instanceof DefenderAI ||
+                        c instanceof FormationAI ||
+                        c instanceof FlyingAI) return;
+
+                Lines.stroke(1, u.team.color);
+
+                otherCores = Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != u.team);
+                getNextTile(u.tileOn(), u.controller() instanceof SuicideAI ? 0 : u.pathType(), u.team, com.ordinal());
+                pathTiles.filter(Objects::nonNull);
+
+                for(int i = 0; i < pathTiles.size; i++) {
+                    Tile from = pathTiles.get(i);
+                    Tile to = pathTiles.get(i + 1);
+                    if(!isInCamera(Tmp.r1, from.x, from.y)) continue;
+                    Lines.line(from.worldx(), from.worldy(), to.worldx(), to.worldy());
+                }
+                pathTiles.clear();
+            });
+
+            if(pathLine) spawner.getSpawns().each(t -> {
+                Team enemyTeam = state.rules.waveTeam;
+                Lines.stroke(1, enemyTeam.color);
+                for(int p = 0; p < (Vars.state.rules.spawns.count(g->g.type.naval)>0?3:2); p++) {
+                    otherCores = Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != enemyTeam);
+                    getNextTile(t, p, enemyTeam, Pathfinder.fieldCore);
+                    pathTiles.filter(Objects::nonNull);
+
+                    for(int i = 0; i < pathTiles.size; i++) {
+                        Tile from = pathTiles.get(i);
+                        Tile to = pathTiles.get(i + 1);
+                        if(!isInCamera(Tmp.r1, from.x, from.y)) continue;
+                        Lines.line(from.worldx(), from.worldy(), to.worldx(), to.worldy());
+                    }
+                    pathTiles.clear();
+                }
+            });
+
+            Draw.z(Layer.overlayUI);
+
+
+            if(Core.settings.getBool("blockfont")) {
+                indexer.eachBlock(null, camera.position.x, camera.position.y, 400, b -> isInCamera(Tmp.r1, b.x, b.y, b.block.size/2f), b -> {
+                    if(b instanceof ForceProjector.ForceBuild force) {
+                        ForceProjector forceBlock = (ForceProjector) force.block;
+                        float max = forceBlock.shieldHealth + forceBlock.phaseShieldBoost * force.phaseHeat;
+
+                        Fonts.outline.draw((int)b.health + " / " + (int)b.maxHealth,
+                                b.x, b.y - b.block.size * 8 * 0.25f - 2,
+                                Tmp.c1.set(Pal.items).lerp(Pal.health, 1-b.healthf()), (b.block.size == 1 ? 0.3f : 0.25f) * 0.25f * b.block.size, false, Align.center);
+                        Fonts.outline.draw((int)(max-force.buildup) + " / " + (int)max,
+                                b.x, b.y - b.block.size * 8 * 0.25f + 2,
+                                Tmp.c1.set(Pal.shield).lerp(Pal.gray, 1-((max-force.buildup) / max)), (b.block.size == 1 ? 0.3f : 0.25f) * 0.25f * b.block.size, false, Align.center);
+                    }
+                    else if(b instanceof ReloadTurret.ReloadTurretBuild || b instanceof UnitFactory.UnitFactoryBuild || b instanceof Reconstructor.ReconstructorBuild) {
+                        float progress = 0f;
+                        if(b instanceof ReloadTurret.ReloadTurretBuild turret) progress = turret.reload / ((ReloadTurret)turret.block).reloadTime * 100;
+                        if(b instanceof UnitFactory.UnitFactoryBuild factory) progress = factory.fraction() * 100;
+                        if(b instanceof Reconstructor.ReconstructorBuild reconstructor) progress = reconstructor.fraction() * 100;
+
+                        Fonts.outline.draw((int)b.health + " / " + (int)b.maxHealth,
+                                b.x, b.y - b.block.size * 8 * 0.25f - 2,
+                                Tmp.c1.set(Pal.items).lerp(Pal.health, 1-b.healthf()), (b.block.size == 1 ? 0.3f : 0.25f) * 0.25f * b.block.size, false, Align.center);
+                        Fonts.outline.draw((int)progress + "%",
+                                b.x, b.y - b.block.size * 8 * 0.25f + 2,
+                                Tmp.c1.set(Color.lightGray).lerp(Pal.accent, progress/100), (b.block.size == 1 ? 0.3f : 0.25f) * 0.25f * b.block.size, false, Align.center);
+                    }
+                    else Fonts.outline.draw((int)b.health + " / " + (int)b.maxHealth,
+                                b.x, b.y - b.block.size * 8 * 0.25f,
+                                Tmp.c1.set(Pal.items).lerp(Pal.health, 1-b.healthf()), (b.block.size == 1 ? 0.3f : 0.25f) * 0.25f * b.block.size, false, Align.center);
+                });
+            }
+
+            if(Core.settings.getBool("unithealthui")) //display unit health bar
+                Groups.unit.each(u->isInCamera(Tmp.r1, u.x, u.y, u.hitSize/2f), FreeBar::draw);
+
+            if(settings.getBool("blockstatus")) //display enemy block status
+                Groups.build.each(b->isInCamera(Tmp.r1, b.x, b.y, b.block.size/2f) && Vars.player.team() == b.team, Building::drawStatus);
+
+            if(!renderer.pixelator.enabled())
+                Groups.unit.each(unit -> isInCamera(Tmp.r1, unit.x, unit.y, unit.hitSize/2f) && unit.item() != null && unit.itemTime > 0.01f, unit ->
+                    Fonts.outline.draw(unit.stack.amount + "",
+                        unit.x + Angles.trnsx(unit.rotation + 180f, unit.type.itemOffsetY),
+                        unit.y + Angles.trnsy(unit.rotation + 180f, unit.type.itemOffsetY) - 3,
+                        Pal.accent, 0.25f * unit.itemTime / Scl.scl(1f), false, Align.center)
+            );
+
+            if(settings.getBool("linkedMass")){
+                if(target instanceof MassDriver.MassDriverBuild mass) {
+                    linkedMasses.clear();
+                    drawMassLink(mass);
+                }
+                else if(target instanceof PayloadMassDriver.PayloadDriverBuild mass) {
+                    linkedPayloadMasses.clear();
+                    drawMassPayloadLink(mass);
+                }
+            }
+
+            if(settings.getBool("linkedNode") && target instanceof Building node){
+                linkedNodes.clear();
+                drawNodeLink(node);
+            }
+
+
+            if(settings.getBool("rangeNearby")) {
                 Unit unit = player.unit();
                 tmpbuildobj.clear();
-                for(int i = 0; i < Team.baseTeams.length; i++){
-                    if(!settings.getBool("aliceRange") && player.team() == Team.baseTeams[i]) continue;
+                for(Team team : Team.baseTeams) {
 
-                    int finalI = i;
-                    tmpbuildobj.put(Team.baseTeams[i], Groups.build.copy(new Seq<Building>()).filter(b -> {
-                        if(!(b instanceof BaseTurret.BaseTurretBuild)) return false;
-                        boolean canHit = unit == null || (b.block instanceof Turret t ? unit.isFlying() ? t.targetAir : t.targetGround :
-                                b.block instanceof TractorBeamTurret tu && (unit.isFlying() ? tu.targetAir : tu.targetGround));
-                        float range = ((BaseTurret.BaseTurretBuild) b).range();
-                        float max = range + settings.getInt("rangeRadius") * tilesize + b.block.offset;
-                        float dst = Mathf.dst(control.input.getMouseX(), control.input.getMouseY(), b.x, b.y);
-                        if(control.input.block != null && dst <= max) canHit = b.block instanceof Turret t && t.targetGround;
-
-                        return ((finalI == 0 && (!canHit&&b.team!=Vars.player.team())) || (b.team == Team.baseTeams[finalI] && (b.team==Vars.player.team()||canHit))) &&
-                        ((b instanceof Turret.TurretBuild t && t.hasAmmo()) || b.cons.valid()) &&
-                        (camera.position.dst(b) <= max || (control.input.block != null && dst <= max)) &&
-                        (canHit || settings.getBool("allTargetRange"));
-                    }));
-                }
-                tmpbuildobj.each((t, bseq) -> {
-                    if(settings.getBool("RangeShader")) Draw.drawRange(166+t.id*3, 1, () -> effectBuffer.begin(Color.clear), () -> {
+                    Draw.drawRange(166 + (Team.baseTeams.length-team.id) * 3, 1, () -> effectBuffer.begin(Color.clear), () -> {
                         effectBuffer.end();
                         effectBuffer.blit(turretRange);
                     });
-                    Draw.color(t.color);
-                    bseq.each(b -> {
-                        float range = ((BaseTurret.BaseTurretBuild)b).range();
-                        if(settings.getBool("RangeShader")) {
-                            Draw.z(166+t.id*3);
-                            Fill.poly(b.x, b.y, Lines.circleVertices(range), range);
+                    tmpbuildobj.put(team, new Seq<>());
+                }
+
+                Groups.build.each(b-> settings.getBool("aliceRange") || player.team() != b.team, b -> {
+                    if(b instanceof BaseTurret.BaseTurretBuild turret) {
+                        float range = turret.range();
+                        if (isInCamera(Tmp.r1, b.x, b.y, range)) {
+                            Draw.color(b.team.color);
+
+                            boolean valid = false;
+                            if (unit == null) valid = true;
+                            else if (b instanceof Turret.TurretBuild build) {
+                                Turret t = (Turret) build.block;
+                                if((unit.isFlying() ? t.targetAir : t.targetGround)) valid = true;
+                                if(!build.hasAmmo() || !build.cons.valid()) Draw.color(Pal.gray);
+                            } else if (b instanceof TractorBeamTurret.TractorBeamBuild build) {
+                                TractorBeamTurret t = (TractorBeamTurret) build.block;
+                                if((unit.isFlying() ? t.targetAir : t.targetGround)) valid = true;
+                                if(!build.cons.valid()) Draw.color(Pal.gray);
+                            }
+
+                            if(!valid) return;
+
+                            if(b.team==player.team()) Draw.color(player.team().color);
+
+                            if (settings.getBool("RangeShader")) {
+                                Draw.z(166+(Team.baseTeams.length-b.team.id)*3);
+                                Fill.poly(b.x, b.y, Lines.circleVertices(range), range);
+                            } else Drawf.dashCircle(b.x, b.y, range, b.team.color);
                         }
-                        else Drawf.dashCircle(b.x, b.y, range, t.color);
-                    });
+                    }
                 });
             }
-            Draw.reset();
         });
+    }
+
+    static boolean isInCamera(Rect rect, float x, float y) {
+        return isInCamera(rect, x, y, 0);
+    }
+
+    static boolean isInCamera(Rect rect, float x, float y, float size) {
+        Tmp.r2.setCentered(x, y, size);
+        return rect.overlaps(Tmp.r2);
     }
 
     public static Tile getNextTile(Tile tile, int cost, Team team, int finder) {
