@@ -4,6 +4,7 @@ import UnitInfo.shaders.*;
 import UnitInfo.ui.*;
 import UnitInfo.ui.windows.*;
 import arc.*;
+import arc.scene.ui.Dialog;
 import arc.struct.Seq;
 import mindustry.*;
 import mindustry.game.EventType.*;
@@ -18,10 +19,8 @@ import static mindustry.Vars.ui;
 public class Main extends Mod {
     @Override
     public void init(){
-        if(!mobile) {
-            turretRange = new RangeShader();
-            lineShader = new LineShader();
-        }
+        turretRange = new RangeShader();
+        lineShader = new LineShader();
 
         Core.app.post(() -> {
             Mods.ModMeta meta = Vars.mods.locateMod("unitinfo").meta;
@@ -52,12 +51,14 @@ public class Main extends Mod {
 
 
             scene.add(new ElementDisplay());
-            Seq.with(
+            for(Dialog dialog : new Dialog[]{
                     ui.picker, ui.editor, ui.controls, ui.restart, ui.join, ui.discord,
                     ui.load, ui.custom, ui.language, ui.database, ui.settings, ui.host,
                     ui.paused, ui.about, ui.bans, ui.admins, ui.traces, ui.maps, ui.content,
-                    ui.planet, ui.research, ui.mods, ui.schematics, ui.logic
-            ).forEach(dialog-> dialog.add(new ElementDisplay(dialog)));
+                    ui.planet, ui.research, ui.mods, ui.schematics, ui.logic}) {
+                dialog.add(new ElementDisplay(dialog));
+            }
+
         });
 
         Events.on(WorldLoadEvent.class, e -> {
