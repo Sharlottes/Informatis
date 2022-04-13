@@ -28,13 +28,6 @@ public class Main extends Mod {
             meta.displayName = "[#B5FFD9]Unit Information[]";
             meta.author = "[#B5FFD9]Sharlotte[lightgray]#0018[][]";
             meta.description = bundle.get("shar-description");
-            scene.add(new ElementDisplay());
-            Seq.with(
-                ui.picker, ui.editor, ui.controls, ui.restart, ui.join, ui.discord,
-                ui.load, ui.custom, ui.language, ui.database, ui.settings, ui.host,
-                ui.paused, ui.about, ui.bans, ui.admins, ui.traces, ui.maps, ui.content,
-                ui.planet, ui.research, ui.mods, ui.schematics, ui.logic
-            ).forEach(dialog-> dialog.add(new ElementDisplay(dialog)));
         });
 
         Events.run(Trigger.class, () -> {
@@ -56,6 +49,15 @@ public class Main extends Mod {
             hud.setEvents();
             OverDrawer.setEvent();
             if(jsonGen) ContentJSON.save();
+
+
+            scene.add(new ElementDisplay());
+            Seq.with(
+                    ui.picker, ui.editor, ui.controls, ui.restart, ui.join, ui.discord,
+                    ui.load, ui.custom, ui.language, ui.database, ui.settings, ui.host,
+                    ui.paused, ui.about, ui.bans, ui.admins, ui.traces, ui.maps, ui.content,
+                    ui.planet, ui.research, ui.mods, ui.schematics, ui.logic
+            ).forEach(dialog-> dialog.add(new ElementDisplay(dialog)));
         });
 
         Events.on(WorldLoadEvent.class, e -> {
