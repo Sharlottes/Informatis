@@ -39,9 +39,10 @@ public class Main extends Mod {
         });
 
         Events.on(ClientLoadEvent.class, e -> {
-            new SettingS().init();
+            SettingS.init();
             MindowsTex.init();
             WindowTables.init();
+
             new HUDFragment().build(Vars.ui.hudGroup);
             hud = new HudUi();
             hud.addWaveInfoTable();
@@ -51,16 +52,13 @@ public class Main extends Mod {
             if(jsonGen) ContentJSON.save();
 
             scene.add(new ElementDisplay());
-            /*
-            for(Dialog dialog : new Dialog[]{
-                    ui.picker, ui.editor, ui.controls, ui.restart, ui.join, ui.discord,
-                    ui.load, ui.custom, ui.language, ui.database, ui.settings, ui.host,
-                    ui.paused, ui.about, ui.bans, ui.admins, ui.traces, ui.maps, ui.content,
-                    ui.planet, ui.research, ui.mods, ui.schematics, ui.logic}) {
-                dialog.add(new ElementDisplay(dialog));
-            }
+            Seq.with(
+                ui.picker, ui.editor, ui.controls, ui.restart, ui.join, ui.discord,
+                ui.load, ui.custom, ui.language, ui.database, ui.settings, ui.host,
+                ui.paused, ui.about, ui.bans, ui.admins, ui.traces, ui.maps, ui.content,
+                ui.planet, ui.research, ui.mods, ui.schematics, ui.logic
+            ).each(dialog-> dialog.add(new ElementDisplay(dialog)));
 
-             */
 
         });
 

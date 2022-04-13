@@ -17,9 +17,9 @@ import static arc.Core.*;
 import static mindustry.Vars.*;
 
 public class SettingS {
-    public SettingsMenuDialog.SettingsTable sharset;
+    public static SettingsMenuDialog.SettingsTable sharset;
 
-    public void addGraphicCheckSetting(String key, boolean def, Seq<SharSetting> list){
+    public static void addGraphicCheckSetting(String key, boolean def, Seq<SharSetting> list){
         list.add(new SharSetting(key, def) {
 
             @Override
@@ -35,7 +35,7 @@ public class SettingS {
         });
     }
 
-    public void addGraphicSlideSetting(String key, int def, int min, int max, int step, SettingsMenuDialog.StringProcessor sp, Seq<SharSetting> list){
+    public static void addGraphicSlideSetting(String key, int def, int min, int max, int step, SettingsMenuDialog.StringProcessor sp, Seq<SharSetting> list){
         list.add(new SharSetting(key, def) {
 
             @Override
@@ -64,7 +64,7 @@ public class SettingS {
         });
     }
 
-    public void addGraphicTypeSetting(String key, float min, float max, int def, boolean integer, Boolp condition, Func<String, String> h, Seq<SharSetting> list){
+    public static void addGraphicTypeSetting(String key, float min, float max, int def, boolean integer, Boolp condition, Func<String, String> h, Seq<SharSetting> list){
         list.add(new SharSetting(key, def) {
 
             @Override
@@ -92,7 +92,7 @@ public class SettingS {
         });
     }
 
-    public void init(){
+    public static void init(){
         BaseDialog dialog = new BaseDialog(bundle.get("setting.shar-title"));
         dialog.addCloseButton();
         sharset = new SettingsMenuDialog.SettingsTable();
