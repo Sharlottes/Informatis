@@ -49,8 +49,8 @@ public class Main extends Mod {
             OverDrawer.setEvent();
             if(jsonGen) ContentJSON.save();
 
-
             scene.add(new ElementDisplay());
+            /*
             for(Dialog dialog : new Dialog[]{
                     ui.picker, ui.editor, ui.controls, ui.restart, ui.join, ui.discord,
                     ui.load, ui.custom, ui.language, ui.database, ui.settings, ui.host,
@@ -58,6 +58,8 @@ public class Main extends Mod {
                     ui.planet, ui.research, ui.mods, ui.schematics, ui.logic}) {
                 dialog.add(new ElementDisplay(dialog));
             }
+
+             */
 
         });
 

@@ -6,6 +6,7 @@ import arc.scene.Element;
 import arc.scene.Group;
 import arc.scene.event.Touchable;
 import arc.struct.SnapshotSeq;
+import arc.util.Log;
 import arc.util.Tmp;
 import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
@@ -31,11 +32,14 @@ public class ElementDisplay extends Element {
         if(!settings.getBool("elementdebug")) return;
         Draw.z(Layer.max);
         Lines.stroke(1);
+        Log.info("draw method called");
         addRect(root.getChildren());
     }
 
     void addRect(SnapshotSeq<Element> elements) {
+        Log.info("addRect method called");
         elements.forEach(elem-> {
+            Log.info("addRect method called in forEach");
             elem.updateVisibility();
             if(elem.visible || settings.getBool("hiddenElem")) {
                 elem.localToStageCoordinates(Tmp.v1.set(0, 0));
