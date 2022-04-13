@@ -6,6 +6,7 @@ import UnitInfo.ui.windows.*;
 import arc.*;
 import arc.scene.ui.Dialog;
 import arc.struct.Seq;
+import arc.util.Log;
 import mindustry.*;
 import mindustry.game.EventType.*;
 import mindustry.mod.*;

@@ -38,8 +38,10 @@ public class ElementDisplay extends Element {
 
     void addRect(SnapshotSeq<Element> elements) {
         Log.info("addRect method called");
-        elements.forEach(elem-> {
+        Element[] items = elements.begin();
+        for (int i = 0, n = elements.size; i < n; i++) {
             Log.info("addRect method called in forEach");
+            Element elem = items[i];
             elem.updateVisibility();
             if(elem.visible || settings.getBool("hiddenElem")) {
                 elem.localToStageCoordinates(Tmp.v1.set(0, 0));
@@ -60,6 +62,6 @@ public class ElementDisplay extends Element {
                 Lines.stroke(1);
                 if(elem instanceof Group group) addRect(group.getChildren());
             }
-        });
+        };
     }
 }
