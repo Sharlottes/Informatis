@@ -279,18 +279,19 @@ public class OverDrawer {
 
     public static void drawMassLink(MassDriver.MassDriverBuild from){
         float sin = Mathf.absin(Time.time, 6f, 1f);
-        Groups.build.each(b -> b instanceof MassDriver.MassDriverBuild fromMass &&
-                world.build(fromMass.link) == from &&
-                from.within(fromMass.x, fromMass.y, ((MassDriver)fromMass.block).range) &&
-                !linkedMasses.contains(from), b -> {
-            linkedMasses.add((MassDriver.MassDriverBuild) b);
-            drawMassLink((MassDriver.MassDriverBuild) b);
+
+        Groups.build.each(b -> {
+            if(b instanceof MassDriver.MassDriverBuild fromMass &&
+                    world.build(fromMass.link) == from &&
+                    !linkedMasses.contains(fromMass)) {
+                linkedMasses.add(fromMass);
+                drawMassLink(fromMass);
+            }
         });
 
-        if(world.build(from.link) instanceof MassDriver.MassDriverBuild to && from != to && to.within(from.x, from.y, ((MassDriver)from.block).range)){
+        if(world.build(from.link) instanceof MassDriver.MassDriverBuild to){
             Tmp.v1.set(from.x + from.block.offset, from.y + from.block.offset).sub(to.x, to.y).limit(from.block.size * tilesize + sin + 0.5f);
-            float x2 = from.x - Tmp.v1.x, y2 = from.y - Tmp.v1.y,
-                    x1 = to.x + Tmp.v1.x, y1 = to.y + Tmp.v1.y;
+            float x2 = from.x - Tmp.v1.x, y2 = from.y - Tmp.v1.y, x1 = to.x + Tmp.v1.x, y1 = to.y + Tmp.v1.y;
             int segs = (int)(to.dst(from.x, from.y)/tilesize);
 
             Lines.stroke(4f, Pal.gray);
