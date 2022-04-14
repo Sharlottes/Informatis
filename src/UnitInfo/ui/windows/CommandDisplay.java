@@ -53,7 +53,7 @@ public class CommandDisplay extends WindowTable {
                     }).minWidth(400f).left();
                     cmdtable.button(Icon.play, ()->{
                         final String[] params = {""};
-                        fields.forEach(f-> params[0] +=" "+f.getText());
+                        fields.each(f-> params[0] +=" "+f.getText());
                         Vars.netServer.clientCommands.handleMessage(Vars.netServer.clientCommands.getPrefix()+cmd.text+params[0], Vars.player);
                     });
                 }).row();
