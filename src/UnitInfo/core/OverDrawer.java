@@ -24,7 +24,6 @@ import mindustry.world.*;
 import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.blocks.distribution.*;
 import mindustry.world.blocks.payloads.*;
-import mindustry.world.blocks.power.*;
 import mindustry.world.blocks.storage.*;
 import mindustry.world.blocks.units.*;
 
@@ -39,7 +38,6 @@ public class OverDrawer {
     public static Seq<MassDriver.MassDriverBuild> linkedMasses = new Seq<>();
     public static Seq<PayloadMassDriver.PayloadDriverBuild> linkedPayloadMasses = new Seq<>();
     public static Seq<Building> linkedNodes = new Seq<>();
-    public static Seq<Building> linkedBuilds = new Seq<>();
     public static Seq<Tile> pathTiles = new Seq<>();
     public static FrameBuffer effectBuffer = new FrameBuffer();
     public static int otherCores;
@@ -59,9 +57,7 @@ public class OverDrawer {
                 Tmp.v1.set(camera.position);
                 Lines.stroke(1f +  sin / 2, Pal.accent);
                 Lines.circle(Tmp.v1.x, Tmp.v1.y, leng - 4f);
-                spawner.getSpawns().each(t -> {
-                    Drawf.arrow(Tmp.v1.x, Tmp.v1.y, t.worldx(), t.worldy(), leng, (Math.min(200 * 8f, Mathf.dst(Tmp.v1.x, Tmp.v1.y, t.worldx(), t.worldy())) / (200 * 8f)) * (5f +  sin));
-                });
+                spawner.getSpawns().each(t -> Drawf.arrow(Tmp.v1.x, Tmp.v1.y, t.worldx(), t.worldy(), leng, (Math.min(200 * 8f, Mathf.dst(Tmp.v1.x, Tmp.v1.y, t.worldx(), t.worldy())) / (200 * 8f)) * (5f +  sin)));
             }
 
             if(settings.getBool("select")) {
@@ -321,18 +317,19 @@ public class OverDrawer {
         if(node.power == null) return;
         if(!linkedNodes.contains(node)) {
             linkedNodes.add(node);
-            getPowerLinkedBuilds(node).each(i -> {
+            int[] builds = getPowerLinkedBuilds(node).items;
+            for(int i : builds) {
                 Building other = world.build(i);
-                if(other.power == null) return;
+                if(other == null || other.power == null) return;
                 float angle1 = Angles.angle(node.x, node.y, other.x, other.y),
-                    vx = Mathf.cosDeg(angle1), vy = Mathf.sinDeg(angle1),
-                    len1 = node.block.size * tilesize / 2f - 1.5f, len2 = other.block.size * tilesize / 2f - 1.5f;
+                        vx = Mathf.cosDeg(angle1), vy = Mathf.sinDeg(angle1),
+                        len1 = node.block.size * tilesize / 2f - 1.5f, len2 = other.block.size * tilesize / 2f - 1.5f;
                 Draw.color(Color.white, Color.valueOf("98ff98"), (1f - node.power.graph.getSatisfaction()) * 0.86f + Mathf.absin(3f, 0.1f));
                 Draw.alpha(Renderer.laserOpacity);
                 Drawf.laser(node.team, atlas.find("unitinfo-Slaser"), atlas.find("unitinfo-Slaser-end"), node.x + vx * len1, node.y + vy * len1, other.x - vx * len2, other.y - vy * len2, 0.25f);
 
                 drawNodeLink(other);
-            });
+            }
         }
     }
 }
