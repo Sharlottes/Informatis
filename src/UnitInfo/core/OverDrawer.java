@@ -117,7 +117,7 @@ public class OverDrawer {
                     for(int i = 0; i < pathTiles.size; i++) {
                         Tile from = pathTiles.get(i);
                         Tile to = pathTiles.get(i + 1);
-                        if(!isInCamera(from.x, from.y)) continue;
+                        if(isOutCamera(from.x, from.y)) continue;
                         Lines.line(from.worldx(), from.worldy(), to.worldx(), to.worldy());
                     }
                     pathTiles.clear();
@@ -144,7 +144,7 @@ public class OverDrawer {
                     for(int i = 0; i < pathTiles.size; i++) {
                         Tile from = pathTiles.get(i);
                         Tile to = pathTiles.get(i + 1);
-                        if(!isInCamera(from.x, from.y)) continue;
+                        if(isOutCamera(from.x, from.y)) continue;
                         Lines.line(from.worldx(), from.worldy(), to.worldx(), to.worldy());
                     }
                     pathTiles.clear();
@@ -156,6 +156,7 @@ public class OverDrawer {
 
             if(settings.getBool("linkedNode") && target instanceof Building node){
                 linkedNodes.clear();
+                Draw.z(Layer.max);
                 drawNodeLink(node);
             }
 
@@ -216,8 +217,8 @@ public class OverDrawer {
         });
     }
 
-    static boolean isInCamera(float x, float y) {
-        return isInCamera(x, y, 0);
+    static boolean isOutCamera(float x, float y) {
+        return !isInCamera(x, y, 0);
     }
 
     static boolean isInCamera(float x, float y, float size) {
@@ -310,30 +311,27 @@ public class OverDrawer {
         }
     }
 
-    public static Seq<Building> getPowerLinkedBuilds(Building build) {
-        linkedBuilds.clear();
-        build.power.links.each(i -> linkedBuilds.add(world.build(i)));
-        build.proximity().each(linkedBuilds::add);
-        linkedBuilds.filter(b -> b != null && b.power != null);
-        if(!build.block.outputsPower && !(build instanceof PowerNode.PowerNodeBuild))
-            linkedBuilds.filter(b -> b.block.outputsPower || b instanceof PowerNode.PowerNodeBuild);
-        return linkedBuilds;
+    public static IntSeq getPowerLinkedBuilds(Building build) {
+        IntSeq seq = new IntSeq(build.power.links);
+        seq.addAll(build.proximity().mapInt(Building::pos));
+        return seq;
     }
 
     public static void drawNodeLink(Building node) {
         if(node.power == null) return;
         if(!linkedNodes.contains(node)) {
             linkedNodes.add(node);
-            getPowerLinkedBuilds(node).each(other -> {
+            getPowerLinkedBuilds(node).each(i -> {
+                Building other = world.build(i);
+                if(other.power == null) return;
                 float angle1 = Angles.angle(node.x, node.y, other.x, other.y),
-                        vx = Mathf.cosDeg(angle1), vy = Mathf.sinDeg(angle1),
-                        len1 = node.block.size * tilesize / 2f - 1.5f, len2 = other.block.size * tilesize / 2f - 1.5f;
-
+                    vx = Mathf.cosDeg(angle1), vy = Mathf.sinDeg(angle1),
+                    len1 = node.block.size * tilesize / 2f - 1.5f, len2 = other.block.size * tilesize / 2f - 1.5f;
                 Draw.color(Color.white, Color.valueOf("98ff98"), (1f - node.power.graph.getSatisfaction()) * 0.86f + Mathf.absin(3f, 0.1f));
                 Draw.alpha(Renderer.laserOpacity);
-                Drawf.laser(node.team, atlas.find("unitinfo-Slaser"), atlas.find("unitinfo-Slaser-end"), node.x + vx*len1, node.y + vy*len1, other.x - vx*len2, other.y - vy*len2, 0.25f);
+                Drawf.laser(node.team, atlas.find("unitinfo-Slaser"), atlas.find("unitinfo-Slaser-end"), node.x + vx * len1, node.y + vy * len1, other.x - vx * len2, other.y - vy * len2, 0.25f);
 
-                if(other.power != null) getPowerLinkedBuilds(other).each(OverDrawer::drawNodeLink);
+                drawNodeLink(other);
             });
         }
     }
