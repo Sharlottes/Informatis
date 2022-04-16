@@ -46,21 +46,21 @@ public class OverDrawer {
     public static boolean locked;
     public static ObjectMap<Team, Seq<BaseTurret.BaseTurretBuild>> tmpbuildobj = new ObjectMap<>();
 
-    static float sin = Mathf.absin(Time.time, 6f, 1f);
-
     public static void setEvent(){
         Events.run(EventType.Trigger.draw, () -> {
+            float sin = Mathf.absin(Time.time, 6f, 1f);
+
             effectBuffer.resize(graphics.getWidth(), graphics.getHeight());
             Draw.z(Layer.max);
 
             //local drawing, drawn on player/camera position
             if(settings.getBool("spawnerarrow")) {
-                float leng = (player.unit() != null && player.unit().hitSize > 4 * 8f ? player.unit().hitSize * 1.5f : 4 * 8f) + sin;
+                float leng = (player.unit() != null && player.unit().hitSize > 4 * 8f ? player.unit().hitSize * 1.5f : 4 * 8f) +  sin;
                 Tmp.v1.set(camera.position);
-                Lines.stroke(1f + sin / 2, Pal.accent);
+                Lines.stroke(1f +  sin / 2, Pal.accent);
                 Lines.circle(Tmp.v1.x, Tmp.v1.y, leng - 4f);
                 spawner.getSpawns().each(t -> {
-                    Drawf.arrow(Tmp.v1.x, Tmp.v1.y, t.worldx(), t.worldy(), leng, (Math.min(200 * 8f, Mathf.dst(Tmp.v1.x, Tmp.v1.y, t.worldx(), t.worldy())) / (200 * 8f)) * (5f + sin));
+                    Drawf.arrow(Tmp.v1.x, Tmp.v1.y, t.worldx(), t.worldy(), leng, (Math.min(200 * 8f, Mathf.dst(Tmp.v1.x, Tmp.v1.y, t.worldx(), t.worldy())) / (200 * 8f)) * (5f +  sin));
                 });
             }
 
@@ -77,8 +77,8 @@ public class OverDrawer {
                 Posc from = player;
                 Position to = target;
                 if(to == from || to == null) to = input.mouseWorld();
-                if(player.unit() instanceof BlockUnitUnit bu) Tmp.v1.set(bu.x() + bu.tile().block.offset, bu.y() + bu.tile().block.offset).sub(to.getX(), to.getY()).limit(bu.tile().block.size * tilesize + sin + 0.5f);
-                else Tmp.v1.set(from.x(), from.y()).sub(to.getX(), to.getY()).limit((player.unit()==null?0:player.unit().hitSize) + sin + 0.5f);
+                if(player.unit() instanceof BlockUnitUnit bu) Tmp.v1.set(bu.x() + bu.tile().block.offset, bu.y() + bu.tile().block.offset).sub(to.getX(), to.getY()).limit(bu.tile().block.size * tilesize +  sin + 0.5f);
+                else Tmp.v1.set(from.x(), from.y()).sub(to.getX(), to.getY()).limit((player.unit()==null?0:player.unit().hitSize) +  sin + 0.5f);
 
                 float x2 = from.x() - Tmp.v1.x, y2 = from.y() - Tmp.v1.y, x1 = to.getX() + Tmp.v1.x, y1 = to.getY() + Tmp.v1.y;
                 int segs = (int) (to.dst(from.x(), from.y()) / tilesize);
@@ -238,6 +238,7 @@ public class OverDrawer {
 
     public static void drawMassPayloadLink(PayloadMassDriver.PayloadDriverBuild from){
         float sin = Mathf.absin(Time.time, 6f, 1f);
+
         Groups.build.each(b -> b instanceof PayloadMassDriver.PayloadDriverBuild fromMass &&
                 world.build(fromMass.link) == from &&
                 from.within(fromMass.x, fromMass.y, ((PayloadMassDriver)fromMass.block).range) &&
@@ -248,7 +249,7 @@ public class OverDrawer {
 
         if(world.build(from.link) instanceof PayloadMassDriver.PayloadDriverBuild to && from != to &&
                 to.within(from.x, from.y, ((PayloadMassDriver)from.block).range)){
-            Tmp.v1.set(from.x + from.block.offset, from.y + from.block.offset).sub(to.x, to.y).limit(from.block.size * tilesize + sin + 0.5f);
+            Tmp.v1.set(from.x + from.block.offset, from.y + from.block.offset).sub(to.x, to.y).limit(from.block.size * tilesize +  sin + 0.5f);
             float x2 = from.x - Tmp.v1.x, y2 = from.y - Tmp.v1.y,
                     x1 = to.x + Tmp.v1.x, y1 = to.y + Tmp.v1.y;
             int segs = (int)(to.dst(from.x, from.y)/tilesize);
@@ -258,16 +259,16 @@ public class OverDrawer {
             Lines.stroke(2f, Pal.placing);
             Lines.dashLine(x1, y1, x2, y2, segs);
             Lines.stroke(1f, Pal.accent);
-            Drawf.circles(from.x, from.y, (from.tile.block().size / 2f + 1) * tilesize + sin - 2f, Pal.accent);
+            Drawf.circles(from.x, from.y, (from.tile.block().size / 2f + 1) * tilesize +  sin - 2f, Pal.accent);
 
             for(var shooter : from.waitingShooters){
-                Drawf.circles(shooter.x, shooter.y, (from.tile.block().size / 2f + 1) * tilesize + sin - 2f);
-                Drawf.arrow(shooter.x, shooter.y, from.x, from.y, from.block.size * tilesize + sin, 4f + sin);
+                Drawf.circles(shooter.x, shooter.y, (from.tile.block().size / 2f + 1) * tilesize +  sin - 2f);
+                Drawf.arrow(shooter.x, shooter.y, from.x, from.y, from.block.size * tilesize +  sin, 4f +  sin);
             }
             if(from.link != -1 && world.build(from.link) instanceof PayloadMassDriver.PayloadDriverBuild other && other.block == from.block && other.team == from.team && from.within(other, ((PayloadMassDriver)from.block).range)){
                 Building target = world.build(from.link);
-                Drawf.circles(target.x, target.y, (target.block().size / 2f + 1) * tilesize + sin - 2f);
-                Drawf.arrow(from.x, from.y, target.x, target.y, from.block.size * tilesize + sin, 4f + sin);
+                Drawf.circles(target.x, target.y, (target.block().size / 2f + 1) * tilesize +  sin - 2f);
+                Drawf.arrow(from.x, from.y, target.x, target.y, from.block.size * tilesize +  sin, 4f +  sin);
             }
             if(world.build(to.link) instanceof PayloadMassDriver.PayloadDriverBuild newTo && to != newTo &&
                     newTo.within(to.x, to.y, ((PayloadMassDriver)to.block).range) && !linkedPayloadMasses.contains(to)){
@@ -277,43 +278,39 @@ public class OverDrawer {
         }
     }
 
-    public static void drawMassLink(MassDriver.MassDriverBuild from){
+    static void drawMassLink(MassDriver.MassDriverBuild from){
         float sin = Mathf.absin(Time.time, 6f, 1f);
 
-        Groups.build.each(b -> {
-            if(b instanceof MassDriver.MassDriverBuild fromMass &&
-                    world.build(fromMass.link) == from &&
-                    !linkedMasses.contains(fromMass)) {
+        //call every mass drivers that link to this driver
+        for(Building b : Groups.build) {
+            if (b != from && b instanceof MassDriver.MassDriverBuild fromMass && world.build(fromMass.link) == from && !linkedMasses.contains(fromMass)) {
                 linkedMasses.add(fromMass);
                 drawMassLink(fromMass);
             }
-        });
+        }
 
-        if(world.build(from.link) instanceof MassDriver.MassDriverBuild to){
-            Tmp.v1.set(from.x + from.block.offset, from.y + from.block.offset).sub(to.x, to.y).limit(from.block.size * tilesize + sin + 0.5f);
-            float x2 = from.x - Tmp.v1.x, y2 = from.y - Tmp.v1.y, x1 = to.x + Tmp.v1.x, y1 = to.y + Tmp.v1.y;
-            int segs = (int)(to.dst(from.x, from.y)/tilesize);
-
+        //get and draw line between this mass driver and linked one
+        Building target = world.build(from.link);
+        if(target instanceof MassDriver.MassDriverBuild targetDriver) {
+            Tmp.v1.set(from.x + from.block.offset, from.y + from.block.offset).sub(targetDriver.x, targetDriver.y).limit(from.block.size * tilesize +  sin + 0.5f);
+            float x2 = from.x - Tmp.v1.x, y2 = from.y - Tmp.v1.y, x1 = targetDriver.x + Tmp.v1.x, y1 = targetDriver.y + Tmp.v1.y;
+            int segs = (int) (targetDriver.dst(from.x, from.y) / tilesize);
             Lines.stroke(4f, Pal.gray);
             Lines.dashLine(x1, y1, x2, y2, segs);
             Lines.stroke(2f, Pal.placing);
             Lines.dashLine(x1, y1, x2, y2, segs);
             Lines.stroke(1f, Pal.accent);
-            Drawf.circles(from.x, from.y, (from.tile.block().size / 2f + 1) * tilesize + sin - 2f, Pal.accent);
+            Drawf.circles(from.x, from.y, (from.tile.block().size / 2f + 1) * tilesize +  sin - 2f, Pal.accent);
+            Drawf.arrow(from.x, from.y, targetDriver.x, targetDriver.y, from.block.size * tilesize +  sin, 4f +  sin);
+            for (Building shooter : from.waitingShooters) {
+                Drawf.circles(shooter.x, shooter.y, (from.tile.block().size / 2f + 1) * tilesize +  sin - 2f);
+                Drawf.arrow(shooter.x, shooter.y, from.x, from.y, from.block.size * tilesize +  sin, 4f +  sin);
+            }
 
-            for(var shooter : from.waitingShooters){
-                Drawf.circles(shooter.x, shooter.y, (from.tile.block().size / 2f + 1) * tilesize + sin - 2f);
-                Drawf.arrow(shooter.x, shooter.y, from.x, from.y, from.block.size * tilesize + sin, 4f + sin);
-            }
-            if(from.link != -1 && world.build(from.link) instanceof MassDriver.MassDriverBuild other && other.block == from.block && other.team == from.team && from.within(other, ((MassDriver)from.block).range)){
-                Building target = world.build(from.link);
-                Drawf.circles(target.x, target.y, (target.block().size / 2f + 1) * tilesize + sin - 2f);
-                Drawf.arrow(from.x, from.y, target.x, target.y, from.block.size * tilesize + sin, 4f + sin);
-            }
-            if(world.build(to.link) instanceof MassDriver.MassDriverBuild newTo && to != newTo &&
-                    newTo.within(to.x, to.y, ((MassDriver)to.block).range) && !linkedMasses.contains(to)){
-                linkedMasses.add(to);
-                drawMassLink(to);
+            //call method again when target links to another mass driver which isn't stored in array
+            if(!linkedMasses.contains(targetDriver)) {
+                linkedMasses.add(targetDriver);
+                drawMassLink(targetDriver);
             }
         }
     }
