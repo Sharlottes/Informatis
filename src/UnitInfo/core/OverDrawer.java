@@ -1,6 +1,8 @@
 package UnitInfo.core;
 
 import UnitInfo.ui.*;
+import UnitInfo.ui.draws.OverDraw;
+import UnitInfo.ui.draws.OverDraws;
 import arc.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
@@ -13,7 +15,6 @@ import arc.util.*;
 import mindustry.*;
 import mindustry.ai.*;
 import mindustry.ai.types.*;
-import mindustry.core.*;
 import mindustry.entities.units.*;
 import mindustry.game.*;
 import mindustry.gen.*;
@@ -22,8 +23,6 @@ import mindustry.logic.*;
 import mindustry.ui.*;
 import mindustry.world.*;
 import mindustry.world.blocks.defense.turrets.*;
-import mindustry.world.blocks.distribution.*;
-import mindustry.world.blocks.payloads.*;
 import mindustry.world.blocks.storage.*;
 import mindustry.world.blocks.units.*;
 
@@ -34,23 +33,13 @@ import static arc.Core.*;
 import static mindustry.Vars.*;
 
 public class OverDrawer {
-    public static Teamc target;
-    public static Seq<MassDriver.MassDriverBuild> linkedMasses = new Seq<>();
-    public static Seq<PayloadMassDriver.PayloadDriverBuild> linkedPayloadMasses = new Seq<>();
-    public static Seq<Building> linkedNodes = new Seq<>();
-    public static Seq<Tile> pathTiles = new Seq<>();
-    public static FrameBuffer effectBuffer = new FrameBuffer();
-    public static int otherCores;
-    public static boolean locked;
-    public static ObjectMap<Team, Seq<BaseTurret.BaseTurretBuild>> tmpbuildobj = new ObjectMap<>();
 
     public static void setEvent(){
         Events.run(EventType.Trigger.draw, () -> {
+
             float sin = Mathf.absin(Time.time, 6f, 1f);
 
-            effectBuffer.resize(graphics.getWidth(), graphics.getHeight());
             Draw.z(Layer.max);
-
             //local drawing, drawn on player/camera position
             if(settings.getBool("spawnerarrow")) {
                 float leng = (player.unit() != null && player.unit().hitSize > 4 * 8f ? player.unit().hitSize * 1.5f : 4 * 8f) +  sin;
@@ -93,243 +82,16 @@ public class OverDrawer {
 
             //global drawing, which needs camera-clipping
             Core.camera.bounds(Tmp.r1);
-            Groups.unit.each(u-> isInCamera(u.x, u.y, u.hitSize), u -> {
-                UnitController c = u.controller();
-                UnitCommand com = u.team.data().command;
-
-                if(logicLine && c instanceof LogicAI ai && (ai.control == LUnitControl.approach || ai.control == LUnitControl.move)) {
-                    Lines.stroke(1, u.team.color);
-                    Lines.line(u.x(), u.y(), ai.moveX, ai.moveY);
-                    Lines.stroke(0.5f + Mathf.absin(6f, 0.5f), Tmp.c1.set(Pal.logicOperations).lerp(Pal.sap, Mathf.absin(6f, 0.5f)));
-                    Lines.line(u.x(), u.y(), ai.controller.x, ai.controller.y);
-                }
-
-                if(unitLine && !u.type.flying && com != UnitCommand.idle && !(c instanceof MinerAI || c instanceof BuilderAI || c instanceof RepairAI || c instanceof DefenderAI || c instanceof FormationAI || c instanceof FlyingAI)) {
-                    Lines.stroke(1, u.team.color);
-
-                    otherCores = Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != u.team);
-                    getNextTile(u.tileOn(), u.controller() instanceof SuicideAI ? 0 : u.pathType(), u.team, com.ordinal());
-                    pathTiles.filter(Objects::nonNull);
-                    for(int i = 0; i < pathTiles.size; i++) {
-                        Tile from = pathTiles.get(i);
-                        Tile to = pathTiles.get(i + 1);
-                        if(isOutCamera(from.x, from.y)) continue;
-                        Lines.line(from.worldx(), from.worldy(), to.worldx(), to.worldy());
-                    }
-                    pathTiles.clear();
-                }
-
-                if(Core.settings.getBool("unithealthui"))
-                    FreeBar.draw(u);
-
-                if(!renderer.pixelator.enabled() && u.item() != null && u.itemTime > 0.01f)
-                    Fonts.outline.draw(u.stack.amount + "",
-                        u.x + Angles.trnsx(u.rotation + 180f, u.type.itemOffsetY),
-                        u.y + Angles.trnsy(u.rotation + 180f, u.type.itemOffsetY) - 3,
-                        Pal.accent, 0.25f * u.itemTime / Scl.scl(1f), false, Align.center);
-            });
-
-            if(pathLine) spawner.getSpawns().each(t -> {
-                Team enemyTeam = state.rules.waveTeam;
-                Lines.stroke(1, enemyTeam.color);
-                for(int p = 0; p < (Vars.state.rules.spawns.count(g->g.type.naval)>0?3:2); p++) {
-                    otherCores = Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != enemyTeam);
-                    getNextTile(t, p, enemyTeam, Pathfinder.fieldCore);
-                    pathTiles.filter(Objects::nonNull);
-
-                    for(int i = 0; i < pathTiles.size; i++) {
-                        Tile from = pathTiles.get(i);
-                        Tile to = pathTiles.get(i + 1);
-                        if(isOutCamera(from.x, from.y)) continue;
-                        Lines.line(from.worldx(), from.worldy(), to.worldx(), to.worldy());
-                    }
-                    pathTiles.clear();
-                }
-            });
-
-            if(settings.getBool("blockstatus")) //display enemy block status
-                Groups.build.each(b->isInCamera(b.x, b.y, b.block.size/2f) && Vars.player.team() == b.team, Building::drawStatus);
-
-            if(settings.getBool("linkedNode") && target instanceof Building node){
-                linkedNodes.clear();
-                Draw.z(Layer.max);
-                drawNodeLink(node);
-            }
-
-            if(settings.getBool("linkedMass")){
-                if(target instanceof MassDriver.MassDriverBuild mass) {
-                    linkedMasses.clear();
-                    drawMassLink(mass);
-                }
-                else if(target instanceof PayloadMassDriver.PayloadDriverBuild mass) {
-                    linkedPayloadMasses.clear();
-                    drawMassPayloadLink(mass);
-                }
-            }
-
-            if(settings.getBool("rangeNearby")) {
-                Unit unit = player.unit();
-                tmpbuildobj.clear();
-                for(Team team : Team.baseTeams) {
-                    Draw.drawRange(166 + (Team.baseTeams.length-team.id) * 3, 1, () -> effectBuffer.begin(Color.clear), () -> {
-                        effectBuffer.end();
-                        effectBuffer.blit(turretRange);
-                    });
-                    tmpbuildobj.put(team, new Seq<>());
-                }
-
-                Groups.build.each(b-> settings.getBool("aliceRange") || player.team() != b.team, b -> {
-                    if(b instanceof BaseTurret.BaseTurretBuild turret) {
-                        float range = turret.range();
-                        if (isInCamera(b.x, b.y, range)) {
-                            int index = b.team.id;
-                            Draw.color(b.team.color);
-
-                            boolean valid = false;
-                            if (unit == null) valid = true;
-                            else if (b instanceof Turret.TurretBuild build) {
-                                Turret t = (Turret) build.block;
-                                if((unit.isFlying() ? t.targetAir : t.targetGround)) valid = true;
-                                if(!build.hasAmmo() || !build.cons.valid()) index = 0;
-                            } else if (b instanceof TractorBeamTurret.TractorBeamBuild build) {
-                                TractorBeamTurret t = (TractorBeamTurret) build.block;
-                                if((unit.isFlying() ? t.targetAir : t.targetGround)) valid = true;
-                                if(!build.cons.valid()) index = 0;
-                            }
-
-                            if(!valid) return;
-
-                            if(b.team==player.team()) index = b.team.id;
-
-                            Draw.color(Team.baseTeams[index].color);
-                            if (settings.getBool("RangeShader")) {
-                                Draw.z(166+(Team.baseTeams.length-index)*3);
-                                Fill.poly(b.x, b.y, Lines.circleVertices(range), range);
-                            } else Drawf.dashCircle(b.x, b.y, range, b.team.color);
-                        }
-                    }
-                });
-            }
+            for(OverDraw drawer : OverDraws.all) drawer.draw();
         });
     }
 
-    static boolean isOutCamera(float x, float y) {
+    public static boolean isOutCamera(float x, float y) {
         return !isInCamera(x, y, 0);
     }
 
-    static boolean isInCamera(float x, float y, float size) {
+    public static boolean isInCamera(float x, float y, float size) {
         Tmp.r2.setCentered(x, y, size);
         return Tmp.r1.overlaps(Tmp.r2);
-    }
-
-    public static Tile getNextTile(Tile tile, int cost, Team team, int finder) {
-        Pathfinder.Flowfield field = pathfinder.getField(team, cost, Mathf.clamp(finder, 0, 1));
-        Tile tile1 = pathfinder.getTargetTile(tile, field);
-        pathTiles.add(tile1);
-        if(tile1 == tile || tile1 == null ||
-                (finder == 0 && (otherCores != Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != team) || tile1.build instanceof CoreBlock.CoreBuild)) ||
-                (finder == 1 && tile1.build instanceof CommandCenter.CommandBuild))
-            return tile1;
-        return getNextTile(tile1, cost, team, finder);
-    }
-
-    public static void drawMassPayloadLink(PayloadMassDriver.PayloadDriverBuild from){
-        float sin = Mathf.absin(Time.time, 6f, 1f);
-
-        //call every mass drivers that link to this driver
-        for(Building b : Groups.build) {
-            if (b != from && b instanceof PayloadMassDriver.PayloadDriverBuild fromMass && world.build(fromMass.link) == from && !linkedPayloadMasses.contains(fromMass)) {
-                linkedPayloadMasses.add(fromMass);
-                drawMassPayloadLink(fromMass);
-            }
-        }
-
-        //get and draw line between this mass driver and linked one
-        Building target = world.build(from.link);
-        if(target instanceof PayloadMassDriver.PayloadDriverBuild targetDriver) {
-            Tmp.v1.set(from.x + from.block.offset, from.y + from.block.offset).sub(targetDriver.x, targetDriver.y).limit(from.block.size * tilesize +  sin + 0.5f);
-            float x2 = from.x - Tmp.v1.x, y2 = from.y - Tmp.v1.y, x1 = targetDriver.x + Tmp.v1.x, y1 = targetDriver.y + Tmp.v1.y;
-            int segs = (int) (targetDriver.dst(from.x, from.y) / tilesize);
-            Lines.stroke(4f, Pal.gray);
-            Lines.dashLine(x1, y1, x2, y2, segs);
-            Lines.stroke(2f, Pal.placing);
-            Lines.dashLine(x1, y1, x2, y2, segs);
-            Lines.stroke(1f, Pal.accent);
-            Drawf.circles(from.x, from.y, (from.tile.block().size / 2f + 1) * tilesize +  sin - 2f, Pal.accent);
-            Drawf.arrow(from.x, from.y, targetDriver.x, targetDriver.y, from.block.size * tilesize +  sin, 4f +  sin);
-            for (Building shooter : from.waitingShooters) {
-                Drawf.circles(shooter.x, shooter.y, (from.tile.block().size / 2f + 1) * tilesize +  sin - 2f);
-                Drawf.arrow(shooter.x, shooter.y, from.x, from.y, from.block.size * tilesize +  sin, 4f +  sin);
-            }
-
-            //call method again when target links to another mass driver which isn't stored in array
-            if(!linkedPayloadMasses.contains(targetDriver)) {
-                linkedPayloadMasses.add(targetDriver);
-                drawMassPayloadLink(targetDriver);
-            }
-        }
-    }
-
-    static void drawMassLink(MassDriver.MassDriverBuild from){
-        float sin = Mathf.absin(Time.time, 6f, 1f);
-
-        //call every mass drivers that link to this driver
-        for(Building b : Groups.build) {
-            if (b != from && b instanceof MassDriver.MassDriverBuild fromMass && world.build(fromMass.link) == from && !linkedMasses.contains(fromMass)) {
-                linkedMasses.add(fromMass);
-                drawMassLink(fromMass);
-            }
-        }
-
-        //get and draw line between this mass driver and linked one
-        Building target = world.build(from.link);
-        if(target instanceof MassDriver.MassDriverBuild targetDriver) {
-            Tmp.v1.set(from.x + from.block.offset, from.y + from.block.offset).sub(targetDriver.x, targetDriver.y).limit(from.block.size * tilesize +  sin + 0.5f);
-            float x2 = from.x - Tmp.v1.x, y2 = from.y - Tmp.v1.y, x1 = targetDriver.x + Tmp.v1.x, y1 = targetDriver.y + Tmp.v1.y;
-            int segs = (int) (targetDriver.dst(from.x, from.y) / tilesize);
-            Lines.stroke(4f, Pal.gray);
-            Lines.dashLine(x1, y1, x2, y2, segs);
-            Lines.stroke(2f, Pal.placing);
-            Lines.dashLine(x1, y1, x2, y2, segs);
-            Lines.stroke(1f, Pal.accent);
-            Drawf.circles(from.x, from.y, (from.tile.block().size / 2f + 1) * tilesize +  sin - 2f, Pal.accent);
-            Drawf.arrow(from.x, from.y, targetDriver.x, targetDriver.y, from.block.size * tilesize +  sin, 4f +  sin);
-            for (Building shooter : from.waitingShooters) {
-                Drawf.circles(shooter.x, shooter.y, (from.tile.block().size / 2f + 1) * tilesize +  sin - 2f);
-                Drawf.arrow(shooter.x, shooter.y, from.x, from.y, from.block.size * tilesize +  sin, 4f +  sin);
-            }
-
-            //call method again when target links to another mass driver which isn't stored in array
-            if(!linkedMasses.contains(targetDriver)) {
-                linkedMasses.add(targetDriver);
-                drawMassLink(targetDriver);
-            }
-        }
-    }
-
-    public static IntSeq getPowerLinkedBuilds(Building build) {
-        IntSeq seq = new IntSeq(build.power.links);
-        seq.addAll(build.proximity().mapInt(Building::pos));
-        return seq;
-    }
-
-    public static void drawNodeLink(Building node) {
-        if(node.power == null) return;
-        if(!linkedNodes.contains(node)) {
-            linkedNodes.add(node);
-            int[] builds = getPowerLinkedBuilds(node).items;
-            for(int i : builds) {
-                Building other = world.build(i);
-                if(other == null || other.power == null) return;
-                float angle1 = Angles.angle(node.x, node.y, other.x, other.y),
-                        vx = Mathf.cosDeg(angle1), vy = Mathf.sinDeg(angle1),
-                        len1 = node.block.size * tilesize / 2f - 1.5f, len2 = other.block.size * tilesize / 2f - 1.5f;
-                Draw.color(Color.white, Color.valueOf("98ff98"), (1f - node.power.graph.getSatisfaction()) * 0.86f + Mathf.absin(3f, 0.1f));
-                Draw.alpha(Renderer.laserOpacity);
-                Drawf.laser(node.team, atlas.find("unitinfo-Slaser"), atlas.find("unitinfo-Slaser-end"), node.x + vx * len1, node.y + vy * len1, other.x - vx * len2, other.y - vy * len2, 0.25f);
-
-                drawNodeLink(other);
-            }
-        }
     }
 }

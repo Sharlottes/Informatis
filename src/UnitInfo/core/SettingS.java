@@ -116,10 +116,11 @@ public class SettingS {
         addGraphicCheckSetting("itemcal", false, tapSeq);
         addGraphicCheckSetting("schem", !mobile, tapSeq);
 
+        //TODO: remove all drawing settings
         Seq<SharSetting> rangeSeq = new Seq<>();
-        addGraphicTypeSetting("rangeRadius", 0, 500, 70, true, () -> true, s -> s + "tiles", rangeSeq);
-        addGraphicCheckSetting("rangeNearby", true, rangeSeq);
-        addGraphicCheckSetting("allTargetRange", false, rangeSeq);
+        //addGraphicTypeSetting("rangeRadius", 0, 500, 70, true, () -> true, s -> s + "tiles", rangeSeq);
+        //addGraphicCheckSetting("rangeNearby", true, rangeSeq);
+        //addGraphicCheckSetting("allTargetRange", false, rangeSeq);
         addGraphicCheckSetting("aliceRange", false, rangeSeq);
         addGraphicCheckSetting("RangeShader", false, rangeSeq);
 
@@ -130,6 +131,7 @@ public class SettingS {
         addGraphicSlideSetting("softRangeOpacity", 60, 0, 100, 10, s -> s + "%", opacitySeq);
 
         Seq<SharSetting> drawSeq = new Seq<>();
+        /*
         addGraphicTypeSetting("pathlinelimit", 0, 5000, 50, true, () -> true, s -> s + "lines", drawSeq);
         addGraphicTypeSetting("unitlinelimit", 0, 5000, 50, true, () -> true, s -> s + "lines", drawSeq);
         addGraphicTypeSetting("logiclinelimit", 0, 5000, 50, true, () -> true, s -> s + "lines", drawSeq);
@@ -139,8 +141,9 @@ public class SettingS {
         addGraphicCheckSetting("blockfont", false, drawSeq);
         addGraphicCheckSetting("linkedMass", true, drawSeq);
         addGraphicCheckSetting("linkedNode", false, drawSeq);
-        addGraphicCheckSetting("select", false, drawSeq);
         addGraphicCheckSetting("deadTarget", false, drawSeq);
+        */
+        addGraphicCheckSetting("select", false, drawSeq);
         addGraphicCheckSetting("distanceLine", false, drawSeq);
         addGraphicCheckSetting("spawnerarrow", false, drawSeq);
         addGraphicCheckSetting("elementdebug", false, drawSeq);

@@ -19,7 +19,7 @@ public class HUDFragment extends Fragment{
                     waveTable,
                     coreTable,
                     playerTable,
-                    commandTable
+                    toolTable
             )).visible(TaskbarTable.visibility);
 
             // windows (totally not a copyright violation)
@@ -27,7 +27,7 @@ public class HUDFragment extends Fragment{
             t.add(waveTable).size(250f).visible(false);
             t.add(coreTable).size(250f).visible(false);
             t.add(playerTable).size(250f).visible(false);
-            t.add(commandTable).size(250f).visible(false);
+            t.add(toolTable).size(250f).visible(false);
 
             t.update(()->{
                 for (Element child : t.getChildren()) {

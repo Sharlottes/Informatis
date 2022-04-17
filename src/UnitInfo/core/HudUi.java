@@ -66,8 +66,7 @@ public class HudUi {
     float heat = 0;
     public void setEvents() {
         Events.run(EventType.Trigger.update, ()->{
-            OverDrawer.target = getTarget();
-            OverDrawer.locked = locked;
+            target = getTarget();
             if(settings.getBool("deadTarget") && locked && lockedTarget != null && !Groups.all.contains(e -> e == lockedTarget)) {
                 lockedTarget = null;
                 locked = false;
@@ -217,42 +216,12 @@ public class HudUi {
             });
         });
 
-        Table pathlineTable = new Table(t -> {
-            t.right();
-
-            Button pathBtn = new ImageButton(new ScaledNinePatchDrawable(new NinePatch(Icon.grid.getRegion()), 0.5f), Styles.clearToggleTransi);
-            Button unitBtn = new ImageButton(new ScaledNinePatchDrawable(new NinePatch(Icon.grid.getRegion()), 0.5f), Styles.clearToggleTransi);
-            Button logicBtn = new ImageButton(new ScaledNinePatchDrawable(new NinePatch(Icon.grid.getRegion()), 0.5f), Styles.clearToggleTransi);
-
-            pathBtn.addListener(new Tooltip(l -> l.label(() -> bundle.get("hud.pathline") + " " + (pathLine ? bundle.get("hud.enabled") : bundle.get("hud.disabled")))));
-            pathBtn.clicked(() -> {
-                pathLine = !pathLine;
-                pathBtn.setChecked(pathLine);
-            });
-
-            unitBtn.addListener(new Tooltip(l -> l.label(() -> bundle.get("hud.unitline") + " " + (unitLine ? bundle.get("hud.enabled") : bundle.get("hud.disabled")))));
-            unitBtn.clicked(() -> {
-                unitLine = !unitLine;
-                unitBtn.setChecked(unitLine);
-            });
-
-            logicBtn.addListener(new Tooltip(l -> l.label(() -> bundle.get("hud.logicline") + " " + (logicLine ? bundle.get("hud.enabled") : bundle.get("hud.disabled")))));
-            logicBtn.clicked(() -> {
-                logicLine = !logicLine;
-                logicBtn.setChecked(logicLine);
-            });
-
-            t.add(pathBtn).padLeft(4 * 8f).size(3 * 8f).row();
-            t.add(unitBtn).padLeft(4 * 8f).size(3 * 8f).row();
-            t.add(logicBtn).padLeft(4 * 8f).size(3 * 8f).row();
-        });
-
         Table waveTable = (Table) scene.find("waves");
         Table infoTable = (Table) scene.find("infotable");
         waveTable.removeChild(infoTable);
         waveTable.row();
         waveTable.stack(
-            new Table(tt -> tt.collapser(t -> t.stack(waveInfoTable, infoTable, pathlineTable).growX(), true, () -> waveShown).growX()).top(),
+            new Table(tt -> tt.collapser(t -> t.stack(waveInfoTable, infoTable).growX(), true, () -> waveShown).growX()).top(),
             new Table(tt -> tt.button(Icon.downOpen, Styles.clearToggleTransi, () -> waveShown = !waveShown).size(4 * 8f).checked(b -> {
                 b.getImage().setDrawable(waveShown ? Icon.upOpen : Icon.downOpen);
                 return waveShown;

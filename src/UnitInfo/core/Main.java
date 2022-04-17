@@ -2,6 +2,7 @@ package UnitInfo.core;
 
 import UnitInfo.shaders.*;
 import UnitInfo.ui.*;
+import UnitInfo.ui.draws.OverDraws;
 import UnitInfo.ui.windows.*;
 import arc.*;
 import arc.scene.ui.Dialog;
@@ -42,6 +43,7 @@ public class Main extends Mod {
             SettingS.init();
             MindowsTex.init();
             WindowTables.init();
+            OverDraws.init();
 
             new HUDFragment().build(Vars.ui.hudGroup);
             hud = new HudUi();
