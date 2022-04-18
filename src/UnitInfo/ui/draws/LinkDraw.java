@@ -24,6 +24,7 @@ import mindustry.world.blocks.distribution.MassDriver;
 import mindustry.world.blocks.payloads.PayloadMassDriver;
 
 import static arc.Core.atlas;
+import static arc.Core.settings;
 import static mindustry.Vars.*;
 import static UnitInfo.SVars.*;
 
@@ -31,10 +32,11 @@ public class LinkDraw extends OverDraw {
     Seq<MassDriver.MassDriverBuild> linkedMasses = new Seq<>();
     Seq<PayloadMassDriver.PayloadDriverBuild> linkedPayloadMasses = new Seq<>();
     Seq<Building> linkedNodes = new Seq<>();
-    boolean node = false, mass = false;
 
     LinkDraw(String name, TextureRegionDrawable icon) {
         super(name, icon);
+        registerOption("powerNode");
+        registerOption("massDriver");
     }
 
     @Override
@@ -43,11 +45,11 @@ public class LinkDraw extends OverDraw {
 
         Draw.z(Layer.max);
         if(target instanceof Building b){
-            if(node) {
+            if(settings.getBool("powerNode") && enabled) {
                 linkedNodes.clear();
                 drawNodeLink(b);
             }
-            if(mass) {
+            if(settings.getBool("massDriver") && enabled) {
                 if (target instanceof MassDriver.MassDriverBuild mass) {
                     linkedMasses.clear();
                     drawMassLink(mass);
@@ -55,28 +57,6 @@ public class LinkDraw extends OverDraw {
                     linkedPayloadMasses.clear();
                     drawMassPayloadLink(mass);
                 }
-            }
-        }
-    }
-
-    @Override
-    public void displayStats(Table parent) {
-        super.displayStats(parent);
-
-        parent.background(Styles.squaret.up);
-
-        parent.check("enable power node", node&&enabled, b->node=b&&enabled).disabled(!enabled).row();
-        parent.check("enable mass driver", mass&&enabled, b->mass=b&&enabled).disabled(!enabled).row();
-    }
-
-    @Override
-    public <T> void onEnabled(T param) {
-        super.onEnabled(param);
-
-        if(param instanceof Table t) {
-            for (int i = 0; i < t.getChildren().size; i++) {
-                Element elem = t.getChildren().get(i);
-                if (elem instanceof CheckBox cb) cb.setDisabled(!enabled);
             }
         }
     }

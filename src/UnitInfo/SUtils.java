@@ -3,17 +3,56 @@ package UnitInfo;
 import arc.graphics.g2d.*;
 import arc.math.Mathf;
 import arc.scene.style.*;
+import arc.struct.Seq;
+import arc.util.Nullable;
 import arc.util.Strings;
+import mindustry.Vars;
 import mindustry.core.UI;
 import mindustry.entities.bullet.BulletType;
 import mindustry.entities.bullet.LightningBulletType;
+import mindustry.gen.BlockUnitUnit;
+import mindustry.gen.Groups;
+import mindustry.gen.Teamc;
+import mindustry.gen.Unit;
 import mindustry.type.UnitType;
 import mindustry.type.weapons.PointDefenseWeapon;
 import mindustry.type.weapons.RepairBeamWeapon;
+import mindustry.world.Tile;
 
 import java.lang.reflect.*;
 
+import static UnitInfo.SVars.locked;
+import static UnitInfo.SVars.target;
+import static arc.Core.input;
+import static arc.Core.settings;
+import static mindustry.Vars.player;
+
 public class SUtils {
+    @SuppressWarnings("unchecked")
+    public static <T extends Teamc> T getTarget(){
+        if(locked && target != null) {
+            if(settings.getBool("deadTarget") && !Groups.all.contains(e -> e == target)) {
+                target = null;
+                locked = false;
+            }
+            else return (T) target; //if there is locked target, return it first.
+        }
+
+        Seq<Unit> units = Groups.unit.intersect(input.mouseWorldX(), input.mouseWorldY(), 4, 4); // well, 0.5tile is enough to search them
+        if(units.size > 0)
+            return (T) units.peek(); //if there is unit, return it.
+        else if(getTile() != null && getTile().build != null)
+            return (T) getTile().build; //if there isn't unit but there is build, return it.
+        else if(player.unit() instanceof BlockUnitUnit b && b.tile() != null)
+            return (T)b.tile();
+        return (T) player.unit(); //if there aren't unit and not build, return player.
+    }
+
+    @Nullable
+    public static Tile getTile(){
+        return Vars.world.tileWorld(input.mouseWorldX(), input.mouseWorldY());
+    }
+
     public static Drawable getDrawable(TextureAtlas.AtlasRegion region, int left, int right, int top, int bottom){
         int[] splits = {left, right, top, bottom};
         int[] pads = region.pads;

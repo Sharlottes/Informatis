@@ -25,6 +25,7 @@ public class PlayerDisplay extends WindowTable implements Updatable {
     TextField search;
     @Nullable Player target;
     float heat;
+    ImageButton.ImageButtonStyle ustyle;
 
     public PlayerDisplay() {
         super("Player Display", Icon.players, t -> {});
@@ -35,6 +36,14 @@ public class PlayerDisplay extends WindowTable implements Updatable {
         scrollPos = new Vec2(0, 0);
         search = Elem.newField(null, f->{});
         search.setMessageText(Core.bundle.get("players.search"));
+
+        ustyle = new ImageButton.ImageButtonStyle(){{
+            down = Styles.none;
+            up = Styles.none;
+            imageDownColor = Pal.accent;
+            imageUpColor = Color.white;
+            imageOverColor = Color.lightGray;
+        }};
 
         top();
         topBar();
@@ -66,13 +75,6 @@ public class PlayerDisplay extends WindowTable implements Updatable {
     public Table rebuild(){
         return new Table(table -> {
             float h = 74f;
-            ImageButton.ImageButtonStyle ustyle = new ImageButton.ImageButtonStyle(){{
-                down = Styles.none;
-                up = Styles.none;
-                imageDownColor = Pal.accent;
-                imageUpColor = Color.white;
-                imageOverColor = Color.lightGray;
-            }};
 
             Seq<Player> players = Groups.player.copy(new Seq<>());
 

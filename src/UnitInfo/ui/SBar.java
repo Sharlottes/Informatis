@@ -9,13 +9,10 @@ import arc.math.*;
 import arc.math.geom.*;
 import arc.scene.*;
 import arc.scene.style.*;
-import arc.scene.ui.layout.*;
 import arc.util.Align;
 import arc.util.Tmp;
 import mindustry.graphics.*;
-import mindustry.ui.*;
-
-import static UnitInfo.SVars.modUiScale;
+import mindustry.ui.Fonts;
 
 public class SBar extends Element{
     static final Rect scissor = new Rect();

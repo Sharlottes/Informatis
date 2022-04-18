@@ -38,8 +38,8 @@ import mindustry.world.blocks.distribution.MassDriver;
 import mindustry.world.blocks.payloads.Payload;
 import mindustry.world.blocks.power.*;
 
-import static UnitInfo.SVars.clear;
-import static UnitInfo.SVars.modUiScale;
+import static UnitInfo.SVars.*;
+import static UnitInfo.SUtils.*;
 import static arc.Core.*;
 import static mindustry.Vars.*;
 
@@ -87,7 +87,7 @@ public class UnitDisplay extends WindowTable implements Updatable {
                             else if (target instanceof Building b && b.block != null) ui.content.show(b.block);
                         });
                         ttt.add(imagebt).update((i) -> {
-                            i.getStyle().imageUp = reg.get().tint(Tmp.c1.set(SVars.hud.locked ? Color.red.cpy().shiftHue(2 * Time.time) : Color.white));
+                            i.getStyle().imageUp = reg.get().tint(Tmp.c1.set(locked ? Color.red.cpy().shiftHue(2 * Time.time) : Color.white));
                             i.getStyle().imageDown = reg.get().tint(Tmp.c1.mul(Color.darkGray));
                             i.layout();
                         }).size(4 * 8f).get().parent = null;
@@ -161,13 +161,9 @@ public class UnitDisplay extends WindowTable implements Updatable {
         resizeButton();
     }
 
-    public static Teamc getTarget() {
-        return SVars.hud == null ? null : SVars.hud.getTarget();
-    }
-
     public void lockTarget() {
-        SVars.hud.locked = !SVars.hud.locked;
-        SVars.hud.lockedTarget = SVars.hud.locked ? getTarget() : null;
+        locked = !locked;
+        target = locked ? getTarget() : null;
     }
 
     public void showMoving() {
@@ -337,10 +333,10 @@ public class UnitDisplay extends WindowTable implements Updatable {
                                             if(getDrawable() != null)
                                                 getDrawable().draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
                                         }
-                                    }).size(Scl.scl(modUiScale) * iconLarge);
+                                    }).size(iconLarge);
                                 }),
                                 new Table(h -> {
-                                    h.defaults().growX().height(Scl.scl(modUiScale) * 9f).width(Scl.scl(modUiScale) * iconLarge).padTop(Scl.scl(modUiScale) * 18f);
+                                    h.defaults().growX().height(9f).width(iconLarge).padTop(18f);
                                     h.add(new SBar(
                                             () -> "",
                                             () -> Pal.accent.cpy().lerp(Color.orange, mount.reload / weapon.reload),

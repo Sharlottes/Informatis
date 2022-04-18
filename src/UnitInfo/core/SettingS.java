@@ -103,65 +103,32 @@ public class SettingS {
             settingUi.button(bundle.get("setting.shar-title"), Styles.cleart, dialog::show);
         });
 
-
         Seq<Seq<SharSetting>> settingSeq = new Seq<>();
         Seq<SharSetting> tapSeq = new Seq<>();
         addGraphicSlideSetting("barstyle", 0, 0, 5, 1, s -> s == 0 ? bundle.get("default-bar") : s + bundle.get("th-bar"), tapSeq);
-        addGraphicSlideSetting("infoUiScale", mobile ? 25 : 50, 25, 100, 5, s -> s + "%", tapSeq);
-        addGraphicSlideSetting("coreItemCheckRate", 60, 6, 180, 6, s -> Strings.fixed(s/60f,1) + bundle.get("sec"), tapSeq);
         addGraphicTypeSetting("wavemax", 0, 200,100, true, () -> true, s -> s + "waves", tapSeq);
-        addGraphicCheckSetting("infoui", true, tapSeq);
         addGraphicCheckSetting("pastwave", false, tapSeq);
         addGraphicCheckSetting("emptywave", true, tapSeq);
-        addGraphicCheckSetting("itemcal", false, tapSeq);
         addGraphicCheckSetting("schem", !mobile, tapSeq);
 
         //TODO: remove all drawing settings
-        Seq<SharSetting> rangeSeq = new Seq<>();
-        //addGraphicTypeSetting("rangeRadius", 0, 500, 70, true, () -> true, s -> s + "tiles", rangeSeq);
-        //addGraphicCheckSetting("rangeNearby", true, rangeSeq);
-        //addGraphicCheckSetting("allTargetRange", false, rangeSeq);
-        addGraphicCheckSetting("aliceRange", false, rangeSeq);
-        addGraphicCheckSetting("RangeShader", false, rangeSeq);
-
-        Seq<SharSetting> opacitySeq = new Seq<>();
-        addGraphicSlideSetting("selectopacity", 50, 0, 100, 5, s -> s + "%", opacitySeq);
-        addGraphicSlideSetting("baropacity", 50, 0, 100, 5, s -> s + "%", opacitySeq);
-        addGraphicSlideSetting("uiopacity", 50, 0, 100, 5, s -> s + "%", opacitySeq);
-        addGraphicSlideSetting("softRangeOpacity", 60, 0, 100, 10, s -> s + "%", opacitySeq);
-
         Seq<SharSetting> drawSeq = new Seq<>();
-        /*
-        addGraphicTypeSetting("pathlinelimit", 0, 5000, 50, true, () -> true, s -> s + "lines", drawSeq);
-        addGraphicTypeSetting("unitlinelimit", 0, 5000, 50, true, () -> true, s -> s + "lines", drawSeq);
-        addGraphicTypeSetting("logiclinelimit", 0, 5000, 50, true, () -> true, s -> s + "lines", drawSeq);
-        addGraphicTypeSetting("spawnarrowlimit", 0, 5000, 50, true, () -> true, s -> s + "arrows", drawSeq);
-        addGraphicCheckSetting("gaycursor", false, drawSeq);
-        addGraphicCheckSetting("unithealthui", true, drawSeq);
-        addGraphicCheckSetting("blockfont", false, drawSeq);
-        addGraphicCheckSetting("linkedMass", true, drawSeq);
-        addGraphicCheckSetting("linkedNode", false, drawSeq);
-        addGraphicCheckSetting("deadTarget", false, drawSeq);
-        */
+        addGraphicSlideSetting("selectopacity", 50, 0, 100, 5, s -> s + "%", drawSeq);
+        addGraphicSlideSetting("baropacity", 50, 0, 100, 5, s -> s + "%", drawSeq);
+        addGraphicCheckSetting("aliceRange", false, drawSeq);
+        addGraphicCheckSetting("RangeShader", false, drawSeq);
         addGraphicCheckSetting("select", false, drawSeq);
         addGraphicCheckSetting("distanceLine", false, drawSeq);
         addGraphicCheckSetting("spawnerarrow", false, drawSeq);
         addGraphicCheckSetting("elementdebug", false, drawSeq);
         addGraphicCheckSetting("hiddenElem", false, drawSeq);
 
-        Seq<SharSetting> etcSeq = new Seq<>();
-        addGraphicCheckSetting("autoShooting", false, etcSeq);
-
-        settingSeq.add(tapSeq, rangeSeq, opacitySeq);
-        settingSeq.add(drawSeq, etcSeq);
+        settingSeq.add(tapSeq, drawSeq);
 
         sharset.table(t -> {
             Seq<TextButton> buttons = new Seq<>();
             buttons.add(new TextButton(bundle.get("setting.shar-ui"), Styles.clearToggleMenut));
-            buttons.add(new TextButton(bundle.get("setting.shar-range"), Styles.clearToggleMenut));
-            buttons.add(new TextButton(bundle.get("setting.shar-opacity"), Styles.clearToggleMenut));
             buttons.add(new TextButton(bundle.get("setting.shar-draw"), Styles.clearToggleMenut));
-            buttons.add(new TextButton(bundle.get("setting.shar-etc"), Styles.clearToggleMenut));
             buttons.each(b -> b.clicked(() -> buttons.each(b1 -> b1.setChecked(b1 == b))));
             t.table(Styles.black8, bt -> {
                 bt.top().align(Align.top);

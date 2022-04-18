@@ -5,18 +5,15 @@ import UnitInfo.ui.*;
 import UnitInfo.ui.draws.OverDraws;
 import UnitInfo.ui.windows.*;
 import arc.*;
-import arc.scene.ui.Dialog;
-import arc.struct.Seq;
-import arc.util.Log;
+import arc.struct.*;
 import mindustry.*;
 import mindustry.game.EventType.*;
 import mindustry.mod.*;
 
 import static UnitInfo.SVars.*;
-import static UnitInfo.ui.windows.UnitDisplay.getTarget;
 import static arc.Core.*;
-import static mindustry.Vars.mobile;
-import static mindustry.Vars.ui;
+import static mindustry.Vars.*;
+import static UnitInfo.SUtils.*;
 
 public class Main extends Mod {
     @Override
@@ -51,17 +48,15 @@ public class Main extends Mod {
             hud.addSchemTable();
             hud.setEvents();
             OverDrawer.setEvent();
-            if(jsonGen) ContentJSON.save();
 
-            scene.add(new ElementDisplay());
-            Seq.with(
+            Seq.with(scene.root,
                 ui.picker, ui.editor, ui.controls, ui.restart, ui.join, ui.discord,
                 ui.load, ui.custom, ui.language, ui.database, ui.settings, ui.host,
                 ui.paused, ui.about, ui.bans, ui.admins, ui.traces, ui.maps, ui.content,
                 ui.planet, ui.research, ui.mods, ui.schematics, ui.logic
-            ).each(dialog-> dialog.add(new ElementDisplay(dialog)));
+            ).each(dialog-> dialog.addChild(new ElementDisplay(dialog)));
 
-
+            if(jsonGen) ContentJSON.save();
         });
 
         Events.on(WorldLoadEvent.class, e -> {

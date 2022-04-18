@@ -1,32 +1,17 @@
 package UnitInfo.core;
 
-import UnitInfo.ui.*;
 import UnitInfo.ui.draws.OverDraw;
 import UnitInfo.ui.draws.OverDraws;
 import arc.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
-import arc.graphics.gl.*;
 import arc.math.*;
 import arc.math.geom.*;
-import arc.scene.ui.layout.*;
-import arc.struct.*;
 import arc.util.*;
-import mindustry.*;
-import mindustry.ai.*;
-import mindustry.ai.types.*;
-import mindustry.entities.units.*;
 import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
-import mindustry.logic.*;
 import mindustry.ui.*;
-import mindustry.world.*;
-import mindustry.world.blocks.defense.turrets.*;
-import mindustry.world.blocks.storage.*;
-import mindustry.world.blocks.units.*;
-
-import java.util.Objects;
 
 import static UnitInfo.SVars.*;
 import static arc.Core.*;
@@ -36,11 +21,9 @@ public class OverDrawer {
 
     public static void setEvent(){
         Events.run(EventType.Trigger.draw, () -> {
-
             float sin = Mathf.absin(Time.time, 6f, 1f);
 
             Draw.z(Layer.max);
-            //local drawing, drawn on player/camera position
             if(settings.getBool("spawnerarrow")) {
                 float leng = (player.unit() != null && player.unit().hitSize > 4 * 8f ? player.unit().hitSize * 1.5f : 4 * 8f) +  sin;
                 Tmp.v1.set(camera.position);

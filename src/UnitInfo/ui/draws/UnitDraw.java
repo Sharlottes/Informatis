@@ -34,15 +34,20 @@ import java.util.Objects;
 
 import static UnitInfo.core.OverDrawer.isInCamera;
 import static UnitInfo.core.OverDrawer.isOutCamera;
+import static arc.Core.settings;
 import static mindustry.Vars.*;
 
 public class UnitDraw extends OverDraw {
     Seq<Tile> pathTiles = new Seq<>();
     int otherCores;
-    boolean pathLine = false, unitLine = false, logicLine = false, bar = false, item = false;
 
     UnitDraw(String name, TextureRegionDrawable icon) {
         super(name, icon);
+        registerOption("pathLine");
+        registerOption("logicLine");
+        registerOption("unitLine");
+        registerOption("unitItem");
+        registerOption("unitBar");
     }
 
     @Override
@@ -53,14 +58,14 @@ public class UnitDraw extends OverDraw {
             UnitController c = u.controller();
             UnitCommand com = u.team.data().command;
 
-            if(logicLine && c instanceof LogicAI ai && (ai.control == LUnitControl.approach || ai.control == LUnitControl.move)) {
+            if(settings.getBool("logicLine") && c instanceof LogicAI ai && (ai.control == LUnitControl.approach || ai.control == LUnitControl.move)) {
                 Lines.stroke(1, u.team.color);
                 Lines.line(u.x(), u.y(), ai.moveX, ai.moveY);
                 Lines.stroke(0.5f + Mathf.absin(6f, 0.5f), Tmp.c1.set(Pal.logicOperations).lerp(Pal.sap, Mathf.absin(6f, 0.5f)));
                 Lines.line(u.x(), u.y(), ai.controller.x, ai.controller.y);
             }
 
-            if(unitLine && !u.type.flying && com != UnitCommand.idle && !(c instanceof MinerAI || c instanceof BuilderAI || c instanceof RepairAI || c instanceof DefenderAI || c instanceof FormationAI || c instanceof FlyingAI)) {
+            if(settings.getBool("unitLine") && !u.type.flying && com != UnitCommand.idle && !(c instanceof MinerAI || c instanceof BuilderAI || c instanceof RepairAI || c instanceof DefenderAI || c instanceof FormationAI || c instanceof FlyingAI)) {
                 Lines.stroke(1, u.team.color);
 
                 otherCores = Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != u.team);
@@ -75,16 +80,16 @@ public class UnitDraw extends OverDraw {
                 }
             }
 
-            if(bar) FreeBar.draw(u);
+            if(settings.getBool("unitBar")) FreeBar.draw(u);
 
-            if(item && !renderer.pixelator.enabled() && u.item() != null && u.itemTime > 0.01f)
+            if(settings.getBool("unitItem") && !renderer.pixelator.enabled() && u.item() != null && u.itemTime > 0.01f)
                 Fonts.outline.draw(u.stack.amount + "",
                         u.x + Angles.trnsx(u.rotation + 180f, u.type.itemOffsetY),
                         u.y + Angles.trnsy(u.rotation + 180f, u.type.itemOffsetY) - 3,
                         Pal.accent, 0.25f * u.itemTime / Scl.scl(1f), false, Align.center);
         });
 
-        if(pathLine) spawner.getSpawns().each(t -> {
+        if(settings.getBool("pathLine")) spawner.getSpawns().each(t -> {
             Team enemyTeam = state.rules.waveTeam;
             Lines.stroke(1, enemyTeam.color);
             for(int p = 0; p < (Vars.state.rules.spawns.count(g->g.type.naval)>0?3:2); p++) {
@@ -112,30 +117,5 @@ public class UnitDraw extends OverDraw {
                 (finder == 1 && tile1.build instanceof CommandCenter.CommandBuild))
             return tile1;
         return getNextTile(tile1, cost, team, finder);
-    }
-
-    @Override
-    public void displayStats(Table parent) {
-        super.displayStats(parent);
-
-        parent.background(Styles.squaret.up);
-
-        parent.check("enable path line", pathLine&&enabled, b->pathLine=b&&enabled).disabled(!enabled).row();
-        parent.check("enable logic line", logicLine&&enabled, b->logicLine=b&&enabled).disabled(!enabled).row();
-        parent.check("enable unit line", unitLine&&enabled, b->unitLine=b&&enabled).disabled(!enabled).row();
-        parent.check("enable unit item", item&&enabled, b->item=b&&enabled).disabled(!enabled).row();
-        parent.check("enable unit bar", bar&&enabled, b->bar=b&&enabled).disabled(!enabled).row();
-    }
-
-    @Override
-    public <T> void onEnabled(T param) {
-        super.onEnabled(param);
-
-        if(param instanceof Table t) {
-            for (int i = 0; i < t.getChildren().size; i++) {
-                Element elem = t.getChildren().get(i);
-                if (elem instanceof CheckBox cb) cb.setDisabled(!enabled);
-            }
-        }
     }
 }
