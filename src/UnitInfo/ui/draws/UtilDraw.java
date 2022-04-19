@@ -1,13 +1,26 @@
 package UnitInfo.ui.draws;
 
+import arc.Events;
+import arc.func.Boolf;
+import arc.func.Cons;
 import arc.input.KeyCode;
 import arc.math.Angles;
 import arc.math.geom.Geometry;
+import arc.math.geom.Point2;
 import arc.scene.style.TextureRegionDrawable;
+import arc.scene.ui.Button;
+import arc.scene.ui.CheckBox;
+import arc.scene.ui.layout.Table;
+import arc.struct.IntSeq;
+import arc.util.Structs;
+import mindustry.content.Blocks;
 import mindustry.entities.Units;
+import mindustry.game.EventType;
 import mindustry.game.Team;
 import mindustry.gen.*;
 import mindustry.logic.Ranged;
+import mindustry.world.Block;
+import mindustry.world.Tile;
 import mindustry.world.blocks.ControlBlock;
 import mindustry.world.blocks.defense.turrets.Turret;
 
@@ -20,6 +33,7 @@ public class UtilDraw extends OverDraw {
     UtilDraw(String name, TextureRegionDrawable icon) {
         super(name, icon);
         registerOption("autoShooting");
+
     }
 
     @Override
@@ -77,4 +91,5 @@ public class UtilDraw extends OverDraw {
             unit.controlWeapons(player.shooting && !boosted);
         }
     }
+
 }

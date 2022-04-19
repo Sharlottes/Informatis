@@ -23,9 +23,9 @@ import static mindustry.Vars.*;
 public class PlayerDisplay extends WindowTable implements Updatable {
     Vec2 scrollPos = new Vec2(0, 0);
     TextField search;
+    ImageButton.ImageButtonStyle ustyle;
     @Nullable Player target;
     float heat;
-    ImageButton.ImageButtonStyle ustyle;
 
     public PlayerDisplay() {
         super("Player Display", Icon.players, t -> {});
