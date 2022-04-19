@@ -56,7 +56,7 @@ public class MapEditorDisplay extends Window implements Updatable {
         table.top().background(Styles.black8);
         table.table(t->{
             t.left().background(Tex.underline2);
-            t.label(()->"[accent]"+selected.localizedName+"[] "+selected.emoji());
+            t.label(()->selected==null?"[gray]None[]":"[accent]"+selected.localizedName+"[] "+selected.emoji());
             t.add(search).growX().pad(8).name("search");
         }).growX().row();
         table.add(new OverScrollPane(rebuild(), Styles.nonePane, scrollPos).disableScroll(true, false)).grow().name("editor-pane");
@@ -71,7 +71,7 @@ public class MapEditorDisplay extends Window implements Updatable {
             heat = 0f;
             resetPane();
         }
-        if(tool != null) {
+        if(tool != null && selected != null && !window.hasMouse()) {
             if(Core.input.isTouched()) {
                 if(!(!mobile&&Core.input.keyDown(KeyCode.mouseLeft))) return;
                 if(tool== EditorTool.line) {
@@ -154,9 +154,9 @@ public class MapEditorDisplay extends Window implements Updatable {
                     options.top().left();
                     options.table(title -> title.left().background(Tex.underline2).add("Options [accent]"+(tool!=null&&tool.mode>=0&&tool.mode<tool.altModes.length?tool.altModes[tool.mode]:"")+"[]")).growX().row();
                     options.table(option-> {
-                        option.defaults().size(300f, 70f).left();
                         if(tool==null) return;
 
+                        option.top().left();
                         for (int i = 0; i < tool.altModes.length; i++) {
                             int mode = i;
                             String name = tool.altModes[i];
@@ -168,10 +168,9 @@ public class MapEditorDisplay extends Window implements Updatable {
                                 b.add(Core.bundle.get("toolmode." + name + ".description")).color(Color.lightGray).left();
                             }, () -> {
                                 tool.mode = (tool.mode == mode ? -1 : mode);
-                            }).update(b -> b.setChecked(tool.mode == mode));
-                            option.row();
+                            }).update(b -> b.setChecked(tool.mode == mode)).margin(12f).growX().row();
                         }
-                    });
+                    }).grow();
                 }).left().width(window.getWidth() / 2).margin(8f).growY();
             }).grow();
         });
