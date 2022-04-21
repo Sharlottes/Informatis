@@ -1,12 +1,15 @@
 package unitinfo.ui.windows;
 
-import unitinfo.ui.EditorTool;
-import unitinfo.ui.OverScrollPane;
-import unitinfo.ui.Updatable;
+import arc.Events;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Lines;
+import arc.math.geom.Geometry;
+import mindustry.editor.MapEditor;
+import mindustry.game.EventType;
+import mindustry.graphics.Layer;
+import unitinfo.ui.*;
 import arc.Core;
-import arc.func.Boolf;
-import arc.func.Cons;
-import arc.func.Prov;
+import arc.func.*;
 import arc.graphics.Color;
 import arc.input.KeyCode;
 import arc.math.Mathf;
@@ -14,36 +17,99 @@ import arc.math.geom.Vec2;
 import arc.scene.event.Touchable;
 import arc.scene.style.TextureRegionDrawable;
 import arc.scene.ui.*;
-import arc.scene.ui.layout.Scl;
-import arc.scene.ui.layout.Table;
+import arc.scene.ui.layout.*;
 import arc.scene.utils.Elem;
 import arc.struct.Seq;
 import arc.util.*;
 import mindustry.Vars;
 import mindustry.content.Blocks;
 import mindustry.game.Team;
-import mindustry.gen.Icon;
-import mindustry.gen.Tex;
+import mindustry.gen.*;
 import mindustry.graphics.Pal;
 import mindustry.ui.Styles;
-import mindustry.world.Block;
-import mindustry.world.Tile;
+import mindustry.world.*;
 
 import static mindustry.Vars.*;
 
 public class MapEditorDisplay extends Window implements Updatable {
     Vec2 scrollPos = new Vec2(0, 0);
-    TextField search;
     Table window;
+    TextField search;
+    EditorTool tool;
+    final Vec2[][] brushPolygons = new Vec2[MapEditor.brushSizes.length][0];
     float heat;
     float brushSize = -1;
-    unitinfo.ui.EditorTool tool;
 
     public static Team drawTeam = Team.sharded;
     public static Block selected = Blocks.router;
 
     public MapEditorDisplay()  {
         super(Icon.map, "editor");
+
+        for(int i = 0; i < MapEditor.brushSizes.length; i++){
+            float size = MapEditor.brushSizes[i];
+            float mod = size % 1f;
+            brushPolygons[i] = Geometry.pixelCircle(size, (index, x, y) -> Mathf.dst(x, y, index - mod, index - mod) <= size - 0.5f);
+        }
+        Events.run(EventType.Trigger.draw, ()->{
+            float cx = Core.camera.position.x, cy = Core.camera.position.y;
+            float scaling = 8;
+
+            Draw.z(Layer.max);
+
+            if(Core.settings.getBool("grid")){
+                Lines.stroke(1f);
+                Draw.color(Pal.accent);
+                for(int i = (int)(-0.5f*Core.camera.height/8); i < (int)(0.5f*Core.camera.height/8); i++) {
+                    Lines.line(Mathf.floor((cx-0.5f*Core.camera.width)/8)*8+4, Mathf.floor((cy + i*8)/8)*8+4, Mathf.floor((cx+0.5f*Core.camera.width)/8)*8+4,Mathf.floor((cy + i*8)/8)*8+4);
+                }
+                for(int i = (int)(-0.5f*Core.camera.width/8); i < (int)(0.5f*Core.camera.width/8); i++) {
+                    Lines.line(Mathf.floor((cx + i*8)/8)*8+4, Mathf.floor((cy+0.5f*Core.camera.height)/8)*8+4, Mathf.floor((cx + i*8)/8)*8+4,Mathf.floor((cy-0.5f*Core.camera.height)/8)*8+4);
+                }
+                Draw.reset();
+            }
+
+
+            if(tool==null) return;
+            int index = 0;
+            for(int i = 0; i < MapEditor.brushSizes.length; i++){
+                if(brushSize == MapEditor.brushSizes[i]){
+                    index = i;
+                    break;
+                }
+            }
+            Lines.stroke(Scl.scl(2f), Pal.accent);
+
+            if((!selected.isMultiblock() || tool == EditorTool.eraser) && tool != EditorTool.fill){
+                if(tool == EditorTool.line && hold){
+                    Vec2 v = Core.input.mouseWorld();
+                    Lines.poly(brushPolygons[index], pastX, pastY, scaling);
+                    float vx = Mathf.floor(v.x/8)*8-4, vy = Mathf.floor(v.y/8)*8-4;
+                    Lines.poly(brushPolygons[index], vx, vy, scaling);
+                }
+
+                if((tool.edit || (tool == EditorTool.line && !hold)) && (!mobile || hold)){
+                    //pencil square outline
+                    Vec2 v = Core.input.mouseWorld();
+                    float vx = Mathf.floor(v.x/8)*8-4, vy = Mathf.floor(v.y/8)*8-4;
+                    if(tool == EditorTool.pencil && tool.mode == 1){
+                        Lines.square(vx, vy, scaling * (brushSize + 0.5f));
+                    }else{
+                        Lines.poly(brushPolygons[index], vx, vy, scaling);
+                    }
+                }
+            }else{
+                if((tool.edit || tool == EditorTool.line) && (!mobile || hold)){
+                    Vec2 v = Core.input.mouseWorld();
+                    float vx = Mathf.floor(v.x/8)*8-4, vy = Mathf.floor(v.y/8)*8-4;
+                    float offset = (selected.size % 2 == 0 ? scaling / 2f : 0f);
+                    Lines.square(
+                            vx + scaling / 2f + offset,
+                            vy + scaling / 2f + offset,
+                            scaling * selected.size / 2f);
+                }
+            }
+        });
     }
 
     @Override
@@ -59,7 +125,7 @@ public class MapEditorDisplay extends Window implements Updatable {
             t.label(()->selected==null?"[gray]None[]":"[accent]"+selected.localizedName+"[] "+selected.emoji());
             t.add(search).growX().pad(8).name("search");
         }).growX().row();
-        table.add(new OverScrollPane(rebuild(), Styles.nonePane, scrollPos).disableScroll(true, false)).grow().name("editor-pane");
+        table.add(new OverScrollPane(rebuild(), Styles.nonePane, scrollPos).disableScroll(true, false)).grow().name("editor-pane").row();
     }
 
     boolean hold = false;
@@ -71,7 +137,7 @@ public class MapEditorDisplay extends Window implements Updatable {
             heat = 0f;
             resetPane();
         }
-        if(tool != null && selected != null && !window.hasMouse()) {
+        if(tool != null && selected != null && !hasMouse()) {
             if(Core.input.isTouched()) {
                 if(!(!mobile&&Core.input.keyDown(KeyCode.mouseLeft))) return;
                 if(tool== EditorTool.line) {
@@ -102,7 +168,7 @@ public class MapEditorDisplay extends Window implements Updatable {
         pane.setWidget(rebuild());
     }
 
-    public Table rebuild() {
+    Table rebuild() {
         return new Table(table-> {
             table.top();
             Seq<Block> blocks = Vars.content.blocks().copy();
@@ -140,11 +206,23 @@ public class MapEditorDisplay extends Window implements Updatable {
                         addTool.get(unitinfo.ui.EditorTool.eraser);
                         addTool.get(unitinfo.ui.EditorTool.fill);
                         addTool.get(unitinfo.ui.EditorTool.spray);
+
+                        ImageButton grid = new ImageButton(Icon.grid, Styles.clearTogglei);
+                        grid.clicked(() -> {
+                            grid.toggle();
+                            Core.settings.put("grid", !Core.settings.getBool("grid"));
+                        });
+                        grid.update(()->grid.setChecked(Core.settings.getBool("grid")));
+                        bt.add(grid);
                     });
                     tools.row();
-                    Slider slider = new Slider(1, 16, 1, false);
-                    slider.moved(size->brushSize=size);
-                    slider.setValue(brushSize);
+                    Slider slider = new Slider(0, MapEditor.brushSizes.length - 1, 1, false);
+                    slider.moved(f -> brushSize = MapEditor.brushSizes[(int)f]);
+                    for(int j = 0; j < MapEditor.brushSizes.length; j++){
+                        if(MapEditor.brushSizes[j] == brushSize){
+                            slider.setValue(j);
+                        }
+                    }
                     Label label = new Label("Brush: "+brushSize);
                     label.touchable = Touchable.disabled;
                     tools.stack(slider, label).width(window.getWidth()/5).center();

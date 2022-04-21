@@ -19,8 +19,8 @@ import static mindustry.Vars.*;
 public class HudUi {
     public SchemDisplay schemTable;
     public boolean waveShown;
-
     float heat = 0;
+
     public void setEvents() {
         Events.run(EventType.Trigger.update, ()->{
             target = getTarget();
