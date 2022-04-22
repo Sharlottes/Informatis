@@ -4,7 +4,7 @@
   "author": "Sharlotte",
   "description": "The mod displays more information in-game, such as unit/building, wave, core, tile, item/unit total info etc",
   "version": "1.5.5",
-  "main": "UnitInfo.core.Main",
+  "main": "unitinfo.core.Main",
   "minGameVersion": "135",
   "dependencies": [],
   "hidden": true,
