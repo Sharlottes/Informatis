@@ -12,9 +12,10 @@ import mindustry.content.Blocks;
 import mindustry.game.Team;
 import mindustry.world.Block;
 import mindustry.world.Tile;
+import unitinfo.ui.windows.MapEditorDisplay;
 
 import static unitinfo.ui.windows.MapEditorDisplay.drawTeam;
-import static unitinfo.ui.windows.MapEditorDisplay.selected;
+import static unitinfo.ui.windows.MapEditorDisplay.drawBlock;
 import static unitinfo.ui.windows.Windows.editorTable;
 import static mindustry.Vars.world;
 
@@ -25,7 +26,7 @@ public enum EditorTool{
             if(!Structs.inBounds(x, y, world.width(), world.height())) return;
 
             Tile tile = world.tile(x, y);
-            selected = tile.block() == Blocks.air || !tile.block().inEditor ? tile.overlay() == Blocks.air ? tile.floor() : tile.overlay() : tile.block();
+            drawBlock = tile.block() == Blocks.air || !tile.block().inEditor ? tile.overlay() == Blocks.air ? tile.floor() : tile.overlay() : tile.block();
         }
     },
     line(KeyCode.l, "replace", "orthogonal"){
@@ -113,7 +114,7 @@ public enum EditorTool{
 
                 Boolf<Tile> tester;
                 Cons<Tile> setter;
-                Block drawBlock = selected;
+                Block drawBlock = MapEditorDisplay.drawBlock;
 
                 if(drawBlock.isOverlay()){
                     Block dest = tile.overlay();
@@ -216,10 +217,10 @@ public enum EditorTool{
         @Override
         public void touched(int x, int y){
             //floor spray
-            if(selected.isFloor()){
+            if(drawBlock.isFloor()){
                 editorTable.drawCircle(x, y, tile -> {
                     if(Mathf.chance(chance)){
-                        tile.setFloor(selected.asFloor());
+                        tile.setFloor(drawBlock.asFloor());
                     }
                 });
             }else if(mode == 0){ //replace-only mode, doesn't affect air

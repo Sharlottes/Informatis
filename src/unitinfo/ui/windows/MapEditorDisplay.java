@@ -39,9 +39,11 @@ public class MapEditorDisplay extends Window implements Updatable {
     final Vec2[][] brushPolygons = new Vec2[MapEditor.brushSizes.length][0];
     float heat;
     float brushSize = -1;
+    boolean hold = false;
+    int pastX, pastY;
 
     public static Team drawTeam = Team.sharded;
-    public static Block selected = Blocks.router;
+    public static Block drawBlock = Blocks.router;
 
     public MapEditorDisplay()  {
         super(Icon.map, "editor");
@@ -80,7 +82,7 @@ public class MapEditorDisplay extends Window implements Updatable {
             }
             Lines.stroke(Scl.scl(2f), Pal.accent);
 
-            if((!selected.isMultiblock() || tool == EditorTool.eraser) && tool != EditorTool.fill){
+            if((!drawBlock.isMultiblock() || tool == EditorTool.eraser) && tool != EditorTool.fill){
                 if(tool == EditorTool.line && hold){
                     Vec2 v = Core.input.mouseWorld();
                     Lines.poly(brushPolygons[index], pastX, pastY, scaling);
@@ -102,11 +104,11 @@ public class MapEditorDisplay extends Window implements Updatable {
                 if((tool.edit || tool == EditorTool.line) && (!mobile || hold)){
                     Vec2 v = Core.input.mouseWorld();
                     float vx = Mathf.floor(v.x/8)*8-4, vy = Mathf.floor(v.y/8)*8-4;
-                    float offset = (selected.size % 2 == 0 ? scaling / 2f : 0f);
+                    float offset = (drawBlock.size % 2 == 0 ? scaling / 2f : 0f);
                     Lines.square(
                             vx + scaling / 2f + offset,
                             vy + scaling / 2f + offset,
-                            scaling * selected.size / 2f);
+                            scaling * drawBlock.size / 2f);
                 }
             }
         });
@@ -122,14 +124,12 @@ public class MapEditorDisplay extends Window implements Updatable {
         table.top().background(Styles.black8);
         table.table(t->{
             t.left().background(Tex.underline2);
-            t.label(()->selected==null?"[gray]None[]":"[accent]"+selected.localizedName+"[] "+selected.emoji());
+            t.label(()-> drawBlock ==null?"[gray]None[]":"[accent]"+ drawBlock.localizedName+"[] "+ drawBlock.emoji());
             t.add(search).growX().pad(8).name("search");
         }).growX().row();
         table.add(new OverScrollPane(rebuild(), Styles.nonePane, scrollPos).disableScroll(true, false)).grow().name("editor-pane").row();
     }
 
-    boolean hold = false;
-    int pastX, pastY;
     @Override
     public void update() {
         heat += Time.delta;
@@ -137,25 +137,25 @@ public class MapEditorDisplay extends Window implements Updatable {
             heat = 0f;
             resetPane();
         }
-        if(tool != null && selected != null && !hasMouse()) {
+        if(tool != null && drawBlock != null && !hasMouse()) {
             if(Core.input.isTouched()) {
                 if(!(!mobile&&Core.input.keyDown(KeyCode.mouseLeft))) return;
                 if(tool== EditorTool.line) {
                     if(!hold) {
-                        pastX = (int) player.mouseX / 8;
-                        pastY = (int) player.mouseY / 8;
+                        pastX = Mathf.round(Core.input.mouseWorldX() / 8);
+                        pastY = Mathf.round(Core.input.mouseWorldY() / 8);
                     }
                     hold = true;
                 }
                 else {
-                    pastX = (int) player.mouseX / 8;
-                    pastY = (int) player.mouseY / 8;
+                    pastX = Mathf.round(Core.input.mouseWorldX() / 8);
+                    pastY = Mathf.round(Core.input.mouseWorldY() / 8);
                 }
 
                 tool.touched(pastX, pastY);
             }
             else if(tool== EditorTool.line) {
-                if(hold&&pastX>=0&&pastY>=0) tool.touchedLine(pastX, pastY, (int) player.mouseX/8, (int) player.mouseY/8);
+                if(hold&&pastX>=0&&pastY>=0) tool.touchedLine(pastX, pastY, Mathf.round(Core.input.mouseWorldX() / 8), Mathf.round(Core.input.mouseWorldY() / 8));
                 hold = false;
                 pastX = -1;
                 pastY = -1;
@@ -175,7 +175,9 @@ public class MapEditorDisplay extends Window implements Updatable {
             if(search.getText().length() > 0){
                 blocks.filter(p -> p.name.toLowerCase().contains(search.getText().toLowerCase())||p.localizedName.toLowerCase().contains(search.getText().toLowerCase()));
             }
-            table.table(select->buildTable(Blocks.boulder, select, blocks, ()->selected, block->selected=block, false)).marginTop(16f).marginBottom(16f).row();
+            table.table(select-> this.buildBlockSelection(null, select, blocks, ()-> drawBlock, block-> drawBlock =block, false)).marginTop(16f).marginBottom(16f).row();
+            table.image().height(4f).color(Pal.gray).growX().row();
+            table.table(select-> this.buildTeamSelection(player.team(), select, Seq.with(Team.all), ()->drawTeam, block->drawTeam=block, false)).marginTop(16f).marginBottom(16f).row();
             table.image().height(4f).color(Pal.gray).growX().row();
             table.table(body-> {
                 body.table(tools -> {
@@ -244,9 +246,7 @@ public class MapEditorDisplay extends Window implements Updatable {
                                 b.setStyle(Styles.clearTogglet);
                                 b.add(Core.bundle.get("toolmode." + name)).left().row();
                                 b.add(Core.bundle.get("toolmode." + name + ".description")).color(Color.lightGray).left();
-                            }, () -> {
-                                tool.mode = (tool.mode == mode ? -1 : mode);
-                            }).update(b -> b.setChecked(tool.mode == mode)).margin(12f).growX().row();
+                            }, () -> tool.mode = (tool.mode == mode ? -1 : mode)).update(b -> b.setChecked(tool.mode == mode)).margin(12f).growX().row();
                         }
                     }).grow();
                 }).left().width(window.getWidth() / 2).margin(8f).growY();
@@ -254,14 +254,15 @@ public class MapEditorDisplay extends Window implements Updatable {
         });
     }
 
-    <T extends Block> void buildTable(@Nullable Block block, Table table, Seq<T> items, Prov<T> holder, Cons<T> consumer, boolean closeSelect){
+    <T extends Block> void buildBlockSelection(@Nullable Block block, Table table, Seq<T> items, Prov<T> holder, Cons<T> consumer, boolean closeSelect){
         ButtonGroup<ImageButton> group = new ButtonGroup<>();
         group.setMinCheckCount(0);
         Table cont = new Table();
         cont.defaults().size(40);
 
         int i = 0;
-        int max = Math.max(4, Math.round(window.getWidth()/64));
+        int row = 4;
+        int max = Math.max(row, Math.round(window.getWidth()/2/8/row));
 
         for(T item : items){
             if(!item.unlockedNow()) continue;
@@ -288,20 +289,54 @@ public class MapEditorDisplay extends Window implements Updatable {
 
         ScrollPane pane = new ScrollPane(cont, Styles.smallPane);
         pane.setScrollingDisabled(true, false);
+        pane.setScrollYForce(blockScroll);
+        pane.update(() -> blockScroll = pane.getScrollY());
+        pane.setOverscroll(false, false);
+        table.add(pane).maxHeight(Scl.scl(row * 10 * 5));
+    }
+    float blockScroll;
 
-        if(block != null){
-            pane.setScrollYForce(block.selectScroll);
-            pane.update(() -> {
-                block.selectScroll = pane.getScrollY();
-            });
+    <T extends Team> void buildTeamSelection(@Nullable Team team, Table table, Seq<T> items, Prov<T> holder, Cons<T> consumer, boolean closeSelect){
+        ButtonGroup<ImageButton> group = new ButtonGroup<>();
+        group.setMinCheckCount(0);
+        Table cont = new Table();
+        cont.defaults().size(40);
+
+        int i = 0;
+        int row = 2;
+        int max = Math.max(row, Math.round(window.getWidth()/2/8/row/2));
+
+        for(T item : items){
+            ImageButton button = cont.button(Tex.whiteui, Styles.clearToggleTransi, 24, () -> {
+                if(closeSelect) control.input.frag.config.hideConfig();
+            }).group(group).tooltip(t->t.background(Styles.black8).add(item.localized().replace(search.getText(), "[accent]"+search.getText()+"[]"))).with(img -> img.getStyle().imageUpColor = item.color).get();
+            button.changed(() -> consumer.get(button.isChecked() ? item : null));
+            button.update(() -> button.setChecked(holder.get() == item));
+
+            if(i++ % max == max-1){
+                cont.row();
+            }
         }
 
+        //add extra blank spaces so it looks nice
+        if(i % max != 0){
+            int remaining = max - (i % max);
+            for(int j = 0; j < remaining; j++){
+                cont.image(Styles.black6);
+            }
+        }
+
+        ScrollPane pane = new ScrollPane(cont, Styles.smallPane);
+        pane.setScrollingDisabled(true, false);
+        pane.setScrollYForce(teamScroll);
+        pane.update(() -> teamScroll = pane.getScrollY());
         pane.setOverscroll(false, false);
-        table.add(pane).maxHeight(Scl.scl(40 * 5));
+        table.add(pane).maxHeight(Scl.scl(row * 10 * 5));
     }
+    float teamScroll;
 
     public void drawBlocksReplace(int x, int y){
-        drawBlocks(x, y, tile -> tile.block() != Blocks.air || selected.isFloor());
+        drawBlocks(x, y, tile -> tile.block() != Blocks.air || drawBlock.isFloor());
     }
 
     public void drawBlocks(int x, int y){
@@ -314,22 +349,22 @@ public class MapEditorDisplay extends Window implements Updatable {
 
     int rotation = 0;
     public void drawBlocks(int x, int y, boolean square, Boolf<Tile> tester){
-        if(selected.isMultiblock()){
-            x = Mathf.clamp(x, (selected.size - 1) / 2, world.width() - selected.size / 2 - 1);
-            y = Mathf.clamp(y, (selected.size - 1) / 2, world.height() - selected.size / 2 - 1);
+        if(drawBlock.isMultiblock()){
+            x = Mathf.clamp(x, (drawBlock.size - 1) / 2, world.width() - drawBlock.size / 2 - 1);
+            y = Mathf.clamp(y, (drawBlock.size - 1) / 2, world.height() - drawBlock.size / 2 - 1);
             if(!hasOverlap(x, y)){
-                world.tile(x, y).setBlock(selected, drawTeam, rotation);
+                world.tile(x, y).setBlock(drawBlock, drawTeam, rotation);
             }
         }else{
-            boolean isFloor = selected.isFloor() && selected != Blocks.air;
+            boolean isFloor = drawBlock.isFloor() && drawBlock != Blocks.air;
 
             Cons<Tile> drawer = tile -> {
                 if(!tester.get(tile)) return;
 
                 if(isFloor){
-                    tile.setFloor(selected.asFloor());
-                }else if(!(tile.block().isMultiblock() && !selected.isMultiblock())){
-                    tile.setBlock(selected, drawTeam, rotation);
+                    tile.setFloor(drawBlock.asFloor());
+                }else if(!(tile.block().isMultiblock() && !drawBlock.isMultiblock())){
+                    tile.setBlock(drawBlock, drawTeam, rotation);
                 }
             };
 
@@ -376,15 +411,15 @@ public class MapEditorDisplay extends Window implements Updatable {
     boolean hasOverlap(int x, int y){
         Tile tile = world.tile(x, y);
         //allow direct replacement of blocks of the same size
-        if(tile != null && tile.isCenter() && tile.block() != selected && tile.block().size == selected.size && tile.x == x && tile.y == y){
+        if(tile != null && tile.isCenter() && tile.block() != drawBlock && tile.block().size == drawBlock.size && tile.x == x && tile.y == y){
             return false;
         }
 
         //else, check for overlap
-        int offsetx = -(selected.size - 1) / 2;
-        int offsety = -(selected.size - 1) / 2;
-        for(int dx = 0; dx < selected.size; dx++){
-            for(int dy = 0; dy < selected.size; dy++){
+        int offsetx = -(drawBlock.size - 1) / 2;
+        int offsety = -(drawBlock.size - 1) / 2;
+        for(int dx = 0; dx < drawBlock.size; dx++){
+            for(int dy = 0; dy < drawBlock.size; dy++){
                 int worldx = dx + offsetx + x;
                 int worldy = dy + offsety + y;
                 Tile other = world.tile(worldx, worldy);

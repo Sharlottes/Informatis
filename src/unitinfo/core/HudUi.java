@@ -1,11 +1,9 @@
 package unitinfo.core;
 
 import unitinfo.ui.SchemDisplay;
-
 import arc.*;
 import arc.scene.ui.layout.*;
 import arc.util.*;
-
 import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.Pal;

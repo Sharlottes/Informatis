@@ -53,7 +53,6 @@ public class Main extends Mod {
             WindowManager.init();
             OverDraws.init();
 
-            //new HUDFragment().build(Vars.ui.hudGroup);
             hud = new HudUi();
             hud.addWaveInfoTable();
             hud.addSchemTable();

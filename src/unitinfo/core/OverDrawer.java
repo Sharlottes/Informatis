@@ -1,7 +1,6 @@
 package unitinfo.core;
 
-import unitinfo.ui.draws.OverDraw;
-import unitinfo.ui.draws.OverDraws;
+import unitinfo.ui.draws.*;
 import arc.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
