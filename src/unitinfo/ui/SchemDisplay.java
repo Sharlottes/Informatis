@@ -25,17 +25,26 @@ import static arc.Core.*;
 import static mindustry.Vars.*;
 import static mindustry.Vars.ui;
 
-public class SchemDisplay extends Table {
+public class SchemDisplay extends Table implements Updatable {
     static float schemScrollPos, tagScrollPos;
     static boolean schemShown;
     static Schematic firstSchematic;
     static final Seq<String> selectedTags = new Seq<>();
     static Runnable rebuildList = () -> {};
+    float heat;
 
     public SchemDisplay() {
         setSchemTable();
     }
 
+    @Override
+    public void update() {
+        heat += Time.delta;
+        if(heat>=60f) {
+            heat = 0;
+            setSchemTable();
+        }
+    }
 
     public void setSchemTable() {
        clear();

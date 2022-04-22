@@ -1,5 +1,7 @@
 package unitinfo.core;
 
+import arc.input.KeyCode;
+import arc.scene.ui.layout.Table;
 import unitinfo.shaders.*;
 import unitinfo.ui.*;
 import unitinfo.ui.draws.OverDraws;
@@ -38,13 +40,14 @@ public class Main extends Mod {
         });
 
         Events.run(Trigger.update, () -> {
+            target = getTarget();
+
             for (Window window : windows) {
                 if(window instanceof Updatable u) u.update();
             }
-        });
-
-        Events.on(ContentInitEvent.class, e -> {
-            Windows.load();
+            if((input.keyDown(KeyCode.shiftRight) || input.keyDown(KeyCode.shiftLeft))) {
+                if(input.keyTap(KeyCode.r)) lockTarget();
+            }
         });
 
         Events.on(ClientLoadEvent.class, e -> {
@@ -52,11 +55,6 @@ public class Main extends Mod {
             SettingS.init();
             WindowManager.init();
             OverDraws.init();
-
-            hud = new HudUi();
-            hud.addWaveInfoTable();
-            hud.addSchemTable();
-            hud.setEvents();
             OverDrawer.setEvent();
 
             Seq.with(scene.root,
@@ -66,7 +64,16 @@ public class Main extends Mod {
                 ui.planet, ui.research, ui.mods, ui.schematics, ui.logic
             ).each(dialog-> dialog.addChild(new ElementDisplay(dialog)));
 
+            Table table = ((Table) scene.find("minimap/position")).row();
+            table.add(new SchemDisplay());
+            new WaveInfoDisplay().addWaveInfoTable();
+
             if(jsonGen) ContentJSON.save();
         });
+    }
+
+    public static void lockTarget() {
+        if(target==getTarget()) locked = !locked;
+        target = getTarget();
     }
 }

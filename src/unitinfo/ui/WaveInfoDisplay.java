@@ -1,10 +1,7 @@
-package unitinfo.core;
+package unitinfo.ui;
 
-import unitinfo.ui.SchemDisplay;
-import arc.*;
 import arc.scene.ui.layout.*;
 import arc.util.*;
-import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.Pal;
 import mindustry.ui.*;
@@ -14,27 +11,8 @@ import static unitinfo.SVars.*;
 import static arc.Core.*;
 import static mindustry.Vars.*;
 
-public class HudUi {
-    public SchemDisplay schemTable;
+public class WaveInfoDisplay {
     public boolean waveShown;
-    float heat = 0;
-
-    public void setEvents() {
-        Events.run(EventType.Trigger.update, ()->{
-            target = getTarget();
-            heat += Time.delta;
-            if(heat > 60) {
-                heat = 0;
-                schemTable.setSchemTable();
-            }
-        });
-    }
-
-    public void addSchemTable() {
-        Table table = ((Table) scene.find("minimap/position")).row();
-        schemTable = new SchemDisplay();
-        table.add(schemTable);
-    }
 
     public void addWaveInfoTable() {
         Table waveInfoTable = new Table(Tex.buttonEdge4, table -> {

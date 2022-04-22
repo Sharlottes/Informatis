@@ -8,7 +8,6 @@ import arc.graphics.Color;
 import arc.math.Mathf;
 import arc.math.geom.Vec2;
 import arc.scene.event.HandCursorListener;
-import arc.scene.style.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
@@ -29,8 +28,9 @@ import static mindustry.Vars.*;
 
 public class CoreDisplay extends Window implements Updatable {
     Vec2 scrollPos = new Vec2(0, 0);
-    ObjectMap<Team, ItemData> itemData = new ObjectMap<>();
+    Table window;
     float heat;
+    ObjectMap<Team, ItemData> itemData = new ObjectMap<>();
 
     public CoreDisplay()  {
         super(Icon.list, "core");
@@ -39,10 +39,11 @@ public class CoreDisplay extends Window implements Updatable {
 
     @Override
     public void build(Table table) {
+        window = table;
         scrollPos = new Vec2(0, 0);
 
         table.background(Styles.black8).top();
-        table.add(new OverScrollPane(rebuild(), Styles.nonePane, scrollPos).disableScroll(true, false)).name("core-pane");
+        table.add(new OverScrollPane(rebuild(), Styles.nonePane, scrollPos).disableScroll(true, false)).grow().name("core-pane");
         Events.on(EventType.WorldLoadEvent.class, e -> resetUsed());
     }
 
@@ -60,13 +61,19 @@ public class CoreDisplay extends Window implements Updatable {
         }
     }
 
-    public Table rebuild() {
+    Table rebuild() {
         return new Table(table -> {
+            table.top();
             for(Team team : getTeams()) {
-                table.add(setTable(team).background(((NinePatchDrawable)Tex.underline2).tint(team.color))).row();
+                table.table(row-> {
+                    row.center();
+                    row.add(setTable(team)).margin(8f).row();
+                    row.image().height(4f).color(team.color).growX();
+                }).growX().row();
             }
         });
     }
+
     public Seq<Team> getTeams(){
         return Seq.with(Team.all).filter(Team::active);
     }
@@ -80,6 +87,7 @@ public class CoreDisplay extends Window implements Updatable {
     public Table setTable(Team team){
         return new Table(table -> {
             table.add(team.name).color(team.color).row();
+            int max = Math.max(1, Math.round(window.getWidth()/2/60));
             table.table(coretable -> {
                 int row = 0;
 
@@ -115,7 +123,9 @@ public class CoreDisplay extends Window implements Updatable {
                         label.setFontScale(0.75f);
                         tt.add(label);
                     }).padTop(2).padLeft(4).padRight(4);
-                    if(++row % 5 == 0) coretable.row();
+                    if(row++ % max == max-1){
+                        coretable.row();
+                    }
                 }
             }).row();
 
@@ -140,7 +150,9 @@ public class CoreDisplay extends Window implements Updatable {
                             ttt.add(label).bottom().right().padTop(16f);
                             ttt.pack();
                         })).padRight(3).left();
-                    if(++row % 5 == 0) itemTable.row();
+                    if(row++ % max == max-1){
+                        itemTable.row();
+                    }
                 }
             }).row();
 
@@ -154,7 +166,9 @@ public class CoreDisplay extends Window implements Updatable {
                             tt.image(unit.uiIcon).size(iconSmall).padRight(3).tooltip(ttt -> ttt.background(Styles.black6).add(unit.localizedName).style(Styles.outlineLabel).margin(2f));
                             tt.add(UI.formatAmount(Groups.unit.count(u -> u.team == team && u.type == unit))).padRight(3).minWidth(5 * 8f).left();
                         });
-                        if(++row % 5 == 0) unitTable.row();
+                        if(row++ % max == max-1){
+                            unitTable.row();
+                        }
                     }
                 }
             });

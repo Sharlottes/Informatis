@@ -9,7 +9,6 @@ import mindustry.gen.Teamc;
 import static arc.Core.atlas;
 
 public class SVars {
-    public static HudUi hud = new HudUi();
     public static TextureRegion clear = atlas.find("clear");
     public static TextureRegion error = atlas.find("error");
     public static RangeShader turretRange;

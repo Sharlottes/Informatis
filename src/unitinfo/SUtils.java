@@ -32,7 +32,7 @@ public class SUtils {
     public static <T extends Teamc> T getTarget(){
         if(locked && target != null) {
             if(settings.getBool("deadTarget") && !Groups.all.contains(e -> e == target)) {
-                target = null;
+                target = player.unit();
                 locked = false;
             }
             else return (T) target; //if there is locked target, return it first.
