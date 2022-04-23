@@ -86,7 +86,7 @@ class UnitDisplay extends Window {
             to.label(() -> target == null ? "(" + 0 + ", " + 0 + ")" : "(" + Strings.fixed(target.x() / tilesize, 2) + ", " + Strings.fixed(target.y() / tilesize, 2) + ")").row();
             to.label(() -> target instanceof Unit u ? "[accent]"+ Strings.fixed(u.armor, 0) + "[] Armor" : "");
         })).margin(12f).row();
-        table.image().height(4f).color(player.team().color).growX().row();
+        table.image().height(4f).color((target==null?player.unit():target).team().color).growX().row();
         table.add(new OverScrollPane(new Table(bars -> {
             bars.top();
             for (int i = 0; i < 6; i++) {

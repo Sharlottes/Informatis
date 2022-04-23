@@ -1,14 +1,8 @@
 package unitinfo.ui.windows;
 
 import arc.Events;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Lines;
-import arc.math.geom.Bresenham2;
+import arc.graphics.g2d.*;
 import arc.math.geom.Geometry;
-import arc.math.geom.Point2;
-import arc.scene.Element;
-import arc.scene.event.InputEvent;
-import arc.scene.event.InputListener;
 import mindustry.editor.MapEditor;
 import mindustry.game.EventType;
 import mindustry.graphics.Layer;
@@ -176,7 +170,7 @@ public class MapEditorDisplay extends Window implements Updatable {
                     tools.top().left();
                     tools.table(title -> title.left().background(Tex.underline2).add("Tools [accent]"+(tool==null?"":tool.name())+"[]")).growX().row();
                     tools.table(bt->{
-                        Cons<unitinfo.ui.EditorTool> addTool = tool -> {
+                        Cons<EditorTool> addTool = tool -> {
                             ImageButton button = new ImageButton(ui.getIcon(tool.name()), Styles.clearTogglei);
                             button.clicked(() -> {
                                 button.toggle();
@@ -195,11 +189,11 @@ public class MapEditorDisplay extends Window implements Updatable {
                             bt.stack(button, mode);
                         };
 
-                        addTool.get(unitinfo.ui.EditorTool.line);
-                        addTool.get(unitinfo.ui.EditorTool.pencil);
-                        addTool.get(unitinfo.ui.EditorTool.eraser);
-                        addTool.get(unitinfo.ui.EditorTool.fill);
-                        addTool.get(unitinfo.ui.EditorTool.spray);
+                        addTool.get(EditorTool.line);
+                        addTool.get(EditorTool.pencil);
+                        addTool.get(EditorTool.eraser);
+                        addTool.get(EditorTool.fill);
+                        addTool.get(EditorTool.spray);
 
                         ImageButton grid = new ImageButton(Icon.grid, Styles.clearTogglei);
                         grid.clicked(() -> {

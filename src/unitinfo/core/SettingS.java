@@ -106,9 +106,6 @@ public class SettingS {
         Seq<Seq<SharSetting>> settingSeq = new Seq<>();
         Seq<SharSetting> tapSeq = new Seq<>();
         addGraphicSlideSetting("barstyle", 0, 0, 5, 1, s -> s == 0 ? bundle.get("default-bar") : s + bundle.get("th-bar"), tapSeq);
-        addGraphicTypeSetting("wavemax", 0, 200,100, true, () -> true, s -> s + "waves", tapSeq);
-        addGraphicCheckSetting("pastwave", false, tapSeq);
-        addGraphicCheckSetting("emptywave", true, tapSeq);
         addGraphicCheckSetting("schem", !mobile, tapSeq);
 
         //TODO: remove all drawing settings
