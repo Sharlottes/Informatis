@@ -5,6 +5,9 @@ import arc.util.*;
 import mindustry.gen.*;
 import mindustry.graphics.Pal;
 import mindustry.ui.*;
+import mindustry.world.Block;
+import mindustry.world.Tile;
+import mindustry.world.blocks.environment.Floor;
 
 import static unitinfo.SUtils.*;
 import static unitinfo.SVars.*;
@@ -20,11 +23,33 @@ public class WaveInfoDisplay {
             table.table(head -> {
                 head.table(image -> {
                     image.left();
-                    image.image(() -> getTile() == null || getTile().floor().uiIcon == error ? clear : getTile().floor().uiIcon).size(iconSmall);
-                    image.image(() -> getTile() == null || getTile().overlay().uiIcon == error ? clear : getTile().overlay().uiIcon).size(iconSmall);
-                    image.image(() -> getTile() == null || getTile().block().uiIcon == error ? clear : getTile().block().uiIcon).size(iconSmall);
+                    image.image(() -> {
+                        Tile tile = getTile();
+                        if(tile == null) return clear;
+                        Floor floor = tile.floor();
+                        if(floor.uiIcon == error) return clear;
+                        return floor.uiIcon;
+                    }).size(iconSmall);
+                    image.image(() -> {
+                        Tile tile = getTile();
+                        if(tile == null) return clear;
+                        Floor floor = tile.overlay();
+                        if(floor.uiIcon == error) return clear;
+                        return floor.uiIcon;
+                    }).size(iconSmall);
+                    image.image(() -> {
+                        Tile tile = getTile();
+                        if(tile == null) return clear;
+                        Block floor = tile.block();
+                        if(floor.uiIcon == error) return clear;
+                        return floor.uiIcon;
+                    }).size(iconSmall);
                 });
-                head.label(() -> Strings.format("(@, @)", getTile() == null ? "NaN" : getTile().x, getTile() == null ? "NaN" : getTile().y)).center();
+                head.label(() -> {
+                    Tile tile = getTile();
+                    if(tile == null) return "(NaN, NaN)";
+                    return Strings.format("(@, @)", tile.x, tile.y);
+                }).center();
             });
             table.row();
             table.image().height(4f).color(Pal.gray).growX().row();

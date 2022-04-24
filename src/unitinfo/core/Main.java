@@ -36,11 +36,12 @@ public class Main extends Mod {
             for (Window window : windows) {
                 if(window instanceof Updatable u) u.update();
             }
+
             if((input.keyDown(KeyCode.shiftRight) || input.keyDown(KeyCode.shiftLeft))) {
                 if(input.keyTap(KeyCode.r)) {
                     if(target==getTarget()) locked = !locked;
                     target = getTarget();
-                };
+                }
             }
         });
 
