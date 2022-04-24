@@ -4,27 +4,19 @@ import arc.graphics.g2d.*;
 import arc.math.Mathf;
 import arc.scene.style.*;
 import arc.struct.Seq;
-import arc.util.Nullable;
-import arc.util.Strings;
+import arc.util.*;
 import mindustry.Vars;
 import mindustry.core.UI;
-import mindustry.entities.bullet.BulletType;
-import mindustry.entities.bullet.LightningBulletType;
-import mindustry.gen.BlockUnitUnit;
-import mindustry.gen.Groups;
-import mindustry.gen.Teamc;
-import mindustry.gen.Unit;
+import mindustry.entities.bullet.*;
+import mindustry.gen.*;
 import mindustry.type.UnitType;
-import mindustry.type.weapons.PointDefenseWeapon;
-import mindustry.type.weapons.RepairBeamWeapon;
+import mindustry.type.weapons.*;
 import mindustry.world.Tile;
 
 import java.lang.reflect.*;
 
-import static unitinfo.SVars.locked;
-import static unitinfo.SVars.target;
-import static arc.Core.input;
-import static arc.Core.settings;
+import static unitinfo.SVars.*;
+import static arc.Core.*;
 import static mindustry.Vars.player;
 
 public class SUtils {
@@ -84,7 +76,7 @@ public class SUtils {
         return b.speed * a * Mathf.pow(1 - b.drag, b.lifetime / 2) * b.lifetime +
                 Math.max(b.lightning > 0 || b instanceof LightningBulletType ? (b.lightningLength + b.lightningLengthRand) * 6 : 0,
                         b.fragBullet != null ? bulletRange(b.fragBullet) * b.fragLifeMax * b.fragVelocityMax : b.splashDamageRadius);
-    };
+    }
 
     public static float unitRange(UnitType u) {
         final float[] mrng = {0};
@@ -99,5 +91,15 @@ public class SUtils {
         Field field = ut.getClass().getDeclaredField(fieldName);
         field.setAccessible(true);
         return field.get(ut);
+    }
+
+
+    public static boolean isOutCamera(float x, float y) {
+        return !isInCamera(x, y, 0);
+    }
+
+    public static boolean isInCamera(float x, float y, float size) {
+        Tmp.r2.setCentered(x, y, size);
+        return Tmp.r1.overlaps(Tmp.r2);
     }
 }

@@ -10,6 +10,7 @@ import arc.scene.ui.layout.*;
 import arc.util.*;
 import mindustry.gen.*;
 import mindustry.ui.*;
+import unitinfo.ui.WindowManager;
 
 public class Window extends Table{
     public TextureRegionDrawable icon;

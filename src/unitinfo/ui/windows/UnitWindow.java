@@ -30,12 +30,12 @@ import static unitinfo.SVars.*;
 import static unitinfo.SUtils.*;
 import static mindustry.Vars.*;
 
-class UnitDisplay extends Window {
+class UnitWindow extends Window {
     final Seq<Color> lastColors = Seq.with(Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear);
     final Rect scissor = new Rect();
     Vec2 scrollPos;
 
-    public UnitDisplay() {
+    public UnitWindow() {
         super(Icon.units, "unit");
     }
 
@@ -69,7 +69,10 @@ class UnitDisplay extends Window {
                 }
                 image.setDrawable(region);
             });
-            image.clicked(Main::lockTarget);
+            image.clicked(()->{
+                if(target==getTarget()) locked = !locked;
+                target = getTarget();
+            });
 
             tt.add(image).size(iconMed).padRight(12f);
             tt.label(() -> {

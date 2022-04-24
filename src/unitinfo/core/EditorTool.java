@@ -1,4 +1,4 @@
-package unitinfo.ui;
+package unitinfo.core;
 
 import arc.func.Boolf;
 import arc.func.Cons;
@@ -12,10 +12,9 @@ import mindustry.content.Blocks;
 import mindustry.game.Team;
 import mindustry.world.Block;
 import mindustry.world.Tile;
-import unitinfo.ui.windows.MapEditorDisplay;
+import unitinfo.ui.windows.*;
 
-import static unitinfo.ui.windows.MapEditorDisplay.drawTeam;
-import static unitinfo.ui.windows.MapEditorDisplay.drawBlock;
+import static unitinfo.ui.windows.MapEditorWindow.*;
 import static unitinfo.ui.windows.Windows.editorTable;
 import static mindustry.Vars.world;
 
@@ -114,7 +113,7 @@ public enum EditorTool{
 
                 Boolf<Tile> tester;
                 Cons<Tile> setter;
-                Block drawBlock = MapEditorDisplay.drawBlock;
+                Block drawBlock = MapEditorWindow.drawBlock;
 
                 if(drawBlock.isOverlay()){
                     Block dest = tile.overlay();

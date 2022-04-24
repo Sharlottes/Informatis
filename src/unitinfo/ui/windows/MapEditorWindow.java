@@ -6,6 +6,7 @@ import arc.math.geom.Geometry;
 import mindustry.editor.MapEditor;
 import mindustry.game.EventType;
 import mindustry.graphics.Layer;
+import unitinfo.core.EditorTool;
 import unitinfo.ui.*;
 import arc.Core;
 import arc.func.*;
@@ -30,7 +31,7 @@ import mindustry.world.*;
 
 import static mindustry.Vars.*;
 
-public class MapEditorDisplay extends Window implements Updatable {
+public class MapEditorWindow extends Window implements Updatable {
     Vec2 scrollPos = new Vec2(0, 0);
     Table window;
     TextField search;
@@ -45,7 +46,7 @@ public class MapEditorDisplay extends Window implements Updatable {
     public static Team drawTeam = Team.sharded;
     public static Block drawBlock = Blocks.router;
 
-    public MapEditorDisplay()  {
+    public MapEditorWindow()  {
         super(Icon.map, "editor");
 
         for(int i = 0; i < MapEditor.brushSizes.length; i++){

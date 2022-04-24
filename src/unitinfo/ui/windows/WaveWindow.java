@@ -26,12 +26,12 @@ import static arc.Core.settings;
 import static mindustry.Vars.*;
 
 
-public class WaveDisplay extends Window implements Updatable {
+public class WaveWindow extends Window implements Updatable {
     static Vec2 scrollPos = new Vec2(0, 0);
     Table window;
     float heat;
 
-    public WaveDisplay() {
+    public WaveWindow() {
         super(Icon.waves, "wave");
     }
 
@@ -44,8 +44,8 @@ public class WaveDisplay extends Window implements Updatable {
         table.add(pane).grow().name("wave-pane").row();
         table.table(total -> {
             total.left();
-
-            total.field("~"+state.wave+" + "+settings.getInt("wavemax"), f->{
+            total.label(()->"~"+state.wave+"+");
+            total.field(""+settings.getInt("wavemax"), f->{
                 String str = f.replaceAll("\\D", "");
                 if(str.isEmpty()) settings.put("wavemax", 0);
                 else settings.put("wavemax", Integer.parseInt(str));

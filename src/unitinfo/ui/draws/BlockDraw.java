@@ -3,7 +3,7 @@ package unitinfo.ui.draws;
 import arc.scene.style.TextureRegionDrawable;
 import mindustry.gen.Groups;
 
-import static unitinfo.core.OverDrawer.isInCamera;
+import static unitinfo.SUtils.*;
 import static arc.Core.settings;
 
 public class BlockDraw extends OverDraw {

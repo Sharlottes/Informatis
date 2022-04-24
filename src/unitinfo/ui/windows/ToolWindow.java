@@ -13,12 +13,12 @@ import mindustry.gen.Tex;
 import mindustry.graphics.Pal;
 import mindustry.ui.Styles;
 
-public class ToolDisplay extends Window implements Updatable {
+public class ToolWindow extends Window implements Updatable {
     Vec2 scrollPos = new Vec2(0, 0);
     OverDraw selected;
     float heat;
 
-    public ToolDisplay() {
+    public ToolWindow() {
         super(Icon.edit, "tool");
     }
 

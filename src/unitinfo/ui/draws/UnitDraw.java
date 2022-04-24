@@ -25,8 +25,7 @@ import mindustry.world.blocks.units.CommandCenter;
 
 import java.util.Objects;
 
-import static unitinfo.core.OverDrawer.isInCamera;
-import static unitinfo.core.OverDrawer.isOutCamera;
+import static unitinfo.SUtils.*;
 import static arc.Core.settings;
 import static mindustry.Vars.*;
 

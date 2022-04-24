@@ -1,4 +1,4 @@
-package unitinfo.ui;
+package unitinfo.ui.display;
 
 import arc.scene.ui.layout.*;
 import arc.util.*;
