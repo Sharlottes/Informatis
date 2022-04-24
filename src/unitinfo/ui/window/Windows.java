@@ -1,4 +1,4 @@
-package unitinfo.ui.windows;
+package unitinfo.ui.window;
 
 public class Windows {
     public static MapEditorWindow editorTable;

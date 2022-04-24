@@ -1,7 +1,6 @@
-package unitinfo.ui.windows;
+package unitinfo.ui.window;
 
 import mindustry.Vars;
-import mindustry.game.Team;
 import mindustry.type.UnitType;
 import unitinfo.ui.OverScrollPane;
 import arc.Events;

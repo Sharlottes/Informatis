@@ -5,7 +5,7 @@ import arc.struct.*;
 import arc.util.*;
 import mindustry.*;
 import mindustry.ui.*;
-import unitinfo.ui.windows.Window;
+import unitinfo.ui.window.Window;
 
 public class WindowManager {
     public static Seq<Window> windows = new Seq<>();
