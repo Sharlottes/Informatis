@@ -14,7 +14,7 @@ import mindustry.world.blocks.defense.turrets.TractorBeamTurret;
 import mindustry.world.blocks.defense.turrets.Turret;
 
 import static unitinfo.SVars.turretRange;
-import static unitinfo.core.OverDrawer.isInCamera;
+import static unitinfo.SUtils.*;
 import static arc.Core.*;
 import static mindustry.Vars.player;
 

@@ -1,10 +1,11 @@
-package unitinfo.ui.windows;
+package unitinfo.ui;
 
 import arc.*;
 import arc.struct.*;
 import arc.util.*;
 import mindustry.*;
 import mindustry.ui.*;
+import unitinfo.ui.windows.Window;
 
 public class WindowManager {
     public static Seq<Window> windows = new Seq<>();

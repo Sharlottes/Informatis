@@ -20,14 +20,14 @@ import mindustry.ui.*;
 import static mindustry.Vars.*;
 
 
-public class PlayerDisplay extends Window implements Updatable {
+public class PlayerWindow extends Window implements Updatable {
     Vec2 scrollPos = new Vec2(0, 0);
     TextField search;
     ImageButton.ImageButtonStyle ustyle;
     @Nullable Player target;
     float heat;
 
-    public PlayerDisplay() {
+    public PlayerWindow() {
         super(Icon.players, "player");
     }
 

@@ -1,4 +1,4 @@
-package unitinfo.ui;
+package unitinfo.ui.display;
 
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Lines;

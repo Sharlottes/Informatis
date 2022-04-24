@@ -26,13 +26,13 @@ import mindustry.world.blocks.storage.CoreBlock;
 
 import static mindustry.Vars.*;
 
-public class CoreDisplay extends Window implements Updatable {
+public class CoreWindow extends Window implements Updatable {
     Vec2 scrollPos = new Vec2(0, 0);
     Table window;
     float heat;
     ObjectMap<Team, ItemData> itemData = new ObjectMap<>();
 
-    public CoreDisplay()  {
+    public CoreWindow()  {
         super(Icon.list, "core");
         resetUsed();
     }

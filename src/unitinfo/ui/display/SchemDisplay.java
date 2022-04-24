@@ -1,4 +1,4 @@
-package unitinfo.ui;
+package unitinfo.ui.display;
 
 import unitinfo.SUtils;
 import arc.Core;
@@ -20,6 +20,7 @@ import mindustry.gen.*;
 import mindustry.graphics.Pal;
 import mindustry.ui.Styles;
 import mindustry.ui.dialogs.*;
+import unitinfo.ui.Updatable;
 
 import static arc.Core.*;
 import static mindustry.Vars.*;

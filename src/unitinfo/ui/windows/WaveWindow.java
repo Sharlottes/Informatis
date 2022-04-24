@@ -1,6 +1,8 @@
 package unitinfo.ui.windows;
 
+import mindustry.Vars;
 import mindustry.game.Team;
+import mindustry.type.UnitType;
 import unitinfo.ui.OverScrollPane;
 import arc.Events;
 import arc.graphics.Color;
@@ -24,12 +26,12 @@ import static arc.Core.settings;
 import static mindustry.Vars.*;
 
 
-public class WaveDisplay extends Window implements Updatable {
+public class WaveWindow extends Window implements Updatable {
     static Vec2 scrollPos = new Vec2(0, 0);
     Table window;
     float heat;
 
-    public WaveDisplay() {
+    public WaveWindow() {
         super(Icon.waves, "wave");
     }
 
@@ -38,9 +40,54 @@ public class WaveDisplay extends Window implements Updatable {
         window = table;
 
         table.top().background(Styles.black8);
-
         ScrollPane pane = new OverScrollPane(rebuild(), Styles.nonePane, scrollPos).disableScroll(true, false);
-        table.add(pane).grow().name("wave-pane");
+        table.add(pane).grow().name("wave-pane").row();
+        table.table(total -> {
+            total.left();
+            total.label(()->"~"+state.wave+"+");
+            total.field(""+settings.getInt("wavemax"), f->{
+                String str = f.replaceAll("\\D", "");
+                if(str.isEmpty()) settings.put("wavemax", 0);
+                else settings.put("wavemax", Integer.parseInt(str));
+            });
+            total.table().update(units->{
+                units.clear();
+                units.center();
+
+                if(Groups.unit.count(u->u.team==state.rules.waveTeam) <= 0) {
+                    units.add("[lightgray]<Empty>[]");
+                    return;
+                }
+
+                int row = 0;
+                int max = Math.max(1, Math.round(window.getWidth()/2/8/2));
+                for (UnitType unit : Vars.content.units()) {
+                    int amount = Groups.unit.count(u->u.type==unit&&u.team==state.rules.waveTeam);
+                    if(amount<=0) continue;
+                    units.stack(
+                        new Table(ttt -> {
+                            ttt.center();
+                            ttt.image(unit.uiIcon).size(iconMed);
+                            ttt.pack();
+                        }),
+
+                        new Table(ttt -> {
+                            ttt.bottom().left();
+                            ttt.add(amount + "").padTop(2f).fontScale(0.9f);
+                            ttt.pack();
+                        })
+                    ).pad(2f);
+                    if(row++ % max == max-1){
+                        units.row();
+                    }
+                }
+            }).growX();
+        }).growX().row();
+        table.image().height(4f).color(Pal.gray).growX().row();
+        table.table(option->{
+            option.check("Show empty wave", settings.getBool("emptywave"), b->settings.put("emptywave", b)).margin(4f);
+            option.check("Show previous wave", settings.getBool("pastwave"), b->settings.put("pastwave", b)).margin(4f);
+        });
         Events.on(EventType.WorldLoadEvent.class, e -> {
             pane.clearChildren();
             pane.setWidget(rebuild());
@@ -89,6 +136,8 @@ public class WaveDisplay extends Window implements Updatable {
                 body.center();
                 for (int i = settings.getBool("pastwave") ? 1 : state.wave; i <= Math.min(state.wave + settings.getInt("wavemax"), (state.isCampaign() && state.rules.winWave > 0 ? state.rules.winWave : Integer.MAX_VALUE)); i++) {
                     final int index = i;
+
+                    if (state.rules.spawns.find(g -> g.getSpawned(index-1) > 0) == null && !settings.getBool("emptywave")) continue;
 
                     body.table(waveRow -> {
                         waveRow.left();

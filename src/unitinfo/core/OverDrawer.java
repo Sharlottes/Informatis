@@ -18,7 +18,7 @@ import static mindustry.Vars.*;
 
 public class OverDrawer {
 
-    public static void setEvent(){
+    public static void init(){
         Events.run(EventType.Trigger.draw, () -> {
             float sin = Mathf.absin(Time.time, 6f, 1f);
 
@@ -66,14 +66,5 @@ public class OverDrawer {
             Core.camera.bounds(Tmp.r1);
             for(OverDraw drawer : OverDraws.all) drawer.draw();
         });
-    }
-
-    public static boolean isOutCamera(float x, float y) {
-        return !isInCamera(x, y, 0);
-    }
-
-    public static boolean isInCamera(float x, float y, float size) {
-        Tmp.r2.setCentered(x, y, size);
-        return Tmp.r1.overlaps(Tmp.r2);
     }
 }
