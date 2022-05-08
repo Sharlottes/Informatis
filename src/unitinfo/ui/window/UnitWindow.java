@@ -1,5 +1,6 @@
 package unitinfo.ui.window;
 
+import arc.Core;
 import unitinfo.core.*;
 import unitinfo.ui.*;
 import arc.graphics.Color;
@@ -20,11 +21,7 @@ import mindustry.type.StatusEffect;
 import mindustry.type.Weapon;
 import mindustry.ui.Styles;
 import mindustry.world.blocks.ConstructBlock;
-import mindustry.world.blocks.defense.ForceProjector;
-import mindustry.world.blocks.defense.turrets.*;
-import mindustry.world.blocks.distribution.MassDriver;
 import mindustry.world.blocks.payloads.Payload;
-import mindustry.world.blocks.power.*;
 
 import static unitinfo.SVars.*;
 import static unitinfo.SUtils.*;
@@ -33,7 +30,8 @@ import static mindustry.Vars.*;
 class UnitWindow extends Window {
     final Seq<Color> lastColors = Seq.with(Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear);
     final Rect scissor = new Rect();
-    Vec2 scrollPos;
+    int bars = 6; //temp
+    Vec2 scrollPos = new Vec2(0, 0);
 
     public UnitWindow() {
         super(Icon.units, "unit");
@@ -42,8 +40,7 @@ class UnitWindow extends Window {
     //TODO: add new UnitInfoDisplay(), new WeaponDisplay();
     @Override
     protected void build(Table table) {
-        scrollPos = new Vec2(0,0);
-
+        scrollPos = new Vec2(0, 0);
         table.top().background(Styles.black8);
         table.table(tt -> {
             tt.center();
@@ -92,28 +89,42 @@ class UnitWindow extends Window {
         table.image().height(4f).color((target==null?player.unit():target).team().color).growX().row();
         table.add(new OverScrollPane(new Table(bars -> {
             bars.top();
-            for (int i = 0; i < 6; i++) {
+            for (int i = 0; i < this.bars; i++) {
                 int index = i;
                 bars.table(bar -> {
                     bar.add(new SBar(
-                        () -> BarInfo.strings.get(index),
                         () -> {
-                            if (BarInfo.colors.get(index) != Color.clear) lastColors.set(index, BarInfo.colors.get(index));
+                            BarInfo.BarData data = index >= BarInfo.data.size ? null : BarInfo.data.get(index);
+                            return data == null ? "[lightgray]<Empty>[]" : data.name;
+                        },
+                        () -> {
+                            BarInfo.BarData data = index >= BarInfo.data.size ? null : BarInfo.data.get(index);
+                            if (index >= lastColors.size) lastColors.size = index+1;
+                            if (data == null) return lastColors.get(index);
+                            if (data.color != Color.clear) lastColors.set(index, data.color);
                             return lastColors.get(index);
                         },
-                        () -> BarInfo.numbers.get(index)
+                        () -> {
+                            BarInfo.BarData data = index >= BarInfo.data.size ? null : BarInfo.data.get(index);
+                            return data == null ? 0 : data.number;
+                        }
                     )).height(4 * 8f).growX();
                     bar.add(new Image(){
                         @Override
                         public void draw() {
                             validate();
 
+                            BarInfo.BarData data = index >= BarInfo.data.size ? null : BarInfo.data.get(index);
                             Draw.color(Color.white);
                             Draw.alpha(parentAlpha * color.a);
-                            TextureRegionDrawable region = new TextureRegionDrawable(getRegions(index));
+                            if(data == null) {
+                                new TextureRegionDrawable(clear).draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
+                                return;
+                            }
+                            TextureRegionDrawable region = new TextureRegionDrawable(data.icon);
                             region.draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
-                            Draw.color(BarInfo.colors.get(index));
-                            if(ScissorStack.push(scissor.set(x, y, imageWidth * scaleX, imageHeight * scaleY * BarInfo.numbers.get(index)))){
+                            Draw.color(data.color);
+                            if(ScissorStack.push(scissor.set(x, y, imageWidth * scaleX, imageHeight * scaleY * data.number))){
                                 region.draw(x, y, imageWidth * scaleX, imageHeight * scaleY);
                                 ScissorStack.pop();
                             }
@@ -122,57 +133,6 @@ class UnitWindow extends Window {
                 }).growX().row();
             }
         }), Styles.nonePane, scrollPos).disableScroll(true, false)).growX().padTop(12f);
-    }
-
-    //do not ask me WHAT THE FUCK IS THIS
-    TextureRegion getRegions(int i){
-        TextureRegion region = clear;
-
-        if(i == 0){
-            if(target instanceof Healthc) region = SIcons.health;
-        } else if(i == 1){
-            if(target instanceof Turret.TurretBuild ||
-                    target instanceof MassDriver.MassDriverBuild){
-                region = SIcons.reload;
-            } else if((target instanceof Unit unit && unit.type != null) ||
-                    target instanceof ForceProjector.ForceBuild){
-                region = SIcons.shield;
-            } else if(target instanceof PowerNode.PowerNodeBuild ||
-                    target instanceof PowerGenerator.GeneratorBuild){
-                region = SIcons.power;
-            }
-        } else if(i == 2){
-            if(target instanceof ItemTurret.ItemTurretBuild){
-                region = SIcons.ammo;
-            } else if(target instanceof LiquidTurret.LiquidTurretBuild){
-                region = SIcons.liquid;
-            } else if(target instanceof PowerTurret.PowerTurretBuild ||
-                    target instanceof PowerNode.PowerNodeBuild){
-                region = SIcons.power;
-            } else if((target instanceof Building b && b.block.hasItems) ||
-                    (target instanceof Unit unit && unit.type != null)){
-                region = SIcons.item;
-            }
-        } else if(i == 3){
-            if(target instanceof PowerNode.PowerNodeBuild){
-                region = SIcons.power;
-            }
-        } else if(i == 4){
-            if(target instanceof PowerNode.PowerNodeBuild){
-                region = SIcons.power;
-            } else if(target instanceof Building b && b.block.hasLiquids){
-                region = SIcons.liquid;
-            }
-        } else if(i == 5){
-            if(target instanceof Unit unit && state.rules.unitAmmo && unit.type != null){
-                region = SIcons.ammo;
-            }else if(target instanceof PowerNode.PowerNodeBuild ||
-                    (target instanceof Building b && b.block.consumes.hasPower())){
-                region = SIcons.power;
-            }
-        }
-
-        return region;
     }
 
     static class WeaponDisplay extends Table {

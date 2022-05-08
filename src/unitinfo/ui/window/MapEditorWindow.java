@@ -3,6 +3,9 @@ package unitinfo.ui.window;
 import arc.Events;
 import arc.graphics.g2d.*;
 import arc.math.geom.Geometry;
+import arc.scene.Element;
+import arc.scene.style.Drawable;
+import arc.struct.ObjectMap;
 import mindustry.editor.MapEditor;
 import mindustry.game.EventType;
 import mindustry.graphics.Layer;
@@ -29,6 +32,7 @@ import mindustry.graphics.Pal;
 import mindustry.ui.Styles;
 import mindustry.world.*;
 
+import static arc.Core.settings;
 import static mindustry.Vars.*;
 
 public class MapEditorWindow extends Window implements Updatable {
@@ -42,6 +46,7 @@ public class MapEditorWindow extends Window implements Updatable {
 
     boolean drawing;
     int lastx, lasty;
+    float lastw, lasth;
 
     public static Team drawTeam = Team.sharded;
     public static Block drawBlock = Blocks.router;
@@ -54,6 +59,7 @@ public class MapEditorWindow extends Window implements Updatable {
             float mod = size % 1f;
             brushPolygons[i] = Geometry.pixelCircle(size, (index, x, y) -> Mathf.dst(x, y, index - mod, index - mod) <= size - 0.5f);
         }
+
         Events.run(EventType.Trigger.draw, ()->{
             float cx = Core.camera.position.x, cy = Core.camera.position.y;
             float scaling = 8;
@@ -116,13 +122,33 @@ public class MapEditorWindow extends Window implements Updatable {
         search.setMessageText(Core.bundle.get("players.search")+"...");
         window = table;
 
+        table.left();
         table.top().background(Styles.black8);
-        table.table(t->{
-            t.left().background(Tex.underline2);
-            t.label(()-> drawBlock ==null?"[gray]None[]":"[accent]"+ drawBlock.localizedName+"[] "+ drawBlock.emoji());
-            t.add(search).growX().pad(8).name("search");
-        }).growX().row();
-        table.add(new OverScrollPane(rebuild(), Styles.nonePane, scrollPos).disableScroll(true, false)).grow().name("editor-pane").row();
+
+        ObjectMap<Drawable, Element> displays = new ObjectMap<>();
+        displays.put(Icon.map, new Table(display -> {
+            display.table(t->{
+                t.left().background(Tex.underline2);
+                t.label(()-> drawBlock == null ? "[gray]None[]" : "[accent]" + drawBlock.localizedName + "[] "+ drawBlock.emoji());
+                t.add(search).growX().pad(8).name("search");
+            }).growX().row();
+            display.add(new OverScrollPane(rebuildEditor(), Styles.nonePane, scrollPos).disableScroll(true, false)).grow().name("editor-pane").row();
+        }));
+        displays.put(Icon.settings, new Table(display -> {
+            display.add(new OverScrollPane(rebuildRule(), Styles.nonePane, scrollPos).disableScroll(true, false)).grow().name("rule-pane").row();
+        }));
+
+        table.table(buttons -> {
+            buttons.top().left();
+
+            displays.each((icon, display) -> {
+                buttons.button(icon, Styles.clearTogglei, ()->{
+                    Log.info(table.getChildren().get(table.getChildren().size-1));
+                    if(table.getChildren().size > 1) table.getChildren().get(table.getChildren().size-1).remove();
+                    table.add(display).grow();
+                }).row();
+            });
+        }).growY();
     }
 
     @Override
@@ -130,7 +156,10 @@ public class MapEditorWindow extends Window implements Updatable {
         heat += Time.delta;
         if(heat >= 60f) {
             heat = 0f;
-            resetPane();
+
+            if(lastw != window.getWidth() || lasth != window.getHeight()) resetPane();
+            lastw = width;
+            lasth = height;
         }
 
         Tile tile = world.tileWorld(Core.input.mouseWorldX(), Core.input.mouseWorldY());
@@ -151,11 +180,31 @@ public class MapEditorWindow extends Window implements Updatable {
     }
 
     void resetPane() {
+        Log.info("reseted");
         ScrollPane pane = find("editor-pane");
-        pane.setWidget(rebuild());
+        if(pane != null) pane.setWidget(rebuildEditor());
     }
 
-    Table rebuild() {
+    Table rebuildRule() {
+        return new Table(table -> {
+            table.top().left();
+
+            table.table(rules -> {
+                rules.top().left();
+
+                Label label = rules.add("Block Health: ").get();
+                Slider slider = new Slider(0, 100, 1, false);
+                slider.changed(() -> {
+                    label.setText("Block Health: "+(int)slider.getValue()+"%");
+                });
+                slider.change();
+                slider.moved(hp->Groups.build.each(b->b.health(b.block.health*hp/100)));
+                rules.add(slider);
+            }).grow();
+        });
+    }
+
+    Table rebuildEditor() {
         return new Table(table-> {
             table.top();
             Seq<Block> blocks = Vars.content.blocks().copy();
@@ -214,8 +263,8 @@ public class MapEditorWindow extends Window implements Updatable {
                     }
                     Label label = new Label("Brush: "+brushSize);
                     label.touchable = Touchable.disabled;
-                    tools.stack(slider, label).width(window.getWidth()/5).center();
-                }).left().width(window.getWidth() / 2).margin(8f).growY();
+                    tools.stack(slider, label).width(getDisplayWidth()/5).center();
+                }).left().width(getDisplayWidth() / 2).margin(8f).growY();
                 body.image().width(4f).height(body.getHeight()).color(Pal.gray).growY();
                 body.table(options -> {
                     options.top().left();
@@ -236,7 +285,7 @@ public class MapEditorWindow extends Window implements Updatable {
                             }, () -> tool.mode = (tool.mode == mode ? -1 : mode)).update(b -> b.setChecked(tool.mode == mode)).margin(12f).growX().row();
                         }
                     }).grow();
-                }).left().width(window.getWidth() / 2).margin(8f).growY();
+                }).left().width(getDisplayWidth() / 2).margin(8f).growY();
             }).grow();
         });
     }
@@ -249,7 +298,7 @@ public class MapEditorWindow extends Window implements Updatable {
 
         int i = 0;
         int row = 4;
-        int max = Math.max(row, Math.round(window.getWidth()/2/8/row));
+        int max = Math.max(row, Math.round(getDisplayWidth()/2/8/row));
 
         for(T item : items){
             if(!item.unlockedNow()) continue;
@@ -291,7 +340,7 @@ public class MapEditorWindow extends Window implements Updatable {
 
         int i = 0;
         int row = 2;
-        int max = Math.max(row, Math.round(window.getWidth()/2/8/row/2));
+        int max = Math.max(row, Math.round(getDisplayWidth()/2/8/row/2));
 
         for(T item : items){
             ImageButton button = cont.button(Tex.whiteui, Styles.clearToggleTransi, 24, () -> {
@@ -322,6 +371,10 @@ public class MapEditorWindow extends Window implements Updatable {
     }
     float teamScroll;
 
+    float getDisplayWidth() {
+        return window.getWidth() - (window.find("buttons") == null ? 1 : window.find("buttons").getWidth());
+    }
+    
     public void drawBlocksReplace(int x, int y){
         drawBlocks(x, y, tile -> tile.block() != Blocks.air || drawBlock.isFloor());
     }

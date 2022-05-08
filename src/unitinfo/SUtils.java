@@ -54,14 +54,12 @@ public class SUtils {
         return new ScaledNinePatchDrawable(patch, 1);
     }
 
-    public static String floatFormat(float number){
-        if(number >= 1000) return UI.formatAmount((long)number);
-        return Strings.fixed(number, 1);
+    public static <T extends Number> String formatNumber(T number){
+        return formatNumber(number, 1);
     }
-
-    public static String floatFormat(int number){
-        if(number >= 1000) return UI.formatAmount(number);
-        return String.valueOf(number);
+    public static <T extends Number> String formatNumber(T number, int step){
+        if(number.intValue() >= 1000) return UI.formatAmount(number.longValue());
+        return Strings.fixed(number.floatValue(), step);
     }
 
     public static float bulletRange(BulletType b) {
