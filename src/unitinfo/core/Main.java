@@ -3,7 +3,7 @@ package unitinfo.core;
 import arc.input.KeyCode;
 import unitinfo.ui.*;
 import unitinfo.ui.draws.OverDraws;
-import unitinfo.ui.windows.*;
+import unitinfo.ui.window.*;
 import arc.*;
 import mindustry.*;
 import mindustry.game.EventType.*;

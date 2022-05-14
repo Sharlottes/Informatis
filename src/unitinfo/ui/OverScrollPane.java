@@ -3,6 +3,7 @@ package unitinfo.ui;
 import arc.math.geom.Vec2;
 import arc.scene.Element;
 import arc.scene.ui.ScrollPane;
+import mindustry.ui.Styles;
 
 import static arc.Core.input;
 import static arc.Core.scene;

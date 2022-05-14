@@ -1,4 +1,4 @@
-package unitinfo.ui.windows;
+package unitinfo.ui.window;
 
 import arc.*;
 import arc.func.*;

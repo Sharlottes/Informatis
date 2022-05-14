@@ -1,6 +1,7 @@
 package unitinfo.core;
 
 import arc.graphics.*;
+import arc.graphics.g2d.TextureRegion;
 import arc.math.*;
 import arc.struct.*;
 import arc.util.*;
@@ -25,250 +26,203 @@ import mindustry.world.consumers.*;
 
 import java.lang.reflect.*;
 
-import static unitinfo.SUtils.floatFormat;
+import static unitinfo.SUtils.*;
 import static arc.Core.*;
 import static mindustry.Vars.*;
+import static unitinfo.SVars.*;
+import static unitinfo.ui.SIcons.*;
 
 public class BarInfo {
-    public static Seq<String> strings = Seq.with("","","","","","");
-    public static FloatSeq numbers = FloatSeq.with(0f,0f,0f,0f,0f,0f);
-    public static Seq<Color> colors = Seq.with(Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear);
+    public static Seq<BarData> data = new Seq<>();
 
     public static <T extends Teamc> void getInfo(T target) throws IllegalAccessException, NoSuchFieldException {
-        for(int i = 0; i < 6; i++) { //init
-            strings.set(i, bundle.get("empty"));
-            colors.set(i, Color.clear);
-            numbers.set(i, 0f);
-        }
-        
-        
+        data.clear();
+
         if(target instanceof Healthc healthc){
-            strings.set(0, bundle.format("shar-stat.health", floatFormat(healthc.health())));
-            colors.set(0, Pal.health);
-            numbers.set(0, healthc.healthf());
+            float pro = healthc.health();
+            data.add(new BarData(bundle.format("shar-stat.health", formatNumber(pro)), Pal.health, pro, health));
         }
 
+        if(target instanceof Unit unit){
+            float max = ((ShieldRegenFieldAbility) content.units().copy().max(ut -> {
+                ShieldRegenFieldAbility ability = (ShieldRegenFieldAbility) ut.abilities.find(ab -> ab instanceof ShieldRegenFieldAbility);
+                if(ability == null) return 0;
+                return ability.max;
+            }).abilities.find(abil -> abil instanceof ShieldRegenFieldAbility)).max;
+            float commands = Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == target);
 
-        if(target instanceof Turret.TurretBuild turret){
-            strings.set(1, bundle.format("shar-stat.reload", floatFormat((turret.reload / ((Turret)turret.block).reloadTime) * 100f)));
-            colors.set(1, Pal.accent.cpy().lerp(Color.orange, Mathf.clamp((turret.reload / ((Turret)turret.block).reloadTime))));
-            numbers.set(1, turret.reload / ((Turret)turret.block).reloadTime);
+            data.add(new BarData(bundle.format("shar-stat.shield", formatNumber(unit.shield())), Pal.surge, unit.shield() / max, shield));
+            data.add(new BarData(bundle.format("shar-stat.capacity", unit.stack.item.localizedName, formatNumber(unit.stack.amount), formatNumber(unit.type.itemCapacity)), unit.stack.amount > 0 && unit.stack().item != null ? unit.stack.item.color.cpy().lerp(Color.white, 0.15f) : Color.white, unit.stack.amount / (unit.type.itemCapacity * 1f), item));
+            data.add(new BarData(bundle.format("shar-stat.commandUnits", formatNumber(commands), formatNumber(unit.type().commandLimit)), Pal.powerBar.cpy().lerp(Pal.surge.cpy().mul(Pal.lighterOrange), Mathf.absin(Time.time, 7f / (1f + Mathf.clamp(commands / (unit.type().commandLimit * 1f))), 1f)), commands / (unit.type().commandLimit * 1f)));
+            if(target instanceof Payloadc pay) data.add(new BarData(bundle.format("shar-stat.payloadCapacity", formatNumber(Mathf.round(Mathf.sqrt(pay.payloadUsed()))), formatNumber(Mathf.round(Mathf.sqrt(unit.type().payloadCapacity)))), Pal.items, pay.payloadUsed() / unit.type().payloadCapacity));
+            if(state.rules.unitAmmo) data.add(new BarData(bundle.format("shar-stat.ammos", formatNumber(unit.ammo()), formatNumber(unit.type().ammoCapacity)), unit.type().ammoType.color(), unit.ammof()));
         }
-        else if(target instanceof MassDriver.MassDriverBuild mass){
-            strings.set(1, bundle.format("shar-stat.reload", floatFormat(mass.reload * 100f)));
-            colors.set(1, Pal.accent.cpy().lerp(Color.orange, mass.reload));
-            numbers.set(1, mass.reload);
+
+        else if(target instanceof Building build){
+            if(build.block.hasLiquids) data.add(new BarData(bundle.format("shar-stat.capacity", build.liquids.currentAmount() < 0.01f ? build.liquids.current().localizedName : bundle.get("bar.liquid"), formatNumber(build.liquids.currentAmount()), formatNumber(build.block.liquidCapacity)), build.liquids.current().color, build.liquids.currentAmount() / build.block.liquidCapacity, liquid));
+
+            if(build.block.hasPower && build.block.consumes.hasPower()){
+                ConsumePower cons = build.block.consumes.getPower();
+                data.add(new BarData(bundle.format("shar-stat.power", formatNumber(build.power.status * 60f * (cons.buffered ? cons.capacity : cons.usage)), formatNumber(60f * (cons.buffered ? cons.capacity : cons.usage))), Pal.powerBar, Mathf.zero(cons.requestedPower(build)) && build.power.graph.getPowerProduced() + build.power.graph.getBatteryStored() > 0f ? 1f : build.power.status, power));
+            }
+            if(build.block.hasItems) {
+                float value;
+                if (target instanceof CoreBlock.CoreBuild cb) value = cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow);
+                else if(target instanceof StorageBlock.StorageBuild sb && !sb.canPickup() && sb.linkedCore instanceof CoreBlock.CoreBuild cb) value = cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow);
+                else value = build.block.itemCapacity;
+                data.add(new BarData(bundle.format("shar-stat.capacity", bundle.get("category.items"), formatNumber(build.items.total()), value), Pal.items, build.items.total() / value, item));
+            }
         }
-        else if(target instanceof Unit unit && unit.type != null){
-            float max1 = ((ShieldRegenFieldAbility)content.units().copy().filter(ut -> ut.abilities.contains(abil -> abil instanceof ShieldRegenFieldAbility)).sort(ut -> ((ShieldRegenFieldAbility)ut.abilities.find(abil -> abil instanceof ShieldRegenFieldAbility)).max).peek().abilities.find(abil -> abil instanceof ShieldRegenFieldAbility)).max;
-            float max2 = 0f;
-            ForceFieldAbility ffa;
-            if((ffa = (ForceFieldAbility) unit.type().abilities.find(abil -> abil instanceof ForceFieldAbility)) != null) max2 = ffa.max;
-            strings.set(1, bundle.format("shar-stat.shield", floatFormat(unit.shield())));
-            colors.set(1, Pal.surge);
-            numbers.set(1, unit.shield() / Math.max(max1, max2));
+
+        if(target instanceof ReloadTurret.ReloadTurretBuild || target instanceof MassDriver.MassDriverBuild){
+            float pro;
+            if(target instanceof ReloadTurret.ReloadTurretBuild turret) pro = turret.reload / ((Turret)turret.block).reloadTime;
+            else {
+                MassDriver.MassDriverBuild mass = (MassDriver.MassDriverBuild) target;
+                pro = mass.reload;
+            }
+            data.add(new BarData(bundle.format("shar-stat.reload", formatNumber(pro * 100f)), Pal.accent.cpy().lerp(Color.orange, pro), pro, reload));
         }
-        else if(target instanceof ForceProjector.ForceBuild force){
+
+        if(target instanceof ForceProjector.ForceBuild force){
             ForceProjector forceBlock = (ForceProjector) force.block;
             float max = forceBlock.shieldHealth + forceBlock.phaseShieldBoost * force.phaseHeat;
-            strings.set(1, bundle.format("shar-stat.shield", floatFormat(max-force.buildup), floatFormat(max)));
-            colors.set(1, Pal.shield);
-            numbers.set(1, (max-force.buildup)/max);
+            data.add(new BarData(bundle.format("shar-stat.shield", formatNumber(max-force.buildup), formatNumber(max)), Pal.shield, (max-force.buildup)/max, shield));
         }
-        else if(target instanceof MendProjector.MendBuild mend){
-            strings.set(1, bundle.format("shar-stat.progress", floatFormat((float) mend.sense(LAccess.progress) * 100f)));
-            colors.set(1, Pal.heal);
-            numbers.set(1, (float) mend.sense(LAccess.progress));
+
+        if(target instanceof MendProjector.MendBuild || target instanceof OverdriveProjector.OverdriveBuild || target instanceof ConstructBlock.ConstructBuild || target instanceof Reconstructor.ReconstructorBuild || target instanceof UnitFactory.UnitFactoryBuild || target instanceof Drill.DrillBuild || target instanceof GenericCrafter.GenericCrafterBuild) {
+            float pro;
+            if(target instanceof MendProjector.MendBuild mend){
+                pro = (float) mend.sense(LAccess.progress);
+                Tmp.c1.set(Pal.heal);
+            }
+            else if(target instanceof OverdriveProjector.OverdriveBuild over){
+                OverdriveProjector block = (OverdriveProjector)over.block;
+                Field ohno = OverdriveProjector.OverdriveBuild.class.getDeclaredField("charge");
+                ohno.setAccessible(true);
+                pro = (float) ohno.get(over)/((OverdriveProjector)over.block).reload;
+                Tmp.c1.set(Color.valueOf("feb380"));
+
+                data.add(new BarData(bundle.format("bar.boost", (int)(over.realBoost() * 100)), Pal.accent, over.realBoost() / (block.hasBoost ? block.speedBoost + block.speedBoostPhase : block.speedBoost)));
+            }
+            else if(target instanceof ConstructBlock.ConstructBuild construct){
+                pro = construct.progress;
+                Tmp.c1.set(Pal.darkerMetal);
+            }
+            else if(target instanceof UnitFactory.UnitFactoryBuild factory){
+                pro = factory.fraction();
+                Tmp.c1.set(Pal.darkerMetal);
+
+                if(factory.unit() == null) data.add(new BarData("[lightgray]" + Iconc.cancel, Pal.power, 0f));
+                else {
+                    float value = factory.team.data().countType(factory.unit());
+                    data.add(new BarData(bundle.format("bar.unitcap", Fonts.getUnicodeStr(factory.unit().name), formatNumber(value), formatNumber(Units.getCap(factory.team))), Pal.power, value / Units.getCap(factory.team)));
+                }
+            }
+            else if(target instanceof Reconstructor.ReconstructorBuild reconstruct){
+                pro = reconstruct.fraction();
+                Tmp.c1.set(Pal.darkerMetal);
+
+                if(reconstruct.unit() == null) data.add(new BarData("[lightgray]" + Iconc.cancel, Pal.power, 0f));
+                else {
+                    float value = reconstruct.team.data().countType(reconstruct.unit());
+                    data.add(new BarData(bundle.format("bar.unitcap", Fonts.getUnicodeStr(reconstruct.unit().name), formatNumber(value), formatNumber(Units.getCap(reconstruct.team))), Pal.power, value / Units.getCap(reconstruct.team)));
+                }
+
+            }
+            else if(target instanceof Drill.DrillBuild drill){
+                pro = (float) drill.sense(LAccess.progress);
+                Tmp.c1.set(drill.dominantItem == null ? Pal.items : drill.dominantItem.color);
+
+                data.add(new BarData(bundle.format("bar.drillspeed", formatNumber(drill.lastDrillSpeed * 60 * drill.timeScale)), Pal.ammo, drill.warmup));
+            }
+            else {
+                GenericCrafter.GenericCrafterBuild crafter = (GenericCrafter.GenericCrafterBuild) target;
+                GenericCrafter block = (GenericCrafter) crafter.block;
+
+                pro = (float) crafter.sense(LAccess.progress);
+                if(block.outputItem != null) Tmp.c1.set(block.outputItem.item.color);
+                else if(block.outputLiquid != null) Tmp.c1.set(block.outputLiquid.liquid.color);
+                else Tmp.c1.set(Pal.items);
+            }
+
+            data.add(new BarData(bundle.format("shar-stat.progress", formatNumber(pro * 100f)), Tmp.c1, pro));
         }
-        else if(target instanceof OverdriveProjector.OverdriveBuild over){
-            Field ohno = OverdriveProjector.OverdriveBuild.class.getDeclaredField("charge");
-            ohno.setAccessible(true);
-            float charge = (float) ohno.get(over);
-            strings.set(1, bundle.format("shar-stat.progress", floatFormat(Mathf.clamp(charge/((OverdriveProjector)over.block).reload) * 100f)));
-            colors.set(1, Color.valueOf("feb380"));
-            numbers.set(1, Mathf.clamp(charge/((OverdriveProjector)over.block).reload));
+
+        if(target instanceof PowerGenerator.GeneratorBuild generator){
+            data.add(new BarData(bundle.format("shar-stat.powerIn", formatNumber(generator.getPowerProduction() * generator.timeScale() * 60f)), Pal.powerBar, generator.productionEfficiency, power));
         }
-        else if(target instanceof ConstructBlock.ConstructBuild build){
-            strings.set(1, bundle.format("shar-stat.progress", floatFormat(build.progress * 100)));
-            colors.set(1, Pal.darkerMetal);
-            numbers.set(1, build.progress);
-        }
-        else if(target instanceof UnitFactory.UnitFactoryBuild build){
-            strings.set(1, bundle.format("shar-stat.progress", floatFormat(build.fraction() * 100f)));
-            colors.set(1, Pal.darkerMetal);
-            numbers.set(1, build.fraction());
-        }
-        else if(target instanceof Reconstructor.ReconstructorBuild reconstruct){
-            strings.set(1, bundle.format("shar-stat.progress", floatFormat(reconstruct.fraction() * 100)));
-            colors.set(1, Pal.darkerMetal);
-            numbers.set(1, reconstruct.fraction());
-        }
-        else if(target instanceof Drill.DrillBuild drill){
-            strings.set(1, bundle.format("shar-stat.progress", floatFormat((float) drill.sense(LAccess.progress) * 100f)));
-            colors.set(1, drill.dominantItem == null ? Pal.items : drill.dominantItem.color);
-            numbers.set(1, (float) drill.sense(LAccess.progress));
-        }
-        else if(target instanceof GenericCrafter.GenericCrafterBuild crafter){
-            GenericCrafter block = (GenericCrafter) crafter.block;
-            if(block.outputItem != null) Tmp.c1.set(block.outputItem.item.color);
-            else if(block.outputLiquid != null) Tmp.c1.set(block.outputLiquid.liquid.color);
-            else Tmp.c1.set(Pal.items);
-            strings.set(1, bundle.format("shar-stat.progress", floatFormat((float) crafter.sense(LAccess.progress) * 100f)));
-            colors.set(1, Tmp.c1);
-            numbers.set(1, (float) crafter.sense(LAccess.progress));
-        }
-        else if(target instanceof PowerNode.PowerNodeBuild node){
-            strings.set(1, bundle.format("shar-stat.power", floatFormat(node.power.graph.getLastPowerStored()), floatFormat(node.power.graph.getLastCapacity())));
-            colors.set(1, Pal.powerBar);
-            numbers.set(1, node.power.graph.getLastPowerStored() / node.power.graph.getLastCapacity());
-        }
-        else if(target instanceof PowerGenerator.GeneratorBuild generator){
-            strings.set(1, bundle.format("shar-stat.powerIn", floatFormat(generator.getPowerProduction() * generator.timeScale() * 60f)));
-            colors.set(1, Pal.powerBar);
-            numbers.set(1, generator.productionEfficiency);
+
+        if(target instanceof PowerNode.PowerNodeBuild || target instanceof PowerTurret.PowerTurretBuild) {
+            float value, max;
+            if(target instanceof PowerNode.PowerNodeBuild node){
+                max = node.power.graph.getLastPowerStored();
+                value = node.power.graph.getLastCapacity();
+
+                data.add(new BarData(bundle.format("bar.powerlines", node.power.links.size, ((PowerNode)node.block).maxNodes), Pal.items, (float)node.power.links.size / (float)((PowerNode)node.block).maxNodes));
+                data.add(new BarData(bundle.format("shar-stat.powerOut", "-" + formatNumber(node.power.graph.getLastScaledPowerOut() * 60f)), Pal.powerBar, node.power.graph.getLastScaledPowerOut() / node.power.graph.getLastScaledPowerIn(), power));
+                data.add(new BarData(bundle.format("shar-stat.powerIn", formatNumber(node.power.graph.getLastScaledPowerIn() * 60f)), Pal.powerBar, node.power.graph.getLastScaledPowerIn() / node.power.graph.getLastScaledPowerOut(), power));
+                data.add(new BarData(bundle.format("bar.powerbalance", (node.power.graph.getPowerBalance() >= 0 ? "+" : "") + formatNumber(node.power.graph.getPowerBalance() * 60)), Pal.powerBar, node.power.graph.getLastPowerProduced() / node.power.graph.getLastPowerNeeded(), power));
+            }
+            else { //TODO: why is this different
+                PowerTurret.PowerTurretBuild turret = (PowerTurret.PowerTurretBuild) target;
+                max = turret.block.consumes.getPower().usage;
+                value = turret.power.status * turret.power.graph.getLastScaledPowerIn();
+            }
+
+            data.add(new BarData(bundle.format("shar-stat.power", formatNumber(Math.max(value, max) * 60), formatNumber(max * 60)), Pal.power, value / max));
         }
 
         if(target instanceof ItemTurret.ItemTurretBuild turret) {
             ItemTurret block = (ItemTurret)turret.block;
-            strings.set(2, bundle.format("shar-stat.capacity", turret.hasAmmo() ? block.ammoTypes.findKey(turret.peekAmmo(), true).localizedName : bundle.get("stat.ammo"), floatFormat(turret.totalAmmo), floatFormat(block.maxAmmo)));
-            colors.set(2, turret.hasAmmo() ? block.ammoTypes.findKey(turret.peekAmmo(), true).color : Pal.ammo);
-            numbers.set(2, turret.totalAmmo / (float)block.maxAmmo);
+            data.add(new BarData(bundle.format("shar-stat.capacity", turret.hasAmmo() ? block.ammoTypes.findKey(turret.peekAmmo(), true).localizedName : bundle.get("stat.ammo"), formatNumber(turret.totalAmmo), formatNumber(block.maxAmmo)), turret.hasAmmo() ? block.ammoTypes.findKey(turret.peekAmmo(), true).color : Pal.ammo, turret.totalAmmo / (float)block.maxAmmo, ammo));
         }
-        else if(target instanceof LiquidTurret.LiquidTurretBuild turret){
-            strings.set(2, bundle.format("shar-stat.capacity", turret.liquids.currentAmount() < 0.01f ? turret.liquids.current().localizedName : bundle.get("stat.ammo"), floatFormat(turret.liquids.get(turret.liquids.current())), floatFormat(turret.block.liquidCapacity)));
-            colors.set(2, turret.liquids.current().color);
-            numbers.set(2, turret.liquids.get(turret.liquids.current()) / turret.block.liquidCapacity);
+
+        if(target instanceof LiquidTurret.LiquidTurretBuild turret){
+            data.add(new BarData(bundle.format("shar-stat.capacity", turret.liquids.currentAmount() < 0.01f ? turret.liquids.current().localizedName : bundle.get("stat.ammo"), formatNumber(turret.liquids.get(turret.liquids.current())), formatNumber(turret.block.liquidCapacity)), turret.liquids.current().color, turret.liquids.get(turret.liquids.current()) / turret.block.liquidCapacity, liquid));
         }
-        else if(target instanceof PowerTurret.PowerTurretBuild turret){
-            float max = turret.block.consumes.getPower().usage;
-            float v = turret.power.status * turret.power.graph.getLastScaledPowerIn();
-            strings.set(2, bundle.format("shar-stat.power", floatFormat(Math.min(v,max) * 60), floatFormat(max * 60)));
-            colors.set(2, Pal.powerBar);
-            numbers.set(2, v/max);
-        }
-        else if(target instanceof Building b && b.block.hasItems) {
-            if(target instanceof CoreBlock.CoreBuild cb){
-                strings.set(2, bundle.format("shar-stat.capacity", bundle.get("category.items"), floatFormat(b.items.total()), floatFormat(cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow))));
-                numbers.set(2, cb.items.total() / (cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow) * 1f));
+
+        if(target instanceof AttributeCrafter.AttributeCrafterBuild || target instanceof ThermalGenerator.ThermalGeneratorBuild || (target instanceof SolidPump.SolidPumpBuild crafter && ((SolidPump)crafter.block).attribute != null)) {
+            float display, pro;
+            if (target instanceof AttributeCrafter.AttributeCrafterBuild crafter) {
+                AttributeCrafter block = (AttributeCrafter) crafter.block;
+                display = (block.baseEfficiency + Math.min(block.maxBoost, block.boostScale * block.sumAttribute(block.attribute, crafter.tileX(), crafter.tileY()))) * 100f;
+                pro = block.boostScale * crafter.attrsum / block.maxBoost;
             }
-            else if(target instanceof StorageBlock.StorageBuild sb && !sb.canPickup() && sb.linkedCore instanceof CoreBlock.CoreBuild cb){
-                strings.set(2, bundle.format("shar-stat.capacity", bundle.get("category.items"), floatFormat(sb.items.total()), floatFormat(cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow))));
-                numbers.set(2, sb.items.total() / (cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow) * 1f));
+            else if (target instanceof ThermalGenerator.ThermalGeneratorBuild thermal) {
+                ThermalGenerator block = (ThermalGenerator) thermal.block;
+                float max = content.blocks().max(b -> b instanceof Floor f && f.attributes != null ? f.attributes.get(block.attribute) : 0).asFloor().attributes.get(block.attribute);
+                display = block.sumAttribute(block.attribute, thermal.tileX(), thermal.tileY()) * 100;
+                pro = block.sumAttribute(block.attribute, thermal.tileX(), thermal.tileY()) / block.size / block.size / max;
             }
             else {
-                strings.set(2, bundle.format("shar-stat.capacity", bundle.get("category.items"), floatFormat(b.items.total()), floatFormat(b.block.itemCapacity)));
-                numbers.set(2, b.items.total() / (float) b.block.itemCapacity);
+                SolidPump.SolidPumpBuild crafter = (SolidPump.SolidPumpBuild) target;
+                SolidPump block = (SolidPump) crafter.block;
+                float fraction = Math.max(crafter.validTiles + crafter.boost + (block.attribute == null ? 0 : block.attribute.env()), 0);
+                float max = content.blocks().max(b -> b instanceof Floor f && f.attributes != null ? f.attributes.get(block.attribute) : 0).asFloor().attributes.get(block.attribute);
+                display = Math.max(block.sumAttribute(block.attribute, crafter.tileX(), crafter.tileY()) / block.size / block.size + block.baseEfficiency, 0f) * 100 * block.percentSolid(crafter.tileX(), crafter.tileY());
+                pro = fraction / max;
             }
-            colors.set(2, Pal.items);
+
+            data.add(new BarData(bundle.format("shar-stat.attr", Mathf.round(display)), Pal.ammo, pro));
         }
-        else if(target instanceof Unit unit && unit.type != null) {
-            strings.set(2, bundle.format("shar-stat.capacity", unit.stack.item.localizedName, floatFormat(unit.stack.amount), floatFormat(unit.type.itemCapacity)));
-            if(unit.stack.amount > 0 && unit.stack().item != null) colors.set(2, unit.stack.item.color.cpy().lerp(Color.white, 0.15f));
-            numbers.set(2, unit.stack.amount / (unit.type.itemCapacity * 1f));
-        }
-        else if(target instanceof PowerNode.PowerNodeBuild node){
-            strings.set(2, bundle.format("bar.powerlines", node.power.links.size, ((PowerNode)node.block).maxNodes));
-            colors.set(2, Pal.items);
-            numbers.set(2, (float)node.power.links.size / (float)((PowerNode)node.block).maxNodes);
+    }
+
+    public static class BarData {
+        public String name;
+        public Color color;
+        public float number;
+        public TextureRegion icon = clear;
+
+        BarData(String name, Color color, float number) {
+            this.name = name;
+            this.color = color;
+            this.number = number;
         }
 
-
-
-        if(target instanceof Unit unit && unit.type != null) {
-            strings.set(3, bundle.format("shar-stat.commandUnits", floatFormat(Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == target)), floatFormat(unit.type().commandLimit)));
-            colors.set(3, Pal.powerBar.cpy().lerp(Pal.surge.cpy().mul(Pal.lighterOrange), Mathf.absin(Time.time, 7f / (1f + Mathf.clamp(Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == target) / (unit.type().commandLimit * 1f))), 1f)));
-            numbers.set(3, Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == target) / (unit.type().commandLimit * 1f));
-        }
-        else if(target instanceof UnitFactory.UnitFactoryBuild factory){
-            strings.set(3, factory.unit() == null ? "[lightgray]" + Iconc.cancel :
-                    bundle.format("bar.unitcap", Fonts.getUnicodeStr(factory.unit().name), floatFormat(factory.team.data().countType(factory.unit())), floatFormat(Units.getCap(factory.team))));
-            colors.set(3, Pal.power);
-            numbers.set(3, factory.unit() == null ? 0f : (float)factory.team.data().countType(factory.unit()) / Units.getCap(factory.team));
-        }
-        else if(target instanceof Reconstructor.ReconstructorBuild reconstruct){
-            strings.set(3, reconstruct.unit() == null ? "[lightgray]" + Iconc.cancel :
-                    bundle.format("bar.unitcap", Fonts.getUnicodeStr(reconstruct.unit().name), floatFormat(reconstruct.team.data().countType(reconstruct.unit())), floatFormat(Units.getCap(reconstruct.team))));
-            colors.set(3, Pal.power);
-            numbers.set(3, reconstruct.unit() == null ? 0f : (float)reconstruct.team.data().countType(reconstruct.unit()) / Units.getCap(reconstruct.team));
-
-        }
-        else if(target instanceof Drill.DrillBuild e){
-            strings.set(3, bundle.format("bar.drillspeed", floatFormat(e.lastDrillSpeed * 60 * e.timeScale)));
-            colors.set(3, Pal.ammo);
-            numbers.set(3, e.warmup);
-        }
-        else if(target instanceof AttributeCrafter.AttributeCrafterBuild crafter){
-            AttributeCrafter block = (AttributeCrafter) crafter.block;
-            strings.set(3, bundle.format("shar-stat.attr", (int)((block.baseEfficiency + Math.min(block.maxBoost, block.boostScale * block.sumAttribute(block.attribute, crafter.tileX(), crafter.tileY()))) * 100f)));
-            colors.set(3, Pal.ammo);
-            numbers.set(3, block.boostScale * crafter.attrsum / block.maxBoost);
-        }
-        else if(target instanceof SolidPump.SolidPumpBuild crafter && ((SolidPump)crafter.block).attribute != null){
-            SolidPump block = (SolidPump) crafter.block;
-            float fraction = Math.max(crafter.validTiles + crafter.boost + (block.attribute == null ? 0 : block.attribute.env()), 0);
-            float max = content.blocks().max(b -> b instanceof Floor f && f.attributes != null ? f.attributes.get(block.attribute) : 0).asFloor().attributes.get(block.attribute);
-            int h = (int)(Math.max(block.sumAttribute(block.attribute, crafter.tileX(), crafter.tileY()) / block.size / block.size + block.baseEfficiency, 0f) * 100 * block.percentSolid(crafter.tileX(), crafter.tileY()));
-            strings.set(3, bundle.format("shar-stat.attr", h));
-            colors.set(3, Pal.ammo);
-            numbers.set(3, fraction / max);
-        }
-        else if(target instanceof ThermalGenerator.ThermalGeneratorBuild thermal){
-            ThermalGenerator block = (ThermalGenerator) thermal.block;
-            float max = content.blocks().max(b -> b instanceof Floor f && f.attributes != null ? f.attributes.get(block.attribute) : 0).asFloor().attributes.get(block.attribute);
-            strings.set(3, bundle.format("shar-stat.attr", block.sumAttribute(block.attribute, thermal.tileX(), thermal.tileY()) * 100));
-            colors.set(3, Pal.ammo);
-            numbers.set(3, block.sumAttribute(block.attribute, thermal.tileX(), thermal.tileY()) / block.size / block.size / max);
-        }
-        else if(target instanceof PowerNode.PowerNodeBuild node){
-            strings.set(3, bundle.format("bar.powerbalance", (node.power.graph.getPowerBalance() >= 0 ? "+" : "") + floatFormat(node.power.graph.getPowerBalance() * 60)));
-            colors.set(3, Pal.powerBar);
-            numbers.set(3, node.power.graph.getLastPowerProduced() / node.power.graph.getLastPowerNeeded());
-        }
-        else if(target instanceof OverdriveProjector.OverdriveBuild over){
-            OverdriveProjector block = (OverdriveProjector)over.block;
-            strings.set(3, bundle.format("bar.boost", (int)(over.realBoost() * 100)));
-            colors.set(3, Pal.accent);
-            numbers.set(3, over.realBoost() / (block.hasBoost ? block.speedBoost + block.speedBoostPhase : block.speedBoost));
-        }
-
-
-        if(target instanceof Unit unit && unit.type != null && target instanceof Payloadc pay){
-            strings.set(4, bundle.format("shar-stat.payloadCapacity", floatFormat(Mathf.round(Mathf.sqrt(pay.payloadUsed()))), floatFormat(Mathf.round(Mathf.sqrt(unit.type().payloadCapacity)))));
-            colors.set(4, Pal.items);
-            numbers.set(4, pay.payloadUsed() / unit.type().payloadCapacity);
-        }
-        else if(target instanceof Building build){
-            if(target instanceof PowerNode.PowerNodeBuild node){
-                strings.set(4, bundle.format("shar-stat.powerOut", "-" + floatFormat(node.power.graph.getLastScaledPowerOut() * 60f)));
-                colors.set(4, Pal.powerBar);
-                numbers.set(4, node.power.graph.getLastScaledPowerOut() / node.power.graph.getLastScaledPowerIn());
-            }
-            else if(build.block.hasLiquids) {
-                strings.set(4, bundle.format("shar-stat.capacity", build.liquids.currentAmount() < 0.01f ? build.liquids.current().localizedName : bundle.get("bar.liquid"), floatFormat(build.liquids.currentAmount()), floatFormat(build.block.liquidCapacity)));
-                colors.set(4, build.liquids.current().color);
-                numbers.set(4, build.liquids.currentAmount() / build.block.liquidCapacity);
-            }
-        }
-
-
-        if(target instanceof Unit unit && state.rules.unitAmmo && unit.type != null){
-            strings.set(5, bundle.format("shar-stat.ammos", floatFormat(unit.ammo()), floatFormat(unit.type().ammoCapacity)));
-            colors.set(5, unit.type().ammoType.color());
-            numbers.set(5, unit.ammof());
-        }
-        else if(target instanceof Building build && build.block.hasPower){
-            if(target instanceof PowerNode.PowerNodeBuild node){
-                strings.set(5, bundle.format("shar-stat.powerIn", floatFormat(node.power.graph.getLastScaledPowerIn() * 60f)));
-                colors.set(5, Pal.powerBar);
-                numbers.set(5, node.power.graph.getLastScaledPowerIn() / node.power.graph.getLastScaledPowerOut());
-            }
-            else if(build.block.consumes.hasPower()){
-                ConsumePower cons = build.block.consumes.getPower();
-                if(cons.buffered) strings.set(5, bundle.format("shar-stat.power", floatFormat(build.power.status * cons.capacity * 60f), floatFormat(cons.capacity * 60f)));
-                else strings.set(5, bundle.format("shar-stat.power", floatFormat(build.power.status * cons.usage * 60f), floatFormat(cons.usage * 60f)));
-                colors.set(5, Pal.powerBar);
-                numbers.set(5, Mathf.zero(cons.requestedPower(build)) && build.power.graph.getPowerProduced() + build.power.graph.getBatteryStored() > 0f ? 1f : build.power.status);
-            }
+        BarData(String name, Color color, float number, TextureRegion icon) {
+            this(name, color, number);
+            this.icon = icon;
         }
     }
 }

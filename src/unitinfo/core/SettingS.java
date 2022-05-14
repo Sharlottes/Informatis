@@ -40,9 +40,6 @@ public class SettingS {
 
             @Override
             public void add(Table table){
-                Slider slider = new Slider(min, max, step, false);
-
-                slider.setValue(settings.getInt(name));
 
                 Label value = new Label("", Styles.outlineLabel);
                 Table content = new Table();
@@ -51,11 +48,12 @@ public class SettingS {
                 content.margin(3f, 33f, 3f, 33f);
                 content.touchable = Touchable.disabled;
 
+                Slider slider = new Slider(min, max, step, false);
+                slider.setValue(settings.getInt(name));
                 slider.changed(() -> {
                     settings.put(name, (int)slider.getValue());
                     value.setText(sp.get((int)slider.getValue()));
                 });
-
                 slider.change();
 
                 addDesc(table.stack(slider, content).width(Math.min(Core.graphics.getWidth() / 1.2f, 460f)).left().padTop(4f).get());
