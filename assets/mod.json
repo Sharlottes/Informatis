@@ -1,11 +1,11 @@
 {
-  "name": "unitinfo",
-  "displayName": "Unit Information",
+  "name": "informatis",
+  "displayName": "Informatis",
   "author": "Sharlotte",
   "description": "The mod displays more information in-game, such as unit/building, wave, core, tile, item/unit total info etc",
-  "version": "1.5.5",
-  "main": "unitinfo.core.Main",
-  "minGameVersion": "135",
+  "version": "1.6",
+  "main": "informatis.core.Main",
+  "minGameVersion": "136",
   "dependencies": [],
   "hidden": true,
   "java": true

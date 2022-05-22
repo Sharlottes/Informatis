@@ -3,7 +3,6 @@ plugins {
 }
 
 group pGroup
-
 version '1.0'
 
 sourceSets.main {
@@ -29,13 +28,12 @@ jar {
 
 dependencies {
     annotationProcessor 'com.github.Anuken:jabel:34e4c172e65b3928cd9eabe1993654ea79c409cd'
-    compileOnly "com.github.Anuken.Arc:arc-core:$pMindustryVersion"
-    compileOnly "com.github.Anuken.Mindustry:core:$pMindustryVersion"
-    implementation 'org.hjson:hjson:3.0.0'
+    compileOnly "com.github.Anuken.MindustryJitpack:core:3ffa59efb6"
+    compileOnly "com.github.Anuken.Arc:arc-core:dfcb21ce56"
 }
 
 task dexify(type: Jar) {
-    archiveName "dexed-$pArtifactFilename"
+    archiveName "$pArtifactFilename"
 
     final File jarArtifact = new File(tasks.jar.archiveFile.get().asFile.parent, pArtifactFilename),
                dexedArtifact = new File(tasks.dexify.getTemporaryDir(), "dexed.jar")
@@ -59,7 +57,7 @@ task buildDex dependsOn "build", "dexify"
 task buildMove(dependsOn: build) {
     doLast {
         copy {
-            from "build/libs/UnitInfo.jar"
+            from "build/libs/Informatis.jar"
             into System.getenv("destination")
         }
     }
