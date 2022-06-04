@@ -52,18 +52,18 @@ public class Window extends Table{
         table(t -> {
             // icon and title
             t.table(Tex.buttonEdge1, b -> {
-                b.top().left();
-                b.image(() -> icon == null ? Icon.none.getRegion() : icon.getRegion()).size(20f).padLeft(15).top().left();
+                b.left();
+                b.image(icon.getRegion()).size(20f).padLeft(15);
                 b.pane(Styles.noBarPane, p -> {
-                    p.top().left();
-                    p.labelWrap(() -> Core.bundle.get("window."+name+".name")).padLeft(20).top().left().get().setAlignment(Align.topLeft);
-                }).left().height(40f).growX().get().setScrollingDisabled(true, true);
-            }).maxHeight(40f).grow();
+                    p.left();
+                    p.add(Core.bundle.get("window."+name+".name")).padLeft(20);
+                }).grow().get().setScrollingDisabled(false, true);
+            }).grow();
             
             // exit button
             t.table(Tex.buttonEdge3, b -> {
                 b.button(Icon.cancel, Styles.emptyi, () -> shown = false);
-            }).maxHeight(40f).width(80f).growY();
+            }).width(80f).growY();
 
             // handles the dragging.
             t.touchable = Touchable.enabled;
@@ -88,8 +88,7 @@ public class Window extends Table{
                     lastY = v.y;
                 }
             });
-        }).top().height(40f).growX();
-        row();
+        }).height(6f*8).top().grow().row();
     }
 
     protected void bottomBar(){

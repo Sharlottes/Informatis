@@ -55,6 +55,8 @@ public class SUtils {
     }
 
     public static <T extends Number> String formatNumber(T number){
+        if(number instanceof Integer integ) return integ.toString();
+        if(number.longValue() % 10 == 0) return String.valueOf(number.intValue());
         return formatNumber(number, 1);
     }
     public static <T extends Number> String formatNumber(T number, int step){

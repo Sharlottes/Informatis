@@ -157,8 +157,6 @@ class UnitWindow extends Window {
                         getDrawable().draw(x, y, width, height);
                         ScissorStack.pop();
                     }
-
-                    Log.info("----------------------");
                 }
             };
             icon.addListener(new InputListener(){
