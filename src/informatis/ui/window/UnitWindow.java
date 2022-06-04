@@ -2,6 +2,9 @@ package informatis.ui.window;
 
 import arc.Core;
 import arc.scene.Element;
+import arc.scene.event.InputEvent;
+import arc.scene.event.InputListener;
+import arc.scene.utils.Disableable;
 import informatis.core.*;
 import informatis.ui.*;
 import arc.graphics.Color;
@@ -35,8 +38,6 @@ import static mindustry.Vars.*;
 
 class UnitWindow extends Window {
     final Seq<Color> lastColors = Seq.with(Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear);
-    Seq<Table> bars = new Seq<>(); //temp
-    Vec2 scrollPos = new Vec2(0, 0);
     Teamc latestTarget = getTarget();
     int barSize = 6;
     ScrollPane barPane;
@@ -52,9 +53,6 @@ class UnitWindow extends Window {
     //TODO: add new UnitInfoDisplay(), new WeaponDisplay();
     @Override
     protected void build(Table table) {
-        scrollPos = new Vec2(0, 0);
-        bars = new Seq<>();
-
         table.top().background(Styles.black8);
         table.table(tt -> {
             tt.center();
@@ -120,7 +118,7 @@ class UnitWindow extends Window {
                 table.add(addBar(i)).growX().get();
                 table.row();
             }
-            table.add(new SBar(() -> "+", () -> Color.clear, () -> 0)).height(4 * 8f).growX().get().clicked(()->{
+            table.add(new SBar("+", Color.clear, 0)).height(4 * 8f).growX().get().clicked(()->{
                 barSize++;
                 barPane.setWidget(buildBarList());
             });
@@ -129,57 +127,56 @@ class UnitWindow extends Window {
 
     Table addBar(int index) {
         return new Table(bar -> {
-            bar.add(new SBar(
-                () -> {
-                    BarInfo.BarData data = index >= BarInfo.data.size || index >= barSize ? null : BarInfo.data.get(index);
-                    return data == null ? "[lightgray]<Empty>[]" : data.name;
-                },
-                () -> {
-                    BarInfo.BarData data = index >= BarInfo.data.size || index >= barSize ? null : BarInfo.data.get(index);
-                    if (index >= lastColors.size) lastColors.size = index+1;
-                    if (data == null) return lastColors.get(index);
-                    if (data.color != Color.clear) lastColors.set(index, data.color);
-                    return lastColors.get(index);
-                },
-                () -> {
-                    BarInfo.BarData data = index >= BarInfo.data.size || index >= barSize ? null : BarInfo.data.get(index);
-                    return data == null ? 0 : data.number;
-                }
-            )).height(4 * 8f).growX();
+            if(index >= BarInfo.data.size) {
+                bar.add(new SBar("[lightgray]<Empty>[]", Color.clear, 0)).height(4 * 8f).growX();
+                return;
+            }
+
+            bar.update(()->{
+                BarInfo.BarData data = BarInfo.data.get(index);
+                if (index >= lastColors.size) lastColors.add(data.color);
+                else lastColors.set(index, data.color);
+            });
+
+            bar.add(new SBar(() -> BarInfo.data.get(index).name, () -> BarInfo.data.get(index).color, () -> BarInfo.data.get(index).number)).height(4 * 8f).growX();
             Image icon = new Image(){
                 @Override
                 public void draw() {
                     validate();
 
-                    float x = this.x;
-                    float y = this.y;
-                    float scaleX = this.scaleX;
-                    float scaleY = this.scaleY;
+                    float x = this.x + imageX;
+                    float y = this.y + imageY;
+                    float width = imageWidth * this.scaleX;
+                    float height = imageHeight * this.scaleY;
                     Draw.color(Color.white);
                     Draw.alpha(parentAlpha * color.a);
-                    if(index >= BarInfo.data.size || index >= barSize) {
-                        return;
-                    }
-                    if(hasMouse()) {
-                        Icon.cancel.draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
-                        return;
-                    }
-
                     BarInfo.BarData data = BarInfo.data.get(index);
-                    data.icon.draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
-                    if(ScissorStack.push(Tmp.r1.set(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY * data.number))){
+                    getDrawable().draw(x, y, width, height);
+                    if (!hasMouse() && ScissorStack.push(Tmp.r1.set(ScissorStack.peek().x + x,  ScissorStack.peek().y + y, width, height * data.number))) {
                         Draw.color(data.color);
-                        data.icon.draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
-                        Log.info(Tmp.r1);
+                        getDrawable().draw(x, y, width, height);
                         ScissorStack.pop();
                     }
-                    Draw.reset();
+
+                    Log.info("----------------------");
                 }
             };
+            icon.addListener(new InputListener(){
+                @Override
+                public void enter(InputEvent event, float x, float y, int pointer, Element fromActor){
+                    icon.setDrawable(Icon.cancel);
+                }
+
+                @Override
+                public void exit(InputEvent event, float x, float y, int pointer, Element fromActor){
+                    icon.setDrawable(BarInfo.data.get(index).icon);
+                }
+            });
             icon.clicked(()->{
                 if(barSize > 0) barSize--;
                 barPane.setWidget(buildBarList());
             });
+            icon.setDrawable(BarInfo.data.get(index).icon);
             bar.add(icon).size(iconMed * 0.75f).padLeft(8f);
         });
     }

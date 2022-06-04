@@ -26,6 +26,17 @@ public class SBar extends Element{
 
     public boolean onedot = false;
 
+    //static bar
+    public SBar(String name, Color color, float fraction){
+        this.fraction = ()->fraction;
+        this.name = Core.bundle.get(name, name);
+        this.blinkColor.set(color);
+        lastValue = value = fraction;
+        setColor(color);
+        init();
+    }
+
+    //dynamic bar
     public SBar(Prov<String> name, Prov<Color> color, Floatp fraction){
         this.fraction = fraction;
         try{
@@ -52,7 +63,6 @@ public class SBar extends Element{
 
     public SBar init(){
         int h = Core.settings.getInt("barstyle");
-
 
         bar = (NinePatchDrawable) SUtils.getDrawable(Core.atlas.find("informatis-barS"), 10, 10, 9, 9);
         top = (NinePatchDrawable) SUtils.getDrawable(Core.atlas.find("informatis-barS-top"), 10, 10, 9, 9);
