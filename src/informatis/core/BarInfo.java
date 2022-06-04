@@ -3,6 +3,9 @@ package informatis.core;
 import arc.graphics.*;
 import arc.graphics.g2d.TextureRegion;
 import arc.math.*;
+import arc.math.geom.Rect;
+import arc.scene.style.Drawable;
+import arc.scene.style.TextureRegionDrawable;
 import arc.struct.*;
 import arc.util.*;
 import mindustry.ctype.*;
@@ -37,10 +40,8 @@ public class BarInfo {
     public static <T extends Teamc> void getInfo(T target) throws IllegalAccessException, NoSuchFieldException {
         data.clear();
 
-        if(target instanceof Healthc){
-            Healthc healthc = (Healthc) target;
-            float pro = healthc.health();
-            data.add(new BarData(bundle.format("shar-stat.health", formatNumber(pro)), Pal.health, pro, health));
+        if(target instanceof Healthc healthc){
+            data.add(new BarData(bundle.format("shar-stat.health", formatNumber(healthc.health())), Pal.health, healthc.healthf(), health));
         }
 
         if(target instanceof Unit unit){
@@ -212,7 +213,7 @@ public class BarInfo {
         public String name;
         public Color color;
         public float number;
-        public TextureRegion icon = clear;
+        public Drawable icon = new TextureRegionDrawable(clear);
 
         BarData(String name, Color color, float number) {
             this.name = name;
@@ -222,7 +223,7 @@ public class BarInfo {
 
         BarData(String name, Color color, float number, TextureRegion icon) {
             this(name, color, number);
-            this.icon = icon;
+            this.icon = new TextureRegionDrawable(icon);
         }
     }
 }

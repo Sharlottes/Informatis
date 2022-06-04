@@ -35,18 +35,18 @@ import static mindustry.Vars.*;
 
 class UnitWindow extends Window {
     final Seq<Color> lastColors = Seq.with(Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear);
-    final Rect scissor = new Rect();
     Seq<Table> bars = new Seq<>(); //temp
     Vec2 scrollPos = new Vec2(0, 0);
     Teamc latestTarget = getTarget();
     int barSize = 6;
     ScrollPane barPane;
+    Table window;
 
     private float barScrollPos;
 
     public UnitWindow() {
         super(Icon.units, "unit");
-        for(int i = 0; i < 6; i++) addBar();
+        window = this;
     }
 
     //TODO: add new UnitInfoDisplay(), new WeaponDisplay();
@@ -98,6 +98,7 @@ class UnitWindow extends Window {
             if(latestTarget != target) {
                 latestTarget = target;
                 barPane.setWidget(buildBarList());
+                Log.info("updated");
             }
             if(barPane.hasScroll()){
                 Element result = Core.scene.hit(Core.input.mouseX(), Core.input.mouseY(), true);
@@ -115,15 +116,10 @@ class UnitWindow extends Window {
     Table buildBarList() {
         return new Table(table -> {
             table.top();
-            bars.clear();
-            for(int i = 0; i < barSize; i++) addBar();
-            bars.each(bar -> {
-                table.add(bar).growX().get().clicked(()->{
-                    if(barSize>0) barSize--;
-                    barPane.setWidget(buildBarList());
-                });
+            for (int i = 0; i < barSize; i++) {
+                table.add(addBar(i)).growX().get();
                 table.row();
-            });
+            }
             table.add(new SBar(() -> "+", () -> Color.clear, () -> 0)).height(4 * 8f).growX().get().clicked(()->{
                 barSize++;
                 barPane.setWidget(buildBarList());
@@ -131,9 +127,8 @@ class UnitWindow extends Window {
         });
     }
 
-    void addBar() {
-        int index = this.bars.size;
-        bars.add(new Table(bar -> {
+    Table addBar(int index) {
+        return new Table(bar -> {
             bar.add(new SBar(
                 () -> {
                     BarInfo.BarData data = index >= BarInfo.data.size || index >= barSize ? null : BarInfo.data.get(index);
@@ -151,28 +146,42 @@ class UnitWindow extends Window {
                     return data == null ? 0 : data.number;
                 }
             )).height(4 * 8f).growX();
-            bar.add(new Image(){
+            Image icon = new Image(){
                 @Override
                 public void draw() {
                     validate();
 
-                    BarInfo.BarData data = index >= BarInfo.data.size || index >= barSize ? null : BarInfo.data.get(index);
+                    float x = this.x;
+                    float y = this.y;
+                    float scaleX = this.scaleX;
+                    float scaleY = this.scaleY;
                     Draw.color(Color.white);
                     Draw.alpha(parentAlpha * color.a);
-                    if(data == null) {
-                        new TextureRegionDrawable(clear).draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
+                    if(index >= BarInfo.data.size || index >= barSize) {
                         return;
                     }
-                    TextureRegionDrawable region = new TextureRegionDrawable(data.icon);
-                    region.draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
-                    Draw.color(data.color);
-                    if(ScissorStack.push(scissor.set(x, y, imageWidth * scaleX, imageHeight * scaleY * data.number))){
-                        region.draw(x, y, imageWidth * scaleX, imageHeight * scaleY);
+                    if(hasMouse()) {
+                        Icon.cancel.draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
+                        return;
+                    }
+
+                    BarInfo.BarData data = BarInfo.data.get(index);
+                    data.icon.draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
+                    if(ScissorStack.push(Tmp.r1.set(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY * data.number))){
+                        Draw.color(data.color);
+                        data.icon.draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
+                        Log.info(Tmp.r1);
                         ScissorStack.pop();
                     }
+                    Draw.reset();
                 }
-            }).size(iconMed * 0.75f).padLeft(8f);
-        }));
+            };
+            icon.clicked(()->{
+                if(barSize > 0) barSize--;
+                barPane.setWidget(buildBarList());
+            });
+            bar.add(icon).size(iconMed * 0.75f).padLeft(8f);
+        });
     }
 
     static class WeaponDisplay extends Table {
