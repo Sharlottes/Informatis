@@ -1,6 +1,7 @@
 package informatis.ui.window;
 
-import arc.math.Mathf;
+import arc.Core;
+import arc.scene.Element;
 import informatis.core.*;
 import informatis.ui.*;
 import arc.graphics.Color;
@@ -12,6 +13,7 @@ import arc.scene.ui.layout.*;
 import arc.struct.Bits;
 import arc.struct.*;
 import arc.util.*;
+import informatis.ui.widgets.RectWidget;
 import mindustry.Vars;
 import mindustry.core.UI;
 import mindustry.entities.units.WeaponMount;
@@ -23,15 +25,24 @@ import mindustry.ui.Styles;
 import mindustry.world.blocks.ConstructBlock;
 import mindustry.world.blocks.payloads.Payload;
 
+import java.util.Objects;
+
 import static informatis.SVars.*;
 import static informatis.SUtils.*;
 import static mindustry.Vars.*;
+
+
 
 class UnitWindow extends Window {
     final Seq<Color> lastColors = Seq.with(Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear);
     final Rect scissor = new Rect();
     Seq<Table> bars = new Seq<>(); //temp
     Vec2 scrollPos = new Vec2(0, 0);
+    Teamc latestTarget = getTarget();
+    int barSize = 6;
+    ScrollPane barPane;
+
+    private float barScrollPos;
 
     public UnitWindow() {
         super(Icon.units, "unit");
@@ -42,36 +53,25 @@ class UnitWindow extends Window {
     @Override
     protected void build(Table table) {
         scrollPos = new Vec2(0, 0);
+        bars = new Seq<>();
+
         table.top().background(Styles.black8);
         table.table(tt -> {
             tt.center();
-            Image image = new Image() {
-                @Override
-                public void draw() {
-                    super.draw();
-
-                    int offset = 8;
-                    Draw.color(locked?Pal.accent:Pal.gray);
-                    Draw.alpha(parentAlpha);
-                    Lines.stroke(Scl.scl(3f));
-                    Lines.rect(x-offset/2f, y-offset/2f, width+offset, height+offset);
-                    Draw.reset();
-                }
-            };
+            Image image = RectWidget.build();
             image.update(()->{
                 TextureRegion region = clear;
                 if (target instanceof Unit u && u.type != null) region = u.type.uiIcon;
                 else if (target instanceof Building b) {
-                    if (target instanceof ConstructBlock.ConstructBuild cb) region = cb.current.uiIcon;
+                    if (b instanceof ConstructBlock.ConstructBuild cb) region = cb.current.uiIcon;
                     else if (b.block != null) region = b.block.uiIcon;
                 }
                 image.setDrawable(region);
             });
             image.clicked(()->{
-                if(target==getTarget()) locked = !locked;
+                if(target == getTarget()) locked = !locked;
                 target = getTarget();
             });
-
             tt.add(image).size(iconMed).padRight(12f);
             tt.label(() -> {
                 if (target instanceof Unit u && u.type != null) return u.type.localizedName;
@@ -81,52 +81,82 @@ class UnitWindow extends Window {
                 }
                 return "";
             }).color(Pal.accent);
-        }).tooltip((to -> {
-            to.background(Styles.black6);
-            to.label(() -> target instanceof Unit u && u.isPlayer() ? u.getPlayer().name() : "AI").row();
-            to.label(() -> target == null ? "(" + 0 + ", " + 0 + ")" : "(" + Strings.fixed(target.x() / tilesize, 2) + ", " + Strings.fixed(target.y() / tilesize, 2) + ")").row();
-            to.label(() -> target instanceof Unit u ? "[accent]"+ Strings.fixed(u.armor, 0) + "[] Armor" : "");
-        })).margin(12f).row();
-        table.image().height(4f).color((target==null?player.unit():target).team().color).growX().row();
-        table.add(new OverScrollPane(new Table(bars -> {
-            bars.top();
-            bars.table().update(t->{
-                t.clear();
-                this.bars.clear();
-                for(int i = 0; i < 6; i++) addBar();
-                for (Table bar : this.bars) {
-                    t.add(bar).growX().row();
+        }).tooltip(tool -> {
+            tool.background(Styles.black6);
+            tool.table().update(to -> {
+                to.clear();
+                if(target instanceof Unit u) {
+                    to.add(u.isPlayer() ? u.getPlayer().name : "AI").row();
+                    to.add(target.tileX() + ", " + target.tileY()).row();
+                    to.add("[accent]"+ Strings.fixed(u.armor, 0) + "[] Armor");
                 }
-            }).growX();
-        }), Styles.noBarPane, scrollPos).disableScroll(true, false)).growX().padTop(12f);
+            }).margin(12f);
+        }).margin(12f).row();
+        table.image().height(4f).color((target==null?player.unit():target).team().color).growX().row();
+        barPane = new ScrollPane(buildBarList(), Styles.noBarPane);
+        barPane.update(() -> {
+            if(latestTarget != target) {
+                latestTarget = target;
+                barPane.setWidget(buildBarList());
+            }
+            if(barPane.hasScroll()){
+                Element result = Core.scene.hit(Core.input.mouseX(), Core.input.mouseY(), true);
+                if(result == null || !result.isDescendantOf(barPane)){
+                    Core.scene.setScrollFocus(null);
+                }
+            }
+            barScrollPos = barPane.getScrollY();
+        });
+        barPane.setScrollingDisabledX(true);
+        barPane.setScrollYForce(barScrollPos);
+        table.add(barPane).growX().padTop(12f);
+    }
+
+    Table buildBarList() {
+        return new Table(table -> {
+            table.top();
+            bars.clear();
+            for(int i = 0; i < barSize; i++) addBar();
+            bars.each(bar -> {
+                table.add(bar).growX().get().clicked(()->{
+                    if(barSize>0) barSize--;
+                    barPane.setWidget(buildBarList());
+                });
+                table.row();
+            });
+            table.add(new SBar(() -> "+", () -> Color.clear, () -> 0)).height(4 * 8f).growX().get().clicked(()->{
+                barSize++;
+                barPane.setWidget(buildBarList());
+            });
+        });
     }
 
     void addBar() {
         int index = this.bars.size;
         bars.add(new Table(bar -> {
             bar.add(new SBar(
-                    () -> {
-                        BarInfo.BarData data = index >= BarInfo.data.size ? null : BarInfo.data.get(index);
-                        return data == null ? "[lightgray]<Empty>[]" : data.name;
-                    },
-                    () -> {
-                        BarInfo.BarData data = index >= BarInfo.data.size ? null : BarInfo.data.get(index);
-                        if (index >= lastColors.size) lastColors.size = index+1;
-                        if (data == null) return lastColors.get(index);
-                        if (data.color != Color.clear) lastColors.set(index, data.color);
-                        return lastColors.get(index);
-                    },
-                    () -> {
-                        BarInfo.BarData data = index >= BarInfo.data.size ? null : BarInfo.data.get(index);
-                        return data == null ? 0 : data.number;
-                    }
+                () -> {
+                    BarInfo.BarData data = index >= BarInfo.data.size || index >= barSize ? null : BarInfo.data.get(index);
+                    return data == null ? "[lightgray]<Empty>[]" : data.name;
+                },
+                () -> {
+                    BarInfo.BarData data = index >= BarInfo.data.size || index >= barSize ? null : BarInfo.data.get(index);
+                    if (index >= lastColors.size) lastColors.size = index+1;
+                    if (data == null) return lastColors.get(index);
+                    if (data.color != Color.clear) lastColors.set(index, data.color);
+                    return lastColors.get(index);
+                },
+                () -> {
+                    BarInfo.BarData data = index >= BarInfo.data.size || index >= barSize ? null : BarInfo.data.get(index);
+                    return data == null ? 0 : data.number;
+                }
             )).height(4 * 8f).growX();
             bar.add(new Image(){
                 @Override
                 public void draw() {
                     validate();
 
-                    BarInfo.BarData data = index >= BarInfo.data.size ? null : BarInfo.data.get(index);
+                    BarInfo.BarData data = index >= BarInfo.data.size || index >= barSize ? null : BarInfo.data.get(index);
                     Draw.color(Color.white);
                     Draw.alpha(parentAlpha * color.a);
                     if(data == null) {
