@@ -2,6 +2,7 @@ package informatis.ui.window;
 
 import arc.*;
 import arc.func.*;
+import arc.math.Mathf;
 import arc.scene.*;
 import arc.scene.event.*;
 import informatis.core.*;
@@ -43,7 +44,7 @@ public class UnitWindow extends Window {
         super(Icon.units, "unit");
     }
 
-    //TODO: add new UnitInfoDisplay(), new WeaponDisplay();
+    //TODO: add weapons
     @Override
     protected void build(Table table) {
         table.top().background(Styles.black8);
@@ -81,82 +82,87 @@ public class UnitWindow extends Window {
             }).margin(12f);
         }).margin(12f).row();
 
-        if(target instanceof Payloadc || target instanceof Statusc) {
-            table.image().color((target == null ? player.unit() : target).team().color).height(4f).growX().row();
+        table.image().color((target == null ? player.unit() : target).team().color).visible(()->target instanceof Payloadc || target instanceof Statusc).height(4f).growX().row();
 
-            table.table(state -> {
-                state.left();
-                final Cons<Table> rebuildPayload = t -> {
-                    t.left();
-                    if (target instanceof Payloadc payload) {
-                        Seq<Payload> payloads = payload.payloads();
-                        for (int i = 0, m = payload.payloads().size; i < m; i++) {
-                            t.image(payloads.get(i).icon()).size(iconSmall);
-                            if ((i + 1) % Math.max(6, Math.round((window.getWidth() - 24) / iconSmall)) == 0) t.row();
+        table.table(state -> {
+            state.left();
+            final Cons<Table> rebuildPayload = t -> {
+                t.left();
+                if (target instanceof Payloadc payloader) {
+                    Seq<Payload> payloads = payloader.payloads();
+                    for (int i = 0, m = payloader.payloads().size; i < m; i++) {
+                        Payload payload = payloads.get(i);
+                        Image image = new Image(payload.icon());
+                        image.clicked(()->ui.content.show(payload.content()));
+                        image.hovered(()->image.setColor(Tmp.c1.set(image.color).lerp(Color.lightGray, Mathf.clamp(Time.delta))));
+                        image.exited(()->image.setColor(Tmp.c1.set(image.color).lerp(Color.white, Mathf.clamp(Time.delta))));
+                        t.add(image).size(iconSmall).tooltip(l -> l.label(() -> payload.content().localizedName).style(Styles.outlineLabel));
+                        if ((i + 1) % Math.max(6, Math.round((window.getWidth() - 24) / iconSmall)) == 0) t.row();
+                    }
+                }
+            };
+
+            final Cons<Table> rebuildStatus = t -> {
+                t.top().left();
+                if (target instanceof Statusc st) {
+                    Bits applied = st.statusBits();
+                    if (applied == null) return;
+                    Seq<StatusEffect> contents = Vars.content.statusEffects();
+                    for (int i = 0, m = Vars.content.statusEffects().size; i < m; i++) {
+                        StatusEffect effect = contents.get(i);
+                        if (applied.get(effect.id) && !effect.isHidden()) {
+                            Image image = new Image(effect.uiIcon);
+                            image.clicked(()->ui.content.show(effect));
+                            image.hovered(()->image.setColor(Tmp.c1.set(image.color).lerp(Color.lightGray, Mathf.clamp(Time.delta))));
+                            image.exited(()->image.setColor(Tmp.c1.set(image.color).lerp(Color.white, Mathf.clamp(Time.delta))));
+                            t.add(image).size(iconSmall).tooltip(l -> l.label(() -> effect.localizedName + " [lightgray]" + UI.formatTime(st.getDuration(effect))).style(Styles.outlineLabel));
+                            if (i + 1 % Math.max(6, Math.round((window.getWidth() - 24) / iconSmall)) == 0) t.row();
                         }
                     }
-                };
+                }
+            };
 
-                final Cons<Table> rebuildStatus = t -> {
-                    t.top().left();
-                    if (target instanceof Statusc st) {
-                        Bits applied = st.statusBits();
-                        if (applied != null) {
-                            Seq<StatusEffect> contents = Vars.content.statusEffects();
-                            for (int i = 0, m = Vars.content.statusEffects().size; i < m; i++) {
-                                StatusEffect effect = contents.get(i);
-                                if (applied.get(effect.id) && !effect.isHidden()) {
-                                    t.image(effect.uiIcon).size(iconSmall).get()
-                                            .addListener(new Tooltip(l -> l.label(() -> effect.localizedName + " [lightgray]" + UI.formatTime(st.getDuration(effect))).style(Styles.outlineLabel)));
-                                }
-                                if (i + 1 % Math.max(6, Math.round((window.getWidth() - 24) / iconSmall)) == 0) t.row();
-                            }
-                        }
-                    }
-                };
-
-                final float[] lastWidth1 = {0};
-                state.table(rebuildPayload).update(t -> {
-                    t.left();
-                    if (lastWidth1[0] != window.getWidth()) {
-                        lastWidth1[0] = window.getWidth();
+            final float[] lastWidth1 = {0};
+            state.table(rebuildPayload).update(t -> {
+                t.left();
+                if (lastWidth1[0] != window.getWidth()) {
+                    lastWidth1[0] = window.getWidth();
+                    t.clear();
+                    rebuildPayload.get(t);
+                } else if (target instanceof Payloadc payload) {
+                    if (usedPayload != payload.payloadUsed()) {
+                        usedPayload = payload.payloadUsed();
                         t.clear();
                         rebuildPayload.get(t);
-                    } else if (target instanceof Payloadc payload) {
-                        if (usedPayload != payload.payloadUsed()) {
-                            usedPayload = payload.payloadUsed();
-                            t.clear();
-                            rebuildPayload.get(t);
-                        }
-                    } else {
-                        usedPayload = -1;
-                        t.clear();
-                        rebuildPayload.get(t);
                     }
-                }).grow().row();
+                } else {
+                    usedPayload = -1;
+                    t.clear();
+                    rebuildPayload.get(t);
+                }
+            }).grow().row();
 
-                final float[] lastWidth2 = {0};
-                state.table(rebuildStatus).update(t -> {
-                    t.left();
-                    if (lastWidth2[0] != window.getWidth()) {
-                        lastWidth2[0] = window.getWidth();
-                        t.clear();
-                        rebuildStatus.get(t);
-                    } else if (target instanceof Statusc st) {
-                        Bits applied = st.statusBits();
-                        if (applied != null && !statuses.equals(applied)) {
-                            statuses.set(applied);
-                            t.clear();
-                            rebuildStatus.get(t);
-                        }
-                    } else {
-                        statuses.clear();
+            final float[] lastWidth2 = {0};
+            state.table(rebuildStatus).update(t -> {
+                t.left();
+                if (lastWidth2[0] != window.getWidth()) {
+                    lastWidth2[0] = window.getWidth();
+                    t.clear();
+                    rebuildStatus.get(t);
+                } else if (target instanceof Statusc st) {
+                    Bits applied = st.statusBits();
+                    if (applied != null && !statuses.equals(applied)) {
+                        statuses.set(applied);
                         t.clear();
                         rebuildStatus.get(t);
                     }
-                }).grow();
-            }).pad(12f).growX().row();
-        }
+                } else {
+                    statuses.clear();
+                    t.clear();
+                    rebuildStatus.get(t);
+                }
+            }).grow();
+        }).pad(12f).growX().row();
 
         table.image().color((target==null?player.unit():target).team().color).height(4f).growX().row();
 
