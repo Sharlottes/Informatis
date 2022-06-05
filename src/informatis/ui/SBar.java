@@ -20,7 +20,7 @@ public class SBar extends Element{
     Floatp fraction;
     String name = "";
     float value, lastValue, blink;
-    final Color blinkColor = new Color();
+    Color blinkColor = new Color(), lastColor = new Color();
     NinePatchDrawable bar, top;
     float spriteWidth;
 
@@ -31,6 +31,7 @@ public class SBar extends Element{
         this.fraction = ()->fraction;
         this.name = Core.bundle.get(name, name);
         this.blinkColor.set(color);
+        this.lastColor = color;
         lastValue = value = fraction;
         setColor(color);
         init();
@@ -48,6 +49,29 @@ public class SBar extends Element{
             try{
                 this.name = name.get();
                 this.blinkColor.set(color.get());
+                this.lastColor.set(color.get());
+                setColor(color.get());
+            }catch(Exception e){ //getting the fraction may involve referring to invalid data
+                this.name = "";
+            }
+        });
+        init();
+    }
+
+    //dynamic bar
+    public SBar(Prov<String> name, Prov<Color> color, Prov<Color> lastColor, Floatp fraction){
+        this.fraction = fraction;
+        try{
+            lastValue = value = Mathf.clamp(fraction.get());
+        }catch(Exception e){ //getting the fraction may involve referring to invalid data
+            lastValue = value = 0f;
+        }
+        this.name = name.get();
+        update(() -> {
+            try{
+                this.name = name.get();
+                this.blinkColor.set(color.get());
+                this.lastColor.set(lastColor.get());
                 setColor(color.get());
             }catch(Exception e){ //getting the fraction may involve referring to invalid data
                 this.name = "";
@@ -61,6 +85,7 @@ public class SBar extends Element{
         return this;
     }
 
+    //TODO: clean up
     public SBar init(){
         int h = Core.settings.getInt("barstyle");
 
@@ -129,7 +154,7 @@ public class SBar extends Element{
         Draw.colorl(0.1f);
         bar.draw(x, y, width, height);
 
-        Draw.color(Tmp.c1.set(color).mul(Pal.lightishGray), blinkColor, blink);
+        Draw.color(Tmp.c1.set(lastColor).mul(Pal.lightishGray), blinkColor, blink);
         float topWidth = width * value;
         if(topWidth > spriteWidth){
             top.draw(x, y, topWidth, height);

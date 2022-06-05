@@ -55,12 +55,11 @@ public class SUtils {
     }
 
     public static <T extends Number> String formatNumber(T number){
-        if(number instanceof Integer integ) return integ.toString();
-        if(number.longValue() % 10 == 0) return String.valueOf(number.intValue());
         return formatNumber(number, 1);
     }
     public static <T extends Number> String formatNumber(T number, int step){
         if(number.intValue() >= 1000) return UI.formatAmount(number.longValue());
+        if(number instanceof Integer || number.longValue() % 10 == 0) return String.valueOf(number.intValue());
         return Strings.fixed(number.floatValue(), step);
     }
 

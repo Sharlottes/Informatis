@@ -1,61 +1,54 @@
 package informatis.ui.window;
 
-import arc.Core;
-import arc.scene.Element;
-import arc.scene.event.InputEvent;
-import arc.scene.event.InputListener;
-import arc.scene.utils.Disableable;
+import arc.*;
+import arc.func.*;
+import arc.scene.*;
+import arc.scene.event.*;
 import informatis.core.*;
 import informatis.ui.*;
 import arc.graphics.Color;
 import arc.graphics.g2d.*;
-import arc.math.geom.*;
 import arc.scene.style.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
 import arc.struct.Bits;
 import arc.struct.*;
 import arc.util.*;
-import informatis.ui.widgets.RectWidget;
-import mindustry.Vars;
-import mindustry.core.UI;
-import mindustry.entities.units.WeaponMount;
+import informatis.ui.widgets.*;
+import mindustry.*;
+import mindustry.core.*;
+import mindustry.entities.units.*;
 import mindustry.gen.*;
-import mindustry.graphics.Pal;
-import mindustry.type.StatusEffect;
-import mindustry.type.Weapon;
-import mindustry.ui.Styles;
-import mindustry.world.blocks.ConstructBlock;
-import mindustry.world.blocks.payloads.Payload;
-
-import java.util.Objects;
+import mindustry.graphics.*;
+import mindustry.type.*;
+import mindustry.ui.*;
+import mindustry.world.blocks.*;
+import mindustry.world.blocks.payloads.*;
 
 import static informatis.SVars.*;
 import static informatis.SUtils.*;
 import static mindustry.Vars.*;
 
-
-
-class UnitWindow extends Window {
-    final Seq<Color> lastColors = Seq.with(Color.clear,Color.clear,Color.clear,Color.clear,Color.clear,Color.clear);
-    Teamc latestTarget = getTarget();
-    int barSize = 6;
+public class UnitWindow extends Window {
+    final Seq<Color> lastColors = new Seq<>();
+    Teamc latestTarget;
     ScrollPane barPane;
-    Table window;
 
+    private int barSize = 6;
+    private float usedPayload;
     private float barScrollPos;
+    private final Bits statuses = new Bits();
 
     public UnitWindow() {
         super(Icon.units, "unit");
-        window = this;
     }
 
     //TODO: add new UnitInfoDisplay(), new WeaponDisplay();
     @Override
     protected void build(Table table) {
         table.top().background(Styles.black8);
-        table.table(tt -> {
-            tt.center();
+        table.table(title -> {
+            title.center();
             Image image = RectWidget.build();
             image.update(()->{
                 TextureRegion region = clear;
@@ -70,8 +63,8 @@ class UnitWindow extends Window {
                 if(target == getTarget()) locked = !locked;
                 target = getTarget();
             });
-            tt.add(image).size(iconMed).padRight(12f);
-            tt.label(() -> {
+            title.add(image).size(iconMed).padRight(12f);
+            title.label(() -> {
                 if (target instanceof Unit u && u.type != null) return u.type.localizedName;
                 if (target instanceof Building b && b.block != null) {
                     if (target instanceof ConstructBlock.ConstructBuild cb) return cb.current.localizedName;
@@ -81,22 +74,106 @@ class UnitWindow extends Window {
             }).color(Pal.accent);
         }).tooltip(tool -> {
             tool.background(Styles.black6);
-            tool.table().update(to -> {
-                to.clear();
-                if(target instanceof Unit u) {
-                    to.add(u.isPlayer() ? u.getPlayer().name : "AI").row();
-                    to.add(target.tileX() + ", " + target.tileY()).row();
-                    to.add("[accent]"+ Strings.fixed(u.armor, 0) + "[] Armor");
-                }
+            tool.table(to -> {
+                to.label(() -> target instanceof Unit u ? u.isPlayer() ? u.getPlayer().name : "AI" : "").row();
+                to.label(() -> target.tileX() + ", " + target.tileY()).row();
+                to.label(() -> target instanceof Unit u ? "[accent]"+ Strings.fixed(u.armor, 0) + "[] Armor" : "");
             }).margin(12f);
         }).margin(12f).row();
-        table.image().height(4f).color((target==null?player.unit():target).team().color).growX().row();
+
+        if(target instanceof Payloadc || target instanceof Statusc) {
+            table.image().color((target == null ? player.unit() : target).team().color).height(4f).growX().row();
+
+            table.table(state -> {
+                state.left();
+                final Cons<Table> rebuildPayload = t -> {
+                    t.left();
+                    if (target instanceof Payloadc payload) {
+                        Seq<Payload> payloads = payload.payloads();
+                        for (int i = 0, m = payload.payloads().size; i < m; i++) {
+                            t.image(payloads.get(i).icon()).size(iconSmall);
+                            if ((i + 1) % Math.max(6, Math.round((window.getWidth() - 24) / iconSmall)) == 0) t.row();
+                        }
+                    }
+                };
+
+                final Cons<Table> rebuildStatus = t -> {
+                    t.top().left();
+                    if (target instanceof Statusc st) {
+                        Bits applied = st.statusBits();
+                        if (applied != null) {
+                            Seq<StatusEffect> contents = Vars.content.statusEffects();
+                            for (int i = 0, m = Vars.content.statusEffects().size; i < m; i++) {
+                                StatusEffect effect = contents.get(i);
+                                if (applied.get(effect.id) && !effect.isHidden()) {
+                                    t.image(effect.uiIcon).size(iconSmall).get()
+                                            .addListener(new Tooltip(l -> l.label(() -> effect.localizedName + " [lightgray]" + UI.formatTime(st.getDuration(effect))).style(Styles.outlineLabel)));
+                                }
+                                if (i + 1 % Math.max(6, Math.round((window.getWidth() - 24) / iconSmall)) == 0) t.row();
+                            }
+                        }
+                    }
+                };
+
+                final float[] lastWidth1 = {0};
+                state.table(rebuildPayload).update(t -> {
+                    t.left();
+                    if (lastWidth1[0] != window.getWidth()) {
+                        lastWidth1[0] = window.getWidth();
+                        t.clear();
+                        rebuildPayload.get(t);
+                    } else if (target instanceof Payloadc payload) {
+                        if (usedPayload != payload.payloadUsed()) {
+                            usedPayload = payload.payloadUsed();
+                            t.clear();
+                            rebuildPayload.get(t);
+                        }
+                    } else {
+                        usedPayload = -1;
+                        t.clear();
+                        rebuildPayload.get(t);
+                    }
+                }).grow().row();
+
+                final float[] lastWidth2 = {0};
+                state.table(rebuildStatus).update(t -> {
+                    t.left();
+                    if (lastWidth2[0] != window.getWidth()) {
+                        lastWidth2[0] = window.getWidth();
+                        t.clear();
+                        rebuildStatus.get(t);
+                    } else if (target instanceof Statusc st) {
+                        Bits applied = st.statusBits();
+                        if (applied != null && !statuses.equals(applied)) {
+                            statuses.set(applied);
+                            t.clear();
+                            rebuildStatus.get(t);
+                        }
+                    } else {
+                        statuses.clear();
+                        t.clear();
+                        rebuildStatus.get(t);
+                    }
+                }).grow();
+            }).pad(12f).growX().row();
+        }
+
+        table.image().color((target==null?player.unit():target).team().color).height(4f).growX().row();
+
         barPane = new ScrollPane(buildBarList(), Styles.noBarPane);
         barPane.update(() -> {
+            //rebuild whole bar table
             if(latestTarget != target) {
-                latestTarget = target;
-                barPane.setWidget(buildBarList());
-                Log.info("updated");
+                for (int i = 0; i < barSize; i++) {
+                    Color color = i >= BarInfo.data.size ? Color.clear : BarInfo.data.get(i).color;
+                    if (i >= lastColors.size) lastColors.add(color);
+                    else lastColors.set(i, color);
+                }
+
+                if(((Table) barPane.getWidget()).getChildren().size-1 != barSize) {
+                    latestTarget = target;
+                    barPane.setWidget(buildBarList());
+                }
             }
             if(barPane.hasScroll()){
                 Element result = Core.scene.hit(Core.input.mouseX(), Core.input.mouseY(), true);
@@ -108,7 +185,7 @@ class UnitWindow extends Window {
         });
         barPane.setScrollingDisabledX(true);
         barPane.setScrollYForce(barScrollPos);
-        table.add(barPane).growX().padTop(12f);
+        table.add(barPane).grow().padTop(12f);
     }
 
     Table buildBarList() {
@@ -127,23 +204,18 @@ class UnitWindow extends Window {
 
     Table addBar(int index) {
         return new Table(bar -> {
-            if(index >= BarInfo.data.size) {
-                bar.add(new SBar("[lightgray]<Empty>[]", Color.clear, 0)).height(4 * 8f).growX();
-                return;
-            }
-
-            bar.update(()->{
-                BarInfo.BarData data = BarInfo.data.get(index);
-                if (index >= lastColors.size) lastColors.add(data.color);
-                else lastColors.set(index, data.color);
-            });
-
-            bar.add(new SBar(() -> BarInfo.data.get(index).name, () -> BarInfo.data.get(index).color, () -> BarInfo.data.get(index).number)).height(4 * 8f).growX();
+            bar.add(new SBar(
+                    () -> index >= BarInfo.data.size ? "[lightgray]<Empty>[]" : BarInfo.data.get(index).name,
+                    () -> index >= BarInfo.data.size ? Color.clear : BarInfo.data.get(index).color,
+                    () -> lastColors.get(index),
+                    () -> index >= BarInfo.data.size ? 0 : BarInfo.data.get(index).number)
+            ).height(4 * 8f).growX();
+            if(index >= BarInfo.data.size) return;
             Image icon = new Image(){
                 @Override
                 public void draw() {
                     validate();
-
+                    if(index >= BarInfo.data.size) return;
                     float x = this.x + imageX;
                     float y = this.y + imageY;
                     float width = imageWidth * this.scaleX;
@@ -231,57 +303,6 @@ class UnitWindow extends Window {
                     }
                 }
             });
-        }
-    }
-    static class UnitInfoDisplay extends Table {
-        UnitInfoDisplay() {
-            top();
-            float[] count = new float[]{-1};
-            table().update(t -> {
-                if(getTarget() instanceof Payloadc payload){
-                    if(count[0] != payload.payloadUsed()){
-                        t.clear();
-                        t.top().left();
-
-                        float pad = 0;
-                        float items = payload.payloads().size;
-                        if(8 * 2 * items + pad * items > 275f){
-                            pad = (275f - (8 * 2) * items) / items;
-                        }
-                        int i = 0;
-                        for(Payload p : payload.payloads()){
-                            t.image(p.icon()).size(8 * 2).padRight(pad);
-                            if(++i % 12 == 0) t.row();
-                        }
-
-                        count[0] = payload.payloadUsed();
-                    }
-                }else{
-                    count[0] = -1;
-                    t.clear();
-                }
-            }).growX().visible(() -> getTarget() instanceof Payloadc p && p.payloadUsed() > 0).colspan(2).row();
-
-            Bits statuses = new Bits();
-            table().update(t -> {
-                t.left();
-                if(getTarget() instanceof Statusc st){
-                    Bits applied = st.statusBits();
-                    if(!statuses.equals(applied)){
-                        t.clear();
-
-                        if(applied != null){
-                            for(StatusEffect effect : Vars.content.statusEffects()){
-                                if(applied.get(effect.id) && !effect.isHidden()){
-                                    t.image(effect.uiIcon).size(iconSmall).get()
-                                        .addListener(new Tooltip(l -> l.label(() -> effect.localizedName + " [lightgray]" + UI.formatTime(st.getDuration(effect))).style(Styles.outlineLabel)));
-                                }
-                            }
-                            statuses.set(applied);
-                        }
-                    }
-                }
-            }).left();
         }
     }
 }

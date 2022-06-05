@@ -10,13 +10,14 @@ import arc.scene.ui.layout.*;
 import arc.util.*;
 import mindustry.gen.*;
 import mindustry.ui.*;
-import informatis.ui.WindowManager;
+import informatis.ui.*;
 
-public class Window extends Table{
+public class Window extends Table {
     public TextureRegionDrawable icon;
     public int id;
     public Cons<Table> content;
     public boolean shown = false;
+    public Table window;
 
     public float minWindowWidth = 160, minWindowHeight = 60;
     public float maxWindowWidth = Float.MAX_VALUE, maxWindowHeight = Float.MAX_VALUE;
@@ -29,13 +30,14 @@ public class Window extends Table{
         this.content = content;
         this.name = name;
         this.icon = icon;
+        window = this;
 
         titleBar();
         pane(t -> {
             t.setBackground(Styles.black5);
             t.top().left();
             build(t);
-        }).grow().top().left().get().setScrollingDisabled(true, true);
+        }).grow().get().setScrollingDisabled(true, true);
         bottomBar();
 
         setPosition(Core.graphics.getWidth() / 2f - getWidth() / 2f, Core.graphics.getHeight() / 2f - getHeight() / 2f);
@@ -88,7 +90,7 @@ public class Window extends Table{
                     lastY = v.y;
                 }
             });
-        }).height(6f*8).top().grow().row();
+        }).height(48f).growX().row();
     }
 
     protected void bottomBar(){

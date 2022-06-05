@@ -1,17 +1,14 @@
 package informatis.ui.window;
 
-import informatis.ui.OverScrollPane;
-import informatis.ui.Updatable;
-import informatis.ui.draws.OverDraw;
-import informatis.ui.draws.OverDraws;
-import arc.math.geom.Vec2;
-import arc.scene.ui.ScrollPane;
-import arc.scene.ui.layout.Table;
-import arc.util.Time;
-import mindustry.gen.Icon;
-import mindustry.gen.Tex;
-import mindustry.graphics.Pal;
-import mindustry.ui.Styles;
+import informatis.ui.*;
+import informatis.ui.draws.*;
+import arc.math.geom.*;
+import arc.scene.ui.*;
+import arc.scene.ui.layout.*;
+import arc.util.*;
+import mindustry.gen.*;
+import mindustry.graphics.*;
+import mindustry.ui.*;
 
 public class ToolWindow extends Window implements Updatable {
     Vec2 scrollPos = new Vec2(0, 0);

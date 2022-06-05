@@ -1,18 +1,18 @@
 package informatis.ui;
 
 import arc.*;
+import arc.scene.ui.layout.*;
 import arc.struct.*;
-import arc.util.*;
 import mindustry.*;
 import mindustry.ui.*;
-import informatis.ui.window.Window;
+import informatis.ui.window.*;
+
+import java.util.Objects;
 
 public class WindowManager {
     public static Seq<Window> windows = new Seq<>();
 
     public static void init(){
-        Log.info(windows.size);
-
         Vars.ui.hudGroup.fill(t -> {
             t.name = "Windows";
             for(Window window : windows){

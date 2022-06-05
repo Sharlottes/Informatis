@@ -1,33 +1,29 @@
 package informatis.ui.window;
 
-import mindustry.Vars;
-import mindustry.type.UnitType;
-import informatis.ui.OverScrollPane;
-import arc.Events;
-import arc.graphics.Color;
-import arc.math.Mathf;
-import arc.math.geom.Vec2;
-import arc.scene.event.Touchable;
+import mindustry.*;
+import mindustry.type.*;
+import informatis.ui.*;
+import arc.*;
+import arc.graphics.*;
+import arc.math.*;
+import arc.math.geom.*;
+import arc.scene.event.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.*;
-import mindustry.content.StatusEffects;
-import mindustry.game.EventType;
-import mindustry.game.SpawnGroup;
+import mindustry.content.*;
+import mindustry.game.*;
 import mindustry.gen.*;
-import mindustry.graphics.Pal;
+import mindustry.graphics.*;
 import mindustry.ui.*;
-import informatis.ui.Updatable;
 
 import static arc.Core.*;
 import static arc.Core.settings;
 import static mindustry.Vars.*;
 
-
 public class WaveWindow extends Window implements Updatable {
     static Vec2 scrollPos = new Vec2(0, 0);
-    Table window;
     float heat;
 
     public WaveWindow() {

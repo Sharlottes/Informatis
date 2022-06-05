@@ -1,28 +1,25 @@
 package informatis.ui.window;
 
-import arc.Events;
-import mindustry.game.EventType;
+import arc.*;
+import mindustry.game.*;
 import informatis.ui.*;
-import arc.Core;
-import arc.graphics.Color;
-import arc.math.Mathf;
-import arc.math.geom.Vec2;
-import arc.scene.event.HandCursorListener;
+import arc.graphics.*;
+import arc.math.*;
+import arc.math.geom.*;
+import arc.scene.event.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
-import arc.struct.Seq;
 import arc.util.*;
-import mindustry.Vars;
-import mindustry.content.UnitTypes;
-import mindustry.core.UI;
-import mindustry.game.Team;
+import mindustry.*;
+import mindustry.content.*;
+import mindustry.core.*;
 import mindustry.gen.*;
-import mindustry.graphics.Pal;
-import mindustry.input.DesktopInput;
+import mindustry.graphics.*;
+import mindustry.input.*;
 import mindustry.type.*;
-import mindustry.ui.Styles;
-import mindustry.world.blocks.storage.CoreBlock;
+import mindustry.ui.*;
+import mindustry.world.blocks.storage.*;
 
 import static mindustry.Vars.*;
 

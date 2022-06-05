@@ -2,41 +2,35 @@ package informatis.ui.window;
 
 import arc.Events;
 import arc.graphics.g2d.*;
-import arc.math.geom.Geometry;
-import arc.scene.Element;
-import arc.scene.style.Drawable;
-import arc.struct.ObjectMap;
-import mindustry.editor.MapEditor;
-import mindustry.game.EventType;
-import mindustry.graphics.Layer;
+import arc.math.geom.*;
+import arc.scene.*;
+import arc.scene.style.*;
+import arc.struct.*;
 import informatis.core.EditorTool;
+import mindustry.editor.*;
+import mindustry.game.*;
+import mindustry.graphics.*;
 import informatis.ui.*;
-import arc.Core;
+import arc.*;
 import arc.func.*;
-import arc.graphics.Color;
-import arc.input.KeyCode;
-import arc.math.Mathf;
-import arc.math.geom.Vec2;
-import arc.scene.event.Touchable;
-import arc.scene.style.TextureRegionDrawable;
+import arc.graphics.*;
+import arc.input.*;
+import arc.math.*;
+import arc.scene.event.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
-import arc.scene.utils.Elem;
-import arc.struct.Seq;
+import arc.scene.utils.*;
 import arc.util.*;
-import mindustry.Vars;
-import mindustry.content.Blocks;
-import mindustry.game.Team;
+import mindustry.*;
+import mindustry.content.*;
 import mindustry.gen.*;
-import mindustry.graphics.Pal;
-import mindustry.ui.Styles;
+import mindustry.ui.*;
 import mindustry.world.*;
 
 import static mindustry.Vars.*;
 
 public class MapEditorWindow extends Window implements Updatable {
     Vec2 scrollPos = new Vec2(0, 0);
-    Table window;
     TextField search;
     EditorTool tool;
     final Vec2[][] brushPolygons = new Vec2[MapEditor.brushSizes.length][0];
@@ -152,6 +146,7 @@ public class MapEditorWindow extends Window implements Updatable {
 
     @Override
     public void update() {
+        //TODO make it more responsive, time -> width delta detect
         heat += Time.delta;
         if(heat >= 60f) {
             heat = 0f;

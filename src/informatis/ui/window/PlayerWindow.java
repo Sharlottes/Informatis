@@ -1,24 +1,21 @@
 package informatis.ui.window;
 
-import informatis.ui.OverScrollPane;
-import informatis.ui.Updatable;
-import arc.Core;
-import arc.graphics.Color;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Lines;
-import arc.math.geom.Vec2;
+import informatis.ui.*;
+import arc.*;
+import arc.graphics.*;
+import arc.graphics.g2d.*;
+import arc.math.geom.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
-import arc.scene.utils.Elem;
+import arc.scene.utils.*;
 import arc.struct.*;
 import arc.util.*;
 import mindustry.gen.*;
-import mindustry.graphics.Pal;
-import mindustry.input.DesktopInput;
+import mindustry.graphics.*;
+import mindustry.input.*;
 import mindustry.ui.*;
 
 import static mindustry.Vars.*;
-
 
 public class PlayerWindow extends Window implements Updatable {
     Vec2 scrollPos = new Vec2(0, 0);
