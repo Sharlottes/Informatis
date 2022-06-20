@@ -229,10 +229,10 @@ public class UnitWindow extends Window {
                     Draw.color(Color.white);
                     Draw.alpha(parentAlpha * color.a);
                     BarInfo.BarData data = BarInfo.data.get(index);
-                    getDrawable().draw(x, y, width, height);
+                    data.icon.draw(x, y, width, height);
                     if (!hasMouse() && ScissorStack.push(Tmp.r1.set(ScissorStack.peek().x + x,  ScissorStack.peek().y + y, width, height * data.number))) {
                         Draw.color(data.color);
-                        getDrawable().draw(x, y, width, height);
+                        data.icon.draw(x, y, width, height);
                         ScissorStack.pop();
                     }
                 }
@@ -245,7 +245,7 @@ public class UnitWindow extends Window {
 
                 @Override
                 public void exit(InputEvent event, float x, float y, int pointer, Element fromActor){
-                    icon.setDrawable(BarInfo.data.get(index).icon);
+                    icon.setDrawable(BarInfo.data.size >= index ? Icon.none : BarInfo.data.get(index).icon);
                 }
             });
             icon.clicked(()->{

@@ -44,6 +44,14 @@ public class Window extends Table {
         id = WindowManager.register(this);
 
         visible(() -> shown);
+
+        update(() -> {
+            if(x > Core.graphics.getWidth() - getWidth()/2) setPosition(Core.graphics.getWidth() - getWidth()/2, y);
+            else if(x < -getWidth()/2) setPosition(-getWidth()/2, y);
+
+            if(y > Core.graphics.getHeight() - getHeight()/2) setPosition(x, Core.graphics.getHeight() - getHeight()/2);
+            else if(y < -getHeight()/2) setPosition(x, -getHeight()/2);
+        });
     }
 
     protected void build(Table t){
