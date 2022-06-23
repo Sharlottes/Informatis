@@ -77,7 +77,7 @@ public class BarInfo {
 
         if(target instanceof ReloadTurret.ReloadTurretBuild || target instanceof MassDriver.MassDriverBuild){
             float pro;
-            if(target instanceof ReloadTurret.ReloadTurretBuild turret) pro = turret.reloadCounter / ((Turret)turret.block).reload;
+            if(target instanceof ReloadTurret.ReloadTurretBuild turret) pro = turret.reloadCounter / ((ReloadTurret)turret.block).reload;
             else {
                 MassDriver.MassDriverBuild mass = (MassDriver.MassDriverBuild) target;
                 pro = mass.reloadCounter;
