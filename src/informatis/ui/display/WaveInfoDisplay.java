@@ -15,7 +15,7 @@ import static arc.Core.*;
 import static mindustry.Vars.*;
 
 public class WaveInfoDisplay {
-    public boolean waveShown;
+    private boolean waveShown;
 
     public void addWaveInfoTable() {
         Table waveInfoTable = new Table(Tex.buttonEdge4, table -> {

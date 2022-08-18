@@ -155,7 +155,7 @@ public class WaveWindow extends Window implements Updatable {
                             ObjectIntMap<SpawnGroup> groups = getWaveGroup(index-1);
 
                             int row = 0;
-                            int max = Math.max(1, Math.round(window.getWidth()/2/8));
+                            int max = Math.max(1, Math.round(window.getWidth()/64)-5);
                             for (SpawnGroup group : groups.keys()) {
                                 int spawners = state.rules.waveTeam.cores().size + (group.type.flying ? spawner.countFlyerSpawns() : spawner.countGroundSpawns());
                                 int amount = groups.get(group);
