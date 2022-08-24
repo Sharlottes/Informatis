@@ -32,4 +32,4 @@ jobs:
         uses: actions/upload-artifact@v2.2.1
         with:
           name: dexed
-          path: build/libs/dexed-*.jar
+          path: build/libs/raw-*.jar
