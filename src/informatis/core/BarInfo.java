@@ -3,7 +3,6 @@ package informatis.core;
 import arc.graphics.*;
 import arc.graphics.g2d.TextureRegion;
 import arc.math.*;
-import arc.math.geom.Rect;
 import arc.scene.style.Drawable;
 import arc.scene.style.TextureRegionDrawable;
 import arc.struct.*;
@@ -62,7 +61,7 @@ public class BarInfo {
         else if(target instanceof Building build){
             if(build.block.hasLiquids) data.add(new BarData(bundle.format("shar-stat.capacity", build.liquids.currentAmount() < 0.01f ? build.liquids.current().localizedName : bundle.get("bar.liquid"), formatNumber(build.liquids.currentAmount()), formatNumber(build.block.liquidCapacity)), build.liquids.current().color, build.liquids.currentAmount() / build.block.liquidCapacity, liquid));
 
-            if(build.block.hasPower && build.block.consumesPower){
+            if(build.block.hasPower && build.block.consPower != null){
                 ConsumePower cons = build.block.consPower;
                 data.add(new BarData(bundle.format("shar-stat.power", formatNumber(build.power.status * 60f * (cons.buffered ? cons.capacity : cons.usage)), formatNumber(60f * (cons.buffered ? cons.capacity : cons.usage))), Pal.powerBar, Mathf.zero(cons.requestedPower(build)) && build.power.graph.getPowerProduced() + build.power.graph.getBatteryStored() > 0f ? 1f : build.power.status, power));
             }

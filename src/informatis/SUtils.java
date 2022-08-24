@@ -1,7 +1,9 @@
 package informatis;
 
+import arc.Core;
 import arc.graphics.g2d.*;
 import arc.math.Mathf;
+import arc.math.geom.Position;
 import arc.scene.style.*;
 import arc.struct.Seq;
 import arc.util.*;
@@ -9,6 +11,7 @@ import mindustry.Vars;
 import mindustry.core.UI;
 import mindustry.entities.bullet.*;
 import mindustry.gen.*;
+import mindustry.input.DesktopInput;
 import mindustry.type.UnitType;
 import mindustry.type.weapons.*;
 import mindustry.world.Tile;
@@ -17,9 +20,23 @@ import java.lang.reflect.*;
 
 import static informatis.SVars.*;
 import static arc.Core.*;
+import static mindustry.Vars.control;
 import static mindustry.Vars.player;
 
 public class SUtils {
+    /**
+     * move camera to given coordination
+     * @param x - world unit x
+     * @param y - world unit y
+     */
+    public static void moveCamera(float x, float y) {
+        if(control.input instanceof DesktopInput)
+            ((DesktopInput) control.input).panning = true;
+        Core.camera.position.set(x, y);
+    }
+    public static void moveCamera(Position pos) {
+        moveCamera(pos.getX(), pos.getY());
+    }
     @SuppressWarnings("unchecked")
     public static <T extends Teamc> T getTarget(){
         if(locked && target != null) {

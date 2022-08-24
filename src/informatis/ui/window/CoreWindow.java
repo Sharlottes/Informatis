@@ -1,6 +1,7 @@
 package informatis.ui.window;
 
 import arc.*;
+import informatis.SUtils;
 import mindustry.game.*;
 import informatis.ui.*;
 import arc.graphics.*;
@@ -94,11 +95,7 @@ public class CoreWindow extends Window implements Updatable {
                             new Table(s -> {
                                 s.center();
                                 Image image = new Image(core.block.uiIcon);
-                                image.clicked(() -> {
-                                    if(control.input instanceof DesktopInput)
-                                        ((DesktopInput) control.input).panning = true;
-                                    Core.camera.position.set(core.x, core.y);
-                                });
+                                image.clicked(() -> SUtils.moveCamera(core));
                                 HandCursorListener listener1 = new HandCursorListener();
                                 image.addListener(listener1);
                                 image.update(() -> {

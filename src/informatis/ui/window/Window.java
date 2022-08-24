@@ -4,8 +4,10 @@ import arc.*;
 import arc.func.*;
 import arc.input.*;
 import arc.math.geom.*;
+import arc.scene.Element;
 import arc.scene.event.*;
 import arc.scene.style.*;
+import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
 import arc.util.*;
 import mindustry.gen.*;
@@ -21,7 +23,7 @@ public class Window extends Table {
 
     public float minWindowWidth = 160, minWindowHeight = 60;
     public float maxWindowWidth = Float.MAX_VALUE, maxWindowHeight = Float.MAX_VALUE;
-
+    float topBarHeight = 48f;
     public Window(TextureRegionDrawable icon, String name){
         this(icon, name, null);
     }
@@ -31,27 +33,33 @@ public class Window extends Table {
         this.name = name;
         this.icon = icon;
         window = this;
+        id = WindowManager.register(this);
 
         titleBar();
-        pane(t -> {
+        row();
+        ScrollPane pane = new ScrollPane(new Table(t -> {
             t.setBackground(Styles.black5);
             t.top().left();
             build(t);
-        }).grow().get().setScrollingDisabled(true, true);
+        }), Styles.noBarPane);
+        pane.update(() -> {
+            if(pane.hasScroll()){
+                Element result = Core.scene.hit(Core.input.mouseX(), Core.input.mouseY(), true);
+                if(result == null || !result.isDescendantOf(pane)){
+                    Core.scene.setScrollFocus(null);
+                }
+            }
+        });
+        pane.setScrollingDisabled(true, true);
+        add(pane).grow();
+        row();
         bottomBar();
 
-        setPosition(Core.graphics.getWidth() / 2f - getWidth() / 2f, Core.graphics.getHeight() / 2f - getHeight() / 2f);
-        id = WindowManager.register(this);
-
         visible(() -> shown);
-
-        update(() -> {
-            if(x > Core.graphics.getWidth() - getWidth()/2) setPosition(Core.graphics.getWidth() - getWidth()/2, y);
-            else if(x < -getWidth()/2) setPosition(-getWidth()/2, y);
-
-            if(y > Core.graphics.getHeight() - getHeight()/2) setPosition(x, Core.graphics.getHeight() - getHeight()/2);
-            else if(y < -getHeight()/2) setPosition(x, -getHeight()/2);
-        });
+        update(() -> setPosition(
+            Math.max(0, Math.min(Core.graphics.getWidth() - getWidth(), x)),
+            Math.max(topBarHeight - getHeight(), Math.min(Core.graphics.getHeight() - getHeight(), y))
+        ));
     }
 
     protected void build(Table t){
@@ -60,20 +68,13 @@ public class Window extends Table {
 
     protected void titleBar(){
         table(t -> {
-            // icon and title
-            t.table(Tex.buttonEdge1, b -> {
+            t.pane(b -> {
                 b.left();
+                b.setBackground(Tex.buttonEdge1);
                 b.image(icon.getRegion()).size(20f).padLeft(15);
-                b.pane(Styles.noBarPane, p -> {
-                    p.left();
-                    p.add(Core.bundle.get("window."+name+".name")).padLeft(20);
-                }).grow().get().setScrollingDisabled(false, true);
-            }).grow();
-            
-            // exit button
-            t.table(Tex.buttonEdge3, b -> {
-                b.button(Icon.cancel, Styles.emptyi, () -> shown = false);
-            }).width(80f).growY();
+                b.add(Core.bundle.get("window."+name+".name")).padLeft(20);
+            }).touchable(Touchable.disabled).grow();
+            t.table(Tex.buttonEdge3, b -> b.button(Icon.cancel, Styles.emptyi, () -> shown = false).fill()).width(80f).growY();
 
             // handles the dragging.
             t.touchable = Touchable.enabled;
@@ -91,18 +92,15 @@ public class Window extends Table {
                 @Override
                 public void touchDragged(InputEvent event, float dx, float dy, int pointer) {
                     Vec2 v = t.localToStageCoordinates(Tmp.v1.set(dx, dy));
-
                     setPosition( x + (v.x - lastX),  y + (v.y - lastY));
-
                     lastX = v.x;
                     lastY = v.y;
                 }
             });
-        }).height(48f).growX().row();
+        }).height(topBarHeight).growX();
     }
 
     protected void bottomBar(){
-        row();
         table(Styles.black5, t -> {
             t.table().growX();
             t.table(Icon.resizeSmall, r -> {

@@ -2,14 +2,12 @@ package informatis.ui.window;
 
 import arc.*;
 import arc.func.*;
-import arc.math.Mathf;
+import arc.math.*;
 import arc.scene.*;
-import arc.scene.event.*;
 import informatis.core.*;
 import informatis.ui.*;
-import arc.graphics.Color;
+import arc.graphics.*;
 import arc.graphics.g2d.*;
-import arc.scene.style.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
 import arc.struct.Bits;
@@ -31,14 +29,13 @@ import static informatis.SUtils.*;
 import static mindustry.Vars.*;
 
 public class UnitWindow extends Window {
+    int barSize = 6;
+    float usedPayload;
+    float barScrollPos;
     final Seq<Color> lastColors = new Seq<>();
+    final Bits statuses = new Bits();
     Teamc latestTarget;
     ScrollPane barPane;
-
-    private int barSize = 6;
-    private float usedPayload;
-    private float barScrollPos;
-    private final Bits statuses = new Bits();
 
     public UnitWindow() {
         super(Icon.units, "unit");
@@ -48,41 +45,52 @@ public class UnitWindow extends Window {
     @Override
     protected void build(Table table) {
         table.top().background(Styles.black8);
-        table.table(title -> {
-            title.center();
-            Image image = RectWidget.build();
-            image.update(()->{
-                TextureRegion region = clear;
-                if (target instanceof Unit u && u.type != null) region = u.type.uiIcon;
-                else if (target instanceof Building b) {
-                    if (b instanceof ConstructBlock.ConstructBuild cb) region = cb.current.uiIcon;
-                    else if (b.block != null) region = b.block.uiIcon;
-                }
-                image.setDrawable(region);
+        table.table(profile -> {
+            profile.table(title -> {
+                title.center();
+                Image image = RectWidget.build();
+                image.update(()->{
+                    TextureRegion region = clear;
+                    if (target instanceof Unit u && u.type != null) region = u.type.uiIcon;
+                    else if (target instanceof Building b) {
+                        if (b instanceof ConstructBlock.ConstructBuild cb) region = cb.current.uiIcon;
+                        else if (b.block != null) region = b.block.uiIcon;
+                    }
+                    image.setDrawable(region);
+                });
+                image.clicked(()->{
+                    if(target == getTarget()) locked = !locked;
+                    target = getTarget();
+                });
+                title.add(image).size(iconMed).padRight(12f);
+                Label label = title.label(() -> {
+                    if (target instanceof Unit u && u.type != null) return u.type.localizedName;
+                    if (target instanceof Building b && b.block != null) {
+                        if (target instanceof ConstructBlock.ConstructBuild cb) return cb.current.localizedName;
+                        return b.block.localizedName;
+                    }
+                    return "";
+                }).color(Pal.accent).get();
+                label.clicked(() -> moveCamera(target));
+            }).tooltip(tool -> {
+                tool.table(Styles.black6, to -> {
+                    to.label(() -> target instanceof Unit u ? u.isPlayer() ? u.getPlayer().name : "AI" : "").visible(target instanceof Unit).row();
+                    to.label(() -> target.tileX() + ", " + target.tileY()).row();
+                    to.label(() -> target instanceof Unit u ? "[accent]"+ Strings.fixed(u.armor, 0) + "[] Armor" : "").visible(target instanceof Unit);
+                });
             });
-            image.clicked(()->{
-                if(target == getTarget()) locked = !locked;
-                target = getTarget();
+            profile.table(weapon -> {
+                weapon.add(new WeaponDisplay());
             });
-            title.add(image).size(iconMed).padRight(12f);
-            title.label(() -> {
-                if (target instanceof Unit u && u.type != null) return u.type.localizedName;
-                if (target instanceof Building b && b.block != null) {
-                    if (target instanceof ConstructBlock.ConstructBuild cb) return cb.current.localizedName;
-                    return b.block.localizedName;
-                }
-                return "";
-            }).color(Pal.accent);
-        }).tooltip(tool -> {
-            tool.background(Styles.black6);
-            tool.table(to -> {
-                to.label(() -> target instanceof Unit u ? u.isPlayer() ? u.getPlayer().name : "AI" : "").row();
-                to.label(() -> target.tileX() + ", " + target.tileY()).row();
-                to.label(() -> target instanceof Unit u ? "[accent]"+ Strings.fixed(u.armor, 0) + "[] Armor" : "");
-            }).margin(12f);
         }).margin(12f).row();
-
-        table.image().color((target == null ? player.unit() : target).team().color).visible(()->target instanceof Payloadc || target instanceof Statusc).height(4f).growX().row();
+        table.image().color((target == null ? player.unit() : target).team().color).visible(()-> {
+            if(target instanceof Payloadc payload) return payload.payloads().size > 0;
+            if(target instanceof Statusc status) {
+                Bits applied = status.statusBits();
+                return applied == null || Vars.content.statusEffects().contains(effect -> applied.get(effect.id) && !effect.isHidden());
+            }
+            return false;
+        }).height(4f).growX().row();
 
         table.table(state -> {
             state.left();
@@ -162,9 +170,9 @@ public class UnitWindow extends Window {
                     rebuildStatus.get(t);
                 }
             }).grow();
-        }).pad(12f).growX().row();
+        }).minHeight(0).growX().row();
 
-        table.image().color((target==null?player.unit():target).team().color).height(4f).growX().row();
+        table.image().color((target == null ? player.unit() : target).team().color).height(4f).growX().row();
 
         barPane = new ScrollPane(buildBarList(), Styles.noBarPane);
         barPane.update(() -> {
@@ -191,20 +199,20 @@ public class UnitWindow extends Window {
         });
         barPane.setScrollingDisabledX(true);
         barPane.setScrollYForce(barScrollPos);
+
         table.add(barPane).grow().padTop(12f);
     }
 
+    boolean show;
+    Teamc targetCache;
     Table buildBarList() {
+        show = false;
         return new Table(table -> {
             table.top();
             for (int i = 0; i < barSize; i++) {
                 table.add(addBar(i)).growX().get();
                 table.row();
             }
-            table.add(new SBar("+", Color.clear, 0)).height(4 * 8f).growX().get().clicked(()->{
-                barSize++;
-                barPane.setWidget(buildBarList());
-            });
         });
     }
 
@@ -229,29 +237,17 @@ public class UnitWindow extends Window {
                     Draw.color(Color.white);
                     Draw.alpha(parentAlpha * color.a);
                     BarInfo.BarData data = BarInfo.data.get(index);
-                    data.icon.draw(x, y, width, height);
-                    if (!hasMouse() && ScissorStack.push(Tmp.r1.set(ScissorStack.peek().x + x,  ScissorStack.peek().y + y, width, height * data.number))) {
-                        Draw.color(data.color);
+                    if(hasMouse()) getDrawable().draw(x, y, width, height);
+                    else {
                         data.icon.draw(x, y, width, height);
-                        ScissorStack.pop();
+                        if(ScissorStack.push(Tmp.r1.set(ScissorStack.peek().x + x,  ScissorStack.peek().y + y, width, height * data.number))) {
+                            Draw.color(data.color);
+                            data.icon.draw(x, y, width, height);
+                            ScissorStack.pop();
+                        }
                     }
                 }
             };
-            icon.addListener(new InputListener(){
-                @Override
-                public void enter(InputEvent event, float x, float y, int pointer, Element fromActor){
-                    icon.setDrawable(Icon.cancel);
-                }
-
-                @Override
-                public void exit(InputEvent event, float x, float y, int pointer, Element fromActor){
-                    icon.setDrawable(BarInfo.data.size >= index ? Icon.none : BarInfo.data.get(index).icon);
-                }
-            });
-            icon.clicked(()->{
-                if(barSize > 0) barSize--;
-                barPane.setWidget(buildBarList());
-            });
             icon.setDrawable(BarInfo.data.get(index).icon);
             bar.add(icon).size(iconMed * 0.75f).padLeft(8f);
         });
@@ -265,36 +261,18 @@ public class UnitWindow extends Window {
                     for(int r = 0; r < u.type.weapons.size; r++){
                         Weapon weapon = u.type.weapons.get(r);
                         WeaponMount mount = u.mounts[r];
-                        int finalR = r;
                         tt.table(ttt -> {
                             ttt.left();
-                            if((1 + finalR) % 4 == 0) ttt.row();
                             ttt.stack(
                                 new Table(o -> {
                                     o.left();
-                                    o.add(new Image(!weapon.name.equals("") && weapon.outlineRegion.found() ? weapon.outlineRegion : u.type.uiIcon){
+                                    o.add(new Image(weapon.region){
                                         @Override
                                         public void draw(){
-                                            validate();
-                                            float x = this.x;
-                                            float y = this.y;
-                                            float scaleX = this.scaleX;
-                                            float scaleY = this.scaleY;
-                                            Draw.color(color);
-                                            Draw.alpha(parentAlpha * color.a);
-
-                                            if(getDrawable() instanceof TransformDrawable){
-                                                float rotation = getRotation();
-                                                if(scaleX != 1 || scaleY != 1 || rotation != 0){
-                                                    getDrawable().draw(x + imageX, y + imageY, originX - imageX, originY - imageY, imageWidth, imageHeight, scaleX, scaleY, rotation);
-                                                    return;
-                                                }
-                                            }
                                             y -= (mount.reload) / weapon.reload * weapon.recoil;
-                                            if(getDrawable() != null)
-                                                getDrawable().draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
+                                           super.draw();
                                         }
-                                    }).size(iconLarge);
+                                    }).size(iconLarge).scaling(Scaling.bounded);
                                 }),
                                 new Table(h -> {
                                     h.defaults().growX().height(9f).width(iconLarge).padTop(18f);
@@ -306,6 +284,7 @@ public class UnitWindow extends Window {
                                 })
                             );
                         }).pad(4);
+                        if(r % 4 == 0) tt.row();
                     }
                 }
             });

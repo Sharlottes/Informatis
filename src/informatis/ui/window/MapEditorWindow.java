@@ -136,7 +136,6 @@ public class MapEditorWindow extends Window implements Updatable {
 
             displays.each((icon, display) -> {
                 buttons.button(icon, Styles.clearTogglei, ()->{
-                    Log.info(table.getChildren().get(table.getChildren().size-1));
                     if(table.getChildren().size > 1) table.getChildren().get(table.getChildren().size-1).remove();
                     table.add(display).grow();
                 }).row();
