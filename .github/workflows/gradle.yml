@@ -25,9 +25,10 @@ jobs:
       run: sdkmanager "build-tools;29.0.3"
     - name: Add Android SDK to PATH
       run: echo "${ANDROID_HOME}/build-tools/29.0.3" >> $GITHUB_PATH
-
+    - name: Build with Gradle
+      run: ./gradlew buildDex
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v2.2.1
       with:
         name: informatis
-        path: build/libs/[!raw-]*.jar
+        path: build/libs/raw-*.jar
