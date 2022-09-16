@@ -137,6 +137,7 @@ public class CoreWindow extends Window implements Updatable {
                         }),
                         new Table(ttt -> {
                             ttt.bottom().right();
+                            if(itemData.get(team) == null) return;
                             int amount = itemData.get(team).updateItems.isEmpty()?0:Mathf.floor(itemData.get(team).updateItems.get(item.id).amount);
                             Label label = new Label(amount + "/s");
                             label.setFontScale(0.65f);

@@ -101,9 +101,9 @@ public class UnitWindow extends Window {
             })
             .tooltip(tool -> {
                 tool.background(Styles.black6);
-                tool.label(() -> target instanceof Unit u ? u.isPlayer() ? u.getPlayer().name : "AI" : "").visible(target instanceof Unit).row();
+                tool.label(() -> target instanceof Unit u ? u.isPlayer() ? u.getPlayer().name : "AI" : "").row();
                 tool.label(() -> target.tileX() + ", " + target.tileY()).row();
-                tool.label(() -> target instanceof Unit u ? "[accent]"+ Strings.fixed(u.armor, 0) + "[] Armor" : "").visible(target instanceof Unit);
+                tool.label(() -> target instanceof Unit u ? "[accent]"+ Strings.fixed(u.armor, 0) + "[] Armor" : "");
             }).get()
         ).margin(3f).growX().row();
         table.table().update(tt -> {
