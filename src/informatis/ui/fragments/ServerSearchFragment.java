@@ -41,10 +41,7 @@ public class ServerSearchFragment extends Table {
         final int[] i = {0};
         final int[] count = {0};
         Events.run(EventType.Trigger.update, () -> {
-            if(!loading) {
-                
-                return;
-            };
+            if(!loading) return;
             i[0] += Time.delta;
             if(i[0] >= 5) {
                 i[0] = 0;
@@ -144,7 +141,6 @@ public class ServerSearchFragment extends Table {
               Vars.defaultServers.set(tempGroup);
               defaultServers.each(group -> group.addresses = addresses.get(group));
               refreshAll();
-              return;
             }
         });
         add(button).minWidth(100).height(50);
