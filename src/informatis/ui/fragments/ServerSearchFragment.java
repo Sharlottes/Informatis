@@ -42,7 +42,7 @@ public class ServerSearchFragment extends Table {
         final int[] count = {0};
         Events.run(EventType.Trigger.update, () -> {
             if(!loading) {
-                loadingLabel.setText("");
+                
                 return;
             };
             i[0] += Time.delta;
@@ -58,7 +58,16 @@ public class ServerSearchFragment extends Table {
         addButton("attack");
         addButton("sandbox");
         addButton("custom");
-        Vars.ui.join.shown(this::addFragment);
+        Vars.ui.join.shown(() -> {
+            Table serverTable = (Table) Vars.ui.join.getChildren().get(1);
+            var saved = serverTable.getChildren().copy();
+            serverTable.clear();
+            serverTable.add(saved.get(0)).row();
+            serverTable.add(this).row();
+            serverTable.add(loadingLabel).pad(5).row();
+            serverTable.add(saved.get(1)).row();
+            serverTable.add(saved.get(2));
+        });
     }
 
     void refreshAll() {
@@ -75,30 +84,32 @@ public class ServerSearchFragment extends Table {
             throw new RuntimeException(ex);
         }
     }
-    void refresh(boolean toggle) throws NoSuchMethodException {
-        if(!toggle) {
-            Log.info("trying backdown");
-            Vars.defaultServers.set(tempGroup);
-            defaultServers.each(group -> group.addresses = addresses.get(group));
-            refreshAll();
-            return;
-        }
+    
+    void loadingEnd() {
+        loadingLabel.setText("");
+        loading = false;
+        mode = "";
+        getChildren().each(elem -> ((TextButton)elem).setDisabled(false));
+        refreshAll(); 
+    }
+    
+    void refresh() {
         loading = true;
         getChildren().each(elem -> ((TextButton)elem).setDisabled(true));
-        Time.run(15 * 60, () -> {
-            loading = false;
-            mode = "";
-            getChildren().each(elem -> ((TextButton)elem).setDisabled(false));
-            refreshAll();
-        });
+        Time.run(15 * 60, this::loadingEnd);
         final int[] iStack = {0};
         for(int i = 0; i < tempGroup.size; i ++){
             int j = i;
             ServerGroup group = tempGroup.get((i + tempGroup.size/2) % tempGroup.size);
             Seq<String> tmp = Seq.with(group.addresses);
-
             final int[] iiStack = {0};
             int addressesLength = group.addresses.length;
+            Cons<Void> checkLast = ignore -> {
+                if(!loading) return;
+                if(++iiStack[0] < addressesLength) return;                
+                if(++iStack[0] < tempGroup.size) return;
+                loadingEnd();  
+            };
             for(int ii = 0; ii < addressesLength; ii++){
                 String address = tmp.get(ii);
                 String resaddress = address.contains(":") ? address.split(":")[0] : address;
@@ -110,38 +121,12 @@ public class ServerSearchFragment extends Table {
                     )) {
                         tmp.remove(address);
                         group.addresses = tmp.toArray();
-                        Log.info(address + " has been removed");
                         Vars.defaultServers.set((j + Vars.defaultServers.size/2) % Vars.defaultServers.size, group);
                     }
-                    if(++iiStack[0] < addressesLength) return;
-                    if(++iStack[0] < tempGroup.size) return;
-                    loading = false;
-                    mode = "";
-                    getChildren().each(elem -> ((TextButton)elem).setDisabled(false));
-                    refreshAll();
-                }, e -> {
-                    if(!loading) return;
-                    if(++iiStack[0] < addressesLength) return;
-                    if(++iStack[0] < tempGroup.size) return;
-                    loading = false;
-                    mode = "";
-                    getChildren().each(elem -> ((TextButton)elem).setDisabled(false));
-                    refreshAll();
-                });
+                    checkLast.get();
+                }, e -> checkLast.get());
             }
         }
-    }
-
-    void addFragment() {
-        Table serverTable = (Table) Vars.ui.join.getChildren().get(1);
-        var saved = serverTable.getChildren().copy();
-
-        serverTable.clear();
-        serverTable.add(saved.get(0)).row();
-        serverTable.add(this).row();
-        serverTable.add(loadingLabel).pad(5).row();
-        serverTable.add(saved.get(1)).row();
-        serverTable.add(saved.get(2));
     }
 
     void addButton(String string) {
@@ -152,11 +137,14 @@ public class ServerSearchFragment extends Table {
                 if(!elem.equals(button)) ((TextButton)elem).setChecked(false);
             });
             mode = string;
-            try {
-                Log.info(button.isChecked());
-                refresh(button.isChecked());
-            } catch (NoSuchMethodException e) {
-                throw new RuntimeException(e);
+            if(button.isChecked()) {
+                refresh();
+            } else {
+              Log.info("trying backdown");
+              Vars.defaultServers.set(tempGroup);
+              defaultServers.each(group -> group.addresses = addresses.get(group));
+              refreshAll();
+              return;
             }
         });
         add(button).minWidth(100).height(50);
