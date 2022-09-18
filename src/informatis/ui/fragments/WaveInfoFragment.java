@@ -1,4 +1,4 @@
-package informatis.ui.display;
+package informatis.ui.fragments;
 
 import arc.scene.ui.layout.*;
 import arc.util.*;
@@ -14,7 +14,7 @@ import static informatis.SVars.*;
 import static arc.Core.*;
 import static mindustry.Vars.*;
 
-public class WaveInfoDisplay {
+public class WaveInfoFragment {
     private boolean waveShown;
 
     public void addWaveInfoTable() {

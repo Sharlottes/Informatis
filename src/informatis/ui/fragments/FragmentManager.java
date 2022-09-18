@@ -1,15 +1,12 @@
-package informatis.ui;
+package informatis.ui.fragments;
 
 import arc.scene.ui.layout.Table;
 import arc.struct.Seq;
-import informatis.ui.display.ElementDisplay;
-import informatis.ui.display.SchemDisplay;
-import informatis.ui.display.WaveInfoDisplay;
 
 import static arc.Core.scene;
 import static mindustry.Vars.ui;
 
-public class DisplayManager {
+public class FragmentManager {
     public static void init() {
         //layout debug
         Seq.with(scene.root,
@@ -17,12 +14,12 @@ public class DisplayManager {
                 ui.load, ui.custom, ui.language, ui.database, ui.settings, ui.host,
                 ui.paused, ui.about, ui.bans, ui.admins, ui.traces, ui.maps, ui.content,
                 ui.planet, ui.research, ui.mods, ui.schematics, ui.logic
-        ).each(dialog-> dialog.addChild(new ElementDisplay(dialog)));
+        ).each(dialog-> dialog.addChild(new ElementViewFragment(dialog)));
 
         //schem quick-slot
         Table table = ((Table) scene.find("minimap/position")).row();
-        table.add(new SchemDisplay());
-        new WaveInfoDisplay().addWaveInfoTable();
-
+        table.add(new QuickSchemFragment());
+        new WaveInfoFragment().addWaveInfoTable();
+        new ServerSearchFragment();
     }
 }

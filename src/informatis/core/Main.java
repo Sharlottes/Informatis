@@ -3,6 +3,7 @@ package informatis.core;
 import arc.input.KeyCode;
 import informatis.ui.*;
 import informatis.ui.draws.OverDraws;
+import informatis.ui.fragments.FragmentManager;
 import informatis.ui.window.*;
 import arc.*;
 import mindustry.*;
@@ -50,7 +51,7 @@ public class Main extends Mod {
 
             SettingS.init();
             WindowManager.init();
-            DisplayManager.init();
+            FragmentManager.init();
             OverDraws.init();
             OverDrawer.init();
         });

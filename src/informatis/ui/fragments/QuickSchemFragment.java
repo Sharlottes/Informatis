@@ -1,4 +1,4 @@
-package informatis.ui.display;
+package informatis.ui.fragments;
 
 import informatis.SUtils;
 import arc.Core;
@@ -26,7 +26,7 @@ import static arc.Core.*;
 import static mindustry.Vars.*;
 import static mindustry.Vars.ui;
 
-public class SchemDisplay extends Table implements Updatable {
+public class QuickSchemFragment extends Table implements Updatable {
     static float schemScrollPos, tagScrollPos;
     static boolean schemShown;
     static Schematic firstSchematic;
@@ -34,7 +34,7 @@ public class SchemDisplay extends Table implements Updatable {
     static Runnable rebuildList = () -> {};
     float heat;
 
-    public SchemDisplay() {
+    public QuickSchemFragment() {
         setSchemTable();
     }
 

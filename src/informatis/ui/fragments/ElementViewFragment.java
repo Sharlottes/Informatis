@@ -1,4 +1,4 @@
-package informatis.ui.display;
+package informatis.ui.fragments;
 
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Lines;
@@ -13,13 +13,13 @@ import mindustry.graphics.Pal;
 import static arc.Core.scene;
 import static arc.Core.settings;
 
-public class ElementDisplay extends Element {
+public class ElementViewFragment extends Element {
     Group root;
 
-    public ElementDisplay() {
+    public ElementViewFragment() {
         this(scene.root);
     }
-    public ElementDisplay(Group root) {
+    public ElementViewFragment(Group root) {
         this.root = root;
         fillParent = true;
         touchable = Touchable.disabled;
