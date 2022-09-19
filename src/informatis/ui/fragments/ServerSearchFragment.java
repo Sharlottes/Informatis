@@ -2,12 +2,8 @@ package informatis.ui.fragments;
 
 import arc.Core;
 import arc.Events;
-import arc.func.Cons;
-import arc.func.Prov;
-import arc.scene.actions.DelayAction;
-import arc.scene.actions.RepeatAction;
-import arc.scene.ui.Label;
-import arc.scene.ui.TextButton;
+import arc.scene.Element;
+import arc.scene.ui.*;
 import arc.scene.ui.layout.Table;
 import arc.struct.*;
 import arc.util.*;
@@ -25,17 +21,17 @@ import static mindustry.Vars.*;
 
 public class ServerSearchFragment extends Table {
     String mode;
-    Seq<ServerGroup> tempGroup = new Seq<>();
-    ObjectMap<ServerGroup, String[]> addresses = new ObjectMap<>();
+    Seq<ServerGroup> originServerGroup = new Seq<>();
+    ObjectMap<ServerGroup, String[]> originServerAddresses = new ObjectMap<>();
     boolean loading = false;
-    Label loadingLabel = new Label("loading");
+    Label loadingLabel = new Label("");
     public ServerSearchFragment() {
         super();
 
         Core.app.post(() -> {
-            tempGroup.set(Vars.defaultServers.copy());
-            tempGroup.each(group -> addresses.put(group, group.addresses));
-            Log.info("[Informatis] Fetched @ community servers.", tempGroup.size);
+            originServerGroup.set(Vars.defaultServers.copy());
+            originServerGroup.each(group -> originServerAddresses.put(group, group.addresses));
+            Log.info("[Informatis] Fetched @ community servers.", originServerGroup.size);
         });
 
         final int[] i = {0};
@@ -49,15 +45,17 @@ public class ServerSearchFragment extends Table {
                 loadingLabel.setText("loading" + (count[0] % 4 == 0 ? "" : count[0] % 4 == 1 ? "." : count[0] % 4 == 2 ? ".." : count[0] % 4 == 3 ? "..." : ""));
             }
         });
+
         setBackground(Tex.button);
         addButton("survival");
         addButton("pvp");
         addButton("attack");
         addButton("sandbox");
         addButton("custom");
+
         Vars.ui.join.shown(() -> {
             Table serverTable = (Table) Vars.ui.join.getChildren().get(1);
-            var saved = serverTable.getChildren().copy();
+            Seq<Element> saved = serverTable.getChildren().copy();
             serverTable.clear();
             serverTable.add(saved.get(0)).row();
             serverTable.add(this).row();
@@ -68,24 +66,22 @@ public class ServerSearchFragment extends Table {
     }
 
     void refreshAll() {
-        Method refreshAll;
         try {
-            refreshAll = Vars.ui.join.getClass().getDeclaredMethod("refreshAll");
+            Method refreshAll = Vars.ui.join.getClass().getDeclaredMethod("refreshAll");
+            refreshAll.setAccessible(true);
+            try {
+                refreshAll.invoke(Vars.ui.join);
+            } catch (IllegalAccessException | InvocationTargetException ex) {
+                throw new RuntimeException(ex);
+            }
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
-        }
-        refreshAll.setAccessible(true);
-        try {
-            refreshAll.invoke(Vars.ui.join);
-        } catch (IllegalAccessException | InvocationTargetException ex) {
-            throw new RuntimeException(ex);
         }
     }
     
     void loadingEnd() {
         loadingLabel.setText("");
         loading = false;
-        mode = "";
         getChildren().each(elem -> ((TextButton)elem).setDisabled(false));
         refreshAll(); 
     }
@@ -93,35 +89,39 @@ public class ServerSearchFragment extends Table {
     void refresh() {
         loading = true;
         getChildren().each(elem -> ((TextButton)elem).setDisabled(true));
-        Time.run(15 * 60, this::loadingEnd);
+        Time.run(15 * 60, () -> {
+            if(loading) loadingEnd();
+        });
         final int[] iStack = {0};
-        for(int i = 0; i < tempGroup.size; i ++){
+        for(int i = 0; i < originServerGroup.size; i ++){
             int j = i;
-            ServerGroup group = tempGroup.get((i + tempGroup.size/2) % tempGroup.size);
-            Seq<String> tmp = Seq.with(group.addresses);
+            ServerGroup group = originServerGroup.get((i + originServerGroup.size/2) % originServerGroup.size);
+            Seq<String> tmp = new Seq<>();
             final int[] iiStack = {0};
             int addressesLength = group.addresses.length;
-            Cons<Void> checkLast = ignore -> {
+            Runnable checkLast = () -> {
                 if(!loading) return;
                 if(++iiStack[0] < addressesLength) return;                
-                if(++iStack[0] < tempGroup.size) return;
-                loadingEnd();  
+                if(++iStack[0] < originServerGroup.size) return;
+                loadingEnd();
             };
             for(int ii = 0; ii < addressesLength; ii++){
-                String address = tmp.get(ii);
-                String resaddress = address.contains(":") ? address.split(":")[0] : address;
-                int resport = address.contains(":") ? Strings.parseInt(address.split(":")[1]) : Vars.port;
-                Vars.net.pingHost(resaddress, resport, res -> {
-                    if(!loading || (tmp.contains(address) && res.mode == null
-                        ? Objects.equals(res.modeName, mode)
-                        : !Objects.equals(mode, "custom") && res.mode.equals(Gamemode.valueOf(mode))
-                    )) {
-                        tmp.remove(address);
-                        group.addresses = tmp.toArray();
+                String address = group.addresses[ii];
+                Vars.net.pingHost(
+                    address.contains(":") ? address.split(":")[0] : address,
+                    address.contains(":") ? Strings.parseInt(address.split(":")[1]) : Vars.port,
+                    res -> {
+                        if(loading &&
+                            !tmp.contains(address) &&
+                            (res.mode == null ? Objects.equals(res.modeName, mode)
+                                : !Objects.equals(mode, "custom") && res.mode.equals(Gamemode.valueOf(mode)))
+                        ) tmp.add(address);
+                        group.addresses = tmp.toArray(String.class);
                         Vars.defaultServers.set((j + Vars.defaultServers.size/2) % Vars.defaultServers.size, group);
-                    }
-                    checkLast.get();
-                }, e -> checkLast.get());
+                        checkLast.run();
+                    },
+                    e -> checkLast.run()
+                );
             }
         }
     }
@@ -130,18 +130,12 @@ public class ServerSearchFragment extends Table {
         TextButton button = new TextButton("@mode." + string + ".name", Styles.flatTogglet);
         button.getLabel().setWrap(false);
         button.clicked(()-> {
-            getChildren().each(elem -> {
-                if(!elem.equals(button)) ((TextButton)elem).setChecked(false);
-            });
             mode = string;
-            if(button.isChecked()) {
-                refresh();
-            } else {
-              Log.info("trying backdown");
-              Vars.defaultServers.set(tempGroup);
-              defaultServers.each(group -> group.addresses = addresses.get(group));
-              refreshAll();
-            }
+            getChildren().each(elem -> !elem.equals(button), elem -> ((TextButton)elem).setChecked(false));
+            Vars.defaultServers.set(originServerGroup);
+            defaultServers.each(group -> group.addresses = originServerAddresses.get(group));
+            if(button.isChecked()) refresh();
+            else refreshAll();
         });
         add(button).minWidth(100).height(50);
     }
