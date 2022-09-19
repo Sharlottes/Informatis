@@ -4,7 +4,7 @@ import arc.input.KeyCode;
 import informatis.ui.*;
 import informatis.ui.draws.OverDraws;
 import informatis.ui.fragments.FragmentManager;
-import informatis.ui.window.*;
+import informatis.ui.windows.*;
 import arc.*;
 import mindustry.*;
 import mindustry.game.EventType.*;

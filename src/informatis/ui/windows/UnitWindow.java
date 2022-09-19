@@ -1,4 +1,4 @@
-package informatis.ui.window;
+package informatis.ui.windows;
 
 import arc.*;
 import arc.math.*;
@@ -12,7 +12,6 @@ import arc.scene.ui.layout.*;
 import arc.struct.Bits;
 import arc.struct.*;
 import arc.util.*;
-import informatis.ui.widgets.*;
 import mindustry.*;
 import mindustry.core.*;
 import mindustry.entities.units.*;
@@ -42,7 +41,19 @@ public class UnitWindow extends Window {
 
     @Override
     protected void build(Table table) {
-        Image profileImage = RectWidget.build();
+        Image profileImage = new Image() {
+            final int size = 8;
+            @Override
+            public void draw() {
+                super.draw();
+
+                Draw.color(locked? Pal.accent:Pal.gray);
+                Draw.alpha(parentAlpha);
+                Lines.stroke(Scl.scl(3f));
+                Lines.rect(x-size/2f, y-size/2f, width+size, height+size);
+                Draw.reset();
+            }
+        };
         profileImage.update(() -> {
             TextureRegion region = clear;
             if (target instanceof Unit u && u.type != null) region = u.type.uiIcon;

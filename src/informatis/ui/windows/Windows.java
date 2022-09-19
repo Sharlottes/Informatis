@@ -1,4 +1,4 @@
-package informatis.ui.window;
+package informatis.ui.windows;
 
 public class Windows {
     public static MapEditorWindow editorTable;

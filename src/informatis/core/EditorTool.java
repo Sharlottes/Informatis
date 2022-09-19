@@ -12,10 +12,10 @@ import mindustry.content.Blocks;
 import mindustry.game.Team;
 import mindustry.world.Block;
 import mindustry.world.Tile;
-import informatis.ui.window.*;
+import informatis.ui.windows.*;
 
-import static informatis.ui.window.MapEditorWindow.*;
-import static informatis.ui.window.Windows.editorTable;
+import static informatis.ui.windows.MapEditorWindow.*;
+import static informatis.ui.windows.Windows.editorTable;
 import static mindustry.Vars.world;
 
 public enum EditorTool{

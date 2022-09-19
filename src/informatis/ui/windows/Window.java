@@ -1,4 +1,4 @@
-package informatis.ui.window;
+package informatis.ui.windows;
 
 import arc.*;
 import arc.func.*;

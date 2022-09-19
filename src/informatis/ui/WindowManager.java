@@ -1,13 +1,10 @@
 package informatis.ui;
 
 import arc.*;
-import arc.scene.ui.layout.*;
 import arc.struct.*;
 import mindustry.*;
 import mindustry.ui.*;
-import informatis.ui.window.*;
-
-import java.util.Objects;
+import informatis.ui.windows.*;
 
 public class WindowManager {
     public static Seq<Window> windows = new Seq<>();

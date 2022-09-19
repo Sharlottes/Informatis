@@ -111,10 +111,11 @@ public class ServerSearchFragment extends Table {
                     address.contains(":") ? address.split(":")[0] : address,
                     address.contains(":") ? Strings.parseInt(address.split(":")[1]) : Vars.port,
                     res -> {
-                        if(loading &&
-                            !tmp.contains(address) &&
-                            (res.mode == null ? Objects.equals(res.modeName, mode)
-                                : !Objects.equals(mode, "custom") && res.mode.equals(Gamemode.valueOf(mode)))
+                        if(loading && !tmp.contains(address) &&
+                            (res.modeName != null
+                                ? Objects.equals(mode, "custom") || res.modeName.equals(mode)
+                                : !Objects.equals(mode, "custom") && res.mode.equals(Gamemode.valueOf(mode))
+                            )
                         ) tmp.add(address);
                         group.addresses = tmp.toArray(String.class);
                         Vars.defaultServers.set((j + Vars.defaultServers.size/2) % Vars.defaultServers.size, group);
