@@ -1,7 +1,5 @@
 package informatis.ui.draws;
 
-import arc.math.geom.*;
-import informatis.SUtils;
 import informatis.ui.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
@@ -42,7 +40,7 @@ public class UnitDraw extends OverDraw {
     public void draw() {
         if(!enabled) return;
 
-        Groups.unit.each(u-> isInCamera(u.x, u.y, u.hitSize), u -> {
+        Groups.unit.each(u -> {
             UnitController c = u.controller();
 
             if(settings.getBool("logicLine") && c instanceof LogicAI ai && (ai.control == LUnitControl.approach || ai.control == LUnitControl.move)) {
@@ -57,7 +55,8 @@ public class UnitDraw extends OverDraw {
 
                 Lines.line(u.x(), u.y(), com.targetPos.x, com.targetPos.y);
             }
-            else if(settings.getBool("unitLine") && !u.type.flying && !(c instanceof MinerAI || c instanceof BuilderAI || c instanceof RepairAI || c instanceof DefenderAI || c instanceof FlyingAI)) {
+
+            if(settings.getBool("unitLine") && u.team == state.rules.waveTeam && !u.type.flying && !(c instanceof MinerAI || c instanceof BuilderAI || c instanceof RepairAI || c instanceof DefenderAI || c instanceof FlyingAI)) {
                 Lines.stroke(1, u.team.color);
 
                 otherCores = Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != u.team);
@@ -66,18 +65,19 @@ public class UnitDraw extends OverDraw {
                 for(int i = 0; i < pathTiles.size-1; i++) {
                     Tile from = pathTiles.get(i);
                     Tile to = pathTiles.get(i + 1);
-                    if(from == null || to == null || isOutCamera(from.worldx(), from.worldy())) continue;
+                    if(from == null || to == null) continue;
                     Lines.line(from.worldx(), from.worldy(), to.worldx(), to.worldy());
                 }
             }
 
-            if(settings.getBool("unitBar")) FreeBar.draw(u);
-
-            if(settings.getBool("unitItem") && !renderer.pixelator.enabled() && u.item() != null && u.itemTime > 0.01f)
-                Fonts.outline.draw(u.stack.amount + "",
-                        u.x + Angles.trnsx(u.rotation + 180f, u.type.itemOffsetY),
-                        u.y + Angles.trnsy(u.rotation + 180f, u.type.itemOffsetY) - 3,
-                        Pal.accent, 0.25f * u.itemTime / Scl.scl(1f), false, Align.center);
+            if(isInCamera(u.x, u.y, u.hitSize)) {
+                if (settings.getBool("unitBar")) FreeBar.draw(u);
+                if (settings.getBool("unitItem") && !renderer.pixelator.enabled() && u.item() != null && u.itemTime > 0.01f)
+                    Fonts.outline.draw(String.valueOf(u.stack.amount),
+                            u.x + Angles.trnsx(u.rotation + 180f, u.type.itemOffsetY),
+                            u.y + Angles.trnsy(u.rotation + 180f, u.type.itemOffsetY) - 3,
+                            Pal.accent, 0.25f * u.itemTime / Scl.scl(1f), false, Align.center);
+            }
         });
 
         if(settings.getBool("pathLine")) spawner.getSpawns().each(t -> {
@@ -90,7 +90,7 @@ public class UnitDraw extends OverDraw {
                 for(int i = 0; i < pathTiles.size-1; i++) {
                     Tile from = pathTiles.get(i);
                     Tile to = pathTiles.get(i + 1);
-                    if(from == null || to == null || isOutCamera(from.worldx(), from.worldy())) continue;
+                    if(from == null || to == null) continue;
                     Lines.line(from.worldx(), from.worldy(), to.worldx(), to.worldy());
                 }
         }
