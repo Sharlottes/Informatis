@@ -16,10 +16,8 @@ public class FragmentManager {
                 ui.planet, ui.research, ui.mods, ui.schematics, ui.logic
         ).each(dialog-> dialog.addChild(new ElementViewFragment(dialog)));
 
-        //schem quick-slot
-        Table table = ((Table) scene.find("minimap/position")).row();
-        table.add(new QuickSchemFragment());
-        new WaveInfoFragment().addWaveInfoTable();
+        new QuickSchemFragment();
+        new TileInfoFragment();
         new ServerSearchFragment();
     }
 }

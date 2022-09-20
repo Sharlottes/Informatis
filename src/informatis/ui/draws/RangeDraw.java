@@ -24,6 +24,8 @@ public class RangeDraw extends OverDraw {
 
     RangeDraw(String name, TextureRegionDrawable icon) {
         super(name, icon);
+        registerOption("unitRange");
+        registerOption("aliceRange");
         registerOption("airRange");
         registerOption("groundRange");
     }
@@ -47,34 +49,28 @@ public class RangeDraw extends OverDraw {
         Groups.build.each(b-> settings.getBool("aliceRange") || player.team() != b.team, b -> {
             if(b instanceof BaseTurret.BaseTurretBuild turret) {
                 float range = turret.range();
-                if (isInCamera(b.x, b.y, range)) {
-                    int index = b.team.id;
-                    Draw.color(b.team.color);
+                if (!isInCamera(b.x, b.y, range)) return;
 
-                    boolean air = settings.getBool("airRange") && enabled;
-                    boolean ground = settings.getBool("groundRange") && enabled;
-                    boolean valid = false;
-                    if (unit == null) valid = true;
-                    else if (b instanceof Turret.TurretBuild build) {
-                        Turret t = (Turret) build.block;
-                        if(t.targetAir&&!air||t.targetGround&&!ground) return;
-                        if((unit.isFlying() ? t.targetAir : t.targetGround) && build.hasAmmo() && build.canConsume()) valid = true;
-                    } else if (b instanceof TractorBeamTurret.TractorBeamBuild build) {
-                        TractorBeamTurret t = (TractorBeamTurret) build.block;
-                        if(t.targetAir&&!air||t.targetGround&&!ground) return;
-                        if((unit.isFlying() ? t.targetAir : t.targetGround) && build.canConsume()) valid = true;
-                    }
-
-                    if(!valid) index = 0;
-
-                    if(b.team==player.team()) index = b.team.id;
-
-                    Draw.color(Team.baseTeams[index].color);
-                    if (settings.getBool("RangeShader")) {
-                        Draw.z(166+(Team.baseTeams.length-index)*3);
-                        Fill.poly(b.x, b.y, Lines.circleVertices(range), range);
-                    } else Drawf.dashCircle(b.x, b.y, range, b.team.color);
+                boolean air = settings.getBool("airRange") && enabled;
+                boolean ground = settings.getBool("groundRange") && enabled;
+                boolean valid = false;
+                if (unit == null) valid = true;
+                else if (b instanceof Turret.TurretBuild build) {
+                    Turret t = (Turret) build.block;
+                    if(t.targetAir&&!air||t.targetGround&&!ground) return;
+                    if((unit.isFlying() ? t.targetAir : t.targetGround) && build.hasAmmo() && build.canConsume()) valid = true;
+                } else if (b instanceof TractorBeamTurret.TractorBeamBuild build) {
+                    TractorBeamTurret t = (TractorBeamTurret) build.block;
+                    if(t.targetAir&&!air||t.targetGround&&!ground) return;
+                    if((unit.isFlying() ? t.targetAir : t.targetGround) && build.canConsume()) valid = true;
                 }
+
+                int index = valid ? b.team.id : 0;
+                Draw.color(Team.baseTeams[index].color);
+                if (settings.getBool("RangeShader")) {
+                    Draw.z(166+(Team.baseTeams.length-index)*3);
+                    Fill.poly(b.x, b.y, Lines.circleVertices(range), range);
+                } else Drawf.dashCircle(b.x, b.y, range, b.team.color);
             }
         });
     }

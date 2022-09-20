@@ -110,7 +110,6 @@ public class SettingS {
         Seq<SharSetting> drawSeq = new Seq<>();
         addGraphicSlideSetting("selectopacity", 50, 0, 100, 5, s -> s + "%", drawSeq);
         addGraphicSlideSetting("baropacity", 50, 0, 100, 5, s -> s + "%", drawSeq);
-        addGraphicCheckSetting("aliceRange", false, drawSeq);
         addGraphicCheckSetting("RangeShader", false, drawSeq);
         addGraphicCheckSetting("select", false, drawSeq);
         addGraphicCheckSetting("distanceLine", false, drawSeq);

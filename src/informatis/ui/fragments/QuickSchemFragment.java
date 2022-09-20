@@ -36,6 +36,8 @@ public class QuickSchemFragment extends Table implements Updatable {
 
     public QuickSchemFragment() {
         setSchemTable();
+        Table table = ((Table) scene.find("minimap/position")).row();
+        table.add(this);
     }
 
     @Override
