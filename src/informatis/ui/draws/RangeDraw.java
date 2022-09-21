@@ -44,8 +44,8 @@ public class RangeDraw extends OverDraw {
 
         boolean includeBlock = settings.getBool("blockRange"),
                 includeUnit = settings.getBool("unitRange"),
-                includeAir = settings.getBool("airRange"),
-                includeGround = settings.getBool("groundRange"),
+                includeAir = settings.getBool("airRange"), isAir = target == null || target.isFlying(),
+                includeGround = settings.getBool("groundRange"), isGround = target == null || !target.isFlying(),
                 includeAlice = settings.getBool("aliceRange"),
                 shader = settings.getBool("RangeShader");
 
@@ -62,15 +62,18 @@ public class RangeDraw extends OverDraw {
                     && building instanceof BaseTurret.BaseTurretBuild turret && isInCamera(building.x, building.y, turret.range()))) continue;
 
                 boolean valid = false;
-                if (target == null) valid = true;
-                else if (building instanceof Turret.TurretBuild turretBuild) {
+                if (building instanceof Turret.TurretBuild turretBuild) {
                     Turret block = (Turret) turretBuild.block;
-                    if(block.targetAir && !includeAir || block.targetGround && !includeGround) continue;
-                    if((target.isFlying() ? block.targetAir : block.targetGround) && turretBuild.hasAmmo() && turretBuild.canConsume()) valid = true;
+                    if ((building.team == player.team()
+                            || (block.targetAir && isAir && includeAir)
+                            || (block.targetGround && isGround && includeGround))
+                        && turretBuild.hasAmmo() && turretBuild.canConsume()) valid = true;
                 } else if (building instanceof TractorBeamTurret.TractorBeamBuild tractorBeamBuild) {
                     TractorBeamTurret block = (TractorBeamTurret) tractorBeamBuild.block;
-                    if(block.targetAir && !includeAir || block.targetGround && !includeGround) continue;
-                    if((target.isFlying() ? block.targetAir : block.targetGround) && tractorBeamBuild.canConsume()) valid = true;
+                    if ((building.team == player.team()
+                            || (block.targetAir && isAir && includeAir)
+                            || (block.targetGround && isGround && includeGround))
+                        && tractorBeamBuild.canConsume()) valid = true;
                 }
 
                 //non-base teams are considered as crux
@@ -90,10 +93,10 @@ public class RangeDraw extends OverDraw {
 
                 boolean valid = false;
                 if (target == null) valid = true;
-                else if (!(unit.type.targetAir && !includeAir || unit.type.targetGround && !includeGround)
-                    && (target.isFlying() ?unit.type.targetAir : unit.type.targetGround)
-                    && unit.canShoot()
-                ) valid = true;
+                else if ((unit.team == player.team()
+                        || (unit.type.targetAir && isAir && includeAir)
+                        || (unit.type.targetGround && isGround && includeGround))
+                    && unit.canShoot()) valid = true;
 
                 //non-base teams are considered as crux
                 int index = valid ? unit.team.id > 5 ? 2 : unit.team.id : 0;
