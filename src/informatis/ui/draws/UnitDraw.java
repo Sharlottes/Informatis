@@ -62,7 +62,7 @@ public class UnitDraw extends OverDraw {
 
                 pathTiles.clear();
                 otherCores = Groups.build.copy(new Seq<>()).filter(b -> b instanceof CoreBlock.CoreBuild && b.team != u.team);
-                getNextTile(u.tileOn(), SVars.pathfinder.getField(u.team, u.controller() instanceof SuicideAI ? 0 : u.pathType(), u.pathType()));
+                getNextTile(u.tileOn(), SVars.pathfinder.getField(u.team, u.controller() instanceof SuicideAI ? 0 : u.pathType(), Pathfinder.fieldCore));
                 for(int i = 0; i < pathTiles.size - 1; i++) {
                     Tile from = pathTiles.get(i), to = pathTiles.get(i + 1);
                     if(from == null || to == null) continue;
