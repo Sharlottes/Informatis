@@ -38,6 +38,7 @@ public class OverDrawer {
                     float rot = i * 90f + 45f + (-Time.time) % 360f;
                     Draw.rect("select-arrow", target.x() + Angles.trnsx(rot, length), target.y() + Angles.trnsy(rot, length), length / 1.9f, length / 1.9f, rot - 135f);
                 }
+                Draw.color();
             }
 
             if(settings.getBool("distanceLine")) {
@@ -65,6 +66,7 @@ public class OverDrawer {
             //global drawing, which needs camera-clipping
             Core.camera.bounds(Tmp.r1);
             for(OverDraw drawer : OverDraws.all) drawer.draw();
+            Draw.reset();
         });
     }
 }

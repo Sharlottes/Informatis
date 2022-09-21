@@ -8,6 +8,7 @@ import mindustry.Vars;
 import mindustry.game.Team;
 import mindustry.gen.*;
 import mindustry.graphics.Drawf;
+import mindustry.graphics.Pal;
 import mindustry.type.Weapon;
 import mindustry.world.blocks.defense.turrets.*;
 
@@ -24,6 +25,7 @@ public class RangeDraw extends OverDraw {
         registerOption("blockRange");
         registerOption("unitRange");
         registerOption("aliceRange");
+        registerOption("invalidRange");
         registerOption("airRange");
         registerOption("groundRange");
     }
@@ -44,6 +46,7 @@ public class RangeDraw extends OverDraw {
 
         boolean includeBlock = settings.getBool("blockRange"),
                 includeUnit = settings.getBool("unitRange"),
+                includeInvalid = settings.getBool("invalidRange"),
                 includeAir = settings.getBool("airRange"), isAir = target == null || target.isFlying(),
                 includeGround = settings.getBool("groundRange"), isGround = target == null || !target.isFlying(),
                 includeAlice = settings.getBool("aliceRange"),
@@ -59,7 +62,7 @@ public class RangeDraw extends OverDraw {
         if(includeBlock) {
             for(Building building : Groups.build) {
                 if(!((includeAlice || player.team() != building.team)
-                    && building instanceof BaseTurret.BaseTurretBuild turret && isInCamera(building.x, building.y, turret.range()))) continue;
+                    && building instanceof BaseTurret.BaseTurretBuild turret && isInCamera(building.x, building.y, turret.range() * 2))) continue;
 
                 boolean valid = false;
                 if (building instanceof Turret.TurretBuild turretBuild) {
@@ -76,6 +79,8 @@ public class RangeDraw extends OverDraw {
                         && tractorBeamBuild.canConsume()) valid = true;
                 }
 
+                if(!includeInvalid && !valid) continue;
+
                 //non-base teams are considered as crux
                 int index = valid ? building.team.id > 5 ? 2 : building.team.id : 0;
                 float range = turret.range();
@@ -84,12 +89,13 @@ public class RangeDraw extends OverDraw {
                     Draw.z(166+(Team.baseTeams.length-index)*3);
                     Fill.poly(building.x, building.y, Lines.circleVertices(range), range);
                 } else Drawf.dashCircle(building.x, building.y, range, Team.baseTeams[index].color);
+                Draw.reset();
             }
         }
 
         if(includeUnit) {
             for(Unit unit : Groups.unit) {
-                if(!((includeAlice || player.team() != unit.team) && isInCamera(unit.x, unit.y, unit.range()))) continue;
+                if(!((includeAlice || player.team() != unit.team) && isInCamera(unit.x, unit.y, unit.range() * 2))) continue;
 
                 boolean valid = false;
                 if (target == null) valid = true;
@@ -98,14 +104,17 @@ public class RangeDraw extends OverDraw {
                         || (unit.type.targetGround && isGround && includeGround))
                     && unit.canShoot()) valid = true;
 
+                if(!includeInvalid && !valid) continue;
+
                 //non-base teams are considered as crux
                 int index = valid ? unit.team.id > 5 ? 2 : unit.team.id : 0;
                 float range = unit.range();
-                Draw.color(Team.baseTeams[index].color);
+                Draw.color(Team.baseTeams[index].color.cpy().shiftSaturation(0.25f));
                 if (shader) {
                     Draw.z(166 + (Team.baseTeams.length - index) * 3);
                     Fill.poly(unit.x, unit.y, Lines.circleVertices(range), range);
                 } else Drawf.dashCircle(unit.x, unit.y, range, Team.baseTeams[index].color);
+                Draw.color();
             }
         }
     }

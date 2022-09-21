@@ -61,8 +61,8 @@ public class ToolWindow extends Window implements Updatable {
             if(selected==null) return;
             tool.top();
             tool.table(Tex.underline2, label->label.add(selected.name).color(Pal.accent)).row();
-            tool.table(des-> selected.displayStats(des)).name("unit-stats").row();
-            tool.check("enable", selected.enabled, c->{
+            tool.table(des-> selected.displayStats(des)).name("unit-stats").left().row();
+            tool.check("@mod.enable", selected.enabled, c->{
                 selected.enabled=c;
                 selected.onEnabled(find("unit-stats"));
             });
