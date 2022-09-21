@@ -16,7 +16,7 @@ import mindustry.ui.dialogs.*;
 import static arc.Core.*;
 import static mindustry.Vars.*;
 
-public class SettingS {
+public class Setting {
     public static SettingsMenuDialog.SettingsTable sharset;
 
     public static void addGraphicCheckSetting(String key, boolean def, Seq<SharSetting> list){
@@ -150,4 +150,18 @@ public class SettingS {
             t.fillParent = true;
         });
     }
+}
+abstract class SharSetting extends SettingsMenuDialog.SettingsTable.Setting {
+
+    public SharSetting(String name) {
+        super(name);
+    }
+
+    public SharSetting(String name, Object def) {
+        this(name);
+        Core.settings.defaults(name, def);
+    }
+
+    public void add(Table table) { }
+    public void add(SettingsMenuDialog.SettingsTable table) { }
 }

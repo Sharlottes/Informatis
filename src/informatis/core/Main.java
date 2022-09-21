@@ -1,12 +1,14 @@
 package informatis.core;
 
 import arc.input.KeyCode;
+import informatis.SVars;
 import informatis.ui.*;
 import informatis.ui.draws.OverDraws;
 import informatis.ui.fragments.FragmentManager;
 import informatis.ui.windows.*;
 import arc.*;
 import mindustry.*;
+import mindustry.ai.Pathfinder;
 import mindustry.game.EventType.*;
 import mindustry.mod.*;
 
@@ -26,12 +28,6 @@ public class Main extends Mod {
         });
 
         Events.run(Trigger.update, () -> {
-            try {
-                BarInfo.getInfo(getTarget());
-            } catch (IllegalAccessException | NoSuchFieldException err) {
-                err.printStackTrace();
-            }
-
             target = getTarget();
 
             for (Window window : windows) {
@@ -49,11 +45,13 @@ public class Main extends Mod {
         Events.on(ClientLoadEvent.class, e -> {
             Windows.load();
 
-            SettingS.init();
+            Setting.init();
             WindowManager.init();
             FragmentManager.init();
             OverDraws.init();
             OverDrawer.init();
+
+            SVars.pathfinder = new informatis.core.Pathfinder();
         });
     }
 }

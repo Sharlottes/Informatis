@@ -16,7 +16,6 @@ public class OverDraw {
     public boolean enabled = false;
     public Seq<String> options = new Seq<>();
 
-
     OverDraw(String name, TextureRegionDrawable icon) {
         this.name = name;
         this.icon = icon;

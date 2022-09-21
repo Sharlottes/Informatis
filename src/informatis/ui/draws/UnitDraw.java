@@ -1,5 +1,7 @@
 package informatis.ui.draws;
 
+import informatis.SVars;
+import informatis.core.Pathfinder;
 import informatis.ui.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
@@ -8,7 +10,6 @@ import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.*;
 import mindustry.Vars;
-import mindustry.ai.*;
 import mindustry.ai.types.*;
 import mindustry.entities.units.*;
 import mindustry.game.*;
@@ -25,12 +26,13 @@ import static mindustry.Vars.*;
 
 public class UnitDraw extends OverDraw {
     Seq<Tile> pathTiles = new Seq<>();
-    int otherCores;
+    Seq<Building> otherCores;
 
     UnitDraw(String name, TextureRegionDrawable icon) {
         super(name, icon);
         registerOption("pathLine");
         registerOption("logicLine");
+        registerOption("commandLine");
         registerOption("unitLine");
         registerOption("unitItem");
         registerOption("unitBar");
@@ -43,6 +45,11 @@ public class UnitDraw extends OverDraw {
         Groups.unit.each(u -> {
             UnitController c = u.controller();
 
+            if(settings.getBool("commandLine") && c instanceof CommandAI com && com.hasCommand()) {
+                Lines.stroke(1, u.team.color);
+                Lines.line(u.x(), u.y(), com.targetPos.x, com.targetPos.y);
+            }
+
             if(settings.getBool("logicLine") && c instanceof LogicAI ai && (ai.control == LUnitControl.approach || ai.control == LUnitControl.move)) {
                 Lines.stroke(1, u.team.color);
                 Lines.line(u.x(), u.y(), ai.moveX, ai.moveY);
@@ -50,21 +57,14 @@ public class UnitDraw extends OverDraw {
                 Lines.line(u.x(), u.y(), ai.controller.x, ai.controller.y);
             }
 
-            if(c instanceof CommandAI com && com.hasCommand()) {
-                Lines.stroke(1, u.team.color);
-
-                Lines.line(u.x(), u.y(), com.targetPos.x, com.targetPos.y);
-            }
-
             if(settings.getBool("unitLine") && u.team == state.rules.waveTeam && !u.type.flying && !(c instanceof MinerAI || c instanceof BuilderAI || c instanceof RepairAI || c instanceof DefenderAI || c instanceof FlyingAI)) {
                 Lines.stroke(1, u.team.color);
 
-                otherCores = Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != u.team);
                 pathTiles.clear();
-                getNextTile(u.tileOn(), u.controller() instanceof SuicideAI ? 0 : u.pathType(), u.team, u.pathType());
-                for(int i = 0; i < pathTiles.size-1; i++) {
-                    Tile from = pathTiles.get(i);
-                    Tile to = pathTiles.get(i + 1);
+                otherCores = Groups.build.copy(new Seq<>()).filter(b -> b instanceof CoreBlock.CoreBuild && b.team != u.team);
+                getNextTile(u.tileOn(), SVars.pathfinder.getField(u.team, u.controller() instanceof SuicideAI ? 0 : u.pathType(), u.pathType()));
+                for(int i = 0; i < pathTiles.size - 1; i++) {
+                    Tile from = pathTiles.get(i), to = pathTiles.get(i + 1);
                     if(from == null || to == null) continue;
                     Lines.line(from.worldx(), from.worldy(), to.worldx(), to.worldy());
                 }
@@ -80,29 +80,27 @@ public class UnitDraw extends OverDraw {
             }
         });
 
-        if(settings.getBool("pathLine")) spawner.getSpawns().each(t -> {
-            Team enemyTeam = state.rules.waveTeam;
-            Lines.stroke(1, enemyTeam.color);
-            for(int p = 0; p < (Vars.state.rules.spawns.count(g->g.type.naval)>0?3:2); p++) {
-                pathTiles.clear();
-                otherCores = Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != enemyTeam);
-                getNextTile(t, p, enemyTeam, Pathfinder.fieldCore);
-                for(int i = 0; i < pathTiles.size-1; i++) {
-                    Tile from = pathTiles.get(i);
-                    Tile to = pathTiles.get(i + 1);
-                    if(from == null || to == null) continue;
-                    Lines.line(from.worldx(), from.worldy(), to.worldx(), to.worldy());
+        if(settings.getBool("pathLine")) {
+            pathTiles.clear();
+            otherCores = Groups.build.copy(new Seq<>()).filter(b -> b instanceof CoreBlock.CoreBuild && b.team != state.rules.waveTeam);
+            spawner.getSpawns().each(t -> {
+                for(int p = 0; p < 3; p++) {
+                    getNextTile(t, SVars.pathfinder.getField(state.rules.waveTeam, p, Pathfinder.fieldCore));
                 }
+            });
+            Lines.stroke(1, state.rules.waveTeam.color);
+            for(int i = 0; i < pathTiles.size - 1; i++) {
+                Tile from = pathTiles.get(i), to = pathTiles.get(i + 1);
+                if(from == null || to == null) continue;
+                Lines.line(from.worldx(), from.worldy(), to.worldx(), to.worldy());
+            }
         }
-        });
     }
 
-    void getNextTile(Tile tile, int cost, Team team, int finder) {
-        Pathfinder.Flowfield field = pathfinder.getField(team, cost, Mathf.clamp(finder, 0, 0));
-        Tile tile1 = pathfinder.getTargetTile(tile, field);
-        pathTiles.add(tile1);
-        if(tile1 == tile || tile1 == null ||
-                (finder == 0 && (otherCores != Groups.build.count(b -> b instanceof CoreBlock.CoreBuild && b.team != team) || tile1.build instanceof CoreBlock.CoreBuild))) return;
-        getNextTile(tile1, cost, team, finder);
+    void getNextTile(Tile tile, Pathfinder.Flowfield field) {
+        Tile nextTile = SVars.pathfinder.getTargetTile(tile, field);
+        pathTiles.add(nextTile);
+        if(nextTile == tile || nextTile == null) return;
+        getNextTile(nextTile, field);
     }
 }
