@@ -1,4 +1,4 @@
-package informatis.ui.draws;
+package informatis.draws;
 
 import informatis.SVars;
 import informatis.core.Pathfinder;
@@ -9,10 +9,8 @@ import arc.scene.style.*;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.*;
-import mindustry.Vars;
 import mindustry.ai.types.*;
 import mindustry.entities.units.*;
-import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.logic.*;

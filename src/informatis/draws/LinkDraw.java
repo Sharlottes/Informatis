@@ -1,4 +1,4 @@
-package informatis.ui.draws;
+package informatis.draws;
 
 import arc.graphics.Color;
 import arc.graphics.g2d.Draw;

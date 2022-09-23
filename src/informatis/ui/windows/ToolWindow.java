@@ -1,7 +1,7 @@
 package informatis.ui.windows;
 
 import informatis.ui.*;
-import informatis.ui.draws.*;
+import informatis.draws.*;
 import arc.math.geom.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;

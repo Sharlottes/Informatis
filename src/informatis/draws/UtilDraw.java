@@ -1,4 +1,4 @@
-package informatis.ui.draws;
+package informatis.draws;
 
 import arc.input.KeyCode;
 import arc.math.Angles;

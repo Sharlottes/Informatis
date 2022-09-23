@@ -1,6 +1,6 @@
 package informatis.core;
 
-import informatis.ui.draws.*;
+import informatis.draws.*;
 import arc.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;

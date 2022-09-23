@@ -1,4 +1,4 @@
-package informatis.ui.draws;
+package informatis.draws;
 
 import arc.scene.Element;
 import arc.scene.style.TextureRegionDrawable;

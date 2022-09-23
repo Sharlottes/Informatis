@@ -1,15 +1,12 @@
-package informatis.ui.draws;
+package informatis.draws;
 
 import arc.graphics.Color;
 import arc.graphics.g2d.*;
 import arc.graphics.gl.FrameBuffer;
 import arc.scene.style.TextureRegionDrawable;
-import mindustry.Vars;
 import mindustry.game.Team;
 import mindustry.gen.*;
 import mindustry.graphics.Drawf;
-import mindustry.graphics.Pal;
-import mindustry.type.Weapon;
 import mindustry.world.blocks.defense.turrets.*;
 
 import static informatis.SVars.turretRange;

@@ -1,4 +1,4 @@
-package informatis.ui.draws;
+package informatis.draws;
 
 import mindustry.gen.Icon;
 

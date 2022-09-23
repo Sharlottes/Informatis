@@ -3,12 +3,11 @@ package informatis.core;
 import arc.input.KeyCode;
 import informatis.SVars;
 import informatis.ui.*;
-import informatis.ui.draws.OverDraws;
+import informatis.draws.OverDraws;
 import informatis.ui.fragments.FragmentManager;
 import informatis.ui.windows.*;
 import arc.*;
 import mindustry.*;
-import mindustry.ai.Pathfinder;
 import mindustry.game.EventType.*;
 import mindustry.mod.*;
 
