@@ -27,7 +27,10 @@ public class OverDraw {
         parent.left();
         options.each(name-> parent
             .check(bundle.get("setting."+name+".name"), settings.getBool(name), b->settings.put(name, b))
-            .tooltip(t->t.background(Styles.black8).add(bundle.get("setting."+name+".description")))
+            .tooltip(t-> {
+                if(bundle.has("setting."+name+".description"))
+                    t.background(Styles.black8).add(bundle.get("setting."+name+".description"));
+            })
             .disabled(!enabled)
             .left().row());
     }

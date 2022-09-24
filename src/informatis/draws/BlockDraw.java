@@ -21,6 +21,7 @@ public class BlockDraw extends OverDraw {
     BlockDraw(String name, TextureRegionDrawable icon) {
         super(name, icon);
         registerOption("blockBar");
+        registerOption("blockstatus");
     }
 
     @Override
@@ -49,17 +50,17 @@ public class BlockDraw extends OverDraw {
             Building b = tile.build;
 
             if(settings.getBool("blockBar")) {
-                drawBar(b, 0, -(b.block.size * 4 + 2), b.healthf(), Pal.health);
+                drawBar(b, 0, -(b.block.size * 4 - 2), b.healthf(), Pal.health);
 
                 if(b instanceof Turret.TurretBuild turretBuild)
-                    drawBar(b, 0, b.block.size * 4 + 2, turretBuild.reloadCounter / ((Turret) b.block).reload, Pal.ammo);
+                    drawBar(b, 0, b.block.size * 4 - 2, turretBuild.reloadCounter / ((Turret) b.block).reload, Pal.ammo);
 
                 if(b instanceof ConstructBlock.ConstructBuild constructBuild)
-                    drawBar(b, 0, b.block.size * 4 + 2, constructBuild.progress(), b.team.color);
+                    drawBar(b, 0, b.block.size * 4 - 2, constructBuild.progress(), b.team.color);
                 if(b instanceof Reconstructor.ReconstructorBuild reconstructorBuild)
-                    drawBar(b, 0, b.block.size * 4 + 2, reconstructorBuild.fraction(), b.team.color);
+                    drawBar(b, 0, b.block.size * 4 - 2, reconstructorBuild.fraction(), b.team.color);
                 if(b instanceof UnitFactory.UnitFactoryBuild factoryBuild)
-                    drawBar(b, 0, b.block.size * 4 + 2, factoryBuild.fraction(), b.team.color);
+                    drawBar(b, 0, b.block.size * 4 - 2, factoryBuild.fraction(), b.team.color);
             }
         }
     }
