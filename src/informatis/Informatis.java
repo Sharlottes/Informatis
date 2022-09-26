@@ -18,7 +18,8 @@ import static informatis.SUtils.*;
 import static informatis.ui.WindowManager.windows;
 
 public class Informatis extends Mod {
-    public Informatis(){
+    @Override
+    public void init(){
         Core.app.post(() -> {
             Mods.ModMeta meta = Vars.mods.locateMod("informatis").meta;
             meta.displayName = "[#B5FFD9]Informatis[]";
