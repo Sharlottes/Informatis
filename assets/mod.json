@@ -3,7 +3,7 @@
   "displayName": "Informatis",
   "author": "Sharlotte",
   "description": "The mod displays more information in-game, such as unit/building, wave, core, tile, item/unit total info etc",
-  "version": "1.6",
+  "version": "1.7",
   "main": "informatis.core.Main",
   "minGameVersion": "138",
   "dependencies": [],
