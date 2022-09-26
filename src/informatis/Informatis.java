@@ -1,7 +1,8 @@
-package informatis.core;
+package informatis;
 
 import arc.input.KeyCode;
-import informatis.SVars;
+import informatis.core.OverDrawer;
+import informatis.core.Setting;
 import informatis.ui.*;
 import informatis.draws.OverDraws;
 import informatis.ui.fragments.FragmentManager;
@@ -16,7 +17,7 @@ import static arc.Core.*;
 import static informatis.SUtils.*;
 import static informatis.ui.WindowManager.windows;
 
-public class Main extends Mod {
+public class Informatis extends Mod {
     @Override
     public void init(){
         Core.app.post(() -> {
