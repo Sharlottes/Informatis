@@ -8,5 +8,6 @@
   "main": "informatis.Informatis",
   "minGameVersion": "138",
   "dependencies": [],
-  "hidden": true
+  "hidden": true,
+  "java": true
 }
