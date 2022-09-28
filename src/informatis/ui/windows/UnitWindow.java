@@ -3,9 +3,7 @@ package informatis.ui.windows;
 import arc.*;
 import arc.math.*;
 import arc.scene.*;
-import arc.scene.style.Drawable;
-import arc.scene.style.TextureRegionDrawable;
-import informatis.core.*;
+import arc.scene.style.*;
 import informatis.ui.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
@@ -16,39 +14,27 @@ import arc.struct.*;
 import arc.util.*;
 import mindustry.*;
 import mindustry.core.*;
-import mindustry.ctype.UnlockableContent;
+import mindustry.ctype.*;
 import mindustry.entities.Units;
-import mindustry.entities.abilities.ShieldRegenFieldAbility;
+import mindustry.entities.abilities.*;
 import mindustry.entities.units.*;
 import mindustry.game.EventType;
 import mindustry.gen.*;
 import mindustry.graphics.*;
-import mindustry.logic.LAccess;
+import mindustry.logic.*;
 import mindustry.type.*;
 import mindustry.ui.*;
 import mindustry.world.blocks.*;
-import mindustry.world.blocks.defense.ForceProjector;
-import mindustry.world.blocks.defense.MendProjector;
-import mindustry.world.blocks.defense.OverdriveProjector;
-import mindustry.world.blocks.defense.turrets.ItemTurret;
-import mindustry.world.blocks.defense.turrets.LiquidTurret;
-import mindustry.world.blocks.defense.turrets.PowerTurret;
-import mindustry.world.blocks.defense.turrets.ReloadTurret;
-import mindustry.world.blocks.distribution.MassDriver;
-import mindustry.world.blocks.environment.Floor;
+import mindustry.world.blocks.defense.*;
+import mindustry.world.blocks.defense.turrets.*;
+import mindustry.world.blocks.distribution.*;
+import mindustry.world.blocks.environment.*;
 import mindustry.world.blocks.payloads.*;
-import mindustry.world.blocks.power.PowerGenerator;
-import mindustry.world.blocks.power.PowerNode;
-import mindustry.world.blocks.power.ThermalGenerator;
-import mindustry.world.blocks.production.AttributeCrafter;
-import mindustry.world.blocks.production.Drill;
-import mindustry.world.blocks.production.GenericCrafter;
-import mindustry.world.blocks.production.SolidPump;
-import mindustry.world.blocks.storage.CoreBlock;
-import mindustry.world.blocks.storage.StorageBlock;
-import mindustry.world.blocks.units.Reconstructor;
-import mindustry.world.blocks.units.UnitFactory;
-import mindustry.world.consumers.ConsumePower;
+import mindustry.world.blocks.power.*;
+import mindustry.world.blocks.production.*;
+import mindustry.world.blocks.storage.*;
+import mindustry.world.blocks.units.*;
+import mindustry.world.consumers.*;
 
 import java.lang.reflect.Field;
 import java.util.Objects;
@@ -67,14 +53,17 @@ public class UnitWindow extends Window {
     float lastWidth;
     final Seq<Color> lastColors = new Seq<>();
     final Bits statuses = new Bits();
-    Teamc lastTarget;
+    public Teamc lastTarget, target;
+    public boolean locked;
+    Seq<BarInfo.BarData> data = new Seq<>();
 
     public UnitWindow() {
         super(Icon.units, "unit");
-
         Events.run(EventType.Trigger.update, () -> {
+            if(!locked) target = getTarget();
+
             try {
-                BarInfo.getInfo(getTarget());
+                data = BarInfo.getInfo(target);
             } catch (IllegalAccessException | NoSuchFieldException err) {
                 err.printStackTrace();
             }
@@ -89,7 +78,7 @@ public class UnitWindow extends Window {
             public void draw() {
                 super.draw();
 
-                Draw.color(locked? Pal.accent:Pal.gray);
+                Draw.color(locked ? Pal.accent : Pal.gray);
                 Draw.alpha(parentAlpha);
                 Lines.stroke(Scl.scl(3f));
                 Lines.rect(x-size/2f, y-size/2f, width+size, height+size);
@@ -105,10 +94,7 @@ public class UnitWindow extends Window {
             }
             profileImage.setDrawable(region);
         });
-        profileImage.clicked(() -> {
-            if (target == getTarget()) locked = !locked;
-            target = getTarget();
-        });
+        profileImage.clicked(() -> locked = !locked);
         Label profileLabel = new Label(() -> {
             if (target instanceof Unit u && u.type != null) return u.type.localizedName;
             if (target instanceof Building b && b.block != null) {
@@ -124,7 +110,7 @@ public class UnitWindow extends Window {
             if (lastTarget != target) {
                 lastTarget = target;
                 for (int i = 0; i < barSize; i++) {
-                    Color color = i >= BarInfo.data.size ? Color.clear : BarInfo.data.get(i).color;
+                    Color color = i >= data.size ? Color.clear : data.get(i).color;
                     if (i >= lastColors.size) lastColors.add(color);
                     else lastColors.set(i, color);
                 }
@@ -161,7 +147,7 @@ public class UnitWindow extends Window {
         ).margin(3f).growX().row();
         table.table().update(tt -> {
             tt.clear();
-            if(getTarget() instanceof Unit u && u.type != null && u.hasWeapons()) {
+            if(target instanceof Unit u && u.type != null && u.hasWeapons()) {
                 for(int r = 0; r < u.type.weapons.size; r++){
                     Weapon weapon = u.type.weapons.get(r);
                     WeaponMount mount = u.mounts[r];
@@ -266,45 +252,43 @@ public class UnitWindow extends Window {
     Table addBar(int index) {
         return new Table(bar -> {
             bar.add(new SBar(
-                    () -> index >= BarInfo.data.size ? "[lightgray]<Empty>[]" : BarInfo.data.get(index).name,
-                    () -> index >= BarInfo.data.size ? Color.clear : BarInfo.data.get(index).color,
+                    () -> index >= data.size ? "[lightgray]<Empty>[]" : data.get(index).name,
+                    () -> index >= data.size ? Color.clear : data.get(index).color,
                     () -> lastColors.get(index),
-                    () -> index >= BarInfo.data.size ? 0 : BarInfo.data.get(index).number)
+                    () -> index >= data.size ? 0 : data.get(index).number)
             ).height(4 * 8f).growX();
-            if(index >= BarInfo.data.size) return;
+            if(index >= data.size) return;
             Image icon = new Image(){
                 @Override
                 public void draw() {
                     validate();
-                    if(index >= BarInfo.data.size) return;
+                    if(index >= data.size) return;
                     float x = this.x + imageX;
                     float y = this.y + imageY;
                     float width = imageWidth * this.scaleX;
                     float height = imageHeight * this.scaleY;
                     Draw.color(Color.white);
                     Draw.alpha(parentAlpha * color.a);
-                    BarInfo.BarData data = BarInfo.data.get(index);
+                    BarInfo.BarData da = data.get(index);
                     if(hasMouse()) getDrawable().draw(x, y, width, height);
                     else {
-                        data.icon.draw(x, y, width, height);
-                        if(ScissorStack.push(Tmp.r1.set(ScissorStack.peek().x + x,  ScissorStack.peek().y + y, width, height * data.number))) {
-                            Draw.color(data.color);
-                            data.icon.draw(x, y, width, height);
+                        da.icon.draw(x, y, width, height);
+                        if(ScissorStack.push(Tmp.r1.set(ScissorStack.peek().x + x,  ScissorStack.peek().y + y, width, height * da.number))) {
+                            Draw.color(da.color);
+                            da.icon.draw(x, y, width, height);
                             ScissorStack.pop();
                         }
                     }
                 }
             };
-            icon.setDrawable(BarInfo.data.get(index).icon);
+            icon.setDrawable(data.get(index).icon);
             bar.add(icon).size(iconMed * 0.75f).padLeft(8f);
         });
     }
 }
 class BarInfo {
-    public static Seq<BarData> data = new Seq<>();
-
-    public static <T extends Teamc> void getInfo(T target) throws IllegalAccessException, NoSuchFieldException {
-        data.clear();
+    public static <T extends Teamc> Seq<BarData> getInfo(T target) throws IllegalAccessException, NoSuchFieldException {
+        Seq<BarData> data = new Seq<>();
 
         if(target instanceof Healthc healthc){
             data.add(new BarData(bundle.format("shar-stat.health", formatNumber(healthc.health())), Pal.health, healthc.healthf(), health));
@@ -473,6 +457,8 @@ class BarInfo {
 
             data.add(new BarData(bundle.format("shar-stat.attr", Mathf.round(display)), Pal.ammo, pro));
         }
+        
+        return data;
     }
 
     static class BarData {

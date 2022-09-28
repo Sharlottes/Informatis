@@ -30,6 +30,15 @@ public class WaveWindow extends Window {
         super(Icon.waves, "wave");
         height = 500;
         width = 450;
+        only = true;
+
+        Events.run(EventType.Trigger.update, () -> {
+            heat += Time.delta;
+            if(heat >= 60f) {
+                heat = 0f;
+                ((ScrollPane) find("wave-pane")).setWidget(rebuild());
+            }
+        });
     }
 
     @Override
@@ -91,15 +100,6 @@ public class WaveWindow extends Window {
             pane.clearChildren();
             pane.setWidget(rebuild());
         });
-    }
-
-    public void update() {
-        heat += Time.delta;
-        if(heat >= 60f) {
-            heat = 0f;
-            ScrollPane pane = find("wave-pane");
-            pane.setWidget(rebuild());
-        }
     }
 
     public ObjectIntMap<SpawnGroup> getWaveGroup(int index) {

@@ -10,6 +10,7 @@ import arc.scene.ui.layout.*;
 import arc.scene.utils.*;
 import arc.struct.*;
 import arc.util.*;
+import mindustry.game.EventType;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.input.*;
@@ -26,6 +27,20 @@ public class PlayerWindow extends Window {
 
     public PlayerWindow() {
         super(Icon.players, "player");
+        only = true;
+
+        Events.run(EventType.Trigger.update, () -> {
+            heat += Time.delta;
+            if(heat >= 60f) {
+                heat = 0f;
+                ScrollPane pane = find("player-pane");
+                pane.setWidget(rebuild());
+            }
+            if(target != null) {
+                if(control.input instanceof DesktopInput desktopInput) desktopInput.panning = true;
+                Core.camera.position.set(target.x, target.y);
+            }
+        });
     }
 
     @Override
@@ -46,20 +61,6 @@ public class PlayerWindow extends Window {
         table.label(()-> Core.bundle.format(Groups.player.size() == 1 ? "players.single" : "players", Groups.player.size())).row();
         table.add(search).growX().pad(8).name("search").maxTextLength(maxNameLength).row();
         table.add(new OverScrollPane(rebuild(), Styles.noBarPane, scrollPos).disableScroll(true, false)).grow().name("player-pane");
-    }
-
-    public void update() {
-        heat += Time.delta;
-        if(heat >= 60f) {
-            heat = 0f;
-            ScrollPane pane = find("player-pane");
-            pane.setWidget(rebuild());
-        }
-        if(target!=null) {
-            if(control.input instanceof DesktopInput)
-            ((DesktopInput) control.input).panning = true;
-            Core.camera.position.set(target.x, target.y);
-        }
     }
 
     public Table rebuild(){

@@ -26,27 +26,23 @@ import static mindustry.Vars.player;
 public class SUtils {
     /**
      * move camera to given coordination
-     * @param x - world unit x
-     * @param y - world unit y
+     * @param x world unit x
+     * @param y world unit y
      */
     public static void moveCamera(float x, float y) {
         if(control.input instanceof DesktopInput)
             ((DesktopInput) control.input).panning = true;
         Core.camera.position.set(x, y);
     }
+    /**
+     * move camera to given coordination
+     * @param pos world unit coordination
+     */
     public static void moveCamera(Position pos) {
         moveCamera(pos.getX(), pos.getY());
     }
     @SuppressWarnings("unchecked")
     public static <T extends Teamc> T getTarget(){
-        if(locked && target != null) {
-            if(settings.getBool("deadTarget") && !Groups.all.contains(e -> e == target)) {
-                target = player.unit();
-                locked = false;
-            }
-            else return (T) target; //if there is locked target, return it first.
-        }
-
         Seq<Unit> units = Groups.unit.intersect(input.mouseWorldX(), input.mouseWorldY(), 4, 4); // well, 0.5tile is enough to search them
         if(units.size > 0)
             return (T) units.peek(); //if there is unit, return it.
@@ -107,11 +103,6 @@ public class SUtils {
         Field field = ut.getClass().getDeclaredField(fieldName);
         field.setAccessible(true);
         return field.get(ut);
-    }
-
-
-    public static boolean isOutCamera(float x, float y) {
-        return !isInCamera(x, y, 0);
     }
 
     public static boolean isInCamera(float x, float y, float size) {

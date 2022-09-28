@@ -12,13 +12,11 @@ import arc.scene.ui.layout.*;
 import arc.util.*;
 import mindustry.gen.*;
 import mindustry.ui.*;
-import informatis.ui.*;
 
 public class Window extends Table {
     public TextureRegionDrawable icon;
-    public int id;
     public Cons<Table> content;
-    public boolean shown = false;
+    public boolean shown = false, only = false;
     public Table window;
 
     public float minWindowWidth = 160, minWindowHeight = 60;
@@ -33,7 +31,7 @@ public class Window extends Table {
         this.name = name;
         this.icon = icon;
         window = this;
-        id = WindowManager.register(this);
+        WindowManager.register(this);
 
         titleBar();
         row();
@@ -74,7 +72,10 @@ public class Window extends Table {
                 b.image(icon.getRegion()).size(20f).padLeft(15);
                 b.add(Core.bundle.get("window."+name+".name")).padLeft(20);
             }).touchable(Touchable.disabled).grow();
-            t.table(Tex.buttonEdge3, b -> b.button(Icon.cancel, Styles.emptyi, () -> shown = false).fill()).width(80f).growY();
+            t.table(Tex.buttonEdge3, b -> b.button(Icon.cancel, Styles.emptyi, () -> {
+                shown = false;
+                if(!only) WindowManager.windows.get(getClass()).remove(this);
+            }).fill()).width(80f).growY();
 
             // handles the dragging.
             t.touchable = Touchable.enabled;

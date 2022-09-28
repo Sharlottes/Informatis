@@ -7,11 +7,14 @@ import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.math.geom.*;
 import arc.util.*;
+import informatis.ui.windows.UnitWindow;
+import informatis.ui.windows.WindowManager;
 import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.ui.*;
 
+import static informatis.SUtils.getTarget;
 import static informatis.SVars.*;
 import static arc.Core.*;
 import static mindustry.Vars.*;
@@ -32,18 +35,22 @@ public class OverDrawer {
             }
 
             if(settings.getBool("select")) {
-                Draw.color(Tmp.c1.set(locked ? Color.orange : Color.darkGray).lerp(locked ? Color.scarlet : Color.gray, Mathf.absin(Time.time, 3f, 1f)).a(settings.getInt("selectopacity") / 100f));
-                float length = (target instanceof Unit u ? u.hitSize : target instanceof Building b ? b.block.size * tilesize : 0) * 1.5f + 2.5f;
-                for(int i = 0; i < 4; i++){
-                    float rot = i * 90f + 45f + (-Time.time) % 360f;
-                    Draw.rect("select-arrow", target.x() + Angles.trnsx(rot, length), target.y() + Angles.trnsy(rot, length), length / 1.9f, length / 1.9f, rot - 135f);
-                }
+                WindowManager.windows.get(UnitWindow.class).each(w -> {
+                    UnitWindow window = (UnitWindow) w;
+                    Draw.color(Tmp.c1.set(window.locked ? Color.orange : Color.darkGray).lerp(window.locked ? Color.scarlet : Color.gray, Mathf.absin(Time.time, 3f, 1f)).a(settings.getInt("selectopacity") / 100f));
+                    float length = (window.target instanceof Unit u ? u.hitSize : window.target instanceof Building b ? b.block.size * tilesize : 0) * 1.5f + 2.5f;
+                    for(int i = 0; i < 4; i++){
+                        float rot = i * 90f + 45f + (-Time.time) % 360f;
+                        Draw.rect("select-arrow", window.target.x() + Angles.trnsx(rot, length), window.target.y() + Angles.trnsy(rot, length), length / 1.9f, length / 1.9f, rot - 135f);
+                    }
+                });
+
                 Draw.color();
             }
 
             if(settings.getBool("distanceLine")) {
                 Posc from = player;
-                Position to = target;
+                Position to = getTarget();
                 if(to == from || to == null) to = input.mouseWorld();
                 if(player.unit() instanceof BlockUnitUnit bu) Tmp.v1.set(bu.x() + bu.tile().block.offset, bu.y() + bu.tile().block.offset).sub(to.getX(), to.getY()).limit(bu.tile().block.size * tilesize +  sin + 0.5f);
                 else Tmp.v1.set(from.x(), from.y()).sub(to.getX(), to.getY()).limit((player.unit()==null?0:player.unit().hitSize) +  sin + 0.5f);

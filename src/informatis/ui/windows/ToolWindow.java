@@ -1,11 +1,13 @@
 package informatis.ui.windows;
 
+import arc.Events;
 import informatis.ui.*;
 import informatis.draws.*;
 import arc.math.geom.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
 import arc.util.*;
+import mindustry.game.EventType;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.ui.*;
@@ -17,6 +19,15 @@ public class ToolWindow extends Window {
 
     public ToolWindow() {
         super(Icon.edit, "tool");
+        only = true;
+
+        Events.run(EventType.Trigger.update, () -> {
+            heat += Time.delta;
+            if(heat >= 60f) {
+                heat = 0f;
+                ((ScrollPane) find("tool-pane")).setWidget(rebuild());
+            }
+        });
     }
 
     @Override
@@ -31,15 +42,6 @@ public class ToolWindow extends Window {
             stats.top();
             stats.add(rebuildStats()).name("tool-stats");
         }).growY();
-    }
-
-    public void update() {
-        heat += Time.delta;
-        if(heat >= 60f) {
-            heat = 0f;
-            ScrollPane pane = find("tool-pane");
-            pane.setWidget(rebuild());
-        }
     }
 
     Table rebuild() {

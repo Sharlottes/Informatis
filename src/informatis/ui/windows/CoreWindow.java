@@ -32,6 +32,20 @@ public class CoreWindow extends Window {
     public CoreWindow()  {
         super(Icon.list, "core");
         resetUsed();
+        only = true;
+
+        Events.run(EventType.Trigger.update, () -> {
+            heat += Time.delta;
+            if(heat >= 60f) {
+                heat = 0f;
+                ScrollPane pane = find("core-pane");
+                pane.setWidget(rebuild());
+                for(Team team : getTeams()) {
+                    if(!itemData.containsKey(team)) itemData.put(team, new ItemData());
+                    itemData.get(team).updateItems(team);
+                }
+            }
+        });
     }
 
     @Override
@@ -42,19 +56,6 @@ public class CoreWindow extends Window {
         table.background(Styles.black8).top();
         table.add(new OverScrollPane(rebuild(), Styles.noBarPane, scrollPos).disableScroll(true, false)).grow().name("core-pane");
         Events.on(EventType.WorldLoadEvent.class, e -> resetUsed());
-    }
-
-    public void update() {
-        heat += Time.delta;
-        if(heat >= 60f) {
-            heat = 0f;
-            ScrollPane pane = find("core-pane");
-            pane.setWidget(rebuild());
-            for(Team team : getTeams()) {
-                if(!itemData.containsKey(team)) itemData.put(team, new ItemData());
-                itemData.get(team).updateItems(team);
-            }
-        }
     }
 
     Table rebuild() {
@@ -135,7 +136,7 @@ public class CoreWindow extends Window {
                         }),
                         new Table(ttt -> {
                             ttt.bottom().right();
-                            if(itemData.get(team) == null) return;
+                            if(itemData == null || itemData.get(team) == null) return;
                             int amount = itemData.get(team).updateItems.isEmpty()?0:Mathf.floor(itemData.get(team).updateItems.get(item.id).amount);
                             Label label = new Label(amount + "/s");
                             label.setFontScale(0.65f);

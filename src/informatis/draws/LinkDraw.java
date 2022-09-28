@@ -13,6 +13,7 @@ import arc.util.Tmp;
 import mindustry.core.Renderer;
 import mindustry.gen.Building;
 import mindustry.gen.Groups;
+import mindustry.gen.Teamc;
 import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
@@ -21,6 +22,7 @@ import mindustry.world.blocks.payloads.PayloadMassDriver;
 
 import static arc.Core.atlas;
 import static arc.Core.settings;
+import static informatis.SUtils.getTarget;
 import static mindustry.Vars.*;
 import static informatis.SVars.*;
 
@@ -38,7 +40,7 @@ public class LinkDraw extends OverDraw {
     @Override
     public void draw() {
         if(!enabled) return;
-
+        Teamc target = getTarget();
         Draw.z(Layer.max);
         if(target instanceof Building b){
             if(settings.getBool("powerNode") && enabled) {
