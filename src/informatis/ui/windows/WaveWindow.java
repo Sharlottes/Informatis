@@ -28,13 +28,12 @@ public class WaveWindow extends Window {
 
     public WaveWindow() {
         super(Icon.waves, "wave");
-        height = 300;
+        height = 500;
+        width = 450;
     }
 
     @Override
     public void build(Table table) {
-        window = table;
-
         table.top().background(Styles.black8);
         ScrollPane pane = new OverScrollPane(rebuild(), Styles.noBarPane, scrollPos).disableScroll(true, false);
         table.add(pane).grow().name("wave-pane").row();

@@ -37,6 +37,7 @@ public class Window extends Table {
 
         titleBar();
         row();
+
         ScrollPane pane = new ScrollPane(new Table(t -> {
             t.setBackground(Styles.black5);
             t.top().left();
@@ -54,7 +55,6 @@ public class Window extends Table {
         add(pane).grow();
         row();
         bottomBar();
-
         visible(() -> shown);
         update(() -> setPosition(
             Math.max(0, Math.min(Core.graphics.getWidth() - getWidth(), x)),

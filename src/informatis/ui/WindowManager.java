@@ -13,7 +13,7 @@ public class WindowManager {
         Vars.ui.hudGroup.fill(t -> {
             t.name = "Windows";
             for(Window window : windows){
-                t.add(window);
+                t.add(window).height(window.getHeight()).width(window.getWidth());
             }
         });
 

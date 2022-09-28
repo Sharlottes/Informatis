@@ -42,6 +42,7 @@ public class ElementViewFragment extends Element {
         addRect(root.getChildren());
 
 
+        if(selected == null) return;
         selected.localToStageCoordinates(Tmp.v1.set(0, 0));
         Draw.color(Tmp.c1.set(Color.red).shiftHue(Time.time * 1.5f));
         Lines.stroke(1.5f);
