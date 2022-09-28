@@ -10,7 +10,7 @@ import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.ui.*;
 
-public class ToolWindow extends Window implements Updatable {
+public class ToolWindow extends Window {
     Vec2 scrollPos = new Vec2(0, 0);
     OverDraw selected;
     float heat;
@@ -33,7 +33,6 @@ public class ToolWindow extends Window implements Updatable {
         }).growY();
     }
 
-    @Override
     public void update() {
         heat += Time.delta;
         if(heat >= 60f) {

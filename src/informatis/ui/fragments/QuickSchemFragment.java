@@ -20,13 +20,12 @@ import mindustry.gen.*;
 import mindustry.graphics.Pal;
 import mindustry.ui.Styles;
 import mindustry.ui.dialogs.*;
-import informatis.ui.Updatable;
 
 import static arc.Core.*;
 import static mindustry.Vars.*;
 import static mindustry.Vars.ui;
 
-public class QuickSchemFragment extends Table implements Updatable {
+public class QuickSchemFragment extends Table {
     static float schemScrollPos, tagScrollPos;
     static boolean schemShown;
     static Schematic firstSchematic;
@@ -40,7 +39,6 @@ public class QuickSchemFragment extends Table implements Updatable {
         table.add(this);
     }
 
-    @Override
     public void update() {
         heat += Time.delta;
         if(heat>=60f) {

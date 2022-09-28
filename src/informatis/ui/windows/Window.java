@@ -139,4 +139,6 @@ public class Window extends Table {
     public void toggle(){
         shown = !shown;
     }
+
+    public void update() { }
 }

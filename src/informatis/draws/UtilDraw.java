@@ -1,9 +1,15 @@
 package informatis.draws;
 
+import arc.Core;
+import arc.graphics.Color;
 import arc.input.KeyCode;
 import arc.math.Angles;
 import arc.math.geom.Geometry;
 import arc.scene.style.TextureRegionDrawable;
+import arc.util.Time;
+import arc.util.Tmp;
+import mindustry.Vars;
+import mindustry.content.Fx;
 import mindustry.entities.Units;
 import mindustry.game.Team;
 import mindustry.gen.*;
@@ -28,6 +34,10 @@ public class UtilDraw extends OverDraw {
         super.draw();
 
         if(!enabled) return;
+
+        if(!mobile && !Vars.state.isPaused() && settings.getBool("gaycursor"))
+            Fx.mine.at(Core.input.mouseWorldX(), Core.input.mouseWorldY(), Tmp.c2.set(Color.red).shiftHue(Time.time * 1.5f));
+
         if(settings.getBool("autoShooting")) {
             Unit unit = player.unit();
             if (unit.type == null) return;

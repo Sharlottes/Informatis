@@ -31,7 +31,7 @@ import static informatis.ui.windows.MapEditorWindow.drawTeam;
 import static informatis.ui.windows.Windows.editorTable;
 import static mindustry.Vars.*;
 
-public class MapEditorWindow extends Window implements Updatable {
+public class MapEditorWindow extends Window {
     Vec2 scrollPos = new Vec2(0, 0);
     TextField search;
     EditorTool tool;
@@ -145,7 +145,6 @@ public class MapEditorWindow extends Window implements Updatable {
         }).growY();
     }
 
-    @Override
     public void update() {
         //TODO make it more responsive, time -> width delta detect
         heat += Time.delta;

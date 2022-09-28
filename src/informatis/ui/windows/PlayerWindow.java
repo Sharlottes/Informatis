@@ -17,7 +17,7 @@ import mindustry.ui.*;
 
 import static mindustry.Vars.*;
 
-public class PlayerWindow extends Window implements Updatable {
+public class PlayerWindow extends Window {
     Vec2 scrollPos = new Vec2(0, 0);
     TextField search;
     ImageButton.ImageButtonStyle ustyle;
@@ -48,7 +48,6 @@ public class PlayerWindow extends Window implements Updatable {
         table.add(new OverScrollPane(rebuild(), Styles.noBarPane, scrollPos).disableScroll(true, false)).grow().name("player-pane");
     }
 
-    @Override
     public void update() {
         heat += Time.delta;
         if(heat >= 60f) {

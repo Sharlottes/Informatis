@@ -5,5 +5,5 @@ set PATH_FROM=C:\Users\jun\Documents\GitHub\Informatis
 setlocal
 set PATH_TO=C:\Users\jun\AppData\Roaming\Mindustry
 
-if exist %PATH_TO%\mods\raw-Informatis.jar del %PATH_TO%\mods\raw-Informatis.jar
-xcopy %PATH_FROM%\build\libs\raw-Informatis.jar %PATH_TO%\mods\ /k /y
+if exist %PATH_TO%\mods\InformatisDesktop.jar del %PATH_TO%\mods\InformatisDesktop.jar
+xcopy %PATH_FROM%\build\libs\InformatisDesktop.jar %PATH_TO%\mods\ /k /y

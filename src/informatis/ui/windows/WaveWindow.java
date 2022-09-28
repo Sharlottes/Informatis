@@ -22,12 +22,13 @@ import static arc.Core.*;
 import static arc.Core.settings;
 import static mindustry.Vars.*;
 
-public class WaveWindow extends Window implements Updatable {
+public class WaveWindow extends Window {
     static Vec2 scrollPos = new Vec2(0, 0);
     float heat;
 
     public WaveWindow() {
         super(Icon.waves, "wave");
+        height = 300;
     }
 
     @Override
@@ -93,7 +94,6 @@ public class WaveWindow extends Window implements Updatable {
         });
     }
 
-    @Override
     public void update() {
         heat += Time.delta;
         if(heat >= 60f) {
@@ -123,7 +123,7 @@ public class WaveWindow extends Window implements Updatable {
 
         return groupsTmp;
     }
-
+    
     Table rebuild(){
         return new Table(table -> {
             table.touchable = Touchable.enabled;

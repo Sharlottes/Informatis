@@ -23,7 +23,7 @@ import mindustry.world.blocks.storage.*;
 
 import static mindustry.Vars.*;
 
-public class CoreWindow extends Window implements Updatable {
+public class CoreWindow extends Window {
     Vec2 scrollPos = new Vec2(0, 0);
     Table window;
     float heat;
@@ -44,7 +44,6 @@ public class CoreWindow extends Window implements Updatable {
         Events.on(EventType.WorldLoadEvent.class, e -> resetUsed());
     }
 
-    @Override
     public void update() {
         heat += Time.delta;
         if(heat >= 60f) {

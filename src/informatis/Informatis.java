@@ -28,15 +28,16 @@ public class Informatis extends Mod {
         });
 
         Events.run(Trigger.update, () -> {
-            target = getTarget();
-
+            //TODO: why not just use Events in its own class constructor?
             for (Window window : windows) {
-                if(window instanceof Updatable u) u.update();
+                window.update();
             }
 
+            //TODO: target should be not global variable anymore for multiple window system
+            target = getTarget();
             if((input.keyDown(KeyCode.shiftRight) || input.keyDown(KeyCode.shiftLeft))) {
                 if(input.keyTap(KeyCode.r)) {
-                    if(target==getTarget()) locked = !locked;
+                    if(target == getTarget()) locked = !locked;
                     target = getTarget();
                 }
             }
