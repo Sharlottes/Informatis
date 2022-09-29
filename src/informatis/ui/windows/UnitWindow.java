@@ -55,15 +55,19 @@ public class UnitWindow extends Window {
     final Bits statuses = new Bits();
     public Teamc lastTarget, target;
     public boolean locked;
-    Seq<BarInfo.BarData> data = new Seq<>();
+    Seq<BarData> data = new Seq<>();
+    public static UnitWindow currentWindow;
 
     public UnitWindow() {
         super(Icon.units, "unit");
+        currentWindow = this;
+        Element titlePane = ((Table) ((ScrollPane) ((Table) getChildren().first()).getChildren().first()).getWidget()).getChildren().first();
+        titlePane.update(() -> titlePane.setColor(currentWindow == this ? Pal.accent : Color.white));
         Events.run(EventType.Trigger.update, () -> {
             if(!locked) target = getTarget();
-
+            if(hasMouse()) currentWindow = this;
             try {
-                data = BarInfo.getInfo(target);
+                data = getInfo(target);
             } catch (IllegalAccessException | NoSuchFieldException err) {
                 err.printStackTrace();
             }
@@ -237,14 +241,11 @@ public class UnitWindow extends Window {
         table.add(barPane).grow().padTop(12f);
     }
 
-    boolean show;
     Table buildBarList() {
-        show = false;
         return new Table(table -> {
             table.top();
             for (int i = 0; i < barSize; i++) {
-                table.add(addBar(i)).growX().get();
-                table.row();
+                table.add(addBar(i)).growX().row();
             }
         });
     }
@@ -269,7 +270,7 @@ public class UnitWindow extends Window {
                     float height = imageHeight * this.scaleY;
                     Draw.color(Color.white);
                     Draw.alpha(parentAlpha * color.a);
-                    BarInfo.BarData da = data.get(index);
+                    BarData da = data.get(index);
                     if(hasMouse()) getDrawable().draw(x, y, width, height);
                     else {
                         da.icon.draw(x, y, width, height);
@@ -285,26 +286,22 @@ public class UnitWindow extends Window {
             bar.add(icon).size(iconMed * 0.75f).padLeft(8f);
         });
     }
-}
-class BarInfo {
-    public static <T extends Teamc> Seq<BarData> getInfo(T target) throws IllegalAccessException, NoSuchFieldException {
-        Seq<BarData> data = new Seq<>();
+    public Seq<BarData> getInfo(Teamc target) throws IllegalAccessException, NoSuchFieldException {
+        data.clear();
 
         if(target instanceof Healthc healthc){
             data.add(new BarData(bundle.format("shar-stat.health", formatNumber(healthc.health())), Pal.health, healthc.healthf(), health));
         }
 
         if(target instanceof Unit unit){
-            float max = ((ShieldRegenFieldAbility) content.units().copy().max(ut -> {
+            float max = ((ShieldRegenFieldAbility) Vars.content.units().copy().max(ut -> {
                 ShieldRegenFieldAbility ability = (ShieldRegenFieldAbility) ut.abilities.find(ab -> ab instanceof ShieldRegenFieldAbility);
                 if(ability == null) return 0;
                 return ability.max;
             }).abilities.find(abil -> abil instanceof ShieldRegenFieldAbility)).max;
-            //float commands = Groups.unit.count(u -> u.controller() instanceof FormationAI && ((FormationAI)u.controller()).leader == target);
 
             data.add(new BarData(bundle.format("shar-stat.shield", formatNumber(unit.shield())), Pal.surge, unit.shield() / max, shield));
             data.add(new BarData(bundle.format("shar-stat.capacity", unit.stack.item.localizedName, formatNumber(unit.stack.amount), formatNumber(unit.type.itemCapacity)), unit.stack.amount > 0 && unit.stack().item != null ? unit.stack.item.color.cpy().lerp(Color.white, 0.15f) : Color.white, unit.stack.amount / (unit.type.itemCapacity * 1f), item));
-            //data.add(new BarData(bundle.format("shar-stat.commandUnits", formatNumber(commands), formatNumber(unit.type().commandLimit)), Pal.powerBar.cpy().lerp(Pal.surge.cpy().mul(Pal.lighterOrange), Mathf.absin(Time.time, 7f / (1f + Mathf.clamp(commands / (unit.type().commandLimit * 1f))), 1f)), commands / (unit.type().commandLimit * 1f)));
             if(target instanceof Payloadc pay) data.add(new BarData(bundle.format("shar-stat.payloadCapacity", formatNumber(Mathf.round(Mathf.sqrt(pay.payloadUsed()))), formatNumber(Mathf.round(Mathf.sqrt(unit.type().payloadCapacity)))), Pal.items, pay.payloadUsed() / unit.type().payloadCapacity));
             if(state.rules.unitAmmo) data.add(new BarData(bundle.format("shar-stat.ammos", formatNumber(unit.ammo()), formatNumber(unit.type().ammoCapacity)), unit.type().ammoType.color(), unit.ammof()));
         }
@@ -318,8 +315,8 @@ class BarInfo {
             }
             if(build.block.hasItems) {
                 float value;
-                if (target instanceof CoreBlock.CoreBuild cb) value = cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow);
-                else if(target instanceof StorageBlock.StorageBuild sb && !sb.canPickup() && sb.linkedCore instanceof CoreBlock.CoreBuild cb) value = cb.storageCapacity * content.items().count(UnlockableContent::unlockedNow);
+                if (target instanceof CoreBlock.CoreBuild cb) value = cb.storageCapacity * Vars.content.items().count(UnlockableContent::unlockedNow);
+                else if(target instanceof StorageBlock.StorageBuild sb && !sb.canPickup() && sb.linkedCore instanceof CoreBlock.CoreBuild cb) value = cb.storageCapacity * Vars.content.items().count(UnlockableContent::unlockedNow);
                 else value = build.block.itemCapacity;
                 data.add(new BarData(bundle.format("shar-stat.capacity", bundle.get("category.items"), formatNumber(build.items.total()), value), Pal.items, build.items.total() / value, item));
             }
@@ -442,7 +439,7 @@ class BarInfo {
             }
             else if (target instanceof ThermalGenerator.ThermalGeneratorBuild thermal) {
                 ThermalGenerator block = (ThermalGenerator) thermal.block;
-                float max = content.blocks().max(b -> b instanceof Floor f && f.attributes != null ? f.attributes.get(block.attribute) : 0).asFloor().attributes.get(block.attribute);
+                float max = Vars.content.blocks().max(b -> b instanceof Floor f && f.attributes != null ? f.attributes.get(block.attribute) : 0).asFloor().attributes.get(block.attribute);
                 display = block.sumAttribute(block.attribute, thermal.tileX(), thermal.tileY()) * 100;
                 pro = block.sumAttribute(block.attribute, thermal.tileX(), thermal.tileY()) / block.size / block.size / max;
             }
@@ -450,7 +447,7 @@ class BarInfo {
                 SolidPump.SolidPumpBuild crafter = (SolidPump.SolidPumpBuild) target;
                 SolidPump block = (SolidPump) crafter.block;
                 float fraction = Math.max(crafter.validTiles + crafter.boost + (block.attribute == null ? 0 : block.attribute.env()), 0);
-                float max = content.blocks().max(b -> b instanceof Floor f && f.attributes != null ? f.attributes.get(block.attribute) : 0).asFloor().attributes.get(block.attribute);
+                float max = Vars.content.blocks().max(b -> b instanceof Floor f && f.attributes != null ? f.attributes.get(block.attribute) : 0).asFloor().attributes.get(block.attribute);
                 display = Math.max(block.sumAttribute(block.attribute, crafter.tileX(), crafter.tileY()) / block.size / block.size + block.baseEfficiency, 0f) * 100 * block.percentSolid(crafter.tileX(), crafter.tileY());
                 pro = fraction / max;
             }

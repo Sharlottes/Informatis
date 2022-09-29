@@ -11,9 +11,7 @@ import mindustry.*;
 import mindustry.game.EventType.*;
 import mindustry.mod.*;
 
-import static informatis.SVars.*;
 import static arc.Core.*;
-import static informatis.SUtils.*;
 import static informatis.ui.windows.WindowManager.windows;
 
 public class Informatis extends Mod {
@@ -29,7 +27,7 @@ public class Informatis extends Mod {
         Events.run(Trigger.update, () -> {
             if((input.keyDown(KeyCode.shiftRight) || input.keyDown(KeyCode.shiftLeft))) {
                 if(input.keyTap(KeyCode.r)) {
-                    windows.get(UnitWindow.class).each(window -> ((UnitWindow) window).locked = !((UnitWindow) window).locked);
+                    UnitWindow.currentWindow.locked = !UnitWindow.currentWindow.locked;
                 }
             }
         });
