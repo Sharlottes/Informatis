@@ -1,6 +1,7 @@
 package informatis;
 
 import arc.input.KeyCode;
+import arc.util.Log;
 import informatis.core.OverDrawer;
 import informatis.core.Setting;
 import informatis.draws.OverDraws;

@@ -26,7 +26,6 @@ public class OverScrollPane extends ScrollPane {
             //scene.setScrollFocus(null);
             cancelTouchFocus();
         }
-        Log.info(result);
         scrollPos.x = getScrollX();
         scrollPos.y = getScrollY();
 
