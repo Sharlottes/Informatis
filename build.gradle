@@ -32,9 +32,8 @@ dependencies {
 jar.archiveFileName.set("raw-$artifactFilename")
 
 def isWindows = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows")
-
 task dexify(type: Jar){
-    archiveFileName.set("raw-$artifactFilename")
+    archiveFileName.set(artifactFilename)
 
     final File jarArtifact = new File(tasks.jar.archiveFile.get().asFile.parent, "raw-$artifactFilename"),
                dexedArtifact = new File(tasks.dexify.getTemporaryDir(), "dexed.jar")
@@ -64,6 +63,7 @@ task dexify(type: Jar){
     from(zipTree(jarArtifact), zipTree(dexedArtifact))
 }
 
+tasks.named("dexify").configure { dependsOn(":jar") }
 task buildDex dependsOn "build", "dexify"
 
 task buildMove(dependsOn: build) {
