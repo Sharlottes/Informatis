@@ -52,9 +52,9 @@ public class BlockDraw extends OverDraw {
             if(settings.getBool("blockBar")) {
                 drawBar(b, 0, -(b.block.size * 4 - 2), b.healthf(), Pal.health);
 
-                if(b instanceof Turret.TurretBuild turretBuild)
+                if (b instanceof Turret.TurretBuild turretBuild) {
                     drawBar(b, 0, b.block.size * 4 - 2, turretBuild.reloadCounter / ((Turret) b.block).reload, Pal.ammo);
-
+                }
                 if(b instanceof ConstructBlock.ConstructBuild constructBuild)
                     drawBar(b, 0, b.block.size * 4 - 2, constructBuild.progress(), b.team.color);
                 if(b instanceof Reconstructor.ReconstructorBuild reconstructorBuild)
