@@ -34,7 +34,7 @@ jar.archiveFileName.set("raw-$artifactFilename")
 def isWindows = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows")
 
 task dexify(type: Jar){
-    archiveFileName.set(artifactFilename)
+    archiveFileName.set("raw-$artifactFilename")
 
     final File jarArtifact = new File(tasks.jar.archiveFile.get().asFile.parent, "raw-$artifactFilename"),
                dexedArtifact = new File(tasks.dexify.getTemporaryDir(), "dexed.jar")
@@ -69,7 +69,7 @@ task buildDex dependsOn "build", "dexify"
 task buildMove(dependsOn: build) {
     doLast {
         copy {
-            from "build/libs/raw-Sharustry.jar"
+            from "build/libs/raw-Informatis.jar"
             into System.getenv("destination")
         }
     }
