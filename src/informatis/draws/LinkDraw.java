@@ -10,15 +10,20 @@ import arc.struct.IntSeq;
 import arc.struct.Seq;
 import arc.util.Time;
 import arc.util.Tmp;
+import mindustry.ai.types.CargoAI;
 import mindustry.core.Renderer;
+import mindustry.entities.units.UnitController;
 import mindustry.gen.Building;
 import mindustry.gen.Groups;
 import mindustry.gen.Teamc;
+import mindustry.gen.Unit;
 import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
+import mindustry.world.Build;
 import mindustry.world.blocks.distribution.MassDriver;
 import mindustry.world.blocks.payloads.PayloadMassDriver;
+import mindustry.world.blocks.units.UnitCargoLoader;
 
 import static arc.Core.atlas;
 import static arc.Core.settings;
@@ -42,6 +47,23 @@ public class LinkDraw extends OverDraw {
         if(!enabled) return;
         Teamc target = getTarget();
         Draw.z(Layer.max);
+
+        Groups.build.each(building -> {
+            if(building instanceof UnitCargoLoader.UnitTransportSourceBuild build) {
+                Unit unit = build.unit;
+                if(unit != null && unit.item() != null && unit.controller() instanceof CargoAI ai && ai.unloadTarget != null) {
+                    Building targetBuild = ai.unloadTarget;
+
+                    Lines.stroke(2);
+                    Draw.color(build.team.color);
+                    Draw.alpha(0.5f);
+                    Lines.line(build.x, build.y, unit.x, unit.y);
+                    Draw.color(unit.item().color);
+                    Draw.alpha(0.5f);
+                    Lines.line(unit.x, unit.y, targetBuild.x, targetBuild.y);
+                }
+            }
+        });
         if(target instanceof Building b){
             if(settings.getBool("powerNode") && enabled) {
                 linkedNodes.clear();
