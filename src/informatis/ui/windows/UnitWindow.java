@@ -24,6 +24,7 @@ import mindustry.graphics.*;
 import mindustry.logic.*;
 import mindustry.type.*;
 import mindustry.ui.*;
+import mindustry.world.Block;
 import mindustry.world.blocks.*;
 import mindustry.world.blocks.defense.*;
 import mindustry.world.blocks.defense.turrets.*;
@@ -454,7 +455,22 @@ public class UnitWindow extends Window {
 
             data.add(new BarData(bundle.format("shar-stat.attr", Mathf.round(display)), Pal.ammo, pro));
         }
-        
+
+        if(target instanceof UnitAssembler.UnitAssemblerBuild assemblerBuild) {
+            UnitAssembler.AssemblerUnitPlan plan = assemblerBuild.plan();
+
+            UnitType unit = assemblerBuild.unit();
+            if(unit == null) data.add(new BarData("[lightgray]" + Iconc.cancel, Pal.power, 0f));
+            else data.add(new BarData(bundle.format("shar-stat.progress", Math.round(assemblerBuild.progress * 100 * 100) / 100), Pal.power, assemblerBuild.progress));
+
+            for(PayloadStack stack : plan.requirements) {
+                int value = assemblerBuild.blocks.get(stack.item);
+                int max = stack.amount;
+                float pro = value / (max * 1f);
+                data.add(new BarData(stack.item.localizedName + ": " + value + " / " + max, Pal.accent.cpy().lerp(Color.orange, pro), pro, stack.item.fullIcon));
+            }
+        }
+
         return data;
     }
 
