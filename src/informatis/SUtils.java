@@ -7,9 +7,11 @@ import arc.math.geom.Position;
 import arc.scene.style.*;
 import arc.struct.Seq;
 import arc.util.*;
+import informatis.core.Pathfinder;
 import mindustry.Vars;
 import mindustry.core.UI;
 import mindustry.entities.bullet.*;
+import mindustry.game.Team;
 import mindustry.gen.*;
 import mindustry.input.DesktopInput;
 import mindustry.type.UnitType;
@@ -20,8 +22,7 @@ import java.lang.reflect.*;
 
 import static informatis.SVars.*;
 import static arc.Core.*;
-import static mindustry.Vars.control;
-import static mindustry.Vars.player;
+import static mindustry.Vars.*;
 
 public class SUtils {
     /**
@@ -74,6 +75,38 @@ public class SUtils {
         if(number.intValue() >= 1000) return UI.formatAmount(number.longValue());
         if(number instanceof Integer || number.longValue() % 10 == 0) return String.valueOf(number.intValue());
         return Strings.fixed(number.floatValue(), step);
+    }
+
+    public static Seq<Tile> generatePathTiles() {
+        Seq<Tile> pathTiles = new Seq<>();
+
+        spawner.getSpawns().each(tile -> pathTiles.addAll(generatePathTiles(tile)));
+
+        return pathTiles;
+    }
+    public static Seq<Tile> generatePathTiles(Tile startTile) {
+        Seq<Tile> pathTiles = new Seq<>();
+
+        for(int p = 0; p < 3; p++) {
+            getNextTile(startTile, SVars.pathfinder.getField(state.rules.waveTeam, p, Pathfinder.fieldCore), pathTiles);
+        }
+
+        return pathTiles;
+    }
+
+    public static Seq<Tile> generatePathTiles(Tile startTile, Team team, int type) {
+        Seq<Tile> pathTiles = new Seq<>();
+
+        getNextTile(startTile, SVars.pathfinder.getField(team, type, Pathfinder.fieldCore), pathTiles);
+
+        return pathTiles;
+    }
+
+    static void getNextTile(Tile tile, Pathfinder.Flowfield field, Seq<Tile> pathTiles) {
+        Tile nextTile = SVars.pathfinder.getTargetTile(tile, field);
+        pathTiles.add(nextTile);
+        if(nextTile == tile || nextTile == null) return;
+        getNextTile(nextTile, field, pathTiles);
     }
 
     public static float bulletRange(BulletType b) {

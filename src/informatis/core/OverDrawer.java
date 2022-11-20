@@ -73,10 +73,6 @@ public class OverDrawer {
                             Pal.accent, 0.25f, false, Align.center);
                 }
             }
-
-            //global drawing, which needs camera-clipping
-            Core.camera.bounds(Tmp.r1);
-            for(OverDraw drawer : OverDraws.all) drawer.draw();
             Draw.reset();
         });
     }
