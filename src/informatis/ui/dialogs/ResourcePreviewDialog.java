@@ -3,11 +3,13 @@ package informatis.ui.dialogs;
 import arc.func.Cons;
 import arc.graphics.Color;
 import arc.graphics.g2d.Font;
+import arc.input.KeyCode;
 import arc.scene.Element;
 import arc.scene.style.Drawable;
 import arc.scene.style.TextureRegionDrawable;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
+import arc.scene.utils.Elem;
 import arc.struct.ObjectMap;
 import arc.struct.Seq;
 import arc.util.Align;
@@ -15,6 +17,7 @@ import arc.util.Log;
 import arc.util.Scaling;
 import mindustry.gen.Icon;
 import mindustry.gen.Tex;
+import mindustry.graphics.Pal;
 import mindustry.ui.Styles;
 import mindustry.ui.dialogs.*;
 
@@ -22,7 +25,7 @@ import java.lang.reflect.Field;
 
 
 public class ResourcePreviewDialog extends BaseDialog {
-    boolean showName = false;
+    boolean showName = false, showAllFields = false;
     int currentTab = 0;
 
     public ResourcePreviewDialog() {
@@ -45,9 +48,9 @@ public class ResourcePreviewDialog extends BaseDialog {
                         }
                         refreshResourceTable();
                     });
-                    tabTable.add(button).minHeight(50).grow();
+                    tabTable.add(button).height(50).growX();
                 }
-            }).grow().row();
+            }).growX().row();
             t.table(tt -> tt.add(rebuildResourceList())).name("resource").grow();
         }).grow();
     }
@@ -55,37 +58,40 @@ public class ResourcePreviewDialog extends BaseDialog {
     void refreshResourceTable() {
         Table resource = find("resource");
         resource.clearChildren();
-        resource.add(rebuildResourceList());
+        resource.add(rebuildResourceList()).grow();
     }
 
     float scrollY;
+    String search = "";
     Table rebuildResourceList() {
         return new Table(pane -> {
             Cons[] builders = {
                 (Cons<Table>) ppane -> {
                     ppane.table(options -> {
-                        options.top().left();
+                        options.top().center().defaults().pad(20);
+                        options.table(t -> {
+                            t.button(Icon.zoom, this::refreshResourceTable);
+                            t.field(search, value -> search = value).get().keyDown(KeyCode.enter, this::refreshResourceTable);
+                        }).minWidth(200);
                         options.check("show resource with its name", showName, (checkBox) -> {
                             showName = !showName;
                             refreshResourceTable();
-                        }).grow();
+                        });
                     }).padBottom(20f).growX().row();
                     ScrollPane contentPane = new ScrollPane(new Table(content -> {
                         buildTitle(content, "Texture Resources").row();
-                        buildTexResources(content).row();
+                        content.table(this::buildTexResources).grow().row();
                         buildTitle(content, "Icon Resources").row();
-                        buildIconResources(content);
+                        content.table(this::buildIconResources).grow().row();
                     }));
-                    contentPane.scrolled(y -> {
-                        scrollY = contentPane.getScrollY();
-                    });
+                    contentPane.scrolled(y -> scrollY = contentPane.getScrollY());
                     contentPane.layout();
                     contentPane.setScrollY(scrollY);
                     ppane.add(contentPane).grow();
                 },
                 (Cons<Table>) ppane -> {
                     buildTitle(ppane, "Styles Resources").row();
-                    ppane.pane(this::buildStyleResources).scrollX(true);
+                    ppane.pane(this::buildStyleResources).scrollX(true).grow().fill();
                 }
             };
             pane.table(ppane -> {
@@ -103,67 +109,74 @@ public class ResourcePreviewDialog extends BaseDialog {
 
     Table buildStyleResources(Table table) {
         Cons<Class<?>> build = classz -> {
+            Seq<Field> allStyles = Seq.with(Styles.class.getFields()).filter(field -> field.getType().equals(classz));
+
             String[] spliten = classz.getName().split("\\$");
             buildTitle(table, spliten[spliten.length - 1]).marginLeft(20f).row();
 
             table.table(t -> {
-                t.top().left().defaults().center().maxHeight(50).pad(10).grow();
+                t.top().left().defaults().labelAlign(Align.center).center().maxHeight(50).pad(10).grow();
 
                 if(classz.equals(Drawable.class)) {
-                    for(Field field : Styles.class.getFields()) {
-                        if (!field.getType().equals(Drawable.class)) continue;
+                    for(Field field : allStyles) {
                         t.table(tt -> {
                             tt.left();
                             try {
                                 tt.add(field.getName());
-                                tt.image((Drawable) field.get(null)).padLeft(40f);
+                                tt.image((Drawable) field.get(null)).grow().padLeft(40f);
                             } catch (IllegalAccessException e) {
                                 throw new RuntimeException(e);
                             }
-                        }).growX().left().row();
+                        }).row();
                     }
-                    t.row();
                     return;
                 }
 
-                t.add("\\");
-
-                Seq<Field> styles = Seq.with(classz.getFields());
-                styles.each(style -> t.add(style.getName()));
-                t.row();
-
-                for(Field field : Styles.class.getFields()) {
-                    if(!field.getType().equals(classz)) continue;
-                    t.add(field.getName());
-
+                Seq<Field> styles = Seq.with(classz.getFields()).filter(style -> allStyles.find(field -> {
+                    style.setAccessible(true);
                     try {
+                        Object value = style.get(field.get(null));
+                        return !(value == null || value instanceof Font || value.toString().matches("^\\d*.\\d*$")); //wtf
+                    } catch (IllegalAccessException e) {
+                        throw new RuntimeException(e);
+                    }
+                }) != null);
+
+                t.add("");
+                styles.each(style -> t.table(tt -> {
+                    tt.center();
+                    tt.add(style.getName());
+                }));
+                t.row();
+                t.image().height(4f).color(Pal.accent).growX().colspan(styles.size + 1).row();
+                for(Field field : allStyles) {
+                    try {
+                        t.add(field.getName());
                         Object style = field.get(null);
                         styles.each(styleField -> {
                             styleField.setAccessible(true);
                             try {
                                 Object value = styleField.get(style);
-                                if(value instanceof Drawable drawable) t.image(drawable);
-                                else t
-                                .add(value != null
-                                    ? value instanceof Font font
-                                        ? font.getData().toString()
-                                        : value.toString()
-                                    : "<empty>"
-                                )
-                                .color(value != null
-                                    ? value.toString().matches("/[a-f0-9]{8}/gi") //TODO - 이거 왜 안먹힘
-                                        ? Color.valueOf(value.toString())
-                                        : Color.white
-                                    : Color.gray
-                                );
+                                t.table(tt -> {
+                                    tt.center();
+                                    if(value == null) tt.add("").color(Color.gray);
+                                    else if(value instanceof Drawable drawable) tt.image(drawable).grow();
+                                    else tt.add(value.toString())
+                                            .color(value.toString().matches("^#?[a-fA-F0-9]{6,8}$")
+                                                    ? Color.valueOf(value.toString())
+                                                    : Color.gray
+                                            );
+                                });
                             } catch (IllegalAccessException e) {
                                 throw new RuntimeException(e);
                             }
                         });
+                        t.row();
+                        //divider smh?
+                        t.image().height(4f).color(Pal.gray).growX().colspan(styles.size + 1).row();
                     } catch (IllegalAccessException e) {
                         throw new RuntimeException(e);
                     }
-                    t.row();
                 }
             }).grow().row();
         };
@@ -176,21 +189,24 @@ public class ResourcePreviewDialog extends BaseDialog {
     }
 
     Table buildIconResources(Table table) {
-        int i = 0;
+        int r = 0;
         for(ObjectMap.Entry<String, TextureRegionDrawable> entry : Icon.icons.entries()) {
+            if(!entry.key.contains(search)) continue;
             addResourceImage(table, entry.value, entry.key, 0);
-            if(++i % 15 == 0) table.row();
+            if(++r % 15 == 0) table.row();
         }
         return table;
     }
 
     Table buildTexResources(Table table) {
         Field[] fields = Tex.class.getDeclaredFields();
-        for(int i = 0; i < fields.length;) {
+        int r = 0;
+        for(int i = 0; i < fields.length; i++) {
             try {
                 Field field = fields[i];
+                if(!field.getName().contains(search)) continue;
                 addResourceImage(table, (Drawable) field.get(null), field.getName(), i);
-                if(++i % 15 == 0) table.row();
+                if(++r % 15 == 0) table.row();
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             }
