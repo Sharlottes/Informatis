@@ -62,6 +62,11 @@ public class UnitWindow extends Window {
     public UnitWindow() {
         super(Icon.units, "unit");
         currentWindow = this;
+    }
+
+    @Override
+    public void build() {
+        super.build();
         Element titlePane = ((Table) ((ScrollPane) ((Table) getChildren().first()).getChildren().first()).getWidget()).getChildren().first();
         titlePane.update(() -> titlePane.setColor(currentWindow == this ? Pal.accent : Color.white));
         Events.run(EventType.Trigger.update, () -> {
@@ -76,7 +81,7 @@ public class UnitWindow extends Window {
     }
 
     @Override
-    protected void build(Table table) {
+    protected void buildBody(Table table) {
         Image profileImage = new Image() {
             final int size = 8;
             @Override
@@ -192,9 +197,9 @@ public class UnitWindow extends Window {
                     return;
                 }
 
-                if(usedPayload == payloader.payloadUsed() && lastWidth == window.getWidth()) return;
+                if(usedPayload == payloader.payloadUsed() && lastWidth == getWidth()) return;
                 if(usedPayload != payloader.payloadUsed()) usedPayload = payloader.payloadUsed();
-                if(lastWidth != window.getWidth()) lastWidth = window.getWidth();
+                if(lastWidth != getWidth()) lastWidth = getWidth();
 
                 t.clear();
                 t.top().left();
@@ -206,7 +211,7 @@ public class UnitWindow extends Window {
                     image.hovered(() -> image.setColor(Tmp.c1.set(image.color).lerp(Color.lightGray, Mathf.clamp(Time.delta))));
                     image.exited(() -> image.setColor(Tmp.c1.set(image.color).lerp(Color.white, Mathf.clamp(Time.delta))));
                     t.add(image).size(iconSmall).tooltip(l -> l.label(() -> payload.content().localizedName).style(Styles.outlineLabel));
-                    if ((i + 1) % Math.max(6, Math.round((window.getWidth() - 24) / iconSmall)) == 0) t.row();
+                    if ((i + 1) % Math.max(6, Math.round((getWidth() - 24) / iconSmall)) == 0) t.row();
                 }
             });
 
@@ -218,9 +223,9 @@ public class UnitWindow extends Window {
                 }
                 Bits applied = st.statusBits();
 
-                if((applied == null || statuses.equals(st.statusBits())) && lastWidth == window.getWidth()) return;
+                if((applied == null || statuses.equals(st.statusBits())) && lastWidth == getWidth()) return;
                 if(!statuses.equals(st.statusBits())) statuses.set(applied);
-                if(lastWidth != window.getWidth()) lastWidth = window.getWidth();
+                if(lastWidth != getWidth()) lastWidth = getWidth();
 
                 t.clear();
                 t.top().left();
@@ -233,7 +238,7 @@ public class UnitWindow extends Window {
                         image.hovered(() -> image.setColor(Tmp.c1.set(image.color).lerp(Color.lightGray, Mathf.clamp(Time.delta))));
                         image.exited(() -> image.setColor(Tmp.c1.set(image.color).lerp(Color.white, Mathf.clamp(Time.delta))));
                         t.add(image).size(iconSmall).tooltip(l -> l.label(() -> effect.localizedName + " [lightgray]" + UI.formatTime(st.getDuration(effect))).style(Styles.outlineLabel));
-                        if (i + 1 % Math.max(6, Math.round((window.getWidth() - 24) / iconSmall)) == 0) t.row();
+                        if (i + 1 % Math.max(6, Math.round((getWidth() - 24) / iconSmall)) == 0) t.row();
                     }
                 }
             });

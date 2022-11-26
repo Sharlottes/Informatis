@@ -3,11 +3,10 @@ package informatis.ui.windows;
 import arc.*;
 import arc.func.*;
 import arc.input.*;
+import arc.math.Mathf;
 import arc.math.geom.*;
-import arc.scene.Element;
 import arc.scene.event.*;
 import arc.scene.style.*;
-import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
 import arc.util.*;
 import mindustry.gen.*;
@@ -17,65 +16,61 @@ public class Window extends Table {
     public TextureRegionDrawable icon;
     public Cons<Table> content;
     public boolean shown = false, only = false;
-    public Table window;
 
     public float minWindowWidth = 160, minWindowHeight = 60;
     public float maxWindowWidth = Float.MAX_VALUE, maxWindowHeight = Float.MAX_VALUE;
-    float topBarHeight = 48f;
+    public Window(String name){
+        this(new TextureRegionDrawable(Core.atlas.find("clear")), name, null);
+    }
     public Window(TextureRegionDrawable icon, String name){
         this(icon, name, null);
     }
 
-    public Window(TextureRegionDrawable icon, String name, Cons<Table> content){
-        this.content = content;
-        this.name = name;
+    public Window(TextureRegionDrawable icon, String name, Cons<Table> content) {
         this.icon = icon;
-        window = this;
+        this.name = name;
+        this.content = content;
         WindowManager.register(this);
+    }
 
-        titleBar();
-        row();
-
-        ScrollPane pane = new ScrollPane(new Table(t -> {
+    public void build() {
+        buildTitleBar().row();
+        pane(new Table(t -> {
             t.setBackground(Styles.black5);
-            t.top().left();
-            build(t);
-        }), Styles.noBarPane);
-        pane.update(() -> {
-            if(pane.hasScroll()){
-                Element result = Core.scene.hit(Core.input.mouseX(), Core.input.mouseY(), true);
-                if(result == null || !result.isDescendantOf(pane)){
-                    Core.scene.setScrollFocus(null);
-                }
-            }
-        });
-        pane.setScrollingDisabled(true, true);
-        add(pane).grow();
-        row();
-        bottomBar();
+            buildBody(t);
+        }))
+            .grow()
+            .row();
+        buildBottomBar();
+
         visible(() -> shown);
-        update(() -> setPosition(
-            Math.max(0, Math.min(Core.graphics.getWidth() - getWidth(), x)),
-            Math.max(topBarHeight - getHeight(), Math.min(Core.graphics.getHeight() - getHeight(), y))
-        ));
+        update(() -> {
+            setPosition(
+                    Mathf.clamp(x, 0, Core.graphics.getWidth() - getWidth()),
+                    Mathf.clamp(y, 0, Core.graphics.getHeight() - getHeight())
+            );
+        });
     }
-
-    protected void build(Table t){
-        if(content != null) content.get(t);
-    }
-
-    protected void titleBar(){
+    protected Window buildTitleBar() {
         table(t -> {
             t.pane(b -> {
                 b.left();
                 b.setBackground(Tex.buttonEdge1);
                 b.image(icon.getRegion()).size(20f).padLeft(15);
                 b.add(Core.bundle.get("window."+name+".name")).padLeft(20);
-            }).touchable(Touchable.disabled).grow();
-            t.table(Tex.buttonEdge3, b -> b.button(Icon.cancel, Styles.emptyi, () -> {
-                shown = false;
-                if(!only) WindowManager.windows.get(getClass()).remove(this);
-            }).fill()).width(80f).growY();
+            })
+                .touchable(Touchable.disabled)
+                .grow();
+
+            t.table(b -> {
+                b.setBackground(Tex.buttonEdge3);
+                b.button(Icon.cancel, Styles.emptyi, () -> {
+                    shown = false;
+                    if(!only) WindowManager.windows.get(getClass()).remove(this);
+                }).fill();
+            })
+                .width(80f)
+                .growY();
 
             // handles the dragging.
             t.touchable = Touchable.enabled;
@@ -98,10 +93,16 @@ public class Window extends Table {
                     lastY = v.y;
                 }
             });
-        }).height(topBarHeight).growX();
+        }).height(48f).growX();
+
+        return this;
     }
 
-    protected void bottomBar(){
+    protected void buildBody(Table t){
+        if(content != null) content.get(t);
+    }
+
+    protected Window buildBottomBar() {
         table(Styles.black5, t -> {
             t.table().growX();
             t.table(Icon.resizeSmall, r -> {
@@ -135,11 +136,11 @@ public class Window extends Table {
                 });
             }).size(20f).left();
         }).height(20f).growX();
+
+        return this;
     }
 
     public void toggle(){
         shown = !shown;
     }
-
-    public void update() { }
 }

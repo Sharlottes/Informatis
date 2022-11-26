@@ -37,7 +37,7 @@ public class ToolWindow extends Window {
     }
 
     @Override
-    public void build(Table table) {
+    public void buildBody(Table table) {
         scrollPos = new Vec2(0, 0);
 
         table.background(Styles.black8)

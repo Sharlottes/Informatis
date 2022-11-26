@@ -44,7 +44,7 @@ public class PlayerWindow extends Window {
     }
 
     @Override
-    public void build(Table table) {
+    public void buildBody(Table table) {
         scrollPos = new Vec2(0, 0);
         search = Elem.newField(null, f->{});
         search.setMessageText(Core.bundle.get("players.search"));

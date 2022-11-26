@@ -118,7 +118,7 @@ public class MapEditorWindow extends Window {
             if(heat >= 60f) {
                 heat = 0f;
 
-                if(lastw != window.getWidth() || lasth != window.getHeight()) resetPane();
+                if(lastw != getWidth() || lasth != getHeight()) resetPane();
                 lastw = width;
                 lasth = height;
             }
@@ -142,11 +142,10 @@ public class MapEditorWindow extends Window {
     }
 
     @Override
-    public void build(Table table) {
+    public void buildBody(Table table) {
         scrollPos = new Vec2(0, 0);
         search = Elem.newField(null, f->{});
         search.setMessageText(Core.bundle.get("players.search")+"...");
-        window = table;
 
         table.left();
         table.top().background(Styles.black8);
@@ -368,7 +367,7 @@ public class MapEditorWindow extends Window {
     float teamScroll;
 
     float getDisplayWidth() {
-        return window.getWidth() - (window.find("buttons") == null ? 1 : window.find("buttons").getWidth());
+        return getWidth() - (find("buttons") == null ? 1 : find("buttons").getWidth());
     }
     
     public void drawBlocksReplace(int x, int y){

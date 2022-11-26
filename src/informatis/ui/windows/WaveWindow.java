@@ -42,7 +42,7 @@ public class WaveWindow extends Window {
     }
 
     @Override
-    public void build(Table table) {
+    public void buildBody(Table table) {
         table.top().background(Styles.black8);
         ScrollPane pane = new OverScrollPane(rebuild(), Styles.noBarPane, scrollPos).disableScroll(true, false);
         table.add(pane).grow().name("wave-pane").row();
@@ -64,7 +64,7 @@ public class WaveWindow extends Window {
                 }
 
                 int row = 0;
-                int max = Math.max(1, Math.round(window.getWidth()/2/8/2));
+                int max = Math.max(1, Math.round(getWidth()/2/8/2));
                 for (UnitType unit : Vars.content.units()) {
                     int amount = Groups.unit.count(u->u.type==unit&&u.team==state.rules.waveTeam);
                     if(amount<=0) continue;
@@ -154,7 +154,7 @@ public class WaveWindow extends Window {
                             ObjectIntMap<SpawnGroup> groups = getWaveGroup(index-1);
 
                             int row = 0;
-                            int max = Math.max(1, Math.round(window.getWidth()/64)-5);
+                            int max = Math.max(1, Math.round(getWidth()/64)-5);
                             for (SpawnGroup group : groups.keys()) {
                                 int spawners = state.rules.waveTeam.cores().size + (group.type.flying ? spawner.countFlyerSpawns() : spawner.countGroundSpawns());
                                 int amount = groups.get(group);

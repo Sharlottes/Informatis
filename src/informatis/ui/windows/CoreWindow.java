@@ -49,7 +49,7 @@ public class CoreWindow extends Window {
     }
 
     @Override
-    public void build(Table table) {
+    public void buildBody(Table table) {
         window = table;
         scrollPos = new Vec2(0, 0);
 
