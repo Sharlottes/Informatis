@@ -2,8 +2,9 @@ package informatis.ui.windows;
 
 import arc.*;
 import informatis.SUtils;
+import informatis.ui.components.OverScrollPane;
+import informatis.ui.components.SBar;
 import mindustry.game.*;
-import informatis.ui.*;
 import arc.graphics.*;
 import arc.math.*;
 import arc.math.geom.*;

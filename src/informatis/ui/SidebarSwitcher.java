@@ -1,6 +1,7 @@
 package informatis.ui;
 
 import arc.*;
+import arc.graphics.g2d.Lines;
 import arc.math.*;
 import arc.scene.*;
 import arc.scene.actions.*;
@@ -10,7 +11,9 @@ import arc.struct.*;
 import arc.util.*;
 import mindustry.*;
 import mindustry.gen.*;
-import mindustry.ui.*;
+import mindustry.graphics.Pal;
+
+import javax.sound.sampled.Line;
 
 public class SidebarSwitcher {
     int showIndex = 0;
@@ -48,15 +51,22 @@ public class SidebarSwitcher {
     public void init() {
         Vars.ui.hudGroup.fill(t -> {
             t.name = "informatis sidebar";
-            t.center().left();
+            t.left();
 
             t.table(body -> {
-                ImageButton button = new ImageButton();
+                ImageButton button = new ImageButton() {
+                    @Override
+                    public void draw() {
+                        super.draw();
+                        Lines.stroke(5, Pal.gray);
+                        Lines.line(this.x, this.y + this.height, this.x + this.width, this.y + this.height);
+                    }
+                };
                 button.clicked(() -> {
-                    SnapshotSeq<Element> children = ((Group) body.getChildren().first()).getChildren();
-                    Element currentSidebar = children.get(showIndex);
+                    SnapshotSeq<Element> children = ((Stack) body.getChildren().first()).getChildren();
+                    Element currentSidebar = ((Table) children.get(showIndex)).getChildren().first();
                     showIndex = (showIndex + 1) % children.size;
-                    Element nextSidebar = children.get(showIndex);
+                    Element nextSidebar = ((Table) children.get(showIndex)).getChildren().first();
 
                     actShowMoveX(currentSidebar, 0, -currentSidebar.getWidth());
                     actShowMoveX(nextSidebar, -nextSidebar.getWidth(),0);
@@ -69,18 +79,22 @@ public class SidebarSwitcher {
                 style.up = Tex.buttonEdge4;
                 style.imageUp = Icon.right;
                 button.setStyle(style);
-                button.setWidth(sidebars[0].getWidth());
+                actResizeWidth(button, sidebars[showIndex].getWidth());
 
-                body.top().left()
-                    .defaults().growY();
-                body.table(sides -> {
-                    sides.top().left().defaults().growY();
-                    for(int i = 0; i < sidebars.length; i++) {
-                        Element elem = sidebars[i];
-                        if(elem instanceof Table table) table.setBackground(Tex.buttonEdge3);
-                        sides.add(elem).visible(i == 0);
-                    }
-                }).row();
+                Stack sidebarTables = new Stack();
+                for(int i = 0; i < sidebars.length; i++) {
+                    int j = i;
+                    sidebarTables.add(new Table(table -> {
+                        Element elem = sidebars[j];
+                        if (elem instanceof Table elemTable) elemTable.setBackground(Tex.buttonEdge3);
+
+                        table.left();
+                        table.add(elem).growY();
+                        elem.visible = j == 0;
+                    }));
+                }
+                body.top().left();
+                body.add(sidebarTables).grow().row();
                 body.add(button).growX();
             });
         });

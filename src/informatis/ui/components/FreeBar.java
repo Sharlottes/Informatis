@@ -1,4 +1,4 @@
-package informatis.ui;
+package informatis.ui.components;
 
 import arc.graphics.g2d.*;
 import arc.math.*;

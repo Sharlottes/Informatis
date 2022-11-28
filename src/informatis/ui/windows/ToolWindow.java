@@ -2,14 +2,13 @@ package informatis.ui.windows;
 
 import arc.Events;
 import arc.scene.Element;
-import arc.struct.ObjectMap;
 import arc.struct.Seq;
-import informatis.ui.*;
 import informatis.draws.*;
 import arc.math.geom.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
 import arc.util.*;
+import informatis.ui.components.OverScrollPane;
 import mindustry.game.EventType;
 import mindustry.gen.*;
 import mindustry.graphics.*;

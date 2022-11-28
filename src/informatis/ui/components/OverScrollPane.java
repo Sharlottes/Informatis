@@ -1,12 +1,10 @@
-package informatis.ui;
+package informatis.ui.components;
 
 import arc.math.geom.Vec2;
 import arc.scene.Element;
 import arc.scene.ui.ScrollPane;
-import arc.util.Log;
 
 import static arc.Core.input;
-import static arc.Core.scene;
 
 public class OverScrollPane extends ScrollPane {
     Vec2 scrollPos;

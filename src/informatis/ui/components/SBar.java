@@ -1,4 +1,4 @@
-package informatis.ui;
+package informatis.ui.components;
 
 import informatis.SUtils;
 import arc.*;

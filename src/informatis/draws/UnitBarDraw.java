@@ -1,6 +1,6 @@
 package informatis.draws;
 
-import informatis.ui.FreeBar;
+import informatis.ui.components.FreeBar;
 import mindustry.gen.Unit;
 
 public class UnitBarDraw extends OverDraw {

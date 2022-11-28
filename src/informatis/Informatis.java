@@ -7,6 +7,7 @@ import informatis.core.OverDrawer;
 import informatis.core.Setting;
 import informatis.draws.OverDraws;
 import informatis.ui.SidebarSwitcher;
+import informatis.ui.TroopingManager;
 import informatis.ui.dialogs.DialogManager;
 import informatis.ui.dialogs.ResourcePreviewDialog;
 import informatis.ui.fragments.FragmentManager;
@@ -37,15 +38,27 @@ public class Informatis extends Mod {
                     UnitWindow.currentWindow.locked = !UnitWindow.currentWindow.locked;
                 }
             }
+            int i = 0;
+            for(KeyCode numCode : KeyCode.numbers) {
+                if(input.keyTap(numCode)) {
+                    if(input.keyDown(KeyCode.altLeft)) TroopingManager.applyTrooping(i);
+                    else if(input.keyDown(KeyCode.capsLock)) TroopingManager.updateTrooping(i);
+                    else TroopingManager.selectTrooping(i);
+                    break;
+                }
+                i++;
+            }
         });
 
         Events.on(ClientLoadEvent.class, e -> {
             Setting.init();
             WindowManager.init();
             DialogManager.init();
+            TroopingManager.init();
             new SidebarSwitcher(
                 WindowManager.body,
                 DialogManager.body,
+                TroopingManager.body,
                 new Table(Tex.buttonEdge4,  t -> {
                     t.label(() -> "it's just label lmao");
                 })

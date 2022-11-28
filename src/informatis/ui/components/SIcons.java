@@ -1,4 +1,4 @@
-package informatis.ui;
+package informatis.ui.components;
 
 import arc.Core;
 import arc.graphics.g2d.TextureRegion;

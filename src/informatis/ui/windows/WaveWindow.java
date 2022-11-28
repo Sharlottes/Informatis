@@ -1,8 +1,8 @@
 package informatis.ui.windows;
 
+import informatis.ui.components.OverScrollPane;
 import mindustry.*;
 import mindustry.type.*;
-import informatis.ui.*;
 import arc.*;
 import arc.graphics.*;
 import arc.math.*;

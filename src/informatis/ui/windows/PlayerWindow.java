@@ -1,6 +1,5 @@
 package informatis.ui.windows;
 
-import informatis.ui.*;
 import arc.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
@@ -10,6 +9,7 @@ import arc.scene.ui.layout.*;
 import arc.scene.utils.*;
 import arc.struct.*;
 import arc.util.*;
+import informatis.ui.components.OverScrollPane;
 import mindustry.game.EventType;
 import mindustry.gen.*;
 import mindustry.graphics.*;
