@@ -25,6 +25,7 @@ public class OverDraws {
         unitCargoLink = new UnitCargoLinkDraw(),
         massLink = new MassLinkDraw(),
         blockRange = new BlockRangeDraw(),
+        memoView = new MemoViewDraw(),
         unitRange = new UnitRangeDraw(),
         playerRange = new PlayerRangeDraw(),
         pathLine = new PathLineDraw(),
@@ -34,7 +35,8 @@ public class OverDraws {
         unitItem = new UnitItemDraw(),
         unitBar = new UnitBarDraw(),
         magicCursor = new MagicCursorDraw(),
-        autoShoot = new AutoShootDraw();
+        autoShoot = new AutoShootDraw(),
+        infoRing = new InfoRingDraw();
     static ObjectMap<OverDrawCategory, Seq<OverDraw>> draws;
     static FrameBuffer effectBuffer = new FrameBuffer();
 
