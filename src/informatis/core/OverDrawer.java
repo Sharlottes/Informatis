@@ -36,16 +36,17 @@ public class OverDrawer {
             if(settings.getBool("select")) {
                 WindowManager.windows.get(UnitWindow.class).each(w -> {
                     UnitWindow window = (UnitWindow) w;
+                    Teamc target = getTarget();
                     Draw.color(Tmp.c1.set(window.locked ? Color.orange : Color.darkGray).lerp(window.locked ? Color.scarlet : Color.gray, Mathf.absin(Time.time, 3f, 1f)).a(settings.getInt("selectopacity") / 100f));
-                    float length = (window.target instanceof Unit u
+                    float length = (target instanceof Unit u
                             ? u.hitSize
-                            : window.target instanceof Building b
+                            : target instanceof Building b
                                 ? b.block.size * tilesize
                                 : 0
                     ) * 1.5f + 2.5f;
                     for(int i = 0; i < 4; i++){
                         float rot = i * 90f + 45f + (-Time.time) % 360f;
-                        Draw.rect("select-arrow", window.target.x() + Angles.trnsx(rot, length), window.target.y() + Angles.trnsy(rot, length), length / 1.9f, length / 1.9f, rot - 135f);
+                        Draw.rect("select-arrow", target.x() + Angles.trnsx(rot, length), target.y() + Angles.trnsy(rot, length), length / 1.9f, length / 1.9f, rot - 135f);
                     }
                 });
 
