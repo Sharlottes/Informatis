@@ -10,6 +10,7 @@ import arc.scene.ui.layout.*;
 import arc.scene.ui.layout.Stack;
 import arc.struct.*;
 import arc.util.*;
+import informatis.ui.fragments.FragmentManager;
 import mindustry.ui.*;
 import mindustry.ui.dialogs.*;
 
@@ -19,14 +20,20 @@ import static mindustry.Vars.*;
 public class Setting {
     public static SettingsMenuDialog.SettingsTable sharset;
 
-    public static void addGraphicCheckSetting(String key, boolean def, Seq<SharSetting> list){
+    public static void addGraphicCheckSetting(String key, boolean def, Seq<SharSetting> list) {
+        addGraphicCheckSetting(key, def, list, () -> {});
+    }
+    public static void addGraphicCheckSetting(String key, boolean def, Seq<SharSetting> list, Runnable onSetted) {
         list.add(new SharSetting(key, def) {
 
             @Override
             public void add(Table table) {
                 CheckBox box = new CheckBox(title);
                 box.update(() -> box.setChecked(settings.getBool(name)));
-                box.changed(() -> settings.put(name, box.isChecked()));
+                box.changed(() -> {
+                    settings.put(name, box.isChecked());
+                    onSetted.run();
+                });
 
                 box.left();
                 addDesc(table.add(box).left().padTop(3f).get());
@@ -104,7 +111,7 @@ public class Setting {
         Seq<Seq<SharSetting>> settingSeq = new Seq<>();
         Seq<SharSetting> tapSeq = new Seq<>();
         addGraphicSlideSetting("barstyle", 0, 0, 5, 1, s -> s == 0 ? bundle.get("default-bar") : s + bundle.get("th-bar"), tapSeq);
-        addGraphicCheckSetting("schem", !mobile, tapSeq);
+        addGraphicCheckSetting("schem", !mobile, tapSeq, () -> FragmentManager.quickSchemFragment.setSchemTable());
 
         //TODO: remove all drawing settings
         Seq<SharSetting> drawSeq = new Seq<>();

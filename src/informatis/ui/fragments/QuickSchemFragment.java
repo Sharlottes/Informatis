@@ -24,6 +24,7 @@ import mindustry.ui.dialogs.*;
 import static arc.Core.*;
 import static mindustry.Vars.*;
 import static mindustry.Vars.ui;
+import static mindustry.ui.Styles.*;
 
 public class QuickSchemFragment extends Table {
     static float schemScrollPos, tagScrollPos;
@@ -31,7 +32,6 @@ public class QuickSchemFragment extends Table {
     static Schematic firstSchematic;
     static final Seq<String> selectedTags = new Seq<>();
     static Runnable rebuildList = () -> {};
-    float heat;
 
     public QuickSchemFragment() {
         setSchemTable();
@@ -39,168 +39,159 @@ public class QuickSchemFragment extends Table {
         table.add(this);
     }
 
-    public void update() {
-        heat += Time.delta;
-        if(heat>=60f) {
-            heat = 0;
-            setSchemTable();
-        }
-    }
-
     public void setSchemTable() {
        clear();
        if(!settings.getBool(("schem"))) return;
        right();
-       button(bundle.get("hud.schematic-list"), Icon.downOpen, Styles.squareTogglet, () -> schemShown = !schemShown).width(160f).height(60f).checked(b -> {
+       button(bundle.get("hud.schematic-list"), Icon.downOpen, Styles.squareTogglet, () -> {
+           if(!schemShown) setSchemTable();
+           schemShown = !schemShown;
+       }).width(160f).height(60f).checked(b -> {
             Image image = (Image)b.getCells().first().get();
             image.setDrawable(schemShown ? Icon.upOpen : Icon.downOpen);
             return schemShown;
         }).row();
        collapser(t -> {
             t.background(Styles.black8).defaults().maxHeight(72 * 8f).maxWidth(160f);
-            rebuildList = () -> {
-                t.clearChildren();
-                ScrollPane pane1 = t.pane(Styles.noBarPane, p -> {
-                    p.left().defaults().pad(2).height(42f);
-                    Seq<String> tags = Reflect.get(ui.schematics, "tags");
-                    for(String tag : tags){
-                        p.button(tag, Styles.togglet, () -> {
-                            if(selectedTags.contains(tag)){
-                                selectedTags.remove(tag);
-                            }else{
-                                selectedTags.add(tag);
-                            }
-                            rebuildList.run();
-                        }).checked(selectedTags.contains(tag)).with(c -> c.getLabel().setWrap(false));
-                    }
-                }).fillX().height(42f).get();
-                pane1.update(() -> {
-                    Element result = scene.hit(input.mouseX(), input.mouseY(), true);
-                    if(pane1.hasScroll() && (result == null || !result.isDescendantOf(pane1)))
-                        scene.setScrollFocus(null);
-                    tagScrollPos = pane1.getScrollX();
-                });
+            ScrollPane tagPane = new ScrollPane(new Table(p -> {
+                p.left().defaults().pad(2).height(42f);
 
-                pane1.setOverscroll(false, false);
-                pane1.setScrollingDisabled(false, true);
-                pane1.setScrollXForce(tagScrollPos);
+                Seq<String> tags = Reflect.get(ui.schematics, "tags");
+                for(String tag : tags){
+                    p.button(tag, Styles.togglet, () -> {
+                        if(selectedTags.contains(tag)) selectedTags.remove(tag);
+                        else selectedTags.add(tag);
 
-                t.row();
+                        setSchemTable();
+                    }).checked(selectedTags.contains(tag)).with(c -> c.getLabel().setWrap(false));
+                }
+            }), Styles.noBarPane);
+            tagPane.update(() -> {
+                Element result = scene.hit(input.mouseX(), input.mouseY(), true);
+                if(tagPane.hasScroll() && (result == null || !result.isDescendantOf(tagPane)))
+                    scene.setScrollFocus(null);
+                tagScrollPos = tagPane.getScrollX();
+            });
+            tagPane.setOverscroll(false, false);
+            tagPane.setScrollingDisabled(false, true);
+            tagPane.setScrollXForce(tagScrollPos);
 
-                ScrollPane pane = t.pane(Styles.noBarPane, p -> {
-                    p.table(tt -> {
-                        firstSchematic = null;
+            ScrollPane schematicsPane = new ScrollPane(new Table(p -> {
+                p.table(tt -> {
+                    tt.button("@editor.import", Icon.download, this::showImport).width(160f).height(64f);
+                    tt.row();
+                    if(schematics.all().isEmpty()) tt.add(bundle.get("none"));
 
-                        tt.button("@editor.import", Icon.download, this::showImport).width(160f).height(64f).row();
-                        for(Schematic s : schematics.all()){
-                            if(selectedTags.any() && !s.labels.containsAll(selectedTags)) continue;
-                            if(firstSchematic == null) firstSchematic = s;
+                    for(Schematic schematic : schematics.all()){
+                        if(selectedTags.any() && !schematic.labels.containsAll(selectedTags)) continue;
 
-                            Button[] sel = {null};
-                            sel[0] = tt.button(b -> {
-                                b.top();
-                                b.margin(0f);
-                                b.table(buttons -> {
-                                    buttons.left();
-                                    buttons.defaults().size(162/4f);
+                        Button button = new Button();
+                        button.top().margin(0f);
+                        button.table(buttons -> {
+                            buttons.left();
+                            buttons.defaults().size(162/4f);
 
-                                    ImageButton.ImageButtonStyle style = Styles.clearNonei;
+                            ImageButton.ImageButtonStyle style = Styles.clearNonei;
 
-                                    buttons.button(Icon.info, style, () -> showInfo(s));
-                                    buttons.button(Icon.upload, style, () -> showExport(s));
-                                    buttons.button(Icon.pencil, style, () -> {
-                                        new Dialog("@schematic.rename"){{
-                                            setFillParent(true);
+                            buttons.button(Icon.info, style, () -> showInfo(schematic));
+                            buttons.button(Icon.upload, style, () -> showExport(schematic));
+                            buttons.button(Icon.pencil, style, () -> {
+                                new Dialog("@schematic.rename"){{
+                                    setFillParent(true);
 
-                                            cont.margin(30);
+                                    cont.margin(30);
 
-                                            cont.add("@schematic.tags").padRight(6f);
-                                            cont.table(tags -> buildTags(s, tags, false)).maxWidth(400f).fillX().left().row();
+                                    cont.add("@schematic.tags").padRight(6f);
+                                    cont.table(tags -> buildTags(schematic, tags, false)).maxWidth(400f).fillX().left().row();
 
-                                            cont.margin(30).add("@name").padRight(6f);
-                                            TextField nameField = cont.field(s.name(), null).size(400f, 55f).left().get();
+                                    cont.margin(30).add("@name").padRight(6f);
+                                    TextField nameField = cont.field(schematic.name(), null).size(400f, 55f).left().get();
 
-                                            cont.row();
+                                    cont.row();
 
-                                            cont.margin(30).add("@editor.description").padRight(6f);
-                                            TextField descField = cont.area(s.description(), Styles.areaField, t -> {}).size(400f, 140f).left().get();
+                                    cont.margin(30).add("@editor.description").padRight(6f);
+                                    TextField descField = cont.area(schematic.description(), Styles.areaField, t -> {}).size(400f, 140f).left().get();
 
-                                            Runnable accept = () -> {
-                                                s.tags.put("name", nameField.getText());
-                                                s.tags.put("description", descField.getText());
-                                                s.save();
-                                                hide();
-                                                setSchemTable();
-                                            };
+                                    Runnable accept = () -> {
+                                        schematic.tags.put("name", nameField.getText());
+                                        schematic.tags.put("description", descField.getText());
+                                        schematic.save();
+                                        hide();
+                                        setSchemTable();
+                                    };
 
-                                            buttons.defaults().size(120, 54).pad(4);
-                                            buttons.button("@ok", accept).disabled(b -> nameField.getText().isEmpty());
-                                            buttons.button("@cancel", this::hide);
+                                    buttons.defaults().size(120, 54).pad(4);
+                                    buttons.button("@ok", accept).disabled(b -> nameField.getText().isEmpty());
+                                    buttons.button("@cancel", this::hide);
 
-                                            keyDown(KeyCode.enter, () -> {
-                                                if(!nameField.getText().isEmpty() && Core.scene.getKeyboardFocus() != descField){
-                                                    accept.run();
-                                                }
-                                            });
-                                            keyDown(KeyCode.escape, this::hide);
-                                            keyDown(KeyCode.back, this::hide);
-                                            show();
-                                        }};
+                                    keyDown(KeyCode.enter, () -> {
+                                        if(!nameField.getText().isEmpty() && Core.scene.getKeyboardFocus() != descField){
+                                            accept.run();
+                                        }
                                     });
+                                    keyDown(KeyCode.escape, this::hide);
+                                    keyDown(KeyCode.back, this::hide);
+                                    show();
+                                }};
+                            });
 
-                                    if(s.hasSteamID()){
-                                        buttons.button(Icon.link, style, () -> platform.viewListing(s));
+                            if(schematic.hasSteamID()) {
+                                buttons.button(Icon.link, style, () -> platform.viewListing(schematic));
+                            } else {
+                                buttons.button(Icon.trash, style, () -> {
+                                    if(schematic.mod != null){
+                                        ui.showInfo(Core.bundle.format("mod.item.remove", schematic.mod.meta.displayName()));
                                     }else{
-                                        buttons.button(Icon.trash, style, () -> {
-                                            if(s.mod != null){
-                                                ui.showInfo(Core.bundle.format("mod.item.remove", s.mod.meta.displayName()));
-                                            }else{
-                                                ui.showConfirm("@confirm", "@schematic.delete.confirm", () -> {
-                                                    schematics.remove(s);
-                                                    setSchemTable();
-                                                });
-                                            }
+                                        ui.showConfirm("@confirm", "@schematic.delete.confirm", () -> {
+                                            schematics.remove(schematic);
+                                            setSchemTable();
                                         });
                                     }
+                                });
+                            }
 
-                                }).growX().height(50f);
-                                b.row();
-                                b.stack(new SchematicsDialog.SchematicImage(s).setScaling(Scaling.fit), new Table(n -> {
-                                    n.top();
-                                    n.table(Styles.black3, c -> {
-                                        Label label = c.add(s.name()).style(Styles.outlineLabel).color(Color.white).top().growX().maxWidth(200f - 8f).get();
-                                        label.setEllipsis(true);
-                                        label.setAlignment(Align.center);
-                                    }).growX().margin(1).pad(4).maxWidth(Scl.scl(160f - 8f)).padBottom(0);
-                                })).size(160f);
-                            }, () -> {
-                                if(sel[0].childrenPressed()) return;
-                                control.input.useSchematic(s);
+                        }).growX().height(50f);
+                        button.row();
+                        button.stack(new SchematicsDialog.SchematicImage(schematic).setScaling(Scaling.fit), new Table(n -> {
+                            n.top();
+                            n.table(Styles.black3, c -> {
+                                Label label = c.add(schematic.name()).style(Styles.outlineLabel).color(Color.white).top().growX().maxWidth(200f - 8f).get();
+                                label.setEllipsis(true);
+                                label.setAlignment(Align.center);
+                            }).growX().margin(1).pad(4).maxWidth(Scl.scl(160f - 8f)).padBottom(0);
+                        })).size(160f);
+                        button.clicked(() -> {
+                            if(button.childrenPressed()) return;
+                            control.input.useSchematic(schematic);
+                        });
+                        tt.add(button).pad(4).style(
+                             new ImageButton.ImageButtonStyle() {{
+                                down = flatDown;
+                                up = Tex.pane;
+                                over = flatOver;
+                                disabled = black8;
+                                imageDisabledColor = Color.lightGray;
+                                imageUpColor = Color.white;
+                            }});
+                        tt.row();
+                    }
 
-                            }).pad(4).style(Styles.cleari).get();
-
-                            sel[0].getStyle().up = Tex.pane;
-                            tt.row();
-                        }
-
-                        if(firstSchematic == null){
-                            tt.add(bundle.get("none"));
-                        }
-                    });
-                }).grow().get();
-
-                pane.update(() -> {
-                    Element result = scene.hit(input.mouseX(), input.mouseY(), true);
-                    if(pane.hasScroll() && (result == null || !result.isDescendantOf(pane)))
-                        scene.setScrollFocus(null);
-                    schemScrollPos = pane.getScrollY();
                 });
+            }), Styles.noBarPane);
 
-                pane.setOverscroll(false, false);
-                pane.setScrollingDisabled(true, false);
-                pane.setScrollYForce(schemScrollPos);
-            };
-            rebuildList.run();
+            schematicsPane.update(() -> {
+                Element result = scene.hit(input.mouseX(), input.mouseY(), true);
+                if(schematicsPane.hasScroll() && (result == null || !result.isDescendantOf(schematicsPane)))
+                    scene.setScrollFocus(null);
+                schemScrollPos = schematicsPane.getScrollY();
+            });
+
+            schematicsPane.setOverscroll(false, false);
+            schematicsPane.setScrollingDisabled(true, false);
+            schematicsPane.setScrollYForce(schemScrollPos);
+
+           t.add(tagPane).fillX().height(42f).row();
+           t.add(schematicsPane).grow();
         }, true, () -> schemShown);
     }
 
