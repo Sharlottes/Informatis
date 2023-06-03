@@ -4,6 +4,7 @@ import arc.Core;
 import arc.Events;
 import arc.scene.Element;
 import arc.scene.ui.*;
+import arc.scene.ui.layout.Stack;
 import arc.scene.ui.layout.Table;
 import arc.struct.*;
 import arc.util.*;
@@ -54,7 +55,8 @@ public class ServerSearchFragment extends Table {
         addButton("custom");
 
         Vars.ui.join.shown(() -> {
-            Table serverTable = (Table) Vars.ui.join.getChildren().get(1);
+            Stack stack = (Stack) Vars.ui.join.getChildren().get(1);
+            Table serverTable = (Table) stack.getChildren().get(1);
             Seq<Element> saved = serverTable.getChildren().copy();
             serverTable.clear();
             serverTable.add(saved.get(0)).row();
