@@ -1,145 +1,143 @@
 package informatis.ui.fragments;
 
 import arc.Core;
-import arc.Events;
-import arc.scene.Element;
 import arc.scene.ui.*;
-import arc.scene.ui.layout.Stack;
-import arc.scene.ui.layout.Table;
+import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.*;
+import arc.util.serialization.Jval;
 import mindustry.Vars;
-import mindustry.game.EventType;
-import mindustry.game.Gamemode;
+import mindustry.game.*;
 import mindustry.gen.Tex;
-import mindustry.net.ServerGroup;
+import mindustry.net.*;
 import mindustry.ui.Styles;
-
-import java.lang.reflect.*;
-import java.util.Objects;
 
 import static mindustry.Vars.*;
 
 public class ServerSearchFragment extends Table {
-    String mode;
-    Seq<ServerGroup> originServerGroup = new Seq<>();
-    ObjectMap<ServerGroup, String[]> originServerAddresses = new ObjectMap<>();
-    boolean loading = false;
-    Label loadingLabel = new Label("");
+    ObjectMap<ServerGroup, ObjectSet<Host>> servers = new ObjectMap<>();
+    static String[] modeNames = new String[]{ "Survival", "PvP", "Attack", "Sandbox", "Custom" };
+
     public ServerSearchFragment() {
         super();
-
-        Core.app.post(() -> {
-            originServerGroup.set(Vars.defaultServers.copy());
-            originServerGroup.each(group -> originServerAddresses.put(group, group.addresses));
-            Log.info("[Informatis] Fetched @ community servers.", originServerGroup.size);
-        });
-
-        final int[] i = {0};
-        final int[] count = {0};
-        Events.run(EventType.Trigger.update, () -> {
-            if(!loading) return;
-            i[0] += Time.delta;
-            if(i[0] >= 5) {
-                i[0] = 0;
-                count[0]++;
-                loadingLabel.setText("loading" + (count[0] % 4 == 0 ? "" : count[0] % 4 == 1 ? "." : count[0] % 4 == 2 ? ".." : count[0] % 4 == 3 ? "..." : ""));
-            }
-        });
-
         setBackground(Tex.button);
-        addButton("survival");
-        addButton("pvp");
-        addButton("attack");
-        addButton("sandbox");
-        addButton("custom");
+        addButtons(modeNames);
+        Core.app.post(() -> {
+            Table header = (Table) Vars.ui.join.getChildren().get(0);
+            header.row();
+            header.add(this);
 
-        Vars.ui.join.shown(() -> {
-            Stack stack = (Stack) Vars.ui.join.getChildren().get(1);
-            Table serverTable = (Table) stack.getChildren().get(1);
-            Seq<Element> saved = serverTable.getChildren().copy();
-            serverTable.clear();
-            serverTable.add(saved.get(0)).row();
-            serverTable.add(this).row();
-            serverTable.add(loadingLabel).pad(5).row();
-            serverTable.add(saved.get(1)).row();
-            serverTable.add(saved.get(2));
+            loadServers();
         });
     }
 
-    void refreshAll() {
-        try {
-            Method refreshAll = Vars.ui.join.getClass().getDeclaredMethod("refreshAll");
-            refreshAll.setAccessible(true);
-            try {
-                refreshAll.invoke(Vars.ui.join);
-            } catch (IllegalAccessException | InvocationTargetException ex) {
-                throw new RuntimeException(ex);
-            }
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
+    void addButtons(String[] modes) {
+        TextButton[] buttons = new TextButton[modes.length];
+        for(int i = 0; i < modes.length; i++) {
+            String mode = modes[i];
+            TextButton button = new TextButton("@mode." + mode.toLowerCase() + ".name", Styles.flatTogglet);
+            button.getLabel().setWrap(false);
+            button.clicked(()-> {
+                for(TextButton otherButton : buttons) {
+                    if(otherButton == button) continue;
+                    otherButton.setChecked(false);
+                }
+                if(button.isChecked()) filterServers(mode);
+                else defaultServers.set(servers.keys().toSeq());
+                Reflect.invoke(Vars.ui.join, "refreshCommunity");
+            });
+            buttons[i] = button;
+            add(button).minWidth(100).height(50);
         }
     }
-    
-    void loadingEnd() {
-        loadingLabel.setText("");
-        loading = false;
-        getChildren().each(elem -> ((TextButton)elem).setDisabled(false));
-        refreshAll(); 
+
+    void filterServers(String mode) {
+        Vars.defaultServers.clear();
+        Seq<ServerGroup> serverGroups = new Seq<>();
+
+        ObjectMap.Entries<ServerGroup, ObjectSet<Host>> serverEntries = servers.entries();
+        int i = 0;
+        while(serverEntries.hasNext) {
+            ObjectMap.Entry<ServerGroup, ObjectSet<Host>> serverEntry = serverEntries.next();
+            ServerGroup serverGroup = serverEntry.key;
+            Seq<Host> hosts = serverEntry.value.toSeq();
+            Seq<String> addresses = new Seq<>();
+            for(Host host : hosts) {
+                if(mode.equals("Custom")
+                        ? host.modeName != null
+                            ? !Structs.contains(modeNames, h -> host.modeName.equals(h.toLowerCase()))
+                            : host.mode.equals(Gamemode.editor)
+                        : host.modeName != null
+                            ? host.modeName.equals(mode)
+                            : host.mode.equals(Gamemode.valueOf(mode.toLowerCase()))
+                ) {
+                    addresses.add(host.address +":"+ host.port);
+                }
+            }
+            if(addresses.any()) {
+                i++;
+                serverGroups.add(new ServerGroup(serverGroup.name, addresses.toArray(String.class)));
+            }
+        }
+        defaultServers.set(serverGroups);
     }
-    
-    void refresh() {
-        loading = true;
-        getChildren().each(elem -> ((TextButton)elem).setDisabled(true));
-        Time.run(15 * 60, () -> {
-            if(loading) loadingEnd();
-        });
-        final int[] iStack = {0};
-        for(int i = 0; i < originServerGroup.size; i ++){
-            int j = i;
-            ServerGroup group = originServerGroup.get((i + originServerGroup.size/2) % originServerGroup.size);
-            Seq<String> tmp = new Seq<>();
-            final int[] iiStack = {0};
-            int addressesLength = group.addresses.length;
-            Runnable checkLast = () -> {
-                if(!loading) return;
-                if(++iiStack[0] < addressesLength) return;                
-                if(++iStack[0] < originServerGroup.size) return;
-                loadingEnd();
-            };
-            for(int ii = 0; ii < addressesLength; ii++){
-                String address = group.addresses[ii];
-                Vars.net.pingHost(
+
+    void loadServers() {
+        var url = becontrol.active() ? serverJsonBeURL : serverJsonURL;
+        Log.info("[Informatis] Fetching community servers at @", url);
+
+        //get servers
+        Http.get(url)
+            .error(t -> Log.err("[Informatis] Failed to fetch community servers", t))
+            .submit(result -> {
+                Jval val = Jval.read(result.getResultAsString());
+                Seq<ServerGroup> serverGroups = new Seq<>();
+                val.asArray().each(child -> {
+                    String name = child.getString("name", "");
+                    String[] addresses;
+                    if(child.has("addresses") || (child.has("address") && child.get("address").isArray())){
+                        addresses = (child.has("addresses") ? child.get("addresses") : child.get("address")).asArray().map(Jval::asString).toArray(String.class);
+                    }else{
+                        addresses = new String[]{child.getString("address", "<invalid>")};
+                    }
+                    serverGroups.add(new ServerGroup(name, addresses));
+                });
+                serverGroups.sort(s -> s.name == null ? Integer.MAX_VALUE : s.name.hashCode());
+                Log.info("[Informatis] Fetched @ community servers at @", serverGroups.size, url);
+
+                refreshServers(serverGroups);
+            });
+    }
+
+    void refreshServers(Seq<ServerGroup> serverGroups) {
+        refreshServers(serverGroups, () -> {});
+    }
+
+    void refreshServers(Seq<ServerGroup> serverGroups, Runnable onDone) {
+        Runnable onDoneWrapper = () -> {
+            Log.info("[Informatis] Fetched @ community servers.", servers.size);
+            onDone.run();
+        };
+
+        Log.info("[Informatis] Fetching community servers");
+        final int[] doneCount = {0, 0};
+        for(ServerGroup server : serverGroups) {
+            servers.put(server, new ObjectSet<>());
+
+            for(String address : server.addresses) {
+                doneCount[1]++;
+                net.pingHost(
                     address.contains(":") ? address.split(":")[0] : address,
                     address.contains(":") ? Strings.parseInt(address.split(":")[1]) : Vars.port,
-                    res -> {
-                        if(loading && !tmp.contains(address) &&
-                            (res.modeName != null
-                                ? Objects.equals(mode, "custom") || res.modeName.equals(mode)
-                                : !Objects.equals(mode, "custom") && res.mode.equals(Gamemode.valueOf(mode))
-                            )
-                        ) tmp.add(address);
-                        group.addresses = tmp.toArray(String.class);
-                        Vars.defaultServers.set((j + Vars.defaultServers.size/2) % Vars.defaultServers.size, group);
-                        checkLast.run();
+                    host -> {
+                        servers.get(server).add(host);
+
+                        if (++doneCount[0] == doneCount[1]) onDoneWrapper.run();
                     },
-                    e -> checkLast.run()
-                );
+                    (e) -> {
+                        if (++doneCount[0] == doneCount[1]) onDoneWrapper.run();
+                    });
             }
         }
-    }
-
-    void addButton(String string) {
-        TextButton button = new TextButton("@mode." + string + ".name", Styles.flatTogglet);
-        button.getLabel().setWrap(false);
-        button.clicked(()-> {
-            mode = string;
-            getChildren().each(elem -> !elem.equals(button), elem -> ((TextButton)elem).setChecked(false));
-            Vars.defaultServers.set(originServerGroup);
-            defaultServers.each(group -> group.addresses = originServerAddresses.get(group));
-            if(button.isChecked()) refresh();
-            else refreshAll();
-        });
-        add(button).minWidth(100).height(50);
     }
 }

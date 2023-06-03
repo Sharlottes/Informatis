@@ -62,19 +62,16 @@ public class QuickSchemFragment extends Table {
                 t.clearChildren();
                 ScrollPane pane1 = t.pane(Styles.noBarPane, p -> {
                     p.left().defaults().pad(2).height(42f);
-                    try {
-                        for(String tag : (Seq<String>)SUtils.invoke(ui.schematics, "tags")){
-                            p.button(tag, Styles.togglet, () -> {
-                                if(selectedTags.contains(tag)){
-                                    selectedTags.remove(tag);
-                                }else{
-                                    selectedTags.add(tag);
-                                }
-                                rebuildList.run();
-                            }).checked(selectedTags.contains(tag)).with(c -> c.getLabel().setWrap(false));
-                        }
-                    } catch (IllegalAccessException | NoSuchFieldException e) {
-                        e.printStackTrace();
+                    Seq<String> tags = Reflect.get(ui.schematics, "tags");
+                    for(String tag : tags){
+                        p.button(tag, Styles.togglet, () -> {
+                            if(selectedTags.contains(tag)){
+                                selectedTags.remove(tag);
+                            }else{
+                                selectedTags.add(tag);
+                            }
+                            rebuildList.run();
+                        }).checked(selectedTags.contains(tag)).with(c -> c.getLabel().setWrap(false));
                     }
                 }).fillX().height(42f).get();
                 pane1.update(() -> {
@@ -208,22 +205,12 @@ public class QuickSchemFragment extends Table {
     }
 
     void showInfo(Schematic schematic){
-        try {
-            ((SchematicsDialog.SchematicInfoDialog) SUtils.invoke(ui.schematics, "info")).show(schematic);
-        } catch (IllegalAccessException | NoSuchFieldException e) {
-            e.printStackTrace();
-        }
+        Reflect.<SchematicsDialog.SchematicInfoDialog>get(ui.schematics, "info").show(schematic);
     }
 
     void checkTags(Schematic s){
         boolean any = false;
-        Seq<String> seq = null;
-        try {
-            seq = (Seq<String>) SUtils.invoke(ui.schematics, "tags");
-        } catch (IllegalAccessException | NoSuchFieldException e) {
-            e.printStackTrace();
-        }
-        if(seq == null) return;
+        Seq<String> seq = Reflect.get(ui.schematics, "tags");
         for(var tag : s.labels){
             if(!seq.contains(tag)){
                 seq.add(tag);
@@ -316,13 +303,7 @@ public class QuickSchemFragment extends Table {
 
     void tagsChanged(){
         rebuildList.run();
-        Seq<String> tags = null;
-        try {
-            tags = (Seq<String>) SUtils.invoke(ui.schematics, "tags");
-        } catch (IllegalAccessException | NoSuchFieldException e) {
-            e.printStackTrace();
-        }
-        if(tags == null) return;
+        Seq<String> tags = Reflect.get(ui.schematics, "tags");
         Core.settings.putJson("schematic-tags", String.class, tags);
     }
 
@@ -340,19 +321,12 @@ public class QuickSchemFragment extends Table {
 
     //shows a dialog for creating a new tag
     void showNewTag(Cons<String> result){
-        Seq<String> tags = null;
-        try {
-            tags = (Seq<String>) SUtils.invoke(ui.schematics, "tags");
-        } catch (IllegalAccessException | NoSuchFieldException e) {
-            e.printStackTrace();
-        }
-        if(tags == null) return;
-        Seq<String> finalTags = tags;
+        Seq<String> tags = Reflect.get(ui.schematics, "tags");
         ui.showTextInput("@schematic.addtag", "", "", out -> {
-            if(finalTags.contains(out)){
+            if(tags.contains(out)){
                 ui.showInfo("@schematic.tagexists");
             }else{
-                finalTags.add(out);
+                tags.add(out);
                 tagsChanged();
                 result.get(out);
             }
@@ -360,14 +334,7 @@ public class QuickSchemFragment extends Table {
     }
 
     void showNewIconTag(Cons<String> cons){
-        Seq<String> tags = null;
-        try {
-            tags = (Seq<String>) SUtils.invoke(ui.schematics, "tags");
-        } catch (IllegalAccessException | NoSuchFieldException e) {
-            e.printStackTrace();
-        }
-        if(tags == null) return;
-        Seq<String> finalTags = tags;
+        Seq<String> tags = Reflect.get(ui.schematics, "tags");
         new Dialog(){{
             closeOnBack();
             setFillParent(true);
@@ -387,11 +354,11 @@ public class QuickSchemFragment extends Table {
 
                             int i = 0;
                             for(UnlockableContent u : content.getBy(ctype).<UnlockableContent>as()){
-                                if(!u.isHidden() && u.unlockedNow() && u.hasEmoji() && !finalTags.contains(u.emoji())){
+                                if(!u.isHidden() && u.unlockedNow() && u.hasEmoji() && !tags.contains(u.emoji())){
                                     t.button(new TextureRegionDrawable(u.uiIcon), Styles.cleari, iconMed, () -> {
                                         String out = u.emoji() + "";
 
-                                        finalTags.add(out);
+                                        tags.add(out);
                                         tagsChanged();
                                         cons.get(out);
 
@@ -411,17 +378,10 @@ public class QuickSchemFragment extends Table {
     void buildTags(Schematic schem, Table t, boolean name){
         t.clearChildren();
         t.left();
-        Seq<String> tags = null;
-        try {
-            tags = (Seq<String>) SUtils.invoke(ui.schematics, "tags");
-        } catch (IllegalAccessException | NoSuchFieldException e) {
-            e.printStackTrace();
-        }
-        if(tags == null) return;
+        Seq<String> tags = Reflect.get(ui.schematics, "tags");
 
         //sort by order in the main target array. the complexity of this is probably awful
-        Seq<String> finalTags = tags;
-        schem.labels.sort((Floatf<String>) finalTags::indexOf);
+        schem.labels.sort((Floatf<String>) tags::indexOf);
 
         if(name) t.add("@schematic.tags").padRight(4);
         t.pane(s -> {

@@ -20,7 +20,6 @@ import mindustry.world.Tile;
 
 import java.lang.reflect.*;
 
-import static informatis.SVars.*;
 import static arc.Core.*;
 import static mindustry.Vars.*;
 
@@ -107,35 +106,6 @@ public class SUtils {
         pathTiles.add(nextTile);
         if(nextTile == tile || nextTile == null) return;
         getNextTile(nextTile, field, pathTiles);
-    }
-
-    public static float bulletRange(BulletType b) {
-        float a = 0;
-        float n = 1;
-        for (int i = 0; i < b.lifetime; i++) {
-            a += n;
-            n *= (1 - b.drag);
-        };
-        a += n;
-        a /= b.lifetime;
-        return b.speed * a * Mathf.pow(1 - b.drag, b.lifetime / 2) * b.lifetime +
-                Math.max(b.lightning > 0 || b instanceof LightningBulletType ? (b.lightningLength + b.lightningLengthRand) * 6 : 0,
-                        b.fragBullet != null ? bulletRange(b.fragBullet) * b.fragLifeMax * b.fragVelocityMax : b.splashDamageRadius);
-    }
-
-    public static float unitRange(UnitType u) {
-        final float[] mrng = {0};
-        u.weapons.each(w -> w.bullet != null, w -> {
-                mrng[0] = Math.max(mrng[0], (w instanceof RepairBeamWeapon || w instanceof PointDefenseWeapon) ? 0 : bulletRange(w.bullet));
-                if(mrng[0] == 0) mrng[0] = w.bullet.range;
-        });
-        return mrng[0];
-    }
-
-    public static Object invoke(Object ut, String fieldName) throws IllegalAccessException, NoSuchFieldException {
-        Field field = ut.getClass().getDeclaredField(fieldName);
-        field.setAccessible(true);
-        return field.get(ut);
     }
 
     public static boolean isInCamera(float x, float y, float size) {
