@@ -12,9 +12,7 @@ public class DialogManager {
         resourcePreview = new ResourcePreviewDialog();
 
         body = new Table(t -> {
-           t.button(Icon.file, () -> {
-               resourcePreview.show();
-           });
+           t.button(Icon.file, () -> resourcePreview.show());
         });
     }
 }

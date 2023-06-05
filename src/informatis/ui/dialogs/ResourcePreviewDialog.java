@@ -1,17 +1,15 @@
 package informatis.ui.dialogs;
 
-import arc.func.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
-import arc.input.*;
-import arc.scene.event.ClickListener;
-import arc.scene.event.InputEvent;
-import arc.scene.event.InputListener;
+import arc.scene.event.*;
 import arc.scene.style.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
+import arc.input.*;
 import arc.util.*;
+import arc.func.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.ui.*;
@@ -19,213 +17,183 @@ import mindustry.ui.dialogs.*;
 
 import java.lang.reflect.Field;
 
-
 public class ResourcePreviewDialog extends BaseDialog {
-    boolean showName = false, showAllFields = false;
-    int currentTab = 0;
+    private static final String[] tabs = {"Textures", "Styles", "Colors"};
 
-    public ResourcePreviewDialog() {
-        super("resource previews");
-        setFillParent(true);
-        addCloseButton();
 
-        cont.table(t -> {
-            t.top().center();
-            t.table(Tex.underline, tabTable -> {
-                String[] tabs = {"Textures", "Styles", "Colors"};
-                for(int i = 0; i < tabs.length; i++) {
-                    int j = i;
-                    TextButton button = new TextButton(tabs[j], Styles.flatToggleMenut);
-                    button.clicked(() -> {
-                        currentTab = j;
-                        button.toggle();
-                        for(int elemI = 0; elemI < tabTable.getChildren().size; elemI++) {
-                            ((Button) tabTable.getChildren().get(elemI)).setChecked(currentTab == elemI);
-                        }
-                        refreshResourceTable();
-                    });
-                    tabTable.add(button).height(50).growX();
-                }
-            }).growX().row();
-            t.table(tt -> tt.add(rebuildResourceList())).name("resource").grow();
-        }).grow();
-    }
-    
-    void refreshResourceTable() {
-        Table resource = find("resource");
-        resource.clearChildren();
-        resource.add(rebuildResourceList()).grow();
-    }
-
+    boolean showName = false;
+    TextButton currentButton;
     float scrollY, scrollY2;
     String search = "";
     String colorInput1 = "ffffffff", colorInput2 = "ffffffff";
     float colorMixProg = 0;
     int colorMixSelectIndex = 0;
     Color color1 = Color.white, color2 = Color.white, mixedColor = Color.white;
-    Table rebuildResourceList() {
-        return new Table(pane -> {
-            Cons[] builders = {
-                (Cons<Table>) ppane -> {
-                    ppane.table(options -> {
-                        options.top().center().defaults().pad(20);
-                        options.table(t -> {
-                            t.button(Icon.zoom, this::refreshResourceTable);
-                            t.field(search, value -> search = value).get().keyDown(KeyCode.enter, this::refreshResourceTable);
-                        }).minWidth(200);
-                        options.check("show resource with its name", showName, (checkBox) -> {
-                            showName = !showName;
-                            refreshResourceTable();
-                        });
-                    }).padBottom(20f).growX().row();
-                    ScrollPane contentPane = new ScrollPane(new Table(content -> {
-                        buildTitle(content, "Texture Resources").row();
-                        content.table(this::buildTexResources).grow().row();
-                        buildTitle(content, "Icon Resources").row();
-                        content.table(this::buildIconResources).grow().row();
-                    }));
-                    contentPane.scrolled(y -> scrollY = contentPane.getScrollY());
-                    contentPane.layout();
-                    contentPane.setScrollY(scrollY);
-                    ppane.add(contentPane).grow();
-                },
-                (Cons<Table>) ppane -> {
-                    buildTitle(ppane, "Styles Resources").row();
-                    ppane.pane(this::buildStyleResources).grow().fill();
-                },
-                (Cons<Table>) ppane -> {
-                    ppane.table(options -> {
-                        options.top().center().defaults().pad(20);
 
-                        options.add("Mix");
-                        options.add(new Image() {
-                            @Override
-                            public void draw() {
-                                super.draw();
+    public ResourcePreviewDialog() {
+        super("resource previews");
+        setFillParent(true);
+        addCloseButton();
+        cont.add(buildBody()).grow();
+    }
+    
+    void refreshBody() {
+        cont.clearChildren();
+        cont.add(buildBody()).grow();
+    }
 
-                                int size = 8;
-                                Draw.color(colorMixSelectIndex == 0 ? Pal.accent : Pal.gray);
-                                Draw.alpha(parentAlpha);
-                                Lines.stroke(Scl.scl(3f));
-                                Lines.rect(x - size / 2f, y - size / 2f, width + size, height + size);
-                                Draw.reset();
-                            }
-                        }).size(30).color(color1).pad(10).get().clicked(() -> colorMixSelectIndex = 0);
-                        options.field(colorInput1, field -> {
-                            colorInput1 = field;
-                            color1 = Color.valueOf(field.matches("^#?[a-fA-F0-9]{6,8}$") ? field : "ffffff");
-                        }).get().keyDown(KeyCode.enter, this::refreshResourceTable);
-                        options.slider(0, 100, 1, colorMixProg, prog -> {
-                            colorMixProg = prog;
-                            mixedColor = color1.cpy().lerp(color2, prog / 100);
-                        }).get().addListener(new ClickListener(){
-                            @Override
-                            public void touchUp(InputEvent event, float x, float y, int pointer, KeyCode button) {
-                                refreshResourceTable();
-                                super.touchUp(event, x, y, pointer, button);
-                            }
-                        });
-                        options.add(new Image() {
-                            @Override
-                            public void draw() {
-                                super.draw();
-
-                                int size = 8;
-                                Draw.color(colorMixSelectIndex == 1 ? Pal.accent : Pal.gray);
-                                Draw.alpha(parentAlpha);
-                                Lines.stroke(Scl.scl(3f));
-                                Lines.rect(x - size / 2f, y - size / 2f, width + size, height + size);
-                                Draw.reset();
-                            }
-                        }).size(30).color(color2).pad(10).get().clicked(() -> colorMixSelectIndex = 1);
-                        options.field(colorInput2, field -> {
-                            colorInput2 = field;
-                            color2 = Color.valueOf(field.matches("^#?[a-fA-F0-9]{6,8}$") ? field : "ffffff");
-                        }).get().keyDown(KeyCode.enter, this::refreshResourceTable);
-                        options.row();
-                        options.add("---->");
-                        options.add(new Image(){
-                            @Override
-                            public void draw() {
-                                this.setColor(mixedColor);
-                                super.draw();
-                            }
-                        }).size(30).pad(10);
-                        options.label(() -> mixedColor.toString());
-                        options.button(Icon.refresh, this::refreshResourceTable);
-
-                    }).growX().row();
-                    buildTitle(ppane, "Color Resources").row();
-                    ScrollPane contentPane = new ScrollPane(new Table(this::buildColorResources));
-                    contentPane.scrolled(y -> scrollY2 = contentPane.getScrollY());
-                    contentPane.layout();
-                    contentPane.setScrollY(scrollY2);
-                    ppane.add(contentPane).grow().fill();
+    Table buildBody() {
+        return new Table(mainTable -> {
+            mainTable.top().center();
+            mainTable.table(Tex.underline, tabTable -> {
+                TextButton[] buttons = new TextButton[tabs.length];
+                for(int i = 0; i < tabs.length; i++) {
+                    TextButton button = new TextButton(tabs[i], Styles.flatToggleMenut);
+                    buttons[i] = button;
+                    button.clicked(() -> {
+                        currentButton = button;
+                        button.toggle();
+                        for(TextButton otherButton : buttons) {
+                            otherButton.setChecked(otherButton == currentButton);
+                        }
+                        refreshBody();
+                    });
+                    tabTable.add(button).height(50).growX();
                 }
-            };
-            pane.table(ppane -> {
-                ppane.left().top();
-                builders[currentTab].get(ppane);
+            }).growX();
+            mainTable.row();
+            mainTable.table(bodyTable -> {
+                bodyTable.left().top();
+
+                // build tap's elements
+                Cons[] builders = {
+                        (Cons<Table>) ppane -> {
+                            ppane.table(options -> {
+                                options.top().center().defaults().pad(20);
+                                options.table(t -> {
+                                    t.button(Icon.zoom, this::refreshBody);
+                                    t.field(search, value -> search = value).get().keyDown(KeyCode.enter, this::refreshBody);
+                                }).minWidth(200);
+                                options.check("show resource with its name", showName, (checkBox) -> {
+                                    showName = !showName;
+                                    refreshBody();
+                                });
+                            }).padBottom(20f).growX().row();
+                            ScrollPane contentPane = new ScrollPane(new Table(content -> {
+                                buildTitle(content, "Texture Resources");
+                                content.row();
+                                content.table(this::buildTexResources).grow();
+                                content.row();
+                                buildTitle(content, "Icon Resources").row();
+                                content.table(this::buildIconResources).grow();
+                                content.row();
+                            }));
+                            contentPane.scrolled(y -> scrollY = contentPane.getScrollY());
+                            contentPane.layout();
+                            contentPane.setScrollY(scrollY);
+                            ppane.add(contentPane).grow();
+                        },
+                        (Cons<Table>) table -> {
+                        },
+                        (Cons<Table>) ppane -> {
+                            ppane.table(options -> {
+                                options.top().center().defaults().pad(20);
+
+                                options.add("Mix");
+                                options.add(new Image() {
+                                    @Override
+                                    public void draw() {
+                                        super.draw();
+
+                                        int size = 8;
+                                        Draw.color(colorMixSelectIndex == 0 ? Pal.accent : Pal.gray);
+                                        Draw.alpha(parentAlpha);
+                                        Lines.stroke(Scl.scl(3f));
+                                        Lines.rect(x - size / 2f, y - size / 2f, width + size, height + size);
+                                        Draw.reset();
+                                    }
+                                }).size(30).color(color1).pad(10).get().clicked(() -> colorMixSelectIndex = 0);
+                                options.field(colorInput1, field -> {
+                                    colorInput1 = field;
+                                    color1 = Color.valueOf(field.matches("^#?[a-fA-F0-9]{6,8}$") ? field : "ffffff");
+                                }).get().keyDown(KeyCode.enter, this::refreshBody);
+                                options.slider(0, 100, 1, colorMixProg, prog -> {
+                                    colorMixProg = prog;
+                                    mixedColor = color1.cpy().lerp(color2, prog / 100);
+                                }).get().addListener(new ClickListener(){
+                                    @Override
+                                    public void touchUp(InputEvent event, float x, float y, int pointer, KeyCode button) {
+                                        refreshBody();
+                                        super.touchUp(event, x, y, pointer, button);
+                                    }
+                                });
+                                options.add(new Image() {
+                                    @Override
+                                    public void draw() {
+                                        super.draw();
+
+                                        int size = 8;
+                                        Draw.color(colorMixSelectIndex == 1 ? Pal.accent : Pal.gray);
+                                        Draw.alpha(parentAlpha);
+                                        Lines.stroke(Scl.scl(3f));
+                                        Lines.rect(x - size / 2f, y - size / 2f, width + size, height + size);
+                                        Draw.reset();
+                                    }
+                                }).size(30).color(color2).pad(10).get().clicked(() -> colorMixSelectIndex = 1);
+                                options.field(colorInput2, field -> {
+                                    colorInput2 = field;
+                                    color2 = Color.valueOf(field.matches("^#?[a-fA-F0-9]{6,8}$") ? field : "ffffff");
+                                }).get().keyDown(KeyCode.enter, this::refreshBody);
+                                options.row();
+                                options.add("---->");
+                                options.add(new Image(){
+                                    @Override
+                                    public void draw() {
+                                        this.setColor(mixedColor);
+                                        super.draw();
+                                    }
+                                }).size(30).pad(10);
+                                options.label(() -> mixedColor.toString());
+                                options.button(Icon.refresh, this::refreshBody);
+                            }).growX();
+                            ppane.row();
+                            ppane.add(buildTitle("Color Resources"));
+                            ppane.row();
+                            ScrollPane contentPane = new ScrollPane(new Table(contentTable -> {
+                                contentTable.top().left();
+
+                                contentTable.add(buildTitle("Pal"));
+                                contentTable.row();
+                                contentTable.add(buildColors(Pal.class)).grow().padLeft(50);
+                                contentTable.row();
+                                contentTable.add(buildTitle("Color"));
+                                contentTable.row();
+                                contentTable.add(buildColors(Color.class)).grow().padLeft(50);
+                            }));
+                            contentPane.scrolled(y -> scrollY2 = contentPane.getScrollY());
+                            contentPane.layout();
+                            contentPane.setScrollY(scrollY2);
+                            ppane.add(contentPane).grow().fill();
+                        }
+                };
             }).grow();
         });
     }
 
-    Table buildTitle(Table table, String title) {
-        table.table(Tex.underline2, tex -> tex.add(title)).pad(30f, 0f, 30f, 0f).left();
-
-        return table;
-    }
-
-    void applyColors(Table table, Class<?> target) {
-        buildTitle(table, target.getName()).row();
-        table.table(t -> {
-            t.top().left();
-            Field[] palFields = target.getDeclaredFields();
-            int row = 0;
-            for(Field palField : palFields) {
-                if(!palField.getType().equals(Color.class)) continue;
-
-                try {
-                    Object obj = palField.get(null);
-                    if(!(obj instanceof Color color)) continue;
-
-                    t.table(colorCell -> {
-                        colorCell.left();
-                        colorCell.image().size(30).color(color).tooltip("#" + color.toString());
-                        colorCell.add(palField.getName()).padLeft(10);
-                    }).maxWidth(300).growX().pad(20).get().clicked(() -> {
-                        if(colorMixSelectIndex == 0) {
-                            colorInput1 = color.toString();
-                            color1 = color;
-                        } else {
-                            colorInput2 = color.toString();
-                            color2 = color;
-                        }
-                        mixedColor = color1.cpy().lerp(color2, colorMixProg / 100);
-                        refreshResourceTable();
-                    });
-                    if(++row % 8 == 0) t.row();
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }).grow().padLeft(50);
-    }
-    Table buildColorResources(Table table) {
-        table.top().left();
-
-        applyColors(table, Pal.class);
-        table.row();
-        applyColors(table, Color.class);
-        return table;
+    Table buildTitle(String title) {
+        return new Table(Tex.underline2, tex -> tex.add(title).pad(30f, 0f, 30f, 0f).left());
     }
 
     Table buildStyleResources(Table table) {
+        table.add(buildTitle("Styles Resources"));
+        table.row();
+        table.pane(this::buildStyleResources).grow().fill();
+
         Cons<Class<?>> build = classz -> {
-            Seq<Field> allStyles = Seq.with(Styles.class.getFields()).filter(field -> field.getType().equals(classz));
+            Seq<Field> allStyles = Seq.select(Styles.class.getFields(), field -> field.getType().equals(classz));
 
             String[] spliten = classz.getName().split("\\$");
-            buildTitle(table, spliten[spliten.length - 1]).marginLeft(20f).row();
+            table.add(buildTitle(spliten[spliten.length - 1])).marginLeft(20f).row();
 
             table.table(t -> {
                 t.top().left().defaults().labelAlign(Align.center).center().maxHeight(50).pad(10).grow();
@@ -327,6 +295,40 @@ public class ResourcePreviewDialog extends BaseDialog {
         return table;
     }
 
+    Table buildColors(Class<?> target) {
+        return new Table(t -> {
+            t.top().left();
+            Field[] palFields = target.getDeclaredFields();
+            int row = 0;
+            for(Field palField : palFields) {
+                if(!palField.getType().equals(Color.class)) continue;
+
+                try {
+                    Object obj = palField.get(null);
+                    if(!(obj instanceof Color color)) continue;
+
+                    t.table(colorCell -> {
+                        colorCell.left();
+                        colorCell.image().size(30).color(color).tooltip("#" + color.toString());
+                        colorCell.add(palField.getName()).padLeft(10);
+                    }).maxWidth(300).growX().pad(20).get().clicked(() -> {
+                        if(colorMixSelectIndex == 0) {
+                            colorInput1 = color.toString();
+                            color1 = color;
+                        } else {
+                            colorInput2 = color.toString();
+                            color2 = color;
+                        }
+                        mixedColor = color1.cpy().lerp(color2, colorMixProg / 100);
+                        refreshBody();
+                    });
+                    if(++row % 8 == 0) t.row();
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+    }
     void addResourceImage(Table table, Drawable res, String name, int i) {
         table.table(t -> {
             t.center().defaults();

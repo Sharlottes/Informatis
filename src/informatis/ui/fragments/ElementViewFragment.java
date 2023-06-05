@@ -2,13 +2,10 @@ package informatis.ui.fragments;
 
 import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Font;
 import arc.graphics.g2d.Lines;
-import arc.math.Angles;
 import arc.scene.Element;
 import arc.scene.Group;
 import arc.scene.event.Touchable;
-import arc.scene.ui.layout.Scl;
 import arc.struct.SnapshotSeq;
 import arc.util.Align;
 import arc.util.Time;
@@ -17,42 +14,30 @@ import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
 import mindustry.ui.Fonts;
 
-import static arc.Core.scene;
 import static arc.Core.settings;
 
 public class ElementViewFragment extends Element {
-    Group root;
-    Element selected;
+    private final Group[] roots;
 
-    public ElementViewFragment() {
-        this(scene.root);
-    }
-    public ElementViewFragment(Group root) {
-        this.root = root;
+    public ElementViewFragment(Group... roots) {
+        this.roots = roots;
         fillParent = true;
         touchable = Touchable.disabled;
     }
 
     @Override
     public void draw() {
-        super.draw();
         if(!settings.getBool("elementdebug")) return;
+
+        super.draw();
         Draw.z(Layer.max);
         Lines.stroke(1);
-        addRect(root.getChildren());
-
-
-        if(selected == null) return;
-        selected.localToStageCoordinates(Tmp.v1.set(0, 0));
-        Draw.color(Tmp.c1.set(Color.red).shiftHue(Time.time * 1.5f));
-        Lines.stroke(1.5f);
-        Lines.rect(Tmp.v1.x, Tmp.v1.y, selected.getWidth(), selected.getHeight());
-        Fonts.outline.draw(selected.getWidth() + ", " + selected.getHeight(), Tmp.v1.x, Tmp.v1.y,
-                Pal.accent, 1f, false, Align.center);
+        for(Group root : roots)
+            drawElementRect(root.getChildren());
     }
 
-    void addRect(SnapshotSeq<Element> elements) {
-        elements.each(elem-> {
+    private void drawElementRect(SnapshotSeq<Element> elements) {
+        elements.each(elem -> {
             elem.updateVisibility();
             if(elem.visible || settings.getBool("hiddenElem")) {
                 Draw.color();
@@ -61,7 +46,7 @@ public class ElementViewFragment extends Element {
                 if(elem.hasMouse()) {
                     Draw.color(Pal.accent);
                     Lines.stroke(3);
-                    selected = elem;
+                    drawElementTransform(elem);
                 }
                 if(elem.hasScroll()) {
                     Draw.color(Pal.lancerLaser);
@@ -73,8 +58,17 @@ public class ElementViewFragment extends Element {
                 }
                 Lines.rect(Tmp.v1.x, Tmp.v1.y, elem.getWidth(), elem.getHeight());
 
-                if(elem instanceof Group group) addRect(group.getChildren());
+                if(elem instanceof Group group) drawElementRect(group.getChildren());
             }
         });
+    }
+
+    private void drawElementTransform(Element element) {
+        element.localToStageCoordinates(Tmp.v1.set(0, 0));
+        Draw.color(Tmp.c1.set(Color.red).shiftHue(Time.time * 1.5f));
+        Lines.stroke(1.5f);
+        Lines.rect(Tmp.v1.x, Tmp.v1.y, element.getWidth(), element.getHeight());
+        Fonts.outline.draw(element.getWidth() + ", " + element.getHeight(), Tmp.v1.x, Tmp.v1.y,
+                Pal.accent, 1f, false, Align.center);
     }
 }
