@@ -1,6 +1,5 @@
 package informatis.ui.fragments;
 
-import informatis.SUtils;
 import arc.Core;
 import arc.func.Cons;
 import arc.func.Floatf;
@@ -27,121 +26,87 @@ import static mindustry.Vars.ui;
 import static mindustry.ui.Styles.*;
 
 public class QuickSchemFragment extends Table {
-    static float schemScrollPos, tagScrollPos;
-    static boolean schemShown;
-    static Schematic firstSchematic;
-    static final Seq<String> selectedTags = new Seq<>();
-    static Runnable rebuildList = () -> {};
+    float schemScrollPos, tagScrollPos;
+    boolean schemShown;
+    final Seq<String> selectedTags = new Seq<>();
+
+    static ImageButton.ImageButtonStyle schmaticButtonStyle = new ImageButton.ImageButtonStyle() {{
+        down = flatDown;
+        up = Tex.pane;
+        over = flatOver;
+        disabled = black8;
+        imageDisabledColor = Color.lightGray;
+        imageUpColor = Color.white;
+    }};
 
     public QuickSchemFragment() {
         setSchemTable();
-        Table table = ((Table) scene.find("minimap/position")).row();
+        Table table = (Table) scene.find("minimap/position");
+        table.row();
         table.add(this);
     }
 
     public void setSchemTable() {
-       clear();
-       if(!settings.getBool(("schem"))) return;
-       right();
-       button(bundle.get("hud.schematic-list"), Icon.downOpen, Styles.squareTogglet, () -> {
-           if(!schemShown) setSchemTable();
-           schemShown = !schemShown;
-       }).width(160f).height(60f).checked(b -> {
-            Image image = (Image)b.getCells().first().get();
-            image.setDrawable(schemShown ? Icon.upOpen : Icon.downOpen);
-            return schemShown;
-        }).row();
-       collapser(t -> {
+        clear();
+        if(!settings.getBool(("schem"))) return;
+
+        right();
+        collapser(t -> {
             t.background(Styles.black8).defaults().maxHeight(72 * 8f).maxWidth(160f);
-            ScrollPane tagPane = new ScrollPane(new Table(p -> {
-                p.left().defaults().pad(2).height(42f);
+            t.add(new ScrollPane(new Table() {{
+                left().defaults().pad(2).height(42f);
 
                 Seq<String> tags = Reflect.get(ui.schematics, "tags");
                 for(String tag : tags){
-                    p.button(tag, Styles.togglet, () -> {
-                        if(selectedTags.contains(tag)) selectedTags.remove(tag);
-                        else selectedTags.add(tag);
+                    add(new TextButton(tag, togglet) {{
+                        clicked(() -> {
+                            if(selectedTags.contains(tag)) selectedTags.remove(tag);
+                            else selectedTags.add(tag);
 
-                        setSchemTable();
-                    }).checked(selectedTags.contains(tag)).with(c -> c.getLabel().setWrap(false));
+                            setSchemTable();
+                        });
+                        update(() -> {
+                            selectedTags.contains(tag);
+                        });
+                        getLabel().setWrap(false);
+                    }});
                 }
-            }), Styles.noBarPane);
-            tagPane.update(() -> {
-                Element result = scene.hit(input.mouseX(), input.mouseY(), true);
-                if(tagPane.hasScroll() && (result == null || !result.isDescendantOf(tagPane)))
-                    scene.setScrollFocus(null);
-                tagScrollPos = tagPane.getScrollX();
-            });
-            tagPane.setOverscroll(false, false);
-            tagPane.setScrollingDisabled(false, true);
-            tagPane.setScrollXForce(tagScrollPos);
+            }}, Styles.noBarPane) {{
+                update(() -> {
+                    Element result = scene.hit(input.mouseX(), input.mouseY(), true);
+                    if(hasScroll() && (result == null || !result.isDescendantOf(this)))
+                        scene.setScrollFocus(null);
+                    tagScrollPos = getScrollX();
+                });
+                setOverscroll(false, false);
+                setScrollingDisabled(false, true);
+                setScrollXForce(tagScrollPos);
+            }}).fillX().height(42f).row();
+            t.add(new ScrollPane(new Table() {{
+                button("@editor.import", Icon.download, QuickSchemFragment.this::showImport).width(160f).height(64f);
+                row();
+                if(schematics.all().isEmpty()) add(bundle.get("none"));
 
-            ScrollPane schematicsPane = new ScrollPane(new Table(p -> {
-                p.table(tt -> {
-                    tt.button("@editor.import", Icon.download, this::showImport).width(160f).height(64f);
-                    tt.row();
-                    if(schematics.all().isEmpty()) tt.add(bundle.get("none"));
-
-                    for(Schematic schematic : schematics.all()){
-                        if(selectedTags.any() && !schematic.labels.containsAll(selectedTags)) continue;
-
-                        Button button = new Button();
-                        button.top().margin(0f);
-                        button.table(buttons -> {
-                            buttons.left();
-                            buttons.defaults().size(162/4f);
-
-                            ImageButton.ImageButtonStyle style = Styles.clearNonei;
-
-                            buttons.button(Icon.info, style, () -> showInfo(schematic));
-                            buttons.button(Icon.upload, style, () -> showExport(schematic));
-                            buttons.button(Icon.pencil, style, () -> {
-                                new Dialog("@schematic.rename"){{
-                                    setFillParent(true);
-
-                                    cont.margin(30);
-
-                                    cont.add("@schematic.tags").padRight(6f);
-                                    cont.table(tags -> buildTags(schematic, tags, false)).maxWidth(400f).fillX().left().row();
-
-                                    cont.margin(30).add("@name").padRight(6f);
-                                    TextField nameField = cont.field(schematic.name(), null).size(400f, 55f).left().get();
-
-                                    cont.row();
-
-                                    cont.margin(30).add("@editor.description").padRight(6f);
-                                    TextField descField = cont.area(schematic.description(), Styles.areaField, t -> {}).size(400f, 140f).left().get();
-
-                                    Runnable accept = () -> {
-                                        schematic.tags.put("name", nameField.getText());
-                                        schematic.tags.put("description", descField.getText());
-                                        schematic.save();
-                                        hide();
-                                        setSchemTable();
-                                    };
-
-                                    buttons.defaults().size(120, 54).pad(4);
-                                    buttons.button("@ok", accept).disabled(b -> nameField.getText().isEmpty());
-                                    buttons.button("@cancel", this::hide);
-
-                                    keyDown(KeyCode.enter, () -> {
-                                        if(!nameField.getText().isEmpty() && Core.scene.getKeyboardFocus() != descField){
-                                            accept.run();
-                                        }
-                                    });
-                                    keyDown(KeyCode.escape, this::hide);
-                                    keyDown(KeyCode.back, this::hide);
-                                    show();
-                                }};
-                            });
-
+                for(Schematic schematic : schematics.all()) {
+                    if(selectedTags.any() && !schematic.labels.containsAll(selectedTags)) continue;
+                    add(new Button() {{
+                        top().margin(0f);
+                        clicked(() -> {
+                            if(childrenPressed()) return;
+                            control.input.useSchematic(schematic);
+                        });
+                        add(new Table(){{
+                            left().defaults().size(162/4f);
+                            button(Icon.info, Styles.clearNonei, () -> showInfo(schematic));
+                            button(Icon.upload, Styles.clearNonei, () -> showExport(schematic));
+                            button(Icon.pencil, Styles.clearNonei, () -> showRename(schematic));
                             if(schematic.hasSteamID()) {
-                                buttons.button(Icon.link, style, () -> platform.viewListing(schematic));
+                                button(Icon.link, Styles.clearNonei, () -> platform.viewListing(schematic));
                             } else {
-                                buttons.button(Icon.trash, style, () -> {
-                                    if(schematic.mod != null){
+                                button(Icon.trash, Styles.clearNonei, () -> {
+                                    if(schematic.mod != null) {
                                         ui.showInfo(Core.bundle.format("mod.item.remove", schematic.mod.meta.displayName()));
-                                    }else{
+                                    } else {
                                         ui.showConfirm("@confirm", "@schematic.delete.confirm", () -> {
                                             schematics.remove(schematic);
                                             setSchemTable();
@@ -149,66 +114,50 @@ public class QuickSchemFragment extends Table {
                                     }
                                 });
                             }
-
-                        }).growX().height(50f);
-                        button.row();
-                        button.stack(new SchematicsDialog.SchematicImage(schematic).setScaling(Scaling.fit), new Table(n -> {
-                            n.top();
-                            n.table(Styles.black3, c -> {
-                                Label label = c.add(schematic.name()).style(Styles.outlineLabel).color(Color.white).top().growX().maxWidth(200f - 8f).get();
-                                label.setEllipsis(true);
-                                label.setAlignment(Align.center);
-                            }).growX().margin(1).pad(4).maxWidth(Scl.scl(160f - 8f)).padBottom(0);
-                        })).size(160f);
-                        button.clicked(() -> {
-                            if(button.childrenPressed()) return;
-                            control.input.useSchematic(schematic);
-                        });
-                        tt.add(button).pad(4).style(
-                             new ImageButton.ImageButtonStyle() {{
-                                down = flatDown;
-                                up = Tex.pane;
-                                over = flatOver;
-                                disabled = black8;
-                                imageDisabledColor = Color.lightGray;
-                                imageUpColor = Color.white;
-                            }});
-                        tt.row();
-                    }
-
+                        }}).growX().height(50f);
+                        row();
+                        stack(new SchematicsDialog.SchematicImage(schematic).setScaling(Scaling.fit), new Table() {{
+                            top();
+                            add(new Table(Styles.black3) {{
+                                add(new Label(schematic.name()) {{
+                                    setColor(Color.white);
+                                    setStyle(Styles.outlineLabel);
+                                    setEllipsis(true);
+                                    setAlignment(Align.center);
+                                }}).top().growX().maxWidth(200f - 8f);
+                            }}).growX().margin(1).pad(4).padBottom(0).maxWidth(Scl.scl(160f - 8f));
+                        }}).size(160f);
+                    }}).pad(4).style(schmaticButtonStyle);
+                }
+                row();
+            }}, Styles.noBarPane) {{
+                update(() -> {
+                    Element result = scene.hit(input.mouseX(), input.mouseY(), true);
+                    if(hasScroll() && (result == null || !result.isDescendantOf(this)))
+                        scene.setScrollFocus(null);
+                    schemScrollPos = getScrollY();
                 });
-            }), Styles.noBarPane);
 
-            schematicsPane.update(() -> {
-                Element result = scene.hit(input.mouseX(), input.mouseY(), true);
-                if(schematicsPane.hasScroll() && (result == null || !result.isDescendantOf(schematicsPane)))
-                    scene.setScrollFocus(null);
-                schemScrollPos = schematicsPane.getScrollY();
-            });
-
-            schematicsPane.setOverscroll(false, false);
-            schematicsPane.setScrollingDisabled(true, false);
-            schematicsPane.setScrollYForce(schemScrollPos);
-
-           t.add(tagPane).fillX().height(42f).row();
-           t.add(schematicsPane).grow();
+                setOverscroll(false, false);
+                setScrollingDisabled(true, false);
+                setScrollYForce(schemScrollPos);
+            }}).grow();
         }, true, () -> schemShown);
+        add(new TextButton(bundle.get("hud.schematic-list"), Styles.squareTogglet) {{
+           add(new Image(Icon.downOpen) {{
+               update(() -> setDrawable(schemShown ? Icon.upOpen : Icon.downOpen));
+           }}).size(Icon.downOpen.imageSize() / Scl.scl(1f));
+           clicked(() -> {
+               if(!schemShown) setSchemTable();
+               schemShown = !schemShown;
+           });
+           update(() -> this.setChecked(schemShown));
+        }}).width(160f).height(60f);
+        row();
     }
 
-    void showInfo(Schematic schematic){
+    void showInfo(Schematic schematic) {
         Reflect.<SchematicsDialog.SchematicInfoDialog>get(ui.schematics, "info").show(schematic);
-    }
-
-    void checkTags(Schematic s){
-        boolean any = false;
-        Seq<String> seq = Reflect.get(ui.schematics, "tags");
-        for(var tag : s.labels){
-            if(!seq.contains(tag)){
-                seq.add(tag);
-                any = true;
-            }
-        }
-        if(any) setSchemTable();
     }
 
     void showImport(){
@@ -292,10 +241,61 @@ public class QuickSchemFragment extends Table {
         dialog.show();
     }
 
-    void tagsChanged(){
-        rebuildList.run();
+    void showRename(Schematic schematic) {
+        new Dialog("@schematic.rename"){{
+            setFillParent(true);
+
+            cont.margin(30);
+
+            cont.add("@schematic.tags").padRight(6f);
+            cont.table(tags -> buildTags(schematic, tags, false)).maxWidth(400f).fillX().left().row();
+
+            cont.margin(30).add("@name").padRight(6f);
+            TextField nameField = cont.field(schematic.name(), null).size(400f, 55f).left().get();
+
+            cont.row();
+
+            cont.margin(30).add("@editor.description").padRight(6f);
+            TextField descField = cont.area(schematic.description(), Styles.areaField, t -> {}).size(400f, 140f).left().get();
+
+            Runnable accept = () -> {
+                schematic.tags.put("name", nameField.getText());
+                schematic.tags.put("description", descField.getText());
+                schematic.save();
+                hide();
+                setSchemTable();
+            };
+
+            buttons.defaults().size(120, 54).pad(4);
+            buttons.button("@ok", accept).disabled(b -> nameField.getText().isEmpty());
+            buttons.button("@cancel", this::hide);
+
+            keyDown(KeyCode.enter, () -> {
+                if(!nameField.getText().isEmpty() && Core.scene.getKeyboardFocus() != descField){
+                    accept.run();
+                }
+            });
+            keyDown(KeyCode.escape, this::hide);
+            keyDown(KeyCode.back, this::hide);
+            show();
+        }};
+    }
+
+    void tagsChanged() {
         Seq<String> tags = Reflect.get(ui.schematics, "tags");
         Core.settings.putJson("schematic-tags", String.class, tags);
+    }
+
+    void checkTags(Schematic s){
+        boolean any = false;
+        Seq<String> seq = Reflect.get(ui.schematics, "tags");
+        for(var tag : s.labels){
+            if(!seq.contains(tag)) {
+                seq.add(tag);
+                any = true;
+            }
+        }
+        if(any) setSchemTable();
     }
 
     void addTag(Schematic s, String tag){
@@ -347,7 +347,7 @@ public class QuickSchemFragment extends Table {
                             for(UnlockableContent u : content.getBy(ctype).<UnlockableContent>as()){
                                 if(!u.isHidden() && u.unlockedNow() && u.hasEmoji() && !tags.contains(u.emoji())){
                                     t.button(new TextureRegionDrawable(u.uiIcon), Styles.cleari, iconMed, () -> {
-                                        String out = u.emoji() + "";
+                                        String out = u.emoji();
 
                                         tags.add(out);
                                         tagsChanged();

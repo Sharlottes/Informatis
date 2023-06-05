@@ -35,17 +35,18 @@ public class ServerSearchFragment extends Table {
         TextButton[] buttons = new TextButton[modes.length];
         for(int i = 0; i < modes.length; i++) {
             String mode = modes[i];
-            TextButton button = new TextButton("@mode." + mode.toLowerCase() + ".name", Styles.flatTogglet);
-            button.getLabel().setWrap(false);
-            button.clicked(()-> {
-                for(TextButton otherButton : buttons) {
-                    if(otherButton == button) continue;
-                    otherButton.setChecked(false);
-                }
-                if(button.isChecked()) filterServers(mode);
-                else defaultServers.set(servers.keys().toSeq());
-                Reflect.invoke(Vars.ui.join, "refreshCommunity");
-            });
+            TextButton button = new TextButton("@mode." + mode.toLowerCase() + ".name", Styles.flatTogglet) {{
+                getLabel().setWrap(false);
+                clicked(()-> {
+                    for(TextButton otherButton : buttons) {
+                        if(otherButton == this) continue;
+                        otherButton.setChecked(false);
+                    }
+                    if(isChecked()) filterServers(mode);
+                    else defaultServers.set(servers.keys().toSeq());
+                    Reflect.invoke(Vars.ui.join, "refreshCommunity");
+                });
+            }};
             buttons[i] = button;
             add(button).minWidth(100).height(50);
         }
