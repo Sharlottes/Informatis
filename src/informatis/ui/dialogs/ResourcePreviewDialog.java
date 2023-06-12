@@ -11,7 +11,6 @@ import arc.scene.ui.layout.*;
 import arc.scene.utils.Elem;
 import arc.struct.*;
 import arc.util.*;
-import informatis.SUtils;
 import informatis.ui.components.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
@@ -209,26 +208,41 @@ class ColorPreviewFragment extends Table {
         pane(tabsFragment.content).grow();
     }
 
+    String cachedId = "";
     Table buildColors(Class<?> colorClass) {
-        return new Table(t -> {
+        return new IntervalTableWrapper(t -> {
             t.top().left().defaults().maxWidth(300).pad(20);
-            SUtils.loop(colorClass.getDeclaredFields(), (colorField, row) -> {
-                if(!colorField.getType().equals(Color.class)) return;
+
+            float sum = 0;
+            for(Field colorField : colorClass.getDeclaredFields()) {
+                if(!colorField.getType().equals(Color.class)) continue;
 
                 Color color = Reflect.get(colorField);
-                t.table(colorCell -> {
+                sum += t.table(colorCell -> {
                     colorCell.left();
-                    colorCell.image().size(30).color(color).tooltip("#" + color.toString());
+                    colorCell.image().size(30).color(color);
                     colorCell.add(colorField.getName()).padLeft(10);
-                    colorCell.clicked(() -> colorMixer.currentField.setter.get(color));
-                });
+                    colorCell.clicked(() -> {
+                        if(colorMixer.currentField != null) colorMixer.currentField.setter.get(color);
+                    });
+                }).tooltip("#" + color.toString()).growX().maxWidth();
 
-                if(row % 8 == 0) t.row();
-            });
-        });
+                if(sum >= getWidth()) {
+                    sum -= getWidth();
+                    t.row();
+                }
+            };
+        }, table -> {
+            if(cachedId != getWidth()+":"+tabsFragment.currentTabIndex) {
+                cachedId = getWidth()+":"+tabsFragment.currentTabIndex;
+                return true;
+            }
+            return false;
+        }, 60).build();
     }
 
     static class ColorMixer extends Table {
+        @Nullable
         public FieldColorLabel currentField;
         public float colorMixProgress = 0;
         public Color color1 = Color.white, color2 = Color.white;
