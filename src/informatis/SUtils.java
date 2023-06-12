@@ -1,6 +1,10 @@
 package informatis;
 
 import arc.Core;
+import arc.func.Cons;
+import arc.func.Cons2;
+import arc.func.Func;
+import arc.func.Func2;
 import arc.graphics.g2d.*;
 import arc.math.Mathf;
 import arc.math.geom.Position;
@@ -19,11 +23,84 @@ import mindustry.type.weapons.*;
 import mindustry.world.Tile;
 
 import java.lang.reflect.*;
+import java.util.Iterator;
 
 import static arc.Core.*;
 import static mindustry.Vars.*;
 
 public class SUtils {
+    /**
+     * loop iterator with "final i", which can be referenced in callback scope.
+     * @param iterator - just an iterator to loop.
+     * @param callback - callback function with "i" parameter.
+     */
+    public static <T> void loop(Iterator<T> iterator, Cons2<T, Integer> callback) {
+        SUtils.loop(iterator, (t, i) -> {
+            callback.get(t, i);
+            return false;
+        });
+    }
+    public static <T> void loop(Iterator<T> iterator, Func2<T, Integer, Boolean> callback) {
+        int i = 0;
+        while(iterator.hasNext()) {
+            if(callback.get(iterator.next(), i)) break;
+            i++;
+        }
+    }
+
+    /**
+     * loop array with "final i", which can be referenced in callback scope.
+     * @param array - just an array object to loop.
+     * @param callback - callback function with "i" parameter.
+     */
+    public static <T> void loop(T[] array, Cons2<T, Integer> callback) {
+        SUtils.loop(array, (t, i) -> {
+            callback.get(t, i);
+            return false;
+        });
+    }
+    public static <T> void loop(T[] array, Func2<T, Integer, Boolean> callback) {
+        for(int i = 0; i < array.length; i++) {
+            if(callback.get(array[i], i)) break;
+        }
+    }
+
+    /**
+     * loop iterable object with "final i", which can be referenced in callback scope.
+     * @param iterable - just an iterable object to loop.
+     * @param callback - callback function with "i" parameter.
+     */
+    public static <T> void loop(Iterable<T> iterable, Cons2<T, Integer> callback) {
+        SUtils.loop(iterable, (t, i) -> {
+            callback.get(t, i);
+            return false;
+        });
+    }
+    public static <T> void loop(Iterable<T> iterable, Func2<T, Integer, Boolean> callback) {
+        int i = 0;
+        for(T t : iterable) {
+            if(callback.get(t, i)) break;
+            i++;
+        }
+    }
+
+    /**
+     * for-loop with "final i", which can be referenced in callback scope.
+     * @param number - max loop count number.
+     * @param callback - callback function with "i" parameter.
+     */
+    public static void loop(int number, Cons<Integer> callback) {
+        SUtils.loop(number, (i) -> {
+            callback.get(i);
+            return false;
+        });
+    }
+    public static void loop(int number, Func<Integer, Boolean> callback) {
+        for(int i = 0; i < number; i++) {
+            if(callback.get(i)) break;
+        }
+    }
+
     /**
      * move camera to given coordination
      * @param x world unit x
