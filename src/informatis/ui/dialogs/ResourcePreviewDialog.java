@@ -1,14 +1,18 @@
 package informatis.ui.dialogs;
 
+import arc.func.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.input.KeyCode;
+import arc.scene.Element;
 import arc.scene.style.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
+import arc.scene.utils.Elem;
 import arc.struct.*;
 import arc.util.*;
-import informatis.ui.components.TabsFragment;
+import informatis.SUtils;
+import informatis.ui.components.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.ui.*;
@@ -17,8 +21,11 @@ import mindustry.ui.dialogs.*;
 import java.lang.reflect.Field;
 
 public class ResourcePreviewDialog extends BaseDialog {
-    private final TabsFragment tabsFragment = new TabsFragment("Textures", "Styles", "Colors");
-    private final Table[] fragments = new Table[]{ new TexturePreviewFragment(), new StylePreviewFragment(), new ColorPreviewFragment() };
+    private final PageTabsFragment tabsFragment = new PageTabsFragment(
+            "Textures", new TexturePreviewFragment(),
+            "Styles", new StylePreviewFragment(),
+            "Colors", new ColorPreviewFragment()
+    );
 
     public ResourcePreviewDialog() {
         super("resource previews");
@@ -27,12 +34,7 @@ public class ResourcePreviewDialog extends BaseDialog {
 
         cont.add(tabsFragment).growX();
         cont.row();
-        Table table = cont.table(t -> t.add(fragments[tabsFragment.currentTabIndex]).grow()).grow().get();
-
-        tabsFragment.eventEmitter.subscribe(TabsFragment.Event.TabChanged, () -> {
-            table.clearChildren();
-            table.add(fragments[tabsFragment.currentTabIndex]).grow();
-        });
+        cont.add(tabsFragment.content).grow();
     }
 }
 
@@ -46,21 +48,22 @@ class TexturePreviewFragment extends Table {
         super();
 
         ScrollPane pane = new ScrollPane(tabsFragment.currentTabIndex == 0 ? buildTexResources() : buildIconResources());
+        refreshPane(pane);
+
         add(tabsFragment).growX();
         row();
         table(options -> {
-            top().center();
-            table(t -> {
+            options.top().center();
+            options.table(t -> {
                 t.button(Icon.zoom, () -> refreshPane(pane));
                 t.field(search, value -> search = value).get().keyDown(KeyCode.enter, () -> refreshPane(pane));
             }).minWidth(200).pad(20);
-            check("show resource with its name", showName, (checkBox) -> {
+            options.check("show resource with its name", showName, (checkBox) -> {
                 showName = !showName;
                 refreshPane(pane);
             }).pad(20);
-        }).padBottom(20f).growX().row();
-
-        refreshPane(pane);
+        }).padBottom(20f).growX();
+        row();
         add(pane).grow();
 
         tabsFragment.eventEmitter.subscribe(TabsFragment.Event.TabChanged, () -> refreshPane(pane));
@@ -124,27 +127,28 @@ class TexturePreviewFragment extends Table {
 }
 
 class StylePreviewFragment extends Table {
-    private static final Class<?>[] styleClasses = { Drawable.class, Button.ButtonStyle.class, TextButton.TextButtonStyle.class, ImageButton.ImageButtonStyle.class };
-    private final TabsFragment tabsFragment = new TabsFragment("Drawable", "ButtonStyle", "TextButtonStyle", "ImageButtonsStyle");
+    private final PageTabsFragment tabsFragment = new PageTabsFragment(
+            "Drawable", buildStyleTable(Drawable.class),
+            "ButtonStyle", buildStyleTable(Button.ButtonStyle.class),
+            "TextButtonStyle", buildStyleTable(TextButton.TextButtonStyle.class),
+            "ImageButtonsStyle", buildStyleTable(ImageButton.ImageButtonStyle.class)
+    );
 
     public StylePreviewFragment() {
         super();
 
         add(tabsFragment).growX();
         row();
-        ScrollPane pane = pane(buildStyleTable(styleClasses[tabsFragment.currentTabIndex])).grow().get();
-        tabsFragment.eventEmitter.subscribe(TabsFragment.Event.TabChanged, () ->
-                pane.setWidget(buildStyleTable(styleClasses[tabsFragment.currentTabIndex]))
-        );
+        pane(tabsFragment.content).grow();
     }
 
-    private Table buildStyleTable(Class<?> classz) {
+    private Table buildStyleTable(Class<?> styleClass) {
         return new Table(table -> {
             table.top().left().defaults().labelAlign(Align.center).center().maxHeight(50).pad(10).grow();
 
-            Seq<Field> allStyles = Seq.select(Styles.class.getFields(), field -> field.getType().equals(classz));
-            if (classz.equals(Drawable.class)) {
-                for (Field field : allStyles) {
+            Seq<Field> defaultStyles = Seq.select(Styles.class.getFields(), field -> field.getType().equals(styleClass));
+            if (styleClass.equals(Drawable.class)) {
+                for (Field field : defaultStyles) {
                     table.table(tt -> {
                         tt.left();
                         tt.add(field.getName());
@@ -155,49 +159,44 @@ class StylePreviewFragment extends Table {
                 return;
             }
 
-            Seq<Field> stylesWithoutNumeric = Seq.select(classz.getFields(), style -> allStyles.contains(field -> {
+            Seq<Field> styleFields = Seq.select(styleClass.getFields(), style -> defaultStyles.contains(field -> {
                 Object value = Reflect.get(Reflect.get(field), style);
                 return !(value == null || value instanceof Font || value.toString().matches("^\\d*.\\d*$")); //wtf
             }));
 
-            stylesWithoutNumeric.each(style -> table.table(tt -> {
+            styleFields.each(style -> table.table(tt -> {
                 tt.center();
                 tt.add(style.getName());
             }));
             table.row();
-            table.image().height(4f).color(Pal.accent).growX().colspan(stylesWithoutNumeric.size + 1).row();
-            for (Field field : allStyles) {
-                try {
-                    table.add(field.getName());
-                    Object style = field.get(null);
-                    stylesWithoutNumeric.each(styleField -> {
-                        Object value =Reflect.get(style, styleField);
-                        table.table(tt -> {
-                            tt.center();
-                            if (value == null) tt.add("").color(Color.gray);
-                            else if (value instanceof Drawable drawable) tt.image(drawable).grow();
-                            else tt
-                                        .add(value.toString())
-                                        .color(value.toString().matches("^#?[a-fA-F0-9]{6,8}$")
-                                                ? Color.valueOf(value.toString())
-                                                : Color.gray
-                                        );
-                        });
+            table.image().height(4f).color(Pal.accent).growX().colspan(styleFields.size + 1).row();
+            for (Field defaultStyle : defaultStyles) {
+                table.add(defaultStyle.getName());
+                styleFields.each(styleField -> {
+                    table.table(tt -> {
+                        Object value = Reflect.get(Reflect.get(defaultStyle), styleField); //<defaultStyle>.<styleField>  ex) <Styles.clearNonei>.<imageUpColor>
+                        tt.center();
+                        if (value == null) tt.add("").color(Color.gray);
+                        else if (value instanceof Drawable drawable) tt.image(drawable).grow();
+                        else tt.add(value.toString()).color(value.toString().matches("^#?[a-fA-F0-9]{6,8}$")
+                            ? Color.valueOf(value.toString())
+                            : Color.gray
+                        );
                     });
-                    table.row();
-                    //divider smh?
-                    table.image().height(4f).color(Pal.gray).growX().colspan(stylesWithoutNumeric.size + 1).row();
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                }
+                });
+                table.row();
+                table.image().height(4f).color(Pal.gray).growX().colspan(styleFields.size + 1);
+                table.row();
             }
         });
     }
 }
 
 class ColorPreviewFragment extends Table {
-    private static final Class<?>[] colorClasses = { Color.class, Pal.class };
-    private final TabsFragment tabsFragment = new TabsFragment("Colors", "Pal");
+    private final PageTabsFragment tabsFragment = new PageTabsFragment(
+            "Colors", buildColors(Color.class),
+            "Pal", buildColors(Pal.class)
+    );
     private final ColorMixer colorMixer = new ColorMixer();
 
     public ColorPreviewFragment() {
@@ -207,98 +206,106 @@ class ColorPreviewFragment extends Table {
         row();
         add(tabsFragment).growX();
         row();
-        ScrollPane pane = new ScrollPane(buildColors(colorClasses[tabsFragment.currentTabIndex]));
-        add(pane).grow();
-        tabsFragment.eventEmitter.subscribe(TabsFragment.Event.TabChanged, () -> pane.setWidget(buildColors(colorClasses[tabsFragment.currentTabIndex])));
+        pane(tabsFragment.content).grow();
     }
 
-    Table buildColors(Class<?> target) {
+    Table buildColors(Class<?> colorClass) {
         return new Table(t -> {
-            t.top().left();
-            Field[] palFields = target.getDeclaredFields();
-            int row = 0;
-            for(Field palField : palFields) {
-                Object obj = Reflect.get(palField);
-                if(!(obj instanceof Color color)) continue;
+            t.top().left().defaults().maxWidth(300).pad(20);
+            SUtils.loop(colorClass.getDeclaredFields(), (colorField, row) -> {
+                if(!colorField.getType().equals(Color.class)) return;
 
+                Color color = Reflect.get(colorField);
                 t.table(colorCell -> {
                     colorCell.left();
                     colorCell.image().size(30).color(color).tooltip("#" + color.toString());
-                    colorCell.add(palField.getName()).padLeft(10);
-                }).maxWidth(300).growX().pad(20).get().clicked(() -> {
-                    if(colorMixer.colorMixSelectIndex == 0) {
-                        colorMixer.colorInput1 = color.toString();
-                        colorMixer.color1 = color;
-                    } else {
-                        colorMixer.colorInput2 = color.toString();
-                        colorMixer.color2 = color;
-                    }
-                    colorMixer.mixedColor = colorMixer.color1.cpy().lerp(colorMixer.color2, colorMixer.colorMixProg / 100);
-                    //refreshPane();
+                    colorCell.add(colorField.getName()).padLeft(10);
+                    colorCell.clicked(() -> colorMixer.currentField.setter.get(color));
                 });
-                if(++row % 8 == 0) t.row();
-            }
+
+                if(row % 8 == 0) t.row();
+            });
         });
     }
 
-    class ColorMixer extends Table {
-        public String colorInput1 = "ffffffff", colorInput2 = "ffffffff";
-        public float colorMixProg = 0;
-        public int colorMixSelectIndex = 0;
-        public Color color1 = Color.white, color2 = Color.white, mixedColor = Color.white;
+    static class ColorMixer extends Table {
+        public FieldColorLabel currentField;
+        public float colorMixProgress = 0;
+        public Color color1 = Color.white, color2 = Color.white;
 
         public ColorMixer() {
-
             top().center().defaults().pad(20);
 
-            add("Mix");
-            add(new Image() {
-                @Override
-                public void draw() {
-                    super.draw();
-
-                    int size = 8;
-                    Draw.color(colorMixSelectIndex == 0 ? Pal.accent : Pal.gray);
-                    Draw.alpha(parentAlpha);
-                    Lines.stroke(Scl.scl(3f));
-                    Lines.rect(x - size / 2f, y - size / 2f, width + size, height + size);
-                    Draw.reset();
-                }
-            }).size(30).color(color1).pad(10).get().clicked(() -> colorMixSelectIndex = 0);
-            field(colorInput1, field -> {
-                colorInput1 = field;
-                color1 = Color.valueOf(field.matches("^#?[a-fA-F0-9]{6,8}$") ? field : "ffffff");
-            });
-            slider(0, 100, 1, colorMixProg, prog -> {
-                colorMixProg = prog;
-                mixedColor = color1.cpy().lerp(color2, prog / 100);
-            });
-            add(new Image() {
-                @Override
-                public void draw() {
-                    super.draw();
-
-                    int size = 8;
-                    Draw.color(colorMixSelectIndex == 1 ? Pal.accent : Pal.gray);
-                    Draw.alpha(parentAlpha);
-                    Lines.stroke(Scl.scl(3f));
-                    Lines.rect(x - size / 2f, y - size / 2f, width + size, height + size);
-                    Draw.reset();
-                }
-            }).size(30).color(color2).pad(10).get().clicked(() -> colorMixSelectIndex = 1);
-            field(colorInput2, field -> {
-                colorInput2 = field;
-                color2 = Color.valueOf(field.matches("^#?[a-fA-F0-9]{6,8}$") ? field : "ffffff");
+            table(table -> {
+                table.add(new FieldColorLabel(() -> color1, color -> color1 = color));
+                table.slider(0, 100, 1, 0, progress -> colorMixProgress = progress);
+                table.add(new FieldColorLabel(() -> color2, color -> color2 = color));
             });
             row();
-            add(new Image(){
-                @Override
-                public void draw() {
-                    this.setColor(mixedColor);
-                    super.draw();
-                }
-            }).size(30).pad(10);
-            label(() -> mixedColor.toString());
+            add(new ColorLabel(() -> color1.cpy().lerp(color2, colorMixProgress / 100)));
+        }
+
+        class FieldColorLabel extends ColorLabel {
+            public final Cons<Color> setter;
+
+            public FieldColorLabel(Prov<Color> color, Cons<Color> setter) {
+                super(color);
+                this.setter = setter;
+            }
+
+            protected Image buildImage() {
+                return new Image() {
+                    @Override
+                    public void draw() {
+                        this.setColor(FieldColorLabel.this.color.get());
+                        super.draw();
+                        int size = 8;
+                        Draw.color(currentField == FieldColorLabel.this ? Pal.accent : Pal.gray);
+                        Draw.alpha(parentAlpha);
+                        Lines.stroke(Scl.scl(3f));
+                        Lines.rect(x - size / 2f, y - size / 2f, width + size, height + size);
+                        Draw.reset();
+                    }
+                    {
+                        clicked(() -> {
+                            if(currentField == FieldColorLabel.this) currentField = null;
+                            else currentField = FieldColorLabel.this;
+                        });
+                    }
+                };
+            }
+
+            protected Element buildLabel() {
+                TextField field = Elem.newField(color.get().toString(), (value) -> setter.get(Color.valueOf(value.matches("^#?[a-fA-F0-9]{6,8}$") ? value : "ffffff")));
+                field.update(() -> {
+                    field.setText(color.get().toString());
+                });
+                return field;
+            }
+        }
+
+        static class ColorLabel extends Table {
+            protected final Prov<Color> color;
+
+            public ColorLabel(Prov<Color> color) {
+                this.color = color;
+                add(buildImage()).size(30).pad(10);
+                add(buildLabel());
+            }
+
+            protected Image buildImage() {
+                return new Image(){
+                    @Override
+                    public void draw() {
+                        this.setColor(ColorLabel.this.color.get());
+                        super.draw();
+                    }
+                };
+            }
+
+            protected Element buildLabel() {
+                return new Label(() -> color.get().toString());
+            }
         }
     }
 }

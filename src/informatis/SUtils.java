@@ -1,12 +1,8 @@
 package informatis;
 
 import arc.Core;
-import arc.func.Cons;
-import arc.func.Cons2;
-import arc.func.Func;
-import arc.func.Func2;
+import arc.func.*;
 import arc.graphics.g2d.*;
-import arc.math.Mathf;
 import arc.math.geom.Position;
 import arc.scene.style.*;
 import arc.struct.Seq;
@@ -14,15 +10,11 @@ import arc.util.*;
 import informatis.core.Pathfinder;
 import mindustry.Vars;
 import mindustry.core.UI;
-import mindustry.entities.bullet.*;
 import mindustry.game.Team;
 import mindustry.gen.*;
 import mindustry.input.DesktopInput;
-import mindustry.type.UnitType;
-import mindustry.type.weapons.*;
 import mindustry.world.Tile;
 
-import java.lang.reflect.*;
 import java.util.Iterator;
 
 import static arc.Core.*;
@@ -99,6 +91,14 @@ public class SUtils {
         for(int i = 0; i < number; i++) {
             if(callback.get(i)) break;
         }
+    }
+
+    public static <T, RT> RT[] pickFromArray(T[] array, Class<RT> returnType, Boolf<Integer> condition) {
+        Seq<RT> list = new Seq<>();
+        for(int i = 0; i < array.length; i++) {
+            if(condition.get(i)) list.add((RT) array[i]);
+        }
+        return list.toArray(returnType);
     }
 
     /**
