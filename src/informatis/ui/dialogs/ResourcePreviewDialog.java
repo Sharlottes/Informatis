@@ -18,6 +18,7 @@ import mindustry.ui.*;
 import mindustry.ui.dialogs.*;
 
 import java.lang.reflect.Field;
+import java.util.Objects;
 
 public class ResourcePreviewDialog extends BaseDialog {
     private final PageTabsFragment tabsFragment = new PageTabsFragment(
@@ -163,6 +164,7 @@ class StylePreviewFragment extends Table {
                 return !(value == null || value instanceof Font || value.toString().matches("^\\d*.\\d*$")); //wtf
             }));
 
+            table.add("styles\\fields").center();
             styleFields.each(style -> table.table(tt -> {
                 tt.center();
                 tt.add(style.getName());
@@ -175,7 +177,7 @@ class StylePreviewFragment extends Table {
                     table.table(tt -> {
                         Object value = Reflect.get(Reflect.get(defaultStyle), styleField); //<defaultStyle>.<styleField>  ex) <Styles.clearNonei>.<imageUpColor>
                         tt.center();
-                        if (value == null) tt.add("").color(Color.gray);
+                        if (value == null) tt.add("");
                         else if (value instanceof Drawable drawable) tt.image(drawable).grow();
                         else tt.add(value.toString()).color(value.toString().matches("^#?[a-fA-F0-9]{6,8}$")
                             ? Color.valueOf(value.toString())
@@ -208,8 +210,8 @@ class ColorPreviewFragment extends Table {
         pane(tabsFragment.content).grow();
     }
 
-    String cachedId = "";
     Table buildColors(Class<?> colorClass) {
+        final String[] cachedId = {""};
         return new IntervalTableWrapper(t -> {
             t.top().left().defaults().maxWidth(300).pad(20);
 
@@ -233,8 +235,8 @@ class ColorPreviewFragment extends Table {
                 }
             };
         }, table -> {
-            if(cachedId != getWidth()+":"+tabsFragment.currentTabIndex) {
-                cachedId = getWidth()+":"+tabsFragment.currentTabIndex;
+            if(!Objects.equals(cachedId[0], getWidth() + ":" + tabsFragment.currentTabIndex)) {
+                cachedId[0] = getWidth()+":"+tabsFragment.currentTabIndex;
                 return true;
             }
             return false;
