@@ -1,26 +1,21 @@
 package informatis;
 
 import arc.input.KeyCode;
-import arc.scene.ui.layout.Table;
-import arc.util.Log;
 import informatis.core.OverDrawer;
 import informatis.core.Setting;
 import informatis.draws.OverDraws;
 import informatis.ui.SidebarSwitcher;
+import informatis.ui.TroopingManageFragment;
 import informatis.ui.TroopingManager;
 import informatis.ui.dialogs.DialogManager;
-import informatis.ui.dialogs.ResourcePreviewDialog;
 import informatis.ui.fragments.FragmentManager;
 import informatis.ui.windows.*;
 import arc.*;
 import mindustry.*;
 import mindustry.game.EventType.*;
-import mindustry.gen.Icon;
-import mindustry.gen.Tex;
 import mindustry.mod.*;
 
 import static arc.Core.*;
-import static informatis.ui.windows.WindowManager.windows;
 
 public class Informatis extends Mod {
     @Override
@@ -54,14 +49,10 @@ public class Informatis extends Mod {
             Setting.init();
             WindowManager.init();
             DialogManager.init();
-            TroopingManager.init();
             new SidebarSwitcher(
                 WindowManager.body,
                 DialogManager.body,
-                TroopingManager.body,
-                new Table(Tex.buttonEdge4,  t -> {
-                    t.label(() -> "it's just label lmao");
-                })
+                new TroopingManageFragment() // cache later?
             ).init();
             FragmentManager.init();
             OverDraws.init();

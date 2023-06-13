@@ -13,8 +13,6 @@ import mindustry.*;
 import mindustry.gen.*;
 import mindustry.graphics.Pal;
 
-import javax.sound.sampled.Line;
-
 public class SidebarSwitcher {
     int showIndex = 0;
     final Element[] sidebars;
