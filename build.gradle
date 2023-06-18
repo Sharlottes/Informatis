@@ -5,7 +5,7 @@ plugins {
 ext{
     sdkRoot = System.getenv("ANDROID_HOME")
     sdkVersion = '30'
-    mindustryVersion = 'v144.1'
+    mindustryVersion = 'v145'
     artifactFilename = "Informatis.jar"
 }
 
