@@ -79,11 +79,11 @@ public class OverDraws {
     }
 
     static void eachDraws(Cons<OverDraw> runner) {
-        OverDraws.draws.entries().forEach(draws -> {
+        for(ObjectMap.Entry<OverDrawCategory, Seq<OverDraw>> draws : OverDraws.draws.entries()) {
             if(draws.key.enabled) draws.value.each(draw -> {
                 if(Core.settings.getBool(draw.name, false)) runner.get(draw);
                 Draw.reset();
             });
-        });
+        };
     }
 }
