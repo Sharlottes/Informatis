@@ -49,6 +49,7 @@ public class WindowManager {
                                 bt.button(window.icon, Styles.emptyi, () -> {
                                     Window window1 = window;
                                     window1.parent.setLayoutEnabled(false);
+                                    /*
                                     if(!window.only) {
                                         try {
                                             window1 = key.getConstructor().newInstance();
@@ -59,6 +60,7 @@ public class WindowManager {
                                             throw new RuntimeException(ex);
                                         }
                                     }
+                                    */
                                     window1.toggle();
                                     for (Seq<Window> ws : WindowManager.windows.values()) {
                                         ws.each(w -> w.setLayoutEnabled(true));

@@ -37,6 +37,8 @@ import mindustry.world.blocks.units.*;
 import mindustry.world.consumers.*;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 
 import static arc.Core.bundle;
@@ -60,22 +62,14 @@ public class UnitWindow extends Window {
 
     public UnitWindow() {
         super(Icon.units, "unit");
-        currentWindow = this;
     }
 
     @Override
     public void build() {
         super.build();
-        Element titlePane = ((Table) ((ScrollPane) ((Table) getChildren().first()).getChildren().first()).getWidget()).getChildren().first();
-        titlePane.update(() -> titlePane.setColor(currentWindow == this ? Pal.accent : Color.white));
         Events.run(EventType.Trigger.update, () -> {
             if(!locked) target = getTarget();
-            if(hasMouse()) currentWindow = this;
-            try {
-                data = getInfo(target);
-            } catch (IllegalAccessException | NoSuchFieldException err) {
-                err.printStackTrace();
-            }
+            data = getInfo(target);
         });
     }
 
@@ -291,7 +285,7 @@ public class UnitWindow extends Window {
             bar.add(icon).size(iconMed * 0.75f).padLeft(8f);
         });
     }
-    public Seq<BarData> getInfo(Teamc target) throws IllegalAccessException, NoSuchFieldException {
+    public Seq<BarData> getInfo(Teamc target) {
         data.clear();
 
         if(target instanceof Healthc healthc){
@@ -343,7 +337,14 @@ public class UnitWindow extends Window {
             data.add(new BarData(bundle.format("shar-stat.shield", formatNumber(max-force.buildup), formatNumber(max)), Pal.shield, (max-force.buildup)/max, shield));
         }
 
-        if(target instanceof MendProjector.MendBuild || target instanceof OverdriveProjector.OverdriveBuild || target instanceof ConstructBlock.ConstructBuild || target instanceof Reconstructor.ReconstructorBuild || target instanceof UnitFactory.UnitFactoryBuild || target instanceof Drill.DrillBuild || target instanceof GenericCrafter.GenericCrafterBuild) {
+        if(target instanceof MendProjector.MendBuild ||
+                target instanceof OverdriveProjector.OverdriveBuild ||
+                target instanceof ConstructBlock.ConstructBuild ||
+                target instanceof Reconstructor.ReconstructorBuild ||
+                target instanceof UnitFactory.UnitFactoryBuild ||
+                target instanceof Drill.DrillBuild ||
+                target instanceof GenericCrafter.GenericCrafterBuild
+        ) {
             float pro;
             if(target instanceof MendProjector.MendBuild mend){
                 pro = (float) mend.sense(LAccess.progress);
@@ -351,9 +352,8 @@ public class UnitWindow extends Window {
             }
             else if(target instanceof OverdriveProjector.OverdriveBuild over){
                 OverdriveProjector block = (OverdriveProjector)over.block;
-                Field ohno = OverdriveProjector.OverdriveBuild.class.getDeclaredField("charge");
-                ohno.setAccessible(true);
-                pro = (float) ohno.get(over)/((OverdriveProjector)over.block).reload;
+                float charge = Reflect.get(OverdriveProjector.OverdriveBuild.class, over, "charge");
+                pro = charge/((OverdriveProjector)over.block).reload;
                 Tmp.c1.set(Color.valueOf("feb380"));
 
                 data.add(new BarData(bundle.format("bar.boost", (int)(over.realBoost() * 100)), Pal.accent, over.realBoost() / (block.hasBoost ? block.speedBoost + block.speedBoostPhase : block.speedBoost)));
@@ -435,7 +435,10 @@ public class UnitWindow extends Window {
             data.add(new BarData(bundle.format("shar-stat.capacity", turret.liquids.currentAmount() < 0.01f ? turret.liquids.current().localizedName : bundle.get("stat.ammo"), formatNumber(turret.liquids.get(turret.liquids.current())), formatNumber(turret.block.liquidCapacity)), turret.liquids.current().color, turret.liquids.get(turret.liquids.current()) / turret.block.liquidCapacity, liquid));
         }
 
-        if(target instanceof AttributeCrafter.AttributeCrafterBuild || target instanceof ThermalGenerator.ThermalGeneratorBuild || (target instanceof SolidPump.SolidPumpBuild crafter && ((SolidPump)crafter.block).attribute != null)) {
+        if(target instanceof AttributeCrafter.AttributeCrafterBuild ||
+                target instanceof ThermalGenerator.ThermalGeneratorBuild ||
+                (target instanceof SolidPump.SolidPumpBuild crafter && ((SolidPump)crafter.block).attribute != null)
+        ) {
             float display, pro;
             if (target instanceof AttributeCrafter.AttributeCrafterBuild crafter) {
                 AttributeCrafter block = (AttributeCrafter) crafter.block;
@@ -477,22 +480,89 @@ public class UnitWindow extends Window {
 
         return data;
     }
+}
 
-    static class BarData {
-        public String name;
-        public Color color;
-        public float number;
-        public Drawable icon = new TextureRegionDrawable(clear);
+class BarDataCollector {
+    private static ObjectMap<Class<Object>, ObjectDataCollector<Object>> collectors = ObjectMap.of(
+        Healthc.class, new HealthCollector(),
+        Unit.class, new UnitCollector()
+    );
 
-        BarData(String name, Color color, float number) {
-            this.name = name;
-            this.color = color;
-            this.number = number;
+    public Seq<BarData> getBarData(Object target) {
+        Seq<BarData> res = new Seq<>();
+        for (ObjectMap.Entry<Class<Object>, ObjectDataCollector<Object>> collectorEntry : collectors) {
+            if(target.getClass().isAssignableFrom(collectorEntry.key)) res.addAll(collectorEntry.value.collectData(target));
         }
+        return res;
+    }
+}
 
-        BarData(String name, Color color, float number, TextureRegion icon) {
-            this(name, color, number);
-            this.icon = new TextureRegionDrawable(icon);
-        }
+abstract class ObjectDataCollector<T> {
+    public abstract Seq<BarData> collectData(T object);
+    protected boolean isValid(Object object) {
+        return true;
+    }
+}
+class HealthCollector extends ObjectDataCollector<Healthc> {
+    @Override
+    public Seq<BarData> collectData(Healthc healthc) {
+        return Seq.with(new BarData(bundle.format("shar-stat.health", formatNumber(healthc.health())), Pal.health, healthc.healthf(), health));
+    }
+}
+class UnitCollector extends ObjectDataCollector<Unit> {
+    private float maxUnitShieldAmount;
+
+    public UnitCollector() {
+        super();
+        Core.app.post(() -> {
+            for(UnitType unitType : content.units()) {
+                for(Ability ability : unitType.abilities) {
+                    if(ability instanceof ShieldRegenFieldAbility shieldRegenFieldAbility) {
+                        if(shieldRegenFieldAbility.max > maxUnitShieldAmount) {
+                            maxUnitShieldAmount = shieldRegenFieldAbility.max;
+                        }
+                        break;
+                    }
+                }
+            }
+        });
+    }
+
+    @Override
+    public Seq<BarData> collectData(Unit unit) {
+        Seq<BarData> seq = new Seq<>();
+        seq.add(new BarData(
+            bundle.format("shar-stat.shield", formatNumber(unit.shield())),
+            Pal.surge,
+            unit.shield() / maxUnitShieldAmount,
+            shield
+        ));
+        seq.add(new BarData(
+            bundle.format("shar-stat.capacity", unit.stack.item.localizedName, formatNumber(unit.stack.amount), formatNumber(unit.type.itemCapacity)),
+            unit.stack.amount > 0 && unit.stack().item != null ? unit.stack.item.color.cpy().lerp(Color.white, 0.15f) : Color.white,
+            unit.stack.amount / (unit.type.itemCapacity * 1f),
+            item
+        ));
+        if(unit instanceof Payloadc pay) seq.add(new BarData(bundle.format("shar-stat.payloadCapacity", formatNumber(Mathf.round(Mathf.sqrt(pay.payloadUsed()))), formatNumber(Mathf.round(Mathf.sqrt(unit.type().payloadCapacity)))), Pal.items, pay.payloadUsed() / unit.type().payloadCapacity));
+        if(state.rules.unitAmmo) seq.add(new BarData(bundle.format("shar-stat.ammos", formatNumber(unit.ammo()), formatNumber(unit.type().ammoCapacity)), unit.type().ammoType.color(), unit.ammof()));
+        return seq;
+    }
+}
+
+class BarData {
+    public String name;
+    public Color color;
+    public float number;
+    public Drawable icon;
+
+    BarData(String name, Color color, float number) {
+        this(name, color, number, clear);
+    }
+
+    BarData(String name, Color color, float number, TextureRegion icon) {
+        this.name = name;
+        this.color = color;
+        this.number = number;
+        this.icon = new TextureRegionDrawable(icon);
     }
 }
