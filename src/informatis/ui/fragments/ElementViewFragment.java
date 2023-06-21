@@ -1,5 +1,6 @@
 package informatis.ui.fragments;
 
+import arc.Core;
 import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Lines;
@@ -23,6 +24,7 @@ public class ElementViewFragment extends Element {
         this.roots = roots;
         fillParent = true;
         touchable = Touchable.disabled;
+        Core.scene.root.addChild(this);
     }
 
     @Override
