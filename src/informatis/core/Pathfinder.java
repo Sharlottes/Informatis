@@ -163,7 +163,7 @@ public class Pathfinder implements Runnable{
 
     /** Packs a tile into its internal representation. */
     public int packTile(Tile tile){
-        boolean nearLiquid = false, nearSolid = false, nearGround = false, solid = tile.solid(), allDeep = tile.floor().isDeep();
+        boolean nearLiquid = false, nearSolid = false, nearLegSolid = false, nearGround = false, solid = tile.solid(), allDeep = tile.floor().isDeep();
 
         for(int i = 0; i < 4; i++){
             Tile other = tile.nearby(i);
@@ -174,6 +174,7 @@ public class Pathfinder implements Runnable{
                 if(osolid && !other.block().teamPassable) nearSolid = true;
                 if(!floor.isLiquid) nearGround = true;
                 if(!floor.isDeep()) allDeep = false;
+                if(other.legSolid()) nearLegSolid = true;
 
                 //other tile is now near solid
                 if(solid && !tile.block().teamPassable){
@@ -189,10 +190,11 @@ public class Pathfinder implements Runnable{
                 tid == 0 && tile.build != null && state.rules.coreCapture ? 255 : tid, //use teamid = 255 when core capture is enabled to mark out derelict structures
                 solid,
                 tile.floor().isLiquid,
-                tile.staticDarkness() >= 2 || (tile.floor().solid && tile.block() == Blocks.air),
+                tile.legSolid(),
                 nearLiquid,
                 nearGround,
                 nearSolid,
+                nearLegSolid,
                 tile.floor().isDeep(),
                 tile.floor().damageTaken > 0.00001f,
                 allDeep,
