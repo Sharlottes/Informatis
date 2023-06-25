@@ -18,7 +18,6 @@ public class WindowManager {
                 unitWindow = new UnitWindow(),
             new WaveWindow(),
             new CoreWindow(),
-            new PlayerWindow(),
             new ToolWindow(),
             mapEditorWindow = new MapEditorWindow()
         );
