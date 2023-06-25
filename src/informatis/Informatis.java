@@ -37,9 +37,7 @@ public class Informatis extends Mod {
             FragmentManager.init();
             OverDraws.init();
             OverDrawer.init();
-
-            //TODO - SVars.init()?
-            SVars.pathfinder = new informatis.core.Pathfinder();
+            SVars.init();
         });
     }
 }

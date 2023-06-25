@@ -13,4 +13,8 @@ public class SVars {
             error = atlas.find("error");
     public static RangeShader turretRange = new RangeShader();
     public static informatis.core.Pathfinder pathfinder;
+
+    public static void init() {
+        pathfinder = new informatis.core.Pathfinder();
+    }
 }

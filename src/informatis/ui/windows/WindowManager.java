@@ -15,7 +15,7 @@ public class WindowManager {
 
     public static void init(){
         windows.addAll(
-                unitWindow = new UnitWindow(),
+            unitWindow = new UnitWindow(),
             new WaveWindow(),
             new CoreWindow(),
             new ToolWindow(),
