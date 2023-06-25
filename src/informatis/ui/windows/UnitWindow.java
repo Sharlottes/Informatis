@@ -170,7 +170,7 @@ class UnitWindowBody extends Table implements IRebuildable {
                     }
                     Bits applied = st.statusBits();
 
-                    if((applied == null || statuses.equals(st.statusBits())) && lastWidth == getWidth()) return;
+                    if(applied == null || statuses.equals(st.statusBits()) || lastWidth == getWidth()) return;
                     if(!statuses.equals(st.statusBits())) statuses.set(applied);
                     if(lastWidth != getWidth()) lastWidth = getWidth();
 
