@@ -108,7 +108,7 @@ public class CoreWindow extends Window {
                             }),
                             new Table(h -> {
                                 h.bottom().defaults().height(9f).width(iconLarge * 1.5f).growX();
-                                h.add(new SBar(() -> "", () -> Pal.health, () -> core.health / core.block.health).rect().init());
+                                h.add(new SBar("", Pal.health, () -> core.health / core.block.health));
                                 h.pack();
                             })
                         ).row();

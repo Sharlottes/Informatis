@@ -15,7 +15,7 @@ public class BarDataCollector {
         Seq<BarData> res = new Seq<>();
         for (ObjectMap.Entry<Class<Object>, ObjectDataCollector<Object>> collectorEntry : collectors) {
             if (collectorEntry.key.isAssignableFrom(target.getClass()) && collectorEntry.value.isValid(target))
-                res.addAll(collectorEntry.value.collectData(target));
+                collectorEntry.value.collectData(target, res);
         }
         return res;
     }

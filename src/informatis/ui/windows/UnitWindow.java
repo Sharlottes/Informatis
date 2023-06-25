@@ -119,13 +119,9 @@ class UnitWindowBody extends Table implements IRebuildable {
                     for(int r = 0; r < u.mounts.length; r++){
                         WeaponMount mount = u.mounts[r];
                         tt.table(ttt -> {
-                                ttt.add(new WeaponImage(mount.weapon, mount, Core.atlas.isFound(mount.weapon.region) ? mount.weapon.region : u.type.uiIcon)).margin(8f);
-                                ttt.row();
-                                ttt.add(new SBar(
-                                        () -> "",
-                                        () -> Pal.accent.cpy().lerp(Color.orange, mount.reload / mount.weapon.reload),
-                                        () -> mount.reload / mount.weapon.reload
-                                ).rect().init()).height(4f).growX();
+                            ttt.add(new WeaponImage(mount.weapon, mount, Core.atlas.isFound(mount.weapon.region) ? mount.weapon.region : u.type.uiIcon)).margin(8f);
+                            ttt.row();
+                            ttt.add(new SBar("", Pal.accent, Color.orange, () -> mount.reload / mount.weapon.reload)).height(4f).growX();
                         }).pad(4);
                         if((r + 1) % 4 == 0) tt.row();
                     }
@@ -172,7 +168,11 @@ class UnitWindowBody extends Table implements IRebuildable {
             table.table(bars -> {
                 for (BarData barData : BarDataCollector.getBarData(target)) {
                     bars.table(bar -> {
-                        bar.add(new SBar(barData.name, barData.color, () -> barData.number.get())).height(4 * 8f).growX();
+                        SBar sbar = new SBar(barData);
+                        sbar.update(() -> {
+                           sbar.name = barData.nameProv.get();
+                        });
+                        bar.add(sbar).height(4 * 8f).growX();
                         bar.add(new BarIconImage(barData)).size(iconMed * 0.75f).padLeft(8f);
                     }).growX();
                     bars.row();
@@ -183,26 +183,7 @@ class UnitWindowBody extends Table implements IRebuildable {
 
     /*
     private Seq<BarData> getInfo(Teamc target) {
-        barData.clear();
-
-        if(target instanceof Healthc healthc){
-            barData.add(new BarData(bundle.format("shar-stat.health", formatNumber(healthc.health())), Pal.health, healthc.healthf(), health));
-        }
-
-        if(target instanceof Unit unit){
-            float max = ((ShieldRegenFieldAbility) Vars.content.units().copy().max(ut -> {
-                ShieldRegenFieldAbility ability = (ShieldRegenFieldAbility) ut.abilities.find(ab -> ab instanceof ShieldRegenFieldAbility);
-                if(ability == null) return 0;
-                return ability.max;
-            }).abilities.find(abil -> abil instanceof ShieldRegenFieldAbility)).max;
-
-            barData.add(new BarData(bundle.format("shar-stat.shield", formatNumber(unit.shield())), Pal.surge, unit.shield() / max, shield));
-            barData.add(new BarData(bundle.format("shar-stat.capacity", unit.stack.item.localizedName, formatNumber(unit.stack.amount), formatNumber(unit.type.itemCapacity)), unit.stack.amount > 0 && unit.stack().item != null ? unit.stack.item.color.cpy().lerp(Color.white, 0.15f) : Color.white, unit.stack.amount / (unit.type.itemCapacity * 1f), item));
-            if(target instanceof Payloadc pay) barData.add(new BarData(bundle.format("shar-stat.payloadCapacity", formatNumber(Mathf.round(Mathf.sqrt(pay.payloadUsed()))), formatNumber(Mathf.round(Mathf.sqrt(unit.type().payloadCapacity)))), Pal.items, pay.payloadUsed() / unit.type().payloadCapacity));
-            if(state.rules.unitAmmo) barData.add(new BarData(bundle.format("shar-stat.ammos", formatNumber(unit.ammo()), formatNumber(unit.type().ammoCapacity)), unit.type().ammoType.color(), unit.ammof()));
-        }
-
-        else if(target instanceof Building build){
+        if(target instanceof Building build){
             if(build.block.hasLiquids) barData.add(new BarData(bundle.format("shar-stat.capacity", build.liquids.currentAmount() < 0.01f ? build.liquids.current().localizedName : bundle.get("bar.liquid"), formatNumber(build.liquids.currentAmount()), formatNumber(build.block.liquidCapacity)), build.liquids.current().color, build.liquids.currentAmount() / build.block.liquidCapacity, liquid));
 
             if(build.block.hasPower && build.block.consPower != null){
@@ -374,10 +355,8 @@ class UnitWindowBody extends Table implements IRebuildable {
                 barData.add(new BarData(stack.item.localizedName + ": " + value + " / " + max, Pal.accent.cpy().lerp(Color.orange, pro), pro, stack.item.fullIcon));
             }
         }
-
-        return barData;
     }
-     */
+    */
 
     private class ProfileImage extends Image {
         public ProfileImage(Teamc target) {
@@ -430,7 +409,7 @@ class UnitWindowBody extends Table implements IRebuildable {
         private final BarData barData;
 
         public BarIconImage(BarData barData) {
-            super(barData.icon.get());
+            super(barData.icon);
             this.barData = barData;
         }
 
@@ -447,8 +426,8 @@ class UnitWindowBody extends Table implements IRebuildable {
             if(hasMouse()) getDrawable().draw(x, y, width, height);
             else {
                 getDrawable().draw(x, y, width, height);
-                if(ScissorStack.push(Tmp.r1.set(ScissorStack.peek().x + x,  ScissorStack.peek().y + y, width, height * barData.number.get()))) {
-                    Draw.color(barData.color.get());
+                if(ScissorStack.push(Tmp.r1.set(ScissorStack.peek().x + x,  ScissorStack.peek().y + y, width, height * barData.fraction.get()))) {
+                    Draw.color(barData.fromColor);
                     getDrawable().draw(x, y, width, height);
                     ScissorStack.pop();
                 }

@@ -18,8 +18,7 @@ import static informatis.ui.components.SIcons.shield;
 import static mindustry.Vars.content;
 import static mindustry.Vars.state;
 
-public
-class UnitCollector extends ObjectDataCollector<Unit> {
+public class UnitCollector extends ObjectDataCollector<Unit> {
     private float maxUnitShieldAmount;
 
     public UnitCollector() {
@@ -39,30 +38,28 @@ class UnitCollector extends ObjectDataCollector<Unit> {
     }
 
     @Override
-    public Seq<BarData> collectData(Unit unit) {
-        Seq<BarData> seq = new Seq<>();
+    public void collectData(Unit unit, Seq<BarData> seq) {
         seq.add(new BarData(
                 () -> bundle.format("shar-stat.shield", formatNumber(unit.shield())),
-                () -> Pal.surge,
+                Pal.surge,
                 () -> unit.shield() / maxUnitShieldAmount,
-                () -> shield
+                shield
         ));
         seq.add(new BarData(
                 () -> bundle.format("shar-stat.capacity", unit.stack.item.localizedName, formatNumber(unit.stack.amount), formatNumber(unit.type.itemCapacity)),
-                () -> unit.stack.amount > 0 && unit.stack().item != null ? unit.stack.item.color.cpy().lerp(Color.white, 0.15f) : Color.white,
+                unit.stack.item != null ? unit.stack.item.color.cpy().lerp(Color.white, 0.15f) : Color.white,
                 () -> unit.stack.amount / (unit.type.itemCapacity * 1f),
-                () -> item
+                item
         ));
         if(unit instanceof Payloadc pay) seq.add(new BarData(
                 () -> bundle.format("shar-stat.payloadCapacity", formatNumber(Mathf.round(Mathf.sqrt(pay.payloadUsed()))), formatNumber(Mathf.round(Mathf.sqrt(unit.type().payloadCapacity)))),
-                () -> Pal.items,
+                Pal.items,
                 () -> pay.payloadUsed() / unit.type().payloadCapacity
         ));
         if(state.rules.unitAmmo) seq.add(new BarData(
                 () -> bundle.format("shar-stat.ammos", formatNumber(unit.ammo()), formatNumber(unit.type().ammoCapacity)),
-                () -> unit.type().ammoType.color(),
+                unit.type().ammoType.color(),
                 () -> unit.ammof()
         ));
-        return seq;
     }
 }

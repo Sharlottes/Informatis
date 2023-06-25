@@ -8,15 +8,14 @@ import static arc.Core.bundle;
 import static informatis.SUtils.formatNumber;
 import static informatis.ui.components.SIcons.health;
 
-public
-class HealthCollector extends ObjectDataCollector<Healthc> {
+public class HealthCollector extends ObjectDataCollector<Healthc> {
     @Override
-    public Seq<BarData> collectData(Healthc healthc) {
-        return Seq.with(new BarData(
+    public void collectData(Healthc healthc, Seq<BarData> seq) {
+        seq.add(new BarData(
                 () -> bundle.format("shar-stat.health", formatNumber(healthc.health())),
-                () -> Pal.health,
+                Pal.health,
                 () -> healthc.healthf(),
-                () -> health
+                health
         ));
     }
 }
