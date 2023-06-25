@@ -6,7 +6,7 @@
   "subtitle": "hacky ui tool",
   "version": "1.8.1",
   "main": "informatis.Informatis",
-  "minGameVersion": "145",
+  "minGameVersion": "145.1",
   "dependencies": [],
   "hidden": true,
   "java": true
