@@ -37,25 +37,24 @@ public class Window extends Table {
         pane(new Table(t -> {
             t.setBackground(Styles.black5);
             buildBody(t);
-        }))
-            .grow()
-            .row();
+        })).grow();
+        row();
         buildBottomBar();
-
         visible(() -> shown);
         update(() -> {
             setPosition(
-                    Mathf.clamp(x, 0, Core.graphics.getWidth() - getWidth()),
-                    Mathf.clamp(y, 0, Core.graphics.getHeight() - getHeight())
+                Mathf.clamp(x, 0, Core.graphics.getWidth() - getWidth()),
+                Mathf.clamp(y, 0, Core.graphics.getHeight() - getHeight())
             );
         });
     }
+
     protected Window buildTitleBar() {
         table(t -> {
             t.pane(b -> {
                 b.left();
                 b.setBackground(Tex.buttonEdge1);
-                b.image(icon.getRegion()).size(20f).padLeft(15);
+                b.image(icon.getRegion()).scaling(Scaling.fill).size(20f).padLeft(15);
                 b.add(Core.bundle.get("window."+name+".name")).padLeft(20);
             })
                 .touchable(Touchable.disabled)
