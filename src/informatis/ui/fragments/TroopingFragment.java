@@ -1,14 +1,18 @@
-package informatis.ui;
+package informatis.ui.fragments;
 
+import arc.input.KeyCode;
 import arc.scene.ui.layout.Table;
 import arc.struct.IntSeq;
+import informatis.SUtils;
 import mindustry.Vars;
 import mindustry.gen.*;
 import mindustry.graphics.Pal;
 import mindustry.ui.Styles;
 
-public class TroopingManageFragment extends Table {
-    public TroopingManageFragment() {
+import static arc.Core.input;
+
+public class TroopingFragment extends Table {
+    public TroopingFragment() {
         defaults().growX();
 
         table(header -> {
@@ -23,13 +27,13 @@ public class TroopingManageFragment extends Table {
         image().height(5f).color(Pal.gray).pad(10, 0, 10, 0);
         row();
         table(list -> {
-            for(int i = 1; i <= TroopingManager.troops.size; i++) {
-                int j = i % TroopingManager.troops.size;
-                IntSeq troop = TroopingManager.troops.get(j);
-
-                Table troopTab = new Table(tab -> {
+            SUtils.loop(10, (i) -> {
+                list.table(tab -> {
+                    IntSeq troop = TroopingManager.troops.get(i);
+                    tab.clicked(() -> TroopingManager.selectTrooping(i));
                     tab.left();
-                    tab.add(String.valueOf(j)).fontScale(0.75f).width(15).padRight(30);
+
+                    tab.add(String.valueOf(i)).fontScale(0.75f).width(15).padRight(30);
                     tab.image(() -> {
                         if(troop.isEmpty()) return Icon.cancel.getRegion();
                         Unit unit = Groups.unit.getByID(troop.peek());
@@ -45,15 +49,30 @@ public class TroopingManageFragment extends Table {
                         return String.valueOf(amount);
                     }).minWidth(30).fontScale(0.5f);
                     tab.table(icons -> {
-                        icons.image(Icon.cancelSmall).size(10).color(Pal.health).padLeft(10).grow().get().clicked(troop::clear);
-                        icons.image(Icon.upSmall).size(10).color(Pal.heal).padLeft(10).grow().get().clicked(() -> TroopingManager.updateTrooping(j));
-                        icons.image(Icon.addSmall).size(10).color(Pal.gray).padLeft(10).grow().get().clicked(() -> TroopingManager.applyTrooping(j));
+                        icons.defaults().size(10).padLeft(10).grow();
+                        icons.image(Icon.cancelSmall).color(Pal.health).get().clicked(troop::clear);
+                        icons.image(Icon.upSmall).color(Pal.heal).size(10).get().clicked(() -> TroopingManager.updateTrooping(i));
+                        icons.image(Icon.addSmall).color(Pal.gray).size(10).get().clicked(() -> TroopingManager.applyTrooping(i));
                     }).padLeft(10).grow();
-                });
-                troopTab.clicked(() -> TroopingManager.selectTrooping(j));
+                }).pad(10).grow();
+                list.row();
+                list.image().height(2f).color(Pal.gray).grow();
+                list.row();
+            });
+        });
 
-                list.add(troopTab).pad(10).grow().row();
-                list.image().height(2f).color(Pal.gray).grow().row();
+        update(() -> {
+            if(!visible) return;
+
+            int i = 0;
+            for(KeyCode numCode : KeyCode.numbers) {
+                if(input.keyTap(numCode)) {
+                    if(input.keyDown(KeyCode.altLeft)) TroopingManager.applyTrooping(i);
+                    else if(input.keyDown(KeyCode.capsLock)) TroopingManager.updateTrooping(i);
+                    else TroopingManager.selectTrooping(i);
+                    break;
+                }
+                i++;
             }
         });
     }

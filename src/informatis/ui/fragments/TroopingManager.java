@@ -1,13 +1,18 @@
-package informatis.ui;
+package informatis.ui.fragments;
 
 import arc.struct.IntSeq;
 import arc.struct.Seq;
+import informatis.SUtils;
 import mindustry.Vars;
 import mindustry.gen.Groups;
 import mindustry.gen.Unit;
 
 public class TroopingManager {
-    static Seq<IntSeq> troops = new Seq<>(10);
+    static Seq<IntSeq> troops = new Seq<>(10) {{
+        SUtils.loop(10, (i) -> {
+            add(new IntSeq());
+        });
+    }};
 
     public static void applyTrooping(int index) {
         IntSeq seq = troops.get(index);

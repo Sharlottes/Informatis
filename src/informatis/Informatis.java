@@ -1,14 +1,12 @@
 package informatis;
 
-import arc.input.KeyCode;
 import informatis.core.OverDrawer;
 import informatis.core.Setting;
 import informatis.draws.OverDraws;
 import informatis.ui.SidebarSwitcher;
-import informatis.ui.TroopingManageFragment;
-import informatis.ui.TroopingManager;
-import informatis.ui.dialogs.DialogManager;
+import informatis.ui.fragments.TroopingFragment;
 import informatis.ui.fragments.FragmentManager;
+import informatis.ui.dialogs.DialogManager;
 import informatis.ui.windows.*;
 import arc.*;
 import mindustry.*;
@@ -27,19 +25,6 @@ public class Informatis extends Mod {
             meta.description = bundle.get("shar-description");
         });
 
-        Events.run(Trigger.update, () -> {
-            int i = 0;
-            for(KeyCode numCode : KeyCode.numbers) {
-                if(input.keyTap(numCode)) {
-                    if(input.keyDown(KeyCode.altLeft)) TroopingManager.applyTrooping(i);
-                    else if(input.keyDown(KeyCode.capsLock)) TroopingManager.updateTrooping(i);
-                    else TroopingManager.selectTrooping(i);
-                    break;
-                }
-                i++;
-            }
-        });
-
         Events.on(ClientLoadEvent.class, e -> {
             Setting.init();
             WindowManager.init();
@@ -47,7 +32,7 @@ public class Informatis extends Mod {
             new SidebarSwitcher(
                 WindowManager.body,
                 DialogManager.body,
-                new TroopingManageFragment() // cache later?
+                new TroopingFragment() // cache later?
             ).init();
             FragmentManager.init();
             OverDraws.init();
