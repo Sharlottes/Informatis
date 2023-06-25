@@ -27,7 +27,6 @@ public class PlayerWindow extends Window {
 
     public PlayerWindow() {
         super(Icon.players, "player");
-        only = true;
 
         Events.run(EventType.Trigger.update, () -> {
             heat += Time.delta;

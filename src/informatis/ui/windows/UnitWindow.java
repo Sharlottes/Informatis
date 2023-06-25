@@ -59,9 +59,6 @@ public class UnitWindow extends Window {
 
 class UnitWindowBody extends Table implements IRebuildable {
     public boolean locked;
-    float usedPayload;
-    float lastWidth;
-    final Bits statuses = new Bits();
 
     public UnitWindowBody() {
         super();
@@ -135,22 +132,11 @@ class UnitWindowBody extends Table implements IRebuildable {
                 }
             });
             table.row();
-            table.table(t -> {
-                    t.left();
-                    if (!(target instanceof Payloadc payloader)) {
-                        t.clear();
-                        usedPayload = -1;
-                        return;
-                    }
-
-                    if(usedPayload == payloader.payloadUsed() && lastWidth == getWidth()) return;
-                    if(usedPayload != payloader.payloadUsed()) usedPayload = payloader.payloadUsed();
-                    if(lastWidth != getWidth()) lastWidth = getWidth();
-
-                    t.clear();
+            if (target instanceof Payloadc payloader)
+                table.table(t -> {
                     t.top().left();
                     Seq<Payload> payloads = payloader.payloads();
-                    for (int i = 0, m = payloads.size; i < m; i++) {
+                    for (int i = 0; i < payloads.size; i++) {
                         Payload payload = payloads.get(i);
                         Image image = new Image(payload.icon());
                         image.clicked(() -> ui.content.show(payload.content()));
@@ -161,21 +147,12 @@ class UnitWindowBody extends Table implements IRebuildable {
                     }
                 });
             table.row();
-            table.table(t -> {
-                    t.left();
-                    if (!(target instanceof Statusc st)) {
-                        t.clear();
-                        statuses.clear();
-                        return;
-                    }
+            if (target instanceof Statusc st)
+                table.table(t -> {
                     Bits applied = st.statusBits();
-
-                    if(applied == null || statuses.equals(st.statusBits()) || lastWidth == getWidth()) return;
-                    if(!statuses.equals(st.statusBits())) statuses.set(applied);
-                    if(lastWidth != getWidth()) lastWidth = getWidth();
-
-                    t.clear();
+                    if(applied == null) return;
                     t.top().left();
+
                     Seq<StatusEffect> contents = Vars.content.statusEffects();
                     for (int i = 0, m = Vars.content.statusEffects().size; i < m; i++) {
                         StatusEffect effect = contents.get(i);

@@ -34,21 +34,20 @@ public class OverDrawer {
             }
 
             if(settings.getBool("select")) {
-                WindowManager.windows.get(UnitWindow.class).each(w -> {
-                    UnitWindow window = (UnitWindow) w;
-                    Teamc target = getTarget();
-                    Draw.color(Tmp.c1.set(window.isLocked() ? Color.orange : Color.darkGray).lerp(window.isLocked() ? Color.scarlet : Color.gray, Mathf.absin(Time.time, 3f, 1f)).a(settings.getInt("selectopacity") / 100f));
-                    float length = (target instanceof Unit u
-                            ? u.hitSize
-                            : target instanceof Building b
-                                ? b.block.size * tilesize
-                                : 0
-                    ) * 1.5f + 2.5f;
-                    for(int i = 0; i < 4; i++){
-                        float rot = i * 90f + 45f + (-Time.time) % 360f;
-                        Draw.rect("select-arrow", target.x() + Angles.trnsx(rot, length), target.y() + Angles.trnsy(rot, length), length / 1.9f, length / 1.9f, rot - 135f);
-                    }
-                });
+                Teamc target = getTarget();
+                Draw.color(Tmp.c1.set(WindowManager.unitWindow.isLocked() ? Color.orange : Color.darkGray).lerp(WindowManager.unitWindow.isLocked() ? Color.scarlet : Color.gray, Mathf.absin(Time.time, 3f, 1f)).a(settings.getInt("selectopacity") / 100f));
+
+                float length = (target instanceof Unit u
+                        ? u.hitSize
+                        : target instanceof Building b
+                        ? b.block.size * tilesize
+                        : 0
+                ) * 1.5f + 2.5f;
+
+                for(int i = 0; i < 4; i++){
+                    float rot = i * 90f + 45f + (-Time.time) % 360f;
+                    Draw.rect("select-arrow", target.x() + Angles.trnsx(rot, length), target.y() + Angles.trnsy(rot, length), length / 1.9f, length / 1.9f, rot - 135f);
+                }
 
                 Draw.color();
             }

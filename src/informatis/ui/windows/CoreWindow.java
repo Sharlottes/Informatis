@@ -33,7 +33,6 @@ public class CoreWindow extends Window {
     public CoreWindow()  {
         super(Icon.list, "core");
         resetUsed();
-        only = true;
 
         Events.run(EventType.Trigger.update, () -> {
             heat += Time.delta;

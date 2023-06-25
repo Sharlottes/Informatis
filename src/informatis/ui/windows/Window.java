@@ -15,7 +15,7 @@ import mindustry.ui.*;
 public class Window extends Table {
     public TextureRegionDrawable icon;
     public Cons<Table> content;
-    public boolean shown = false, only = false;
+    public boolean shown = false;
 
     public float minWindowWidth = 160, minWindowHeight = 60;
     public float maxWindowWidth = Float.MAX_VALUE, maxWindowHeight = Float.MAX_VALUE;
@@ -30,7 +30,6 @@ public class Window extends Table {
         this.icon = icon;
         this.name = name;
         this.content = content;
-        WindowManager.register(this);
     }
 
     public void build() {
@@ -66,7 +65,6 @@ public class Window extends Table {
                 b.setBackground(Tex.buttonEdge3);
                 b.button(Icon.cancel, Styles.emptyi, () -> {
                     shown = false;
-                    if(!only) WindowManager.windows.get(getClass()).remove(this);
                 }).fill();
             })
                 .width(80f)

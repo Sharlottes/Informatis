@@ -30,7 +30,6 @@ public class WaveWindow extends Window {
         super(Icon.waves, "wave");
         height = 500;
         width = 450;
-        only = true;
 
         Events.run(EventType.Trigger.update, () -> {
             heat += Time.delta;

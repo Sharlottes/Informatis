@@ -26,7 +26,7 @@ import mindustry.gen.*;
 import mindustry.ui.*;
 import mindustry.world.*;
 
-import static informatis.ui.windows.Windows.editorTable;
+import static informatis.ui.windows.WindowManager.mapEditorWindow;
 import static mindustry.Vars.*;
 
 public class MapEditorWindow extends Window {
@@ -49,7 +49,6 @@ public class MapEditorWindow extends Window {
 
         width = 800;
         height = 600;
-        only = true;
 
         for(int i = 0; i < MapEditor.brushSizes.length; i++){
             float size = MapEditor.brushSizes[i];
@@ -493,10 +492,10 @@ public class MapEditorWindow extends Window {
                 Bresenham2.line(x1, y1, x2, y2, (x, y) -> {
                     if(mode == 0){
                         //replace
-                        editorTable.drawBlocksReplace(x, y);
+                        mapEditorWindow.drawBlocksReplace(x, y);
                     }else{
                         //normal
-                        editorTable.drawBlocks(x, y);
+                        mapEditorWindow.drawBlocks(x, y);
                     }
                 });
             }
@@ -511,16 +510,16 @@ public class MapEditorWindow extends Window {
             public void touched(int x, int y){
                 if(mode == -1){
                     //normal mode
-                    editorTable.drawBlocks(x, y);
+                    mapEditorWindow.drawBlocks(x, y);
                 }else if(mode == 0){
                     //replace mode
-                    editorTable.drawBlocksReplace(x, y);
+                    mapEditorWindow.drawBlocksReplace(x, y);
                 }else if(mode == 1){
                     //square mode
-                    editorTable.drawBlocks(x, y, true, tile -> true);
+                    mapEditorWindow.drawBlocks(x, y, true, tile -> true);
                 }else if(mode == 2){
                     //draw teams
-                    editorTable.drawCircle(x, y, tile -> tile.setTeam(drawTeam));
+                    mapEditorWindow.drawCircle(x, y, tile -> tile.setTeam(drawTeam));
                 }
 
             }
@@ -533,7 +532,7 @@ public class MapEditorWindow extends Window {
 
             @Override
             public void touched(int x, int y){
-                editorTable.drawCircle(x, y, tile -> {
+                mapEditorWindow.drawCircle(x, y, tile -> {
                     if(mode == -1){
                         //erase block
                         tile.remove();
@@ -666,15 +665,15 @@ public class MapEditorWindow extends Window {
             public void touched(int x, int y){
                 //floor spray
                 if(drawBlock.isFloor()){
-                    editorTable.drawCircle(x, y, tile -> {
+                    mapEditorWindow.drawCircle(x, y, tile -> {
                         if(Mathf.chance(chance)){
                             tile.setFloor(drawBlock.asFloor());
                         }
                     });
                 }else if(mode == 0){ //replace-only mode, doesn't affect air
-                    editorTable.drawBlocks(x, y, tile -> Mathf.chance(chance) && tile.block() != Blocks.air);
+                    mapEditorWindow.drawBlocks(x, y, tile -> Mathf.chance(chance) && tile.block() != Blocks.air);
                 }else{
-                    editorTable.drawBlocks(x, y, tile -> Mathf.chance(chance));
+                    mapEditorWindow.drawBlocks(x, y, tile -> Mathf.chance(chance));
                 }
             }
         };

@@ -24,7 +24,6 @@ public class ToolWindow extends Window {
 
     public ToolWindow() {
         super(Icon.edit, "tool");
-        only = true;
 
         Events.run(EventType.Trigger.update, () -> {
             heat += Time.delta;
