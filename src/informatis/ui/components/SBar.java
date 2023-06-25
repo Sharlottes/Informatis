@@ -20,7 +20,7 @@ public class SBar extends Element {
             barSprite = SUtils.getDrawable(Core.atlas.find("informatis-barS"), 10, 10, 9, 9),
             barTopSprite = SUtils.getDrawable(Core.atlas.find("informatis-barS-top"), 10, 10, 9, 9);
 
-    private final SBarData barData;
+    public SBarData barData;
     float value, lastValue, blink;
 
     public SBar(String name, Color color, Floatp fraction){
@@ -82,3 +82,4 @@ public class SBar extends Element {
         }
     }
 }
+
