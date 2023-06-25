@@ -1,9 +1,8 @@
 package informatis.ui.windows;
 
 import arc.*;
+import arc.input.KeyCode;
 import arc.math.*;
-import arc.scene.*;
-import arc.scene.style.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.scene.ui.*;
@@ -11,285 +10,206 @@ import arc.scene.ui.layout.*;
 import arc.struct.Bits;
 import arc.struct.*;
 import arc.util.*;
+import informatis.core.IRebuildable;
+import informatis.core.VDOM;
 import informatis.ui.components.SBar;
+import informatis.ui.windows.barDataCollectors.*;
 import mindustry.*;
 import mindustry.core.*;
-import mindustry.ctype.*;
-import mindustry.entities.Units;
-import mindustry.entities.abilities.*;
 import mindustry.entities.units.*;
 import mindustry.game.EventType;
 import mindustry.gen.*;
 import mindustry.graphics.*;
-import mindustry.logic.*;
 import mindustry.type.*;
 import mindustry.ui.*;
 import mindustry.world.blocks.*;
-import mindustry.world.blocks.defense.*;
-import mindustry.world.blocks.defense.turrets.*;
-import mindustry.world.blocks.distribution.*;
-import mindustry.world.blocks.environment.*;
 import mindustry.world.blocks.payloads.*;
-import mindustry.world.blocks.power.*;
-import mindustry.world.blocks.production.*;
-import mindustry.world.blocks.storage.*;
-import mindustry.world.blocks.units.*;
-import mindustry.world.consumers.*;
 
-import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Map;
 import java.util.Objects;
 
-import static arc.Core.bundle;
+import static arc.Core.input;
 import static informatis.SVars.*;
 import static informatis.SUtils.*;
-import static informatis.ui.components.SIcons.*;
-import static informatis.ui.components.SIcons.liquid;
 import static mindustry.Vars.*;
 
 public class UnitWindow extends Window {
-    int barSize = 6;
-    float usedPayload;
-    float barScrollPos;
-    float lastWidth;
-    final Seq<Color> lastColors = new Seq<>();
-    final Bits statuses = new Bits();
-    public Teamc lastTarget, target;
-    public boolean locked;
-    Seq<BarData> data = new Seq<>();
-    public static UnitWindow currentWindow;
+    private final VDOM vdom = new VDOM();
+    private final VDOM.Status<Teamc> target = vdom.new Status<>();
+    private final UnitWindowBody unitWindowBody = new UnitWindowBody();
 
     public UnitWindow() {
         super(Icon.units, "unit");
-    }
+        vdom.addBuilder(unitWindowBody, target);
 
-    @Override
-    public void build() {
-        super.build();
         Events.run(EventType.Trigger.update, () -> {
-            if(!locked) target = getTarget();
-            data = getInfo(target);
+            if(!unitWindowBody.locked) target.setStatus(getTarget());
         });
     }
 
     @Override
     protected void buildBody(Table table) {
-        Image profileImage = new Image() {
-            final int size = 8;
-            @Override
-            public void draw() {
-                super.draw();
+        table.top();
+        table.add(unitWindowBody).grow();
+    }
 
-                Draw.color(locked ? Pal.accent : Pal.gray);
-                Draw.alpha(parentAlpha);
-                Lines.stroke(Scl.scl(3f));
-                Lines.rect(x-size/2f, y-size/2f, width+size, height+size);
-                Draw.reset();
+    public boolean isLocked() {
+        return unitWindowBody.locked;
+    }
+}
+
+class UnitWindowBody extends Table implements IRebuildable {
+    public boolean locked;
+    float usedPayload;
+    float lastWidth;
+    final Bits statuses = new Bits();
+
+    public UnitWindowBody() {
+        super();
+        fillParent = true;
+        Events.run(EventType.Trigger.update, () -> {
+            if((input.keyDown(KeyCode.shiftRight) || input.keyDown(KeyCode.shiftLeft))) {
+                if(input.keyTap(KeyCode.r)) {
+                    locked = !locked;
+                }
             }
-        };
-        profileImage.update(() -> {
-            TextureRegion region = clear;
-            if (target instanceof Unit u && u.type != null) region = u.type.uiIcon;
-            else if (target instanceof Building b) {
-                if (b instanceof ConstructBlock.ConstructBuild cb) region = cb.current.uiIcon;
-                else if (b.block != null) region = b.block.uiIcon;
-            }
-            profileImage.setDrawable(region);
         });
-        profileImage.clicked(() -> locked = !locked);
-        Label profileLabel = new Label(() -> {
-            if (target instanceof Unit u && u.type != null) return u.type.localizedName;
-            if (target instanceof Building b && b.block != null) {
-                if (target instanceof ConstructBlock.ConstructBuild cb) return cb.current.localizedName;
-                return b.block.localizedName;
+    }
+
+    @Override
+    public void rebuild(Object[] statuses) {
+        Teamc target = (Teamc) statuses[0];
+
+        clearChildren();
+        add(buildContent(target)).grow();
+    }
+
+    private Table buildContent(Teamc target) {
+        String targetName = "";
+
+        if (target instanceof Unit u && u.type != null) {
+            targetName = u.type.localizedName;
+        }
+        else if (target instanceof Building b) {
+            if (b instanceof ConstructBlock.ConstructBuild cb) {
+                targetName = cb.current.localizedName;
+            } else if (b.block != null) {
+                targetName = b.block.localizedName;
             }
-            return "";
-        });
-        profileLabel.clicked(() -> moveCamera(target));
+        }
 
-        ScrollPane barPane = new ScrollPane(buildBarList(), Styles.noBarPane);
-        barPane.update(() -> {
-            if (lastTarget != target) {
-                lastTarget = target;
-                for (int i = 0; i < barSize; i++) {
-                    Color color = i >= data.size ? Color.clear : data.get(i).color;
-                    if (i >= lastColors.size) lastColors.add(color);
-                    else lastColors.set(i, color);
-                }
-            }
+        Label profileLabel = new Label(targetName) {{
+            clicked(() -> moveCamera(target));
+        }};
 
-            if (((Table) barPane.getWidget()).getChildren().size - 1 != barSize) {
-                barPane.setWidget(buildBarList());
-            }
+        return new Table(table -> {
+            table.top().background(Styles.black8).defaults().pad(4f).growX();
 
-            if (barPane.hasScroll()) {
-                Element result = Core.scene.hit(Core.input.mouseX(), Core.input.mouseY(), true);
-                if (result == null || !result.isDescendantOf(barPane)) {
-                    Core.scene.setScrollFocus(null);
-                }
-            }
-            barScrollPos = barPane.getScrollY();
-        });
-        barPane.setScrollingDisabledX(true);
-        barPane.setScrollYForce(barScrollPos);
-
-        table.top().background(Styles.black8);
-        table.table(profile -> profile
-            .table(title -> {
-                title.center();
-                title.add(profileImage).size(iconMed);
-                title.add(profileLabel).padLeft(12f).padRight(12f).color(Pal.accent);
-            })
-            .tooltip(tool -> {
-                tool.background(Styles.black6);
-                tool.label(() -> target instanceof Unit u ? u.isPlayer() ? u.getPlayer().name : "AI" : "").row();
-                tool.label(() -> target.tileX() + ", " + target.tileY()).row();
-                tool.label(() -> target instanceof Unit u ? "[accent]"+ Strings.fixed(u.armor, 0) + "[] Armor" : "");
-            }).get()
-        ).margin(3f).growX().row();
-        table.table().update(tt -> {
-            tt.clear();
-            if(target instanceof Unit u && u.type != null && u.hasWeapons()) {
-                for(int r = 0; r < u.type.weapons.size; r++){
-                    Weapon weapon = u.type.weapons.get(r);
-                    WeaponMount mount = u.mounts[r];
-                    tt.table(ttt -> {
-                        ttt.left();
-                        ttt.stack(
-                                new Table(o -> {
-                                    o.left();
-                                    o.add(new Image(Core.atlas.isFound(weapon.region) ? weapon.region : u.type.uiIcon){
-                                        @Override
-                                        public void draw(){
-                                            y -= (mount.reload) / weapon.reload * weapon.recoil;
-                                            super.draw();
-                                        }
-                                    }).size(iconLarge).scaling(Scaling.bounded);
-                                }),
-                                new Table(h -> {
-                                    h.defaults().growX().height(9f).width(iconLarge).padTop(18f);
-                                    h.add(new SBar(
-                                            () -> "",
-                                            () -> Pal.accent.cpy().lerp(Color.orange, mount.reload / weapon.reload),
-                                            () -> mount.reload / weapon.reload).rect().init());
-                                    h.pack();
-                                })
-                        );
-                    }).pad(4);
-                    if((r + 1) % 4 == 0) tt.row();
-                }
-            }
-        }).margin(4f).growX().row();
-        table.table(state -> {
-            state.left();
-            state.table().update(t -> {
-                if (!(target instanceof Payloadc payloader)) {
-                    t.clear();
-                    usedPayload = -1;
-                    return;
-                }
-
-                if(usedPayload == payloader.payloadUsed() && lastWidth == getWidth()) return;
-                if(usedPayload != payloader.payloadUsed()) usedPayload = payloader.payloadUsed();
-                if(lastWidth != getWidth()) lastWidth = getWidth();
-
-                t.clear();
-                t.top().left();
-                Seq<Payload> payloads = payloader.payloads();
-                for (int i = 0, m = payloads.size; i < m; i++) {
-                    Payload payload = payloads.get(i);
-                    Image image = new Image(payload.icon());
-                    image.clicked(() -> ui.content.show(payload.content()));
-                    image.hovered(() -> image.setColor(Tmp.c1.set(image.color).lerp(Color.lightGray, Mathf.clamp(Time.delta))));
-                    image.exited(() -> image.setColor(Tmp.c1.set(image.color).lerp(Color.white, Mathf.clamp(Time.delta))));
-                    t.add(image).size(iconSmall).tooltip(l -> l.label(() -> payload.content().localizedName).style(Styles.outlineLabel));
-                    if ((i + 1) % Math.max(6, Math.round((getWidth() - 24) / iconSmall)) == 0) t.row();
+            table
+                .table(title -> {
+                        title.center();
+                        title.add(new ProfileImage(target)).pad(12).size(iconMed);
+                        title.add(profileLabel).color(Pal.accent);
+                    })
+                .tooltip(tool -> {
+                        tool.background(Styles.black6);
+                        tool.label(() -> target instanceof Unit u ? u.isPlayer() ? u.getPlayer().name : "AI" : "").row();
+                        tool.label(() -> target.tileX() + ", " + target.tileY()).row();
+                        tool.label(() -> target instanceof Unit u ? "[accent]" + Strings.fixed(u.armor, 0) + "[] Armor" : "");
+                    });
+            table.row();
+            table.table(tt -> {
+                if(target instanceof Unit u && u.type != null && u.hasWeapons()) {
+                    for(int r = 0; r < u.mounts.length; r++){
+                        WeaponMount mount = u.mounts[r];
+                        tt.table(ttt -> {
+                                ttt.add(new WeaponImage(mount.weapon, mount, Core.atlas.isFound(mount.weapon.region) ? mount.weapon.region : u.type.uiIcon)).margin(8f);
+                                ttt.row();
+                                ttt.add(new SBar(
+                                        () -> "",
+                                        () -> Pal.accent.cpy().lerp(Color.orange, mount.reload / mount.weapon.reload),
+                                        () -> mount.reload / mount.weapon.reload
+                                ).rect().init()).height(4f).growX();
+                        }).pad(4);
+                        if((r + 1) % 4 == 0) tt.row();
+                    }
                 }
             });
+            table.row();
+            table.table(t -> {
+                    t.left();
+                    if (!(target instanceof Payloadc payloader)) {
+                        t.clear();
+                        usedPayload = -1;
+                        return;
+                    }
 
-            state.table().update(t -> {
-                if (!(target instanceof Statusc st)) {
+                    if(usedPayload == payloader.payloadUsed() && lastWidth == getWidth()) return;
+                    if(usedPayload != payloader.payloadUsed()) usedPayload = payloader.payloadUsed();
+                    if(lastWidth != getWidth()) lastWidth = getWidth();
+
                     t.clear();
-                    statuses.clear();
-                    return;
-                }
-                Bits applied = st.statusBits();
-
-                if((applied == null || statuses.equals(st.statusBits())) && lastWidth == getWidth()) return;
-                if(!statuses.equals(st.statusBits())) statuses.set(applied);
-                if(lastWidth != getWidth()) lastWidth = getWidth();
-
-                t.clear();
-                t.top().left();
-                Seq<StatusEffect> contents = Vars.content.statusEffects();
-                for (int i = 0, m = Vars.content.statusEffects().size; i < m; i++) {
-                    StatusEffect effect = contents.get(i);
-                    if (Objects.requireNonNull(applied).get(effect.id) && !effect.isHidden()) {
-                        Image image = new Image(effect.uiIcon);
-                        image.clicked(() -> ui.content.show(effect));
+                    t.top().left();
+                    Seq<Payload> payloads = payloader.payloads();
+                    for (int i = 0, m = payloads.size; i < m; i++) {
+                        Payload payload = payloads.get(i);
+                        Image image = new Image(payload.icon());
+                        image.clicked(() -> ui.content.show(payload.content()));
                         image.hovered(() -> image.setColor(Tmp.c1.set(image.color).lerp(Color.lightGray, Mathf.clamp(Time.delta))));
                         image.exited(() -> image.setColor(Tmp.c1.set(image.color).lerp(Color.white, Mathf.clamp(Time.delta))));
-                        t.add(image).size(iconSmall).tooltip(l -> l.label(() -> effect.localizedName + " [lightgray]" + UI.formatTime(st.getDuration(effect))).style(Styles.outlineLabel));
-                        if (i + 1 % Math.max(6, Math.round((getWidth() - 24) / iconSmall)) == 0) t.row();
+                        t.add(image).size(iconSmall).tooltip(l -> l.label(() -> payload.content().localizedName).style(Styles.outlineLabel));
+                        if ((i + 1) % Math.max(6, Math.round((getWidth() - 24) / iconSmall)) == 0) t.row();
                     }
-                }
-            });
-        }).growX().row();
-        table.image().color((target == null ? player.unit() : target).team().color).height(4f).growX().row();
-        table.add(barPane).grow().padTop(12f);
-    }
+                });
+            table.row();
+            table.table(t -> {
+                    t.left();
+                    if (!(target instanceof Statusc st)) {
+                        t.clear();
+                        statuses.clear();
+                        return;
+                    }
+                    Bits applied = st.statusBits();
 
-    Table buildBarList() {
-        return new Table(table -> {
-            table.top();
-            for (int i = 0; i < barSize; i++) {
-                table.add(addBar(i)).growX().row();
-            }
-        });
-    }
+                    if((applied == null || statuses.equals(st.statusBits())) && lastWidth == getWidth()) return;
+                    if(!statuses.equals(st.statusBits())) statuses.set(applied);
+                    if(lastWidth != getWidth()) lastWidth = getWidth();
 
-    Table addBar(int index) {
-        return new Table(bar -> {
-            bar.add(new SBar(
-                    () -> index >= data.size ? "[lightgray]<Empty>[]" : data.get(index).name,
-                    () -> index >= data.size ? Color.clear : data.get(index).color,
-                    () -> lastColors.get(index),
-                    () -> index >= data.size ? 0 : data.get(index).number)
-            ).height(4 * 8f).growX();
-            if(index >= data.size) return;
-            Image icon = new Image(){
-                @Override
-                public void draw() {
-                    validate();
-                    if(index >= data.size) return;
-                    float x = this.x + imageX;
-                    float y = this.y + imageY;
-                    float width = imageWidth * this.scaleX;
-                    float height = imageHeight * this.scaleY;
-                    Draw.color(Color.white);
-                    Draw.alpha(parentAlpha * color.a);
-                    BarData da = data.get(index);
-                    if(hasMouse()) getDrawable().draw(x, y, width, height);
-                    else {
-                        da.icon.draw(x, y, width, height);
-                        if(ScissorStack.push(Tmp.r1.set(ScissorStack.peek().x + x,  ScissorStack.peek().y + y, width, height * da.number))) {
-                            Draw.color(da.color);
-                            da.icon.draw(x, y, width, height);
-                            ScissorStack.pop();
+                    t.clear();
+                    t.top().left();
+                    Seq<StatusEffect> contents = Vars.content.statusEffects();
+                    for (int i = 0, m = Vars.content.statusEffects().size; i < m; i++) {
+                        StatusEffect effect = contents.get(i);
+                        if (Objects.requireNonNull(applied).get(effect.id) && !effect.isHidden()) {
+                            Image image = new Image(effect.uiIcon);
+                            image.clicked(() -> ui.content.show(effect));
+                            image.hovered(() -> image.setColor(Tmp.c1.set(image.color).lerp(Color.lightGray, Mathf.clamp(Time.delta))));
+                            image.exited(() -> image.setColor(Tmp.c1.set(image.color).lerp(Color.white, Mathf.clamp(Time.delta))));
+                            t.add(image).size(iconSmall).tooltip(l -> l.label(() -> effect.localizedName + " [lightgray]" + UI.formatTime(st.getDuration(effect))).style(Styles.outlineLabel));
+                            if (i + 1 % Math.max(6, Math.round((getWidth() - 24) / iconSmall)) == 0) t.row();
                         }
                     }
+                });
+            table.row();
+            table.image().color((target == null ? player.unit() : target).team().color).height(4f);
+            table.row();
+            table.table(bars -> {
+                for (BarData barData : BarDataCollector.getBarData(target)) {
+                    bars.table(bar -> {
+                        bar.add(new SBar(barData.name, barData.color, () -> barData.number.get())).height(4 * 8f).growX();
+                        bar.add(new BarIconImage(barData)).size(iconMed * 0.75f).padLeft(8f);
+                    }).growX();
+                    bars.row();
                 }
-            };
-            icon.setDrawable(data.get(index).icon);
-            bar.add(icon).size(iconMed * 0.75f).padLeft(8f);
+            });
         });
     }
-    public Seq<BarData> getInfo(Teamc target) {
-        data.clear();
+
+    /*
+    private Seq<BarData> getInfo(Teamc target) {
+        barData.clear();
 
         if(target instanceof Healthc healthc){
-            data.add(new BarData(bundle.format("shar-stat.health", formatNumber(healthc.health())), Pal.health, healthc.healthf(), health));
+            barData.add(new BarData(bundle.format("shar-stat.health", formatNumber(healthc.health())), Pal.health, healthc.healthf(), health));
         }
 
         if(target instanceof Unit unit){
@@ -299,25 +219,25 @@ public class UnitWindow extends Window {
                 return ability.max;
             }).abilities.find(abil -> abil instanceof ShieldRegenFieldAbility)).max;
 
-            data.add(new BarData(bundle.format("shar-stat.shield", formatNumber(unit.shield())), Pal.surge, unit.shield() / max, shield));
-            data.add(new BarData(bundle.format("shar-stat.capacity", unit.stack.item.localizedName, formatNumber(unit.stack.amount), formatNumber(unit.type.itemCapacity)), unit.stack.amount > 0 && unit.stack().item != null ? unit.stack.item.color.cpy().lerp(Color.white, 0.15f) : Color.white, unit.stack.amount / (unit.type.itemCapacity * 1f), item));
-            if(target instanceof Payloadc pay) data.add(new BarData(bundle.format("shar-stat.payloadCapacity", formatNumber(Mathf.round(Mathf.sqrt(pay.payloadUsed()))), formatNumber(Mathf.round(Mathf.sqrt(unit.type().payloadCapacity)))), Pal.items, pay.payloadUsed() / unit.type().payloadCapacity));
-            if(state.rules.unitAmmo) data.add(new BarData(bundle.format("shar-stat.ammos", formatNumber(unit.ammo()), formatNumber(unit.type().ammoCapacity)), unit.type().ammoType.color(), unit.ammof()));
+            barData.add(new BarData(bundle.format("shar-stat.shield", formatNumber(unit.shield())), Pal.surge, unit.shield() / max, shield));
+            barData.add(new BarData(bundle.format("shar-stat.capacity", unit.stack.item.localizedName, formatNumber(unit.stack.amount), formatNumber(unit.type.itemCapacity)), unit.stack.amount > 0 && unit.stack().item != null ? unit.stack.item.color.cpy().lerp(Color.white, 0.15f) : Color.white, unit.stack.amount / (unit.type.itemCapacity * 1f), item));
+            if(target instanceof Payloadc pay) barData.add(new BarData(bundle.format("shar-stat.payloadCapacity", formatNumber(Mathf.round(Mathf.sqrt(pay.payloadUsed()))), formatNumber(Mathf.round(Mathf.sqrt(unit.type().payloadCapacity)))), Pal.items, pay.payloadUsed() / unit.type().payloadCapacity));
+            if(state.rules.unitAmmo) barData.add(new BarData(bundle.format("shar-stat.ammos", formatNumber(unit.ammo()), formatNumber(unit.type().ammoCapacity)), unit.type().ammoType.color(), unit.ammof()));
         }
 
         else if(target instanceof Building build){
-            if(build.block.hasLiquids) data.add(new BarData(bundle.format("shar-stat.capacity", build.liquids.currentAmount() < 0.01f ? build.liquids.current().localizedName : bundle.get("bar.liquid"), formatNumber(build.liquids.currentAmount()), formatNumber(build.block.liquidCapacity)), build.liquids.current().color, build.liquids.currentAmount() / build.block.liquidCapacity, liquid));
+            if(build.block.hasLiquids) barData.add(new BarData(bundle.format("shar-stat.capacity", build.liquids.currentAmount() < 0.01f ? build.liquids.current().localizedName : bundle.get("bar.liquid"), formatNumber(build.liquids.currentAmount()), formatNumber(build.block.liquidCapacity)), build.liquids.current().color, build.liquids.currentAmount() / build.block.liquidCapacity, liquid));
 
             if(build.block.hasPower && build.block.consPower != null){
                 ConsumePower cons = build.block.consPower;
-                data.add(new BarData(bundle.format("shar-stat.power", formatNumber(build.power.status * 60f * (cons.buffered ? cons.capacity : cons.usage)), formatNumber(60f * (cons.buffered ? cons.capacity : cons.usage))), Pal.powerBar, Mathf.zero(cons.requestedPower(build)) && build.power.graph.getPowerProduced() + build.power.graph.getBatteryStored() > 0f ? 1f : build.power.status, power));
+                barData.add(new BarData(bundle.format("shar-stat.power", formatNumber(build.power.status * 60f * (cons.buffered ? cons.capacity : cons.usage)), formatNumber(60f * (cons.buffered ? cons.capacity : cons.usage))), Pal.powerBar, Mathf.zero(cons.requestedPower(build)) && build.power.graph.getPowerProduced() + build.power.graph.getBatteryStored() > 0f ? 1f : build.power.status, power));
             }
             if(build.block.hasItems) {
                 float value;
                 if (target instanceof CoreBlock.CoreBuild cb) value = cb.storageCapacity * Vars.content.items().count(UnlockableContent::unlockedNow);
                 else if(target instanceof StorageBlock.StorageBuild sb && !sb.canPickup() && sb.linkedCore instanceof CoreBlock.CoreBuild cb) value = cb.storageCapacity * Vars.content.items().count(UnlockableContent::unlockedNow);
                 else value = build.block.itemCapacity;
-                data.add(new BarData(bundle.format("shar-stat.capacity", bundle.get("category.items"), formatNumber(build.items.total()), value), Pal.items, build.items.total() / value, item));
+                barData.add(new BarData(bundle.format("shar-stat.capacity", bundle.get("category.items"), formatNumber(build.items.total()), value), Pal.items, build.items.total() / value, item));
             }
         }
 
@@ -328,13 +248,13 @@ public class UnitWindow extends Window {
                 MassDriver.MassDriverBuild mass = (MassDriver.MassDriverBuild) target;
                 pro = mass.reloadCounter;
             }
-            data.add(new BarData(bundle.format("shar-stat.reload", formatNumber(pro * 100f)), Pal.accent.cpy().lerp(Color.orange, pro), pro, reload));
+            barData.add(new BarData(bundle.format("shar-stat.reload", formatNumber(pro * 100f)), Pal.accent.cpy().lerp(Color.orange, pro), pro, reload));
         }
 
         if(target instanceof ForceProjector.ForceBuild force){
             ForceProjector forceBlock = (ForceProjector) force.block;
             float max = forceBlock.shieldHealth + forceBlock.phaseShieldBoost * force.phaseHeat;
-            data.add(new BarData(bundle.format("shar-stat.shield", formatNumber(max-force.buildup), formatNumber(max)), Pal.shield, (max-force.buildup)/max, shield));
+            barData.add(new BarData(bundle.format("shar-stat.shield", formatNumber(max-force.buildup), formatNumber(max)), Pal.shield, (max-force.buildup)/max, shield));
         }
 
         if(target instanceof MendProjector.MendBuild ||
@@ -356,7 +276,7 @@ public class UnitWindow extends Window {
                 pro = charge/((OverdriveProjector)over.block).reload;
                 Tmp.c1.set(Color.valueOf("feb380"));
 
-                data.add(new BarData(bundle.format("bar.boost", (int)(over.realBoost() * 100)), Pal.accent, over.realBoost() / (block.hasBoost ? block.speedBoost + block.speedBoostPhase : block.speedBoost)));
+                barData.add(new BarData(bundle.format("bar.boost", (int)(over.realBoost() * 100)), Pal.accent, over.realBoost() / (block.hasBoost ? block.speedBoost + block.speedBoostPhase : block.speedBoost)));
             }
             else if(target instanceof ConstructBlock.ConstructBuild construct){
                 pro = construct.progress;
@@ -366,20 +286,20 @@ public class UnitWindow extends Window {
                 pro = factory.fraction();
                 Tmp.c1.set(Pal.darkerMetal);
 
-                if(factory.unit() == null) data.add(new BarData("[lightgray]" + Iconc.cancel, Pal.power, 0f));
+                if(factory.unit() == null) barData.add(new BarData("[lightgray]" + Iconc.cancel, Pal.power, 0f));
                 else {
                     float value = factory.team.data().countType(factory.unit());
-                    data.add(new BarData(bundle.format("bar.unitcap", Fonts.getUnicodeStr(factory.unit().name), formatNumber(value), formatNumber(Units.getCap(factory.team))), Pal.power, value / Units.getCap(factory.team)));
+                    barData.add(new BarData(bundle.format("bar.unitcap", Fonts.getUnicodeStr(factory.unit().name), formatNumber(value), formatNumber(Units.getCap(factory.team))), Pal.power, value / Units.getCap(factory.team)));
                 }
             }
             else if(target instanceof Reconstructor.ReconstructorBuild reconstruct){
                 pro = reconstruct.fraction();
                 Tmp.c1.set(Pal.darkerMetal);
 
-                if(reconstruct.unit() == null) data.add(new BarData("[lightgray]" + Iconc.cancel, Pal.power, 0f));
+                if(reconstruct.unit() == null) barData.add(new BarData("[lightgray]" + Iconc.cancel, Pal.power, 0f));
                 else {
                     float value = reconstruct.team.data().countType(reconstruct.unit());
-                    data.add(new BarData(bundle.format("bar.unitcap", Fonts.getUnicodeStr(reconstruct.unit().name), formatNumber(value), formatNumber(Units.getCap(reconstruct.team))), Pal.power, value / Units.getCap(reconstruct.team)));
+                    barData.add(new BarData(bundle.format("bar.unitcap", Fonts.getUnicodeStr(reconstruct.unit().name), formatNumber(value), formatNumber(Units.getCap(reconstruct.team))), Pal.power, value / Units.getCap(reconstruct.team)));
                 }
 
             }
@@ -387,7 +307,7 @@ public class UnitWindow extends Window {
                 pro = (float) drill.sense(LAccess.progress);
                 Tmp.c1.set(drill.dominantItem == null ? Pal.items : drill.dominantItem.color);
 
-                data.add(new BarData(bundle.format("bar.drillspeed", formatNumber(drill.lastDrillSpeed * 60 * drill.timeScale())), Pal.ammo, drill.warmup));
+                barData.add(new BarData(bundle.format("bar.drillspeed", formatNumber(drill.lastDrillSpeed * 60 * drill.timeScale())), Pal.ammo, drill.warmup));
             }
             else {
                 GenericCrafter.GenericCrafterBuild crafter = (GenericCrafter.GenericCrafterBuild) target;
@@ -399,11 +319,11 @@ public class UnitWindow extends Window {
                 else Tmp.c1.set(Pal.items);
             }
 
-            data.add(new BarData(bundle.format("shar-stat.progress", formatNumber(pro * 100f)), Tmp.c1, pro));
+            barData.add(new BarData(bundle.format("shar-stat.progress", formatNumber(pro * 100f)), Tmp.c1, pro));
         }
 
         if(target instanceof PowerGenerator.GeneratorBuild generator){
-            data.add(new BarData(bundle.format("shar-stat.powerIn", formatNumber(generator.getPowerProduction() * generator.timeScale() * 60f)), Pal.powerBar, generator.productionEfficiency, power));
+            barData.add(new BarData(bundle.format("shar-stat.powerIn", formatNumber(generator.getPowerProduction() * generator.timeScale() * 60f)), Pal.powerBar, generator.productionEfficiency, power));
         }
 
         if(target instanceof PowerNode.PowerNodeBuild || target instanceof PowerTurret.PowerTurretBuild) {
@@ -412,10 +332,10 @@ public class UnitWindow extends Window {
                 max = node.power.graph.getLastPowerStored();
                 value = node.power.graph.getLastCapacity();
 
-                data.add(new BarData(bundle.format("bar.powerlines", node.power.links.size, ((PowerNode)node.block).maxNodes), Pal.items, (float)node.power.links.size / (float)((PowerNode)node.block).maxNodes));
-                data.add(new BarData(bundle.format("shar-stat.powerOut", "-" + formatNumber(node.power.graph.getLastScaledPowerOut() * 60f)), Pal.powerBar, node.power.graph.getLastScaledPowerOut() / node.power.graph.getLastScaledPowerIn(), power));
-                data.add(new BarData(bundle.format("shar-stat.powerIn", formatNumber(node.power.graph.getLastScaledPowerIn() * 60f)), Pal.powerBar, node.power.graph.getLastScaledPowerIn() / node.power.graph.getLastScaledPowerOut(), power));
-                data.add(new BarData(bundle.format("bar.powerbalance", (node.power.graph.getPowerBalance() >= 0 ? "+" : "") + formatNumber(node.power.graph.getPowerBalance() * 60)), Pal.powerBar, node.power.graph.getLastPowerProduced() / node.power.graph.getLastPowerNeeded(), power));
+                barData.add(new BarData(bundle.format("bar.powerlines", node.power.links.size, ((PowerNode)node.block).maxNodes), Pal.items, (float)node.power.links.size / (float)((PowerNode)node.block).maxNodes));
+                barData.add(new BarData(bundle.format("shar-stat.powerOut", "-" + formatNumber(node.power.graph.getLastScaledPowerOut() * 60f)), Pal.powerBar, node.power.graph.getLastScaledPowerOut() / node.power.graph.getLastScaledPowerIn(), power));
+                barData.add(new BarData(bundle.format("shar-stat.powerIn", formatNumber(node.power.graph.getLastScaledPowerIn() * 60f)), Pal.powerBar, node.power.graph.getLastScaledPowerIn() / node.power.graph.getLastScaledPowerOut(), power));
+                barData.add(new BarData(bundle.format("bar.powerbalance", (node.power.graph.getPowerBalance() >= 0 ? "+" : "") + formatNumber(node.power.graph.getPowerBalance() * 60)), Pal.powerBar, node.power.graph.getLastPowerProduced() / node.power.graph.getLastPowerNeeded(), power));
             }
             else { //TODO: why is this different
                 PowerTurret.PowerTurretBuild turret = (PowerTurret.PowerTurretBuild) target;
@@ -423,16 +343,16 @@ public class UnitWindow extends Window {
                 value = turret.power.status * turret.power.graph.getLastScaledPowerIn();
             }
 
-            data.add(new BarData(bundle.format("shar-stat.power", formatNumber(Math.max(value, max) * 60), formatNumber(max * 60)), Pal.power, value / max));
+            barData.add(new BarData(bundle.format("shar-stat.power", formatNumber(Math.max(value, max) * 60), formatNumber(max * 60)), Pal.power, value / max));
         }
 
         if(target instanceof ItemTurret.ItemTurretBuild turret) {
             ItemTurret block = (ItemTurret)turret.block;
-            data.add(new BarData(bundle.format("shar-stat.capacity", turret.hasAmmo() ? block.ammoTypes.findKey(turret.peekAmmo(), true).localizedName : bundle.get("stat.ammo"), formatNumber(turret.totalAmmo), formatNumber(block.maxAmmo)), turret.hasAmmo() ? block.ammoTypes.findKey(turret.peekAmmo(), true).color : Pal.ammo, turret.totalAmmo / (float)block.maxAmmo, ammo));
+            barData.add(new BarData(bundle.format("shar-stat.capacity", turret.hasAmmo() ? block.ammoTypes.findKey(turret.peekAmmo(), true).localizedName : bundle.get("stat.ammo"), formatNumber(turret.totalAmmo), formatNumber(block.maxAmmo)), turret.hasAmmo() ? block.ammoTypes.findKey(turret.peekAmmo(), true).color : Pal.ammo, turret.totalAmmo / (float)block.maxAmmo, ammo));
         }
 
         if(target instanceof LiquidTurret.LiquidTurretBuild turret){
-            data.add(new BarData(bundle.format("shar-stat.capacity", turret.liquids.currentAmount() < 0.01f ? turret.liquids.current().localizedName : bundle.get("stat.ammo"), formatNumber(turret.liquids.get(turret.liquids.current())), formatNumber(turret.block.liquidCapacity)), turret.liquids.current().color, turret.liquids.get(turret.liquids.current()) / turret.block.liquidCapacity, liquid));
+            barData.add(new BarData(bundle.format("shar-stat.capacity", turret.liquids.currentAmount() < 0.01f ? turret.liquids.current().localizedName : bundle.get("stat.ammo"), formatNumber(turret.liquids.get(turret.liquids.current())), formatNumber(turret.block.liquidCapacity)), turret.liquids.current().color, turret.liquids.get(turret.liquids.current()) / turret.block.liquidCapacity, liquid));
         }
 
         if(target instanceof AttributeCrafter.AttributeCrafterBuild ||
@@ -460,109 +380,103 @@ public class UnitWindow extends Window {
                 pro = fraction / max;
             }
 
-            data.add(new BarData(bundle.format("shar-stat.attr", Mathf.round(display)), Pal.ammo, pro));
+            barData.add(new BarData(bundle.format("shar-stat.attr", Mathf.round(display)), Pal.ammo, pro));
         }
 
         if(target instanceof UnitAssembler.UnitAssemblerBuild assemblerBuild) {
             UnitAssembler.AssemblerUnitPlan plan = assemblerBuild.plan();
 
             UnitType unit = assemblerBuild.unit();
-            if(unit == null) data.add(new BarData("[lightgray]" + Iconc.cancel, Pal.power, 0f));
-            else data.add(new BarData(bundle.format("shar-stat.progress", Math.round(assemblerBuild.progress * 100 * 100) / 100), Pal.power, assemblerBuild.progress));
+            if(unit == null) barData.add(new BarData("[lightgray]" + Iconc.cancel, Pal.power, 0f));
+            else barData.add(new BarData(bundle.format("shar-stat.progress", Math.round(assemblerBuild.progress * 100 * 100) / 100), Pal.power, assemblerBuild.progress));
 
             for(PayloadStack stack : plan.requirements) {
                 int value = assemblerBuild.blocks.get(stack.item);
                 int max = stack.amount;
                 float pro = value / (max * 1f);
-                data.add(new BarData(stack.item.localizedName + ": " + value + " / " + max, Pal.accent.cpy().lerp(Color.orange, pro), pro, stack.item.fullIcon));
+                barData.add(new BarData(stack.item.localizedName + ": " + value + " / " + max, Pal.accent.cpy().lerp(Color.orange, pro), pro, stack.item.fullIcon));
             }
         }
 
-        return data;
+        return barData;
     }
-}
+     */
 
-class BarDataCollector {
-    private static ObjectMap<Class<Object>, ObjectDataCollector<Object>> collectors = ObjectMap.of(
-        Healthc.class, new HealthCollector(),
-        Unit.class, new UnitCollector()
-    );
+    private class ProfileImage extends Image {
+        public ProfileImage(Teamc target) {
+            super(target instanceof Unit u && u.type != null
+                    ? u.type.uiIcon
+                    : target instanceof Building b
+                        ? b instanceof ConstructBlock.ConstructBuild cb
+                            ? cb.current.uiIcon
+                            : b.block != null
+                                ? b.block.uiIcon
+                                : clear
+                        : clear
+            );
 
-    public Seq<BarData> getBarData(Object target) {
-        Seq<BarData> res = new Seq<>();
-        for (ObjectMap.Entry<Class<Object>, ObjectDataCollector<Object>> collectorEntry : collectors) {
-            if(target.getClass().isAssignableFrom(collectorEntry.key)) res.addAll(collectorEntry.value.collectData(target));
+            clicked(() -> locked = !locked);
         }
-        return res;
-    }
-}
 
-abstract class ObjectDataCollector<T> {
-    public abstract Seq<BarData> collectData(T object);
-    protected boolean isValid(Object object) {
-        return true;
-    }
-}
-class HealthCollector extends ObjectDataCollector<Healthc> {
-    @Override
-    public Seq<BarData> collectData(Healthc healthc) {
-        return Seq.with(new BarData(bundle.format("shar-stat.health", formatNumber(healthc.health())), Pal.health, healthc.healthf(), health));
-    }
-}
-class UnitCollector extends ObjectDataCollector<Unit> {
-    private float maxUnitShieldAmount;
+        @Override
+        public void draw() {
+            super.draw();
+            int size = 8;
 
-    public UnitCollector() {
-        super();
-        Core.app.post(() -> {
-            for(UnitType unitType : content.units()) {
-                for(Ability ability : unitType.abilities) {
-                    if(ability instanceof ShieldRegenFieldAbility shieldRegenFieldAbility) {
-                        if(shieldRegenFieldAbility.max > maxUnitShieldAmount) {
-                            maxUnitShieldAmount = shieldRegenFieldAbility.max;
-                        }
-                        break;
-                    }
+            Draw.color(locked ? Pal.accent : Pal.gray);
+            Draw.alpha(parentAlpha);
+            Lines.stroke(Scl.scl(3f));
+            Lines.rect(x - size / 2f, y - size / 2f, width + size, height + size);
+            Draw.reset();
+        }
+    }
+    private static class WeaponImage extends Image {
+        private final Weapon weapon;
+        private final WeaponMount mount;
+
+        public WeaponImage(Weapon weapon, WeaponMount mount, TextureRegion region) {
+            super(region);
+            this.weapon = weapon;
+            this.mount = mount;
+
+            setSize(iconLarge);
+            setScaling(Scaling.fill);
+        }
+
+        @Override
+        public void draw() {
+            y -= (mount.reload) / weapon.reload * weapon.recoil;
+            super.draw();
+        }
+    }
+    private static class BarIconImage extends Image {
+        private final BarData barData;
+
+        public BarIconImage(BarData barData) {
+            super(barData.icon.get());
+            this.barData = barData;
+        }
+
+        @Override
+        public void draw() {
+            validate();
+            float x = this.x + imageX;
+            float y = this.y + imageY;
+            float width = imageWidth * this.scaleX;
+            float height = imageHeight * this.scaleY;
+            Draw.color(Color.white);
+            Draw.alpha(parentAlpha * color.a);
+
+            if(hasMouse()) getDrawable().draw(x, y, width, height);
+            else {
+                getDrawable().draw(x, y, width, height);
+                if(ScissorStack.push(Tmp.r1.set(ScissorStack.peek().x + x,  ScissorStack.peek().y + y, width, height * barData.number.get()))) {
+                    Draw.color(barData.color.get());
+                    getDrawable().draw(x, y, width, height);
+                    ScissorStack.pop();
                 }
             }
-        });
-    }
-
-    @Override
-    public Seq<BarData> collectData(Unit unit) {
-        Seq<BarData> seq = new Seq<>();
-        seq.add(new BarData(
-            bundle.format("shar-stat.shield", formatNumber(unit.shield())),
-            Pal.surge,
-            unit.shield() / maxUnitShieldAmount,
-            shield
-        ));
-        seq.add(new BarData(
-            bundle.format("shar-stat.capacity", unit.stack.item.localizedName, formatNumber(unit.stack.amount), formatNumber(unit.type.itemCapacity)),
-            unit.stack.amount > 0 && unit.stack().item != null ? unit.stack.item.color.cpy().lerp(Color.white, 0.15f) : Color.white,
-            unit.stack.amount / (unit.type.itemCapacity * 1f),
-            item
-        ));
-        if(unit instanceof Payloadc pay) seq.add(new BarData(bundle.format("shar-stat.payloadCapacity", formatNumber(Mathf.round(Mathf.sqrt(pay.payloadUsed()))), formatNumber(Mathf.round(Mathf.sqrt(unit.type().payloadCapacity)))), Pal.items, pay.payloadUsed() / unit.type().payloadCapacity));
-        if(state.rules.unitAmmo) seq.add(new BarData(bundle.format("shar-stat.ammos", formatNumber(unit.ammo()), formatNumber(unit.type().ammoCapacity)), unit.type().ammoType.color(), unit.ammof()));
-        return seq;
+        }
     }
 }
 
-class BarData {
-    public String name;
-    public Color color;
-    public float number;
-    public Drawable icon;
-
-    BarData(String name, Color color, float number) {
-        this(name, color, number, clear);
-    }
-
-    BarData(String name, Color color, float number, TextureRegion icon) {
-        this.name = name;
-        this.color = color;
-        this.number = number;
-        this.icon = new TextureRegionDrawable(icon);
-    }
-}

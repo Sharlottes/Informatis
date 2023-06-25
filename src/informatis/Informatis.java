@@ -28,11 +28,6 @@ public class Informatis extends Mod {
         });
 
         Events.run(Trigger.update, () -> {
-            if((input.keyDown(KeyCode.shiftRight) || input.keyDown(KeyCode.shiftLeft))) {
-                if(input.keyTap(KeyCode.r)) {
-                    UnitWindow.currentWindow.locked = !UnitWindow.currentWindow.locked;
-                }
-            }
             int i = 0;
             for(KeyCode numCode : KeyCode.numbers) {
                 if(input.keyTap(numCode)) {

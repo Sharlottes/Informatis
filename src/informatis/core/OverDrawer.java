@@ -37,7 +37,7 @@ public class OverDrawer {
                 WindowManager.windows.get(UnitWindow.class).each(w -> {
                     UnitWindow window = (UnitWindow) w;
                     Teamc target = getTarget();
-                    Draw.color(Tmp.c1.set(window.locked ? Color.orange : Color.darkGray).lerp(window.locked ? Color.scarlet : Color.gray, Mathf.absin(Time.time, 3f, 1f)).a(settings.getInt("selectopacity") / 100f));
+                    Draw.color(Tmp.c1.set(window.isLocked() ? Color.orange : Color.darkGray).lerp(window.isLocked() ? Color.scarlet : Color.gray, Mathf.absin(Time.time, 3f, 1f)).a(settings.getInt("selectopacity") / 100f));
                     float length = (target instanceof Unit u
                             ? u.hitSize
                             : target instanceof Building b
