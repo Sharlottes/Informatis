@@ -14,7 +14,6 @@ import arc.util.*;
 import informatis.SUtils;
 import informatis.core.IRebuildable;
 import informatis.core.VDOM;
-import informatis.ui.components.OneDotBar;
 import informatis.ui.components.SBar;
 import mindustry.*;
 import mindustry.core.*;
@@ -114,31 +113,14 @@ public class UnitWindow extends Window {
         }
 
         private Table buildContent(Teamc target) {
-            String targetName = "";
-
-            if (target instanceof Unit u && u.type != null) {
-                targetName = u.type.localizedName;
-            }
-            else if (target instanceof Building b) {
-                if (b instanceof ConstructBlock.ConstructBuild cb) {
-                    targetName = cb.current.localizedName;
-                } else if (b.block != null) {
-                    targetName = b.block.localizedName;
-                }
-            }
-
-            Label profileLabel = new Label(targetName) {{
-                clicked(() -> moveCamera(target));
-            }};
-
-            return new Table(table -> {
-                table.top().background(Styles.black8).defaults().growX();
+            return new Table(Styles.black8, table -> {
+                table.top().defaults().growX();
 
                 table
                     .table(title -> {
                             title.center();
                             title.add(new ProfileImage(target)).pad(12).size(iconMed);
-                            title.add(profileLabel).color(Pal.accent);
+                            title.button(getTargetName(target), Styles.cleart, () -> moveCamera(target));
                         })
                     .tooltip(tool -> {
                             tool.background(Styles.black6);
@@ -153,12 +135,9 @@ public class UnitWindow extends Window {
                         float currentWidth = getWidth();
                         for(int r = 0; r < u.mounts.length; r++){
                             WeaponMount mount = u.mounts[r];
-                            currentWidth -= tt.add(new WeaponImage(mount,
-                                Core.atlas.isFound(mount.weapon.region)
-                                    ? mount.weapon.region
-                                    : u.type != null ? u.type.uiIcon : clear,
-                                () -> mount.reload / mount.weapon.reload
-                            )).padLeft(4).padRight(4).size(8 * 2.5f).get().getWidth();
+                            currentWidth -= tt.add(
+                                new WeaponImage(mount, Core.atlas.isFound(mount.weapon.region) ? mount.weapon.region : u.type != null ? u.type.uiIcon : clear, () -> mount.reload / mount.weapon.reload)
+                            ).padLeft(4).padRight(4).size(8 * 2.5f).get().getWidth();
                             if(currentWidth < 1) {
                                 currentWidth = getWidth();
                                 tt.row();
@@ -237,6 +216,7 @@ public class UnitWindow extends Window {
                 });
             });
         }
+
         public void getInfo(Teamc target, Seq<BarData> data) {
             if(target instanceof Healthc healthc){
                 data.add(new BarData(bundle.format("shar-stat.health", formatNumber(healthc.health())), Pal.health, healthc.healthf(), health));
@@ -418,6 +398,23 @@ public class UnitWindow extends Window {
             }
         }
 
+        private String getTargetName(Teamc target) {
+            String targetName = "";
+
+            if (target instanceof Unit u && u.type != null) {
+                targetName = u.type.localizedName;
+            }
+            else if (target instanceof Building b) {
+                if (b instanceof ConstructBlock.ConstructBuild cb) {
+                    targetName = cb.current.localizedName;
+                } else if (b.block != null) {
+                    targetName = b.block.localizedName;
+                }
+            }
+
+            return targetName;
+        }
+
         private class ProfileImage extends Image {
             public ProfileImage(Teamc target) {
                 super(target instanceof Unit u && u.type != null
@@ -469,10 +466,10 @@ public class UnitWindow extends Window {
                 Draw.color(Color.white);
                 Draw.alpha(parentAlpha * color.a);
 
-                getDrawable().draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
-                if(ScissorStack.push(Tmp.r1.set(ScissorStack.peek().x + x+ imageX, ScissorStack.peek().y + y + imageY, imageWidth * scaleX, imageHeight * scaleY * fraction.get()))) {
+                getDrawable().draw(x, y, width, height);
+                if(ScissorStack.push(Tmp.r1.set(ScissorStack.peek().x + x, ScissorStack.peek().y + y, width, height * fraction.get()))) {
                     Draw.color(Color.gray);
-                    getDrawable().draw(x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY);
+                    getDrawable().draw(x, y, width, height);
                     ScissorStack.pop();
                 }
             }
