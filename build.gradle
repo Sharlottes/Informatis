@@ -10,7 +10,7 @@ ext{
 }
 
 group "sharlotte"
-sourceCompatibility = 16
+sourceCompatibility = 17
 
 sourceSets.main {
     java.srcDir("src/")
