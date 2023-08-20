@@ -11,6 +11,7 @@ import arc.scene.*;
 import arc.scene.style.*;
 import arc.util.Align;
 import arc.util.Tmp;
+import informatis.ui.windows.UnitWindow;
 import mindustry.graphics.*;
 import mindustry.ui.Fonts;
 
@@ -20,16 +21,16 @@ public class SBar extends Element {
             barSprite = SUtils.getDrawable(Core.atlas.find("informatis-barS"), 10, 10, 9, 9),
             barTopSprite = SUtils.getDrawable(Core.atlas.find("informatis-barS-top"), 10, 10, 9, 9);
 
-    public SBarData barData;
+    public UnitWindow.BarData barData;
     float value, lastValue, blink;
 
     public SBar(String name, Color color, Floatp fraction){
-        this(new SBarData(name, color, fraction));
+        this(new UnitWindow.BarData(() -> name, () -> color, fraction));
     }
     public SBar(String name, Color fromColor, Color toColor, Floatp fraction){
-        this(new SBarData(name, fromColor, toColor, fraction));
+        this(new UnitWindow.BarData(pro -> name, pro -> Tmp.c1.set(fromColor).lerp(toColor, pro), fraction));
     }
-    public SBar(SBarData barData){
+    public SBar(UnitWindow.BarData barData){
         this.barData = barData;
         lastValue = value = Mathf.clamp(barData.fraction.get());
     }
@@ -45,13 +46,13 @@ public class SBar extends Element {
 
         blink = Mathf.lerpDelta(blink, 0f, 0.2f);
         value = Mathf.lerpDelta(value, computed, 0.05f);
-        setColor(Tmp.c1.set(barData.fromColor).lerp(barData.toColor, computed));
+        setColor(barData.color.get());
 
         Draw.colorl(0.1f);
         barSprite.draw(x, y, width, height);
         drawBarSprite(Tmp.c1.set(color).mul(Pal.lightishGray), width * value);
         drawBarSprite(color, width * Math.min(value, computed));
-        Fonts.outline.draw(barData.name, x + width / 2f, y + height * 0.75f, Color.white, 1, false, Align.center);
+        Fonts.outline.draw(barData.name.get(), x + width / 2f, y + height * 0.75f, Color.white, 1, false, Align.center);
     }
 
     private void drawBarSprite(Color color, float width) {
