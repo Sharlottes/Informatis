@@ -5,7 +5,6 @@ import arc.func.Cons;
 import arc.func.Floatf;
 import arc.graphics.Color;
 import arc.input.KeyCode;
-import arc.scene.Element;
 import arc.scene.style.TextureRegionDrawable;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
@@ -26,8 +25,6 @@ import static mindustry.Vars.ui;
 import static mindustry.ui.Styles.*;
 
 public class QuickSchemFragment extends Table {
-    private float schemScrollPos, tagScrollPos;
-    private boolean schemShown;
     private final Seq<String> selectedTags = new Seq<>();
 
     private static final ImageButton.ImageButtonStyle schmaticButtonStyle = new ImageButton.ImageButtonStyle() {{
@@ -40,27 +37,26 @@ public class QuickSchemFragment extends Table {
     }};
 
     public QuickSchemFragment() {
-        setSchemTable();
+        right().defaults().growX().minWidth(180f);
+        visible(() -> settings.getBool(("schem")));
+        Log.info(12);
+        Button button = add(new Button(Styles.squareTogglet) {{
+            margin(0);
+            add(bundle.get("hud.schematic-list"));
+            Image image = image(Icon.downOpenSmall).padLeft(8f).get();
+            clicked(() -> {
+                image.setDrawable(isChecked() ? Icon.upOpenSmall : Icon.downOpenSmall);
+            });
+        }}).height(60f).get();
+        row();
+        collapser(rebuildBody(), true, button::isChecked);
         Table table = (Table) scene.find("minimap/position");
         table.row();
         table.add(this);
     }
 
-    public void setSchemTable() {
-        clear();
-        if(!settings.getBool(("schem"))) return;
-        right().defaults().growX();
-
-        add(new TextButton(bundle.get("hud.schematic-list"), Styles.squareTogglet) {{
-            image(() -> (schemShown ? Icon.upOpen : Icon.downOpen).getRegion());
-            clicked(() -> {
-                if(!schemShown) setSchemTable();
-                schemShown = !schemShown;
-            });
-            update(() -> this.setChecked(schemShown));
-        }}).height(60f);
-        row();
-        collapser(t -> {
+    public Table rebuildBody() {
+        return new Table(t -> {
             t.background(Styles.black8).defaults().maxHeight(72 * 8f).growX();
 
             t.pane(noBarPane, tagsListTable -> {
@@ -72,14 +68,15 @@ public class QuickSchemFragment extends Table {
                         if(selectedTags.contains(tag)) selectedTags.remove(tag);
                         else selectedTags.add(tag);
 
-                        setSchemTable();
-                    });
+                        rebuildBody();
+                    }).wrapLabel(false);
                 }
-            }).maxHeight(42f);
+            }).pad(8, 0, 8, 0).maxHeight(42f).scrollX(true).scrollY(false);
             t.row();
-
             t.pane(noBarPane, schemListTable -> {
-                schemListTable.button("@editor.import", Icon.download, QuickSchemFragment.this::showImport).growX();
+                schemListTable.button("@mods.reload", Icon.redo, this::rebuildBody).growX();
+                schemListTable.row();
+                schemListTable.button("@editor.import", Icon.download, () -> ui.schematics.showImport()).growX();
                 schemListTable.row();
 
                 if(schematics.all().isEmpty()) {
@@ -92,14 +89,14 @@ public class QuickSchemFragment extends Table {
                     schemListTable.add(new Button() {{
                         top().margin(0f);
                         clicked(() -> {
-                            if(childrenPressed(a)) return;
+                            if(childrenPressed()) return;
                             control.input.useSchematic(schematic);
                         });
                         table(toolbarTable -> {
                             toolbarTable.left().defaults().size(162 / 4f);
 
-                            toolbarTable.button(Icon.info, cleari, () -> showInfo(schematic));
-                            toolbarTable.button(Icon.upload, cleari, () -> showExport(schematic));
+                            toolbarTable.button(Icon.info, cleari, () -> ui.schematics.showInfo(schematic));
+                            toolbarTable.button(Icon.upload, cleari, () -> ui.schematics.showExport(schematic));
                             toolbarTable.button(Icon.pencil, cleari, () -> showRename(schematic));
                             if(schematic.hasSteamID()) {
                                 toolbarTable.button(Icon.link, cleari, () -> platform.viewListing(schematic));
@@ -110,7 +107,7 @@ public class QuickSchemFragment extends Table {
                                     } else {
                                         ui.showConfirm("@confirm", "@schematic.delete.confirm", () -> {
                                             schematics.remove(schematic);
-                                            setSchemTable();
+                                            rebuildBody();
                                         });
                                     }
                                 });
@@ -128,94 +125,10 @@ public class QuickSchemFragment extends Table {
                     }}).pad(4).style(schmaticButtonStyle);
                     schemListTable.row();
                 }
-            });
-        }, true, () -> schemShown);
-    }
-
-    void showInfo(Schematic schematic) {
-        Reflect.<SchematicsDialog.SchematicInfoDialog>get(ui.schematics, "info").show(schematic);
-    }
-
-    void showImport(){
-        BaseDialog dialog = new BaseDialog("@editor.export");
-        dialog.cont.pane(p -> {
-            p.margin(10f);
-            p.table(Tex.button, t -> {
-                TextButton.TextButtonStyle style = Styles.cleart;
-                t.defaults().size(280f, 60f).left();
-                t.row();
-                t.button("@schematic.copy.import", Icon.copy, style, () -> {
-                    dialog.hide();
-                    try{
-                        Schematic s = Schematics.readBase64(Core.app.getClipboardText());
-                        s.removeSteamID();
-                        schematics.add(s);
-                        setSchemTable();
-                        ui.showInfoFade("@schematic.saved");
-                        checkTags(s);
-                        showInfo(s);
-                    }catch(Throwable e){
-                        ui.showException(e);
-                    }
-                }).marginLeft(12f).disabled(b -> Core.app.getClipboardText() == null || !Core.app.getClipboardText().startsWith(schematicBaseStart));
-                t.row();
-                t.button("@schematic.importfile", Icon.download, style, () -> platform.showFileChooser(true, schematicExtension, file -> {
-                    dialog.hide();
-
-                    try{
-                        Schematic s = Schematics.read(file);
-                        s.removeSteamID();
-                        schematics.add(s);
-                        setSchemTable();
-                        showInfo(s);
-                        checkTags(s);
-                    }catch(Exception e){
-                        ui.showException(e);
-                    }
-                })).marginLeft(12f);
-                t.row();
-                if(steam){
-                    t.button("@schematic.browseworkshop", Icon.book, style, () -> {
-                        dialog.hide();
-                        platform.openWorkshop();
-                    }).marginLeft(12f);
-                }
-            });
+            }).growY().scrollX(false).scrollY(true);
         });
-
-        dialog.addCloseButton();
-        dialog.show();
     }
 
-    void showExport(Schematic s){
-        BaseDialog dialog = new BaseDialog("@editor.export");
-        dialog.cont.pane(p -> {
-            p.margin(10f);
-            p.table(Tex.button, t -> {
-                TextButton.TextButtonStyle style = Styles.cleart;
-                t.defaults().size(280f, 60f).left();
-                if(steam && !s.hasSteamID()){
-                    t.button("@schematic.shareworkshop", Icon.book, style,
-                            () -> platform.publish(s)).marginLeft(12f);
-                    t.row();
-                    dialog.hide();
-                }
-                t.button("@schematic.copy", Icon.copy, style, () -> {
-                    dialog.hide();
-                    ui.showInfoFade("@copied");
-                    Core.app.setClipboardText(schematics.writeBase64(s));
-                }).marginLeft(12f);
-                t.row();
-                t.button("@schematic.exportfile", Icon.export, style, () -> {
-                    dialog.hide();
-                    platform.export(s.name(), schematicExtension, file -> Schematics.write(s, file));
-                }).marginLeft(12f);
-            });
-        });
-
-        dialog.addCloseButton();
-        dialog.show();
-    }
 
     void showRename(Schematic schematic) {
         new Dialog("@schematic.rename"){{
@@ -239,7 +152,7 @@ public class QuickSchemFragment extends Table {
                 schematic.tags.put("description", descField.getText());
                 schematic.save();
                 hide();
-                setSchemTable();
+                rebuildBody();
             };
 
             buttons.defaults().size(120, 54).pad(4);
@@ -260,18 +173,6 @@ public class QuickSchemFragment extends Table {
     void tagsChanged() {
         Seq<String> tags = Reflect.get(ui.schematics, "tags");
         Core.settings.putJson("schematic-tags", String.class, tags);
-    }
-
-    void checkTags(Schematic s){
-        boolean any = false;
-        Seq<String> seq = Reflect.get(ui.schematics, "tags");
-        for(var tag : s.labels){
-            if(!seq.contains(tag)) {
-                seq.add(tag);
-                any = true;
-            }
-        }
-        if(any) setSchemTable();
     }
 
     void addTag(Schematic s, String tag){
