@@ -39,7 +39,6 @@ public class QuickSchemFragment extends Table {
     public QuickSchemFragment() {
         right().defaults().growX().minWidth(180f);
         visible(() -> settings.getBool(("schem")));
-        Log.info(12);
         Button button = add(new Button(Styles.squareTogglet) {{
             margin(0);
             add(bundle.get("hud.schematic-list"));
