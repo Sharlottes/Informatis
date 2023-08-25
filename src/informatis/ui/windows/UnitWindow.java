@@ -143,75 +143,80 @@ public class UnitWindow extends Window {
                         title.left().defaults().expandY();
                         title.add(new ProfileImage(target)).size(iconXLarge).padRight(24);
                         title.table(rtitle -> {
-                            rtitle.left();
+                            rtitle.left().defaults().growX();
                             rtitle.table(rttitle -> {
                                 rttitle.left();
                                 rttitle.add(getTargetName((target))).labelAlign(Align.left).get().setFontScale(1.25f);
-                                if(target instanceof Unit u && u.hasWeapons()) {
-                                    rttitle.table(rtttitle -> {
-                                        rtttitle.right();
-                                        for(int r = 0; r < u.mounts.length; r++){
+                                rttitle.table(weaponsTable -> {
+                                    weaponsTable.right();
+                                    if (target instanceof Unit u && u.hasWeapons()) {
+                                        for (int r = 0; r < u.mounts.length; r++) {
                                             WeaponMount mount = u.mounts[r];
-                                            rtttitle.add(
-                                                    new WeaponImage(
-                                                            mount,
-                                                            Core.atlas.isFound(mount.weapon.region) ? mount.weapon.region : u.type != null ? u.type.uiIcon : clear,
-                                                            () -> mount.reload / mount.weapon.reload
-                                                    )
+                                            weaponsTable.add(
+                                                new WeaponImage(
+                                                    mount,
+                                                    Core.atlas.isFound(mount.weapon.region) ? mount.weapon.region : u.type != null ? u.type.uiIcon : clear,
+                                                    () -> mount.reload / mount.weapon.reload
+                                                )
                                             ).pad(0, 4, 0, 4).size(8 * 2.5f);
                                         }
-                                    });
-                                }
-                            }).growX();
+                                    }
+                                });
+                                rttitle.table(payStatusTable -> {
+                                    payStatusTable.top().right();
+                                    if (target instanceof Payloadc payloader) {
+                                        payStatusTable.table(t -> {
+                                            t.top().right();
+                                            for (Payload payload : payloader.payloads()) {
+                                                Image image = new Image(payload.icon());
+                                                image.clicked(() -> ui.content.show(payload.content()));
+                                                image.hovered(() -> image.setColor(Tmp.c1.set(image.color).lerp(Color.lightGray, Mathf.clamp(Time.delta))));
+                                                image.exited(() -> image.setColor(Tmp.c1.set(image.color).lerp(Color.white, Mathf.clamp(Time.delta))));
+                                                t.add(image).size(iconSmall).tooltip(l -> l.label(() -> payload.content().localizedName).style(Styles.outlineLabel));
+                                            }
+                                        }).right();
+                                        payStatusTable.row();
+                                    }
+                                    if (target instanceof Statusc st &&  st.statusBits() != null) {
+                                        Bits applied = st.statusBits();
+
+                                        payStatusTable.table(t -> {
+                                            t.top().right();
+
+                                            for (StatusEffect effect : Vars.content.statusEffects()) {
+                                                if (Objects.requireNonNull(applied).get(effect.id) && !effect.isHidden()) {
+                                                    Image image = new Image(effect.uiIcon);
+                                                    image.clicked(() -> ui.content.show(effect));
+                                                    image.hovered(() -> image.setColor(Tmp.c1.set(image.color).lerp(Color.lightGray, Mathf.clamp(Time.delta))));
+                                                    image.exited(() -> image.setColor(Tmp.c1.set(image.color).lerp(Color.white, Mathf.clamp(Time.delta))));
+                                                    t.add(image).size(iconSmall).tooltip(l -> l.label(() -> effect.localizedName + " [lightgray]" + UI.formatTime(st.getDuration(effect))).style(Styles.outlineLabel));
+                                                }
+                                            }
+                                        }).right();
+                                        payStatusTable.row();
+                                    }
+                                }).growX();
+                            });
                             rtitle.row();
                             rtitle.table(rbtitle -> {
                                 rbtitle.left().defaults().growY();
-                                rbtitle.add(target instanceof Unitc u ? u.isPlayer() ? u.getPlayer().name : "AI" : target instanceof ControlBlock cb ? cb.unit().isPlayer() ? cb.unit().getPlayer().name : "AI" : "AI").padRight(16);
-                                rbtitle.button(Icon.linkSmall, Styles.cleari, () -> moveCamera(target)).tooltip("move camera");
+                                rbtitle.add(
+                                    target instanceof Unitc u
+                                        ? u.isPlayer()
+                                            ? u.getPlayer().name
+                                            : "AI"
+                                        : target instanceof ControlBlock cb
+                                            ? cb.unit().isPlayer()
+                                                ? cb.unit().getPlayer().name
+                                                : "AI"
+                                        : "AI"
+                                ).ellipsis(true);
+                                rbtitle.button(Icon.linkSmall, Styles.cleari, () -> moveCamera(target)).tooltip("move camera").pad(0, 8, 0, 8);
                                 rbtitle.label(() -> target.tileX() + ", " + target.tileY()).growX().labelAlign(Align.right);
-                            }).growX().padTop(8);
+                            }).padTop(8);
                         }).growX();
                     });
                 table.row();
-
-                if (target instanceof Payloadc payloader) {
-                    table.table(t -> {
-                        t.top().left();
-                        Seq<Payload> payloads = payloader.payloads();
-                        for (int i = 0; i < payloads.size; i++) {
-                            Payload payload = payloads.get(i);
-                            Image image = new Image(payload.icon());
-                            image.clicked(() -> ui.content.show(payload.content()));
-                            image.hovered(() -> image.setColor(Tmp.c1.set(image.color).lerp(Color.lightGray, Mathf.clamp(Time.delta))));
-                            image.exited(() -> image.setColor(Tmp.c1.set(image.color).lerp(Color.white, Mathf.clamp(Time.delta))));
-                            t.add(image).size(iconSmall).tooltip(l -> l.label(() -> payload.content().localizedName).style(Styles.outlineLabel));
-                            if ((i + 1) % Math.max(6, Math.round((getWidth() - 24) / iconSmall)) == 0) t.row();
-                        }
-                    });
-                    table.row();
-                }
-
-                if (target instanceof Statusc st) {
-                    table.table(t -> {
-                        Bits applied = st.statusBits();
-                        if (applied == null) return;
-                        t.top().left();
-
-                        Seq<StatusEffect> contents = Vars.content.statusEffects();
-                        for (int i = 0, m = Vars.content.statusEffects().size; i < m; i++) {
-                            StatusEffect effect = contents.get(i);
-                            if (Objects.requireNonNull(applied).get(effect.id) && !effect.isHidden()) {
-                                Image image = new Image(effect.uiIcon);
-                                image.clicked(() -> ui.content.show(effect));
-                                image.hovered(() -> image.setColor(Tmp.c1.set(image.color).lerp(Color.lightGray, Mathf.clamp(Time.delta))));
-                                image.exited(() -> image.setColor(Tmp.c1.set(image.color).lerp(Color.white, Mathf.clamp(Time.delta))));
-                                t.add(image).size(iconSmall).tooltip(l -> l.label(() -> effect.localizedName + " [lightgray]" + UI.formatTime(st.getDuration(effect))).style(Styles.outlineLabel));
-                                if (i + 1 % Math.max(6, Math.round((getWidth() - 24) / iconSmall)) == 0) t.row();
-                            }
-                        }
-                    });
-                    table.row();
-                }
 
                 table.image().color((target == null ? player.unit() : target).team().color).height(4f);
                 table.row();

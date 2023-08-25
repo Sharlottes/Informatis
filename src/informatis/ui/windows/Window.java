@@ -48,7 +48,7 @@ public class Window extends Table {
             t.addListener(new DragHandleListener(this));
         }).height(8 * 6f).growX();
         row();
-        pane(new Table(t -> {
+        pane(Styles.noBarPane, new Table(t -> {
             t.setBackground(Styles.black5);
             buildBody(t);
         })).grow();
