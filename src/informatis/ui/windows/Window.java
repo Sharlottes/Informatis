@@ -7,6 +7,7 @@ import arc.math.Mathf;
 import arc.math.geom.*;
 import arc.scene.event.*;
 import arc.scene.style.*;
+import arc.scene.ui.ScrollPane;
 import arc.scene.ui.layout.*;
 import arc.util.*;
 import mindustry.gen.*;
@@ -40,6 +41,7 @@ public class Window extends Table {
                 b.image(icon.getRegion()).scaling(Scaling.fill).size(20f);
                 b.add(Core.bundle.get("window." + name + ".name")).padLeft(20);
             }).grow();
+
             t.table(Tex.buttonEdge3, b ->
                 b.button(Icon.cancel, Styles.emptyi, () -> shown = false).grow()
             ).maxWidth(8 * 15f).growY();
@@ -48,10 +50,9 @@ public class Window extends Table {
             t.addListener(new DragHandleListener(this));
         }).height(8 * 6f).growX();
         row();
-        pane(Styles.noBarPane, new Table(t -> {
-            t.setBackground(Styles.black5);
-            buildBody(t);
-        })).grow();
+        table(Styles.black5, pt -> {
+             pt.pane(Styles.noBarPane, new Table(this::buildBody)).grow();
+        }).grow();
         row();
         table(Styles.black5, t -> {
             t.right();
@@ -65,6 +66,8 @@ public class Window extends Table {
                 Mathf.clamp(y, 0, Core.graphics.getHeight() - getHeight())
             )
         );
+        this.minWindowWidth = Math.max(this.minWindowWidth, getMinWidth());
+        this.minWindowHeight = Math.max(this.minWindowHeight, getPrefHeight());
     }
 
     protected void buildBody(Table t){
