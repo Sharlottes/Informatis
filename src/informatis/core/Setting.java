@@ -110,7 +110,6 @@ public class Setting {
 
         Seq<Seq<SharSetting>> settingSeq = new Seq<>();
         Seq<SharSetting> tapSeq = new Seq<>();
-        addGraphicSlideSetting("barstyle", 0, 0, 5, 1, s -> s == 0 ? bundle.get("default-bar") : s + bundle.get("th-bar"), tapSeq);
         addGraphicCheckSetting("schem", !mobile, tapSeq, () -> FragmentManager.quickSchemFragment.rebuildBody());
 
         //TODO: remove all drawing settings
