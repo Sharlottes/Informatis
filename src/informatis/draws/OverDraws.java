@@ -2,7 +2,6 @@ package informatis.draws;
 
 import arc.Core;
 import arc.Events;
-import arc.func.Cons;
 import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.graphics.gl.FrameBuffer;
@@ -15,9 +14,6 @@ import mindustry.gen.Building;
 import mindustry.gen.Groups;
 import mindustry.gen.Unit;
 import mindustry.world.Tile;
-
-import java.util.Arrays;
-import java.util.Iterator;
 
 import static arc.Core.graphics;
 import static informatis.SVars.turretRange;
@@ -58,18 +54,21 @@ public class OverDraws {
 
                 for(Building building : Groups.build) {
                     draw.onBuilding(building);
+                    Draw.reset();
                 }
 
                 for(Unit unit : Groups.unit) {
                     draw.onUnit(unit);
+                    Draw.reset();
                 }
 
                 for(Tile tile : Vars.world.tiles) {
                     draw.onTile(tile);
+                    Draw.reset();
                 }
                 draw.draw();
-            };
-            Draw.reset();
+                Draw.reset();
+            }
         });
     }
 

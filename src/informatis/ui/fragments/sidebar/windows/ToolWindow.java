@@ -30,7 +30,6 @@ public class ToolWindow extends Window {
 
     public ToolWindow() {
         super(Icon.edit, "tool");
-        Events.run(EventType.Trigger.update, this::updateShooting);
     }
 
     @Override

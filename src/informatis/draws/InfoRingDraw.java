@@ -1,6 +1,7 @@
 package informatis.draws;
 
 import arc.Events;
+import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Lines;
 import arc.math.Mathf;
 import arc.util.Time;
@@ -25,7 +26,6 @@ public class InfoRingDraw extends OverDraw {
 
     @Override
     public void draw() {
-        super.draw();
         float sin = Mathf.absin(Time.time, 6f, 1f);
         float leng = (player.unit() != null && player.unit().hitSize > 4 * 8f ? player.unit().hitSize * 1.5f : 4 * 8f) +  sin;
         Tmp.v1.set(camera.position);
