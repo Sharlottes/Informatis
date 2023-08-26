@@ -94,6 +94,7 @@ public class SidebarSwitcher {
             elem.visible = false;
         }
         sidebars[showIndex].visible = true;
+        actResizeWidth(switchButton, sidebars[showIndex].getWidth());
 
         sidebarTable.clear();
         sidebarTable.top().left();
