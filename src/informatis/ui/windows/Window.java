@@ -35,7 +35,7 @@ public class Window extends Table {
     }
 
     public void build() {
-        table(t -> {
+        float width = table(t -> {
             t.table(Tex.buttonEdge1, b -> {
                 b.left();
                 b.image(icon.getRegion()).scaling(Scaling.fill).size(20f);
@@ -48,7 +48,10 @@ public class Window extends Table {
 
             t.touchable = Touchable.enabled;
             t.addListener(new DragHandleListener(this));
-        }).height(8 * 6f).growX();
+        }).height(8 * 6f).growX().prefWidth();
+        this.minWindowWidth = Math.max(this.minWindowWidth, width);
+
+
         row();
         table(Styles.black5, pt -> {
              pt.pane(Styles.noBarPane, new Table(this::buildBody)).grow();
@@ -66,8 +69,6 @@ public class Window extends Table {
                 Mathf.clamp(y, 0, Core.graphics.getHeight() - getHeight())
             )
         );
-        this.minWindowWidth = Math.max(this.minWindowWidth, getMinWidth());
-        this.minWindowHeight = Math.max(this.minWindowHeight, getPrefHeight());
     }
 
     protected void buildBody(Table t){
