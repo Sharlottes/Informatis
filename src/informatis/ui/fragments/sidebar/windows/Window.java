@@ -76,6 +76,7 @@ public class Window extends Table {
 
     public void toggle(){
         shown = !shown;
+        if(shown) toFront();
     }
 
     private static class TouchPosInputListener extends InputListener {
