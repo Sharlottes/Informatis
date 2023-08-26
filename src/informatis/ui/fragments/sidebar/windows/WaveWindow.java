@@ -27,8 +27,8 @@ public class WaveWindow extends Window {
 
     public WaveWindow() {
         super(Icon.waves, "wave");
-        height = 500;
-        width = 450;
+        height = 300;
+        width = 300;
 
         Events.on(EventType.WorldLoadEvent.class, e -> {
             wavePane.clearChildren();

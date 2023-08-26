@@ -30,6 +30,9 @@ public class ToolWindow extends Window {
 
     public ToolWindow() {
         super(Icon.edit, "tool");
+        height = 300;
+        width = 300;
+
     }
 
     @Override

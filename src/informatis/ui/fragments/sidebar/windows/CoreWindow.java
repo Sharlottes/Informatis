@@ -32,6 +32,9 @@ public class CoreWindow extends Window {
 
     public CoreWindow()  {
         super(Icon.list, "core");
+        height = 300;
+        width = 300;
+
         resetUsed();
 
         Events.run(EventType.Trigger.update, () -> {

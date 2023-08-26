@@ -46,9 +46,8 @@ public class MapEditorWindow extends Window {
 
     public MapEditorWindow()  {
         super(Icon.map, "editor");
-
-        width = 800;
-        height = 600;
+        height = 300;
+        width = 300;
 
         for(int i = 0; i < MapEditor.brushSizes.length; i++){
             float size = MapEditor.brushSizes[i];

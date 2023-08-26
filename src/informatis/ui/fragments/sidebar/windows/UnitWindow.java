@@ -56,6 +56,9 @@ public class UnitWindow extends Window {
 
     public UnitWindow() {
         super(Icon.units, "unit");
+        height = 300;
+        width = 300;
+
         vdom.addBuilder(unitWindowBody, target);
 
         Events.run(EventType.Trigger.update, () -> {
