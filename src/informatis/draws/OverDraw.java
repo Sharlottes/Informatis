@@ -45,10 +45,5 @@ public class OverDraw {
         * 매 프레임에 대한 그리기를 처리합니다.
     */
     public void draw() {}
-
-    /**
-     * 매 프레임에 대한 업데이트를 처리합니다.
-     */
-    public void update() {}
 }
 

@@ -1,24 +1,36 @@
 package informatis.ui.fragments.sidebar.windows;
 
+import arc.Events;
 import arc.graphics.Color;
+import arc.input.KeyCode;
+import arc.math.Angles;
+import arc.math.geom.Geometry;
 import arc.struct.Seq;
 import informatis.draws.*;
 import arc.scene.ui.layout.*;
 import arc.util.*;
+import mindustry.entities.Units;
+import mindustry.game.EventType;
+import mindustry.game.Team;
 import mindustry.gen.*;
 import mindustry.graphics.*;
+import mindustry.logic.Ranged;
 import mindustry.ui.*;
+import mindustry.world.blocks.ControlBlock;
+import mindustry.world.blocks.defense.turrets.Turret;
 
-import static arc.Core.bundle;
-import static arc.Core.settings;
+import static arc.Core.*;
+import static arc.Core.input;
 import static mindustry.Vars.*;
 
 public class ToolWindow extends Window {
     private OverDrawCategory selected = OverDrawCategory.values()[0];
     private Table mainTable;
+    private Teamc shotTarget;
 
     public ToolWindow() {
         super(Icon.edit, "tool");
+        Events.run(EventType.Trigger.update, this::updateShooting);
     }
 
     @Override
@@ -30,7 +42,7 @@ public class ToolWindow extends Window {
         mainTable = table.add(rebuildMain()).growX().get();
     }
 
-    Table rebuildSideTab() {
+    private Table rebuildSideTab() {
         return new Table(icons -> {
             icons.top();
             for(OverDrawCategory category : OverDrawCategory.values()) {
@@ -45,7 +57,7 @@ public class ToolWindow extends Window {
         });
     }
 
-    Table rebuildMain() {
+    private Table rebuildMain() {
         return new Table(tool -> {
             tool.top().left().defaults().growX().left();
             tool.add(selected.name).color(Pal.accent).labelAlign(Align.left);
