@@ -58,8 +58,7 @@ public class ToolWindow extends Window {
                     desc.check(bundle.get("setting."+draw.name+".name"), settings.getBool(draw.name), b -> settings.put(draw.name, b))
                         .tooltip(t -> {
                             t.background(Styles.black8).add(bundle.get("setting."+draw.name+".description"));
-                        })
-                        .disabled(!selected.enabled);
+                        });
                     desc.row();
                 }
             });
