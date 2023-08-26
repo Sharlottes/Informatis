@@ -9,7 +9,7 @@ import static mindustry.Vars.state;
 
 public class PathLineDraw extends OverDraw {
     public PathLineDraw() {
-        super("pathLine", OverDrawCategory.Unit);
+        super("pathLine");
     }
 
     @Override

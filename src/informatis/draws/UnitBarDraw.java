@@ -5,7 +5,7 @@ import mindustry.gen.Unit;
 
 public class UnitBarDraw extends OverDraw {
     public UnitBarDraw() {
-        super("unitBar", OverDrawCategory.Unit);
+        super("unitBar");
     }
 
     @Override

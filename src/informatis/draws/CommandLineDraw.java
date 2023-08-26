@@ -6,7 +6,7 @@ import mindustry.gen.Unit;
 
 public class CommandLineDraw extends OverDraw {
     public CommandLineDraw() {
-        super("commandLine", OverDrawCategory.Unit);
+        super("commandLine");
     }
 
     @Override

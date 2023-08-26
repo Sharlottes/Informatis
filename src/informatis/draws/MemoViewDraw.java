@@ -7,7 +7,7 @@ import static mindustry.Vars.tilesize;
 
 public class MemoViewDraw extends OverDraw {
     public MemoViewDraw() {
-        super("memoView", OverDrawCategory.Block);
+        super("memoView");
     }
 
     @Override

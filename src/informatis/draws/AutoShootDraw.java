@@ -13,11 +13,12 @@ import mindustry.world.blocks.defense.turrets.Turret;
 import static arc.Core.*;
 import static mindustry.Vars.*;
 
+// TODO: autoshoot is not drawing. will be refacted
 public class AutoShootDraw extends OverDraw {
     Teamc shotTarget;
 
     AutoShootDraw() {
-        super("autoShoot", OverDrawCategory.Util);
+        super("autoShoot");
     }
 
     @Override

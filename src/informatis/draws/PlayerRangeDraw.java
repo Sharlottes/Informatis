@@ -8,7 +8,7 @@ import static informatis.SUtils.getTarget;
 
 public class PlayerRangeDraw extends OverDraw {
     public PlayerRangeDraw() {
-        super("playerRange", OverDrawCategory.Range);
+        super("playerRange");
     }
 
     @Override

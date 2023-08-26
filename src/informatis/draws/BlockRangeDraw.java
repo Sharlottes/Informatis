@@ -12,7 +12,7 @@ import static mindustry.Vars.player;
 
 public class BlockRangeDraw extends OverDraw {
     public BlockRangeDraw() {
-        super("blockRange", OverDrawCategory.Range);
+        super("blockRange");
     }
     private final static BlockRangeData blockRangeData = new BlockRangeData();
 
@@ -47,7 +47,7 @@ public class BlockRangeDraw extends OverDraw {
         float range = ((BaseTurret.BaseTurretBuild) build).range();
         Draw.color(Team.baseTeams[index].color);
         if (shader) {
-            Draw.z(166 + (Team.baseTeams.length - index) * 3);
+            Draw.z(OverDraws.zIndexTeamCache[index]);
             Fill.poly(build.x, build.y, Lines.circleVertices(range), range);
         } else {
             Drawf.dashCircle(build.x, build.y, range, Team.baseTeams[index].color);

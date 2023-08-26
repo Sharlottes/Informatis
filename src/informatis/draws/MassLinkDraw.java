@@ -22,7 +22,7 @@ public class MassLinkDraw extends OverDraw {
     Seq<PayloadMassDriver.PayloadDriverBuild> linkedPayloadMasses = new Seq<>();
 
     public MassLinkDraw() {
-        super("massLink", OverDrawCategory.Link);
+        super("massLink");
     }
 
 

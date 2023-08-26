@@ -17,7 +17,7 @@ import static informatis.SUtils.isInCamera;
 
 public class BlockBarDraw extends OverDraw {
     public BlockBarDraw() {
-        super("blockBar", OverDrawCategory.Block);
+        super("blockBar");
     }
 
     @Override

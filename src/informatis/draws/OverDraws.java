@@ -11,79 +11,66 @@ import arc.util.Tmp;
 import mindustry.Vars;
 import mindustry.game.EventType;
 import mindustry.game.Team;
+import mindustry.gen.Building;
 import mindustry.gen.Groups;
+import mindustry.gen.Unit;
 import mindustry.world.Tile;
+
+import java.util.Arrays;
+import java.util.Iterator;
 
 import static arc.Core.graphics;
 import static informatis.SVars.turretRange;
 
 public class OverDraws {
-    public static OverDraw
-        blockBar = new BlockBarDraw(),
-        blockStatus = new BlockStatusDraw(),
-        powerNode = new PowerNodeDraw(),
-        unitCargoLink = new UnitCargoLinkDraw(),
-        massLink = new MassLinkDraw(),
-        blockRange = new BlockRangeDraw(),
-        memoView = new MemoViewDraw(),
-        unitRange = new UnitRangeDraw(),
-        playerRange = new PlayerRangeDraw(),
-        pathLine = new PathLineDraw(),
-        logicLine = new LogicLineDraw(),
-        commandLine = new CommandLineDraw(),
-        unitPathLine = new UnitPathLineDraw(),
-        unitItem = new UnitItemDraw(),
-        unitBar = new UnitBarDraw(),
-        magicCursor = new MagicCursorDraw(),
-        autoShoot = new AutoShootDraw(),
-        infoRing = new InfoRingDraw();
-    static ObjectMap<OverDrawCategory, Seq<OverDraw>> draws;
-    static FrameBuffer effectBuffer = new FrameBuffer();
+    public static final ObjectMap<OverDrawCategory, OverDraw[]> draws = ObjectMap.of(
+            OverDrawCategory.Block, new OverDraw[]{ new BlockBarDraw(), new BlockStatusDraw(), new PowerNodeDraw(), new MemoViewDraw() },
+            OverDrawCategory.Unit, new OverDraw[] { new PathLineDraw(), new LogicLineDraw(), new CommandLineDraw(), new UnitPathLineDraw(), new UnitItemDraw(),new UnitBarDraw(), },
+            OverDrawCategory.Range, new OverDraw[] { new BlockRangeDraw(), new UnitRangeDraw(), new PlayerRangeDraw() },
+            OverDrawCategory.Link, new OverDraw[] { new UnitCargoLinkDraw(), new MassLinkDraw() },
+            OverDrawCategory.Util, new OverDraw[] { new MagicCursorDraw(),  new AutoShootDraw(),  new InfoRingDraw() }
+    );
+    private static final Seq<OverDraw> overDraws = new Seq<>();
+    public static float[] zIndexTeamCache = new float[Team.baseTeams.length];
+    private static final FrameBuffer effectBuffer = new FrameBuffer();
 
     public static void init() {
+        for(OverDraw[] draws : draws.values()) {
+            overDraws.addAll(draws);
+        }
+
+        for (int i = 0; i < Team.baseTeams.length; i++) {
+            zIndexTeamCache[i] = 166 + (Team.baseTeams.length - Team.baseTeams[i].id) * 3 * 0.001f;
+        }
+
         Events.run(EventType.Trigger.draw, () -> {
             Core.camera.bounds(Tmp.r1);
             effectBuffer.resize(graphics.getWidth(), graphics.getHeight());
-            for(Team team : Team.baseTeams) {
-                Draw.drawRange(166 + (Team.baseTeams.length-team.id) * 3, 1, () -> effectBuffer.begin(Color.clear), () -> {
+            for(float zIndex : zIndexTeamCache) {
+                Draw.drawRange(zIndex, () -> effectBuffer.begin(Color.clear), () -> {
                     effectBuffer.end();
                     effectBuffer.blit(turretRange);
                 });
             }
 
-            Groups.build.each(building ->
-                eachDraws(draw -> draw.onBuilding(building))
-            );
-            Groups.unit.each(unit ->
-                eachDraws(draw -> draw.onUnit(unit))
-            );
-            for(Tile tile : Vars.world.tiles) {
-                eachDraws(draw -> draw.onTile(tile));
-            }
-            eachDraws(OverDraw::draw);
+            for(OverDraw draw : overDraws) {
+                if(!draw.isEnabled()) continue;
+
+                for(Building building : Groups.build) {
+                    draw.onBuilding(building);
+                }
+
+                for(Unit unit : Groups.unit) {
+                    draw.onUnit(unit);
+                }
+
+                for(Tile tile : Vars.world.tiles) {
+                    draw.onTile(tile);
+                }
+                draw.draw();
+            };
+            Draw.reset();
         });
-
-        Events.run(EventType.Trigger.update, () -> {
-            eachDraws(OverDraw::update);
-        });
     }
 
-    public static ObjectMap<OverDrawCategory, Seq<OverDraw>> getDraws() {
-        if(draws == null) {
-            draws = new ObjectMap<>();
-            for(OverDrawCategory category : OverDrawCategory.values()) {
-                draws.put(category, new Seq<>());
-            }
-        }
-        return draws;
-    }
-
-    static void eachDraws(Cons<OverDraw> runner) {
-        for(ObjectMap.Entry<OverDrawCategory, Seq<OverDraw>> draws : OverDraws.draws.entries()) {
-            if(draws.key.enabled) draws.value.each(draw -> {
-                if(Core.settings.getBool(draw.name, false)) runner.get(draw);
-                Draw.reset();
-            });
-        };
-    }
 }

@@ -10,7 +10,7 @@ import static informatis.SUtils.isInCamera;
 
 public class BlockStatusDraw extends OverDraw {
     public BlockStatusDraw() {
-        super("blockstatus", OverDrawCategory.Block);
+        super("blockstatus");
     }
     @Override
     public void onBuilding(Building build) {

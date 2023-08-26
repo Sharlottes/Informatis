@@ -17,7 +17,7 @@ public class PowerNodeDraw extends OverDraw {
     Seq<Building> linkedNodes = new Seq<>();
 
     public PowerNodeDraw() {
-        super("powerNode", OverDrawCategory.Link);
+        super("powerNode");
     }
 
     @Override

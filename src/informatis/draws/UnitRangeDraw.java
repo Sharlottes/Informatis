@@ -10,7 +10,7 @@ import static mindustry.Vars.player;
 
 public class UnitRangeDraw extends OverDraw {
     public UnitRangeDraw() {
-        super("unitRange", OverDrawCategory.Range);
+        super("unitRange");
     }
 
     @Override
@@ -38,7 +38,7 @@ public class UnitRangeDraw extends OverDraw {
         float range = unit.range();
         Draw.color(Team.baseTeams[index].color.cpy().shiftSaturation(0.25f));
         if (shader) {
-            Draw.z(166 + (Team.baseTeams.length - index) * 3);
+            Draw.z(OverDraws.zIndexTeamCache[index]);
             Fill.poly(unit.x, unit.y, Lines.circleVertices(range), range);
         } else Drawf.dashCircle(unit.x, unit.y, range, Team.baseTeams[index].color);
     }

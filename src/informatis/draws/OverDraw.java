@@ -1,25 +1,26 @@
 package informatis.draws;
 
-import arc.scene.Element;
-import arc.scene.style.TextureRegionDrawable;
-import arc.scene.ui.CheckBox;
-import arc.scene.ui.layout.Table;
-import arc.struct.Seq;
+import arc.Core;
 import mindustry.gen.Building;
 import mindustry.gen.Unit;
-import mindustry.ui.Styles;
 import mindustry.world.Tile;
-
-import static arc.Core.bundle;
-import static arc.Core.settings;
 
 public class OverDraw {
     public String name;
+    private boolean enabled;
 
-    OverDraw(String name, OverDrawCategory category) {
+    OverDraw(String name) {
         this.name = name;
+        this.enabled = Core.settings.getBool(name, false);
+    }
 
-        OverDraws.getDraws().get(category, new Seq<>()).add(this);
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean value) {
+        enabled = value;
+        Core.settings.put(name, value);
     }
 
     /**

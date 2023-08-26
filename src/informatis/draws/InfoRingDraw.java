@@ -16,7 +16,7 @@ import static mindustry.Vars.spawner;
 
 public class InfoRingDraw extends OverDraw {
     public InfoRingDraw() {
-        super("infoRing", OverDrawCategory.Util);
+        super("infoRing");
 
         Events.on(EventType.UnitCreateEvent.class, ev -> {
 

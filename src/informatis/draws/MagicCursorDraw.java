@@ -12,7 +12,7 @@ import static mindustry.Vars.mobile;
 
 public class MagicCursorDraw extends OverDraw {
     public MagicCursorDraw() {
-        super("gaycursor", OverDrawCategory.Util);
+        super("gaycursor");
     }
 
     @Override

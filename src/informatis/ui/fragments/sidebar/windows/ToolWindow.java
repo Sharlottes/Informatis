@@ -54,8 +54,8 @@ public class ToolWindow extends Window {
             tool.row();
             tool.table(desc -> {
                 desc.top().left().defaults().left().labelAlign(Align.left);
-                for(OverDraw draw : OverDraws.getDraws().get(selected, new Seq<>())) {
-                    desc.check(bundle.get("setting."+draw.name+".name"), settings.getBool(draw.name), b -> settings.put(draw.name, b))
+                for(OverDraw draw : OverDraws.draws.get(selected)) {
+                    desc.check(bundle.get("setting."+draw.name+".name"), draw.isEnabled(), draw::setEnabled)
                         .tooltip(t -> {
                             t.background(Styles.black8).add(bundle.get("setting."+draw.name+".description"));
                         });

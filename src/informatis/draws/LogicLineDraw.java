@@ -10,7 +10,7 @@ import mindustry.logic.LUnitControl;
 
 public class LogicLineDraw extends OverDraw {
     public LogicLineDraw() {
-        super("logicLine", OverDrawCategory.Unit);
+        super("logicLine");
     }
 
     @Override

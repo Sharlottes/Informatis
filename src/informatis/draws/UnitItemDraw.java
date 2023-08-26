@@ -12,7 +12,7 @@ import static mindustry.Vars.renderer;
 
 public class UnitItemDraw extends OverDraw {
     public UnitItemDraw() {
-        super("unitItem", OverDrawCategory.Unit);
+        super("unitItem");
     }
 
     @Override
