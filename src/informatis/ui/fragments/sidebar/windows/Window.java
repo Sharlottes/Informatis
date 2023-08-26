@@ -132,9 +132,10 @@ public class Window extends Table {
             Vec2 v = event.listenerActor.localToStageCoordinates(Tmp.v1.set(dx, dy));
             float w = v.x - lastX;
             float h = v.y - lastY;
+            Log.info(targetWindow.getWidth() + w);
+            Log.info(targetWindow.minWindowWidth);
 
-            // will soft-lock if initial size is smaller than minimum
-            // so don't do that!
+            if(targetWindow.getWidth() < targetWindow.minWindowWidth) targetWindow.setWidth(targetWindow.minWindowWidth);
             if(targetWindow.getWidth() + w < targetWindow.minWindowWidth || targetWindow.getWidth() + w > Window.maxWindowWidth) w = 0;
             if(targetWindow.getHeight() - h < targetWindow.minWindowHeight || targetWindow.getHeight() - h > Window.maxWindowHeight) h = 0;
             targetWindow.sizeBy(w, -h);
