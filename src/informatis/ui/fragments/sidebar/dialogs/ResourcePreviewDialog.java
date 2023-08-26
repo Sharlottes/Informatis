@@ -1,4 +1,4 @@
-package informatis.ui.dialogs;
+package informatis.ui.fragments.sidebar.dialogs;
 
 import arc.func.*;
 import arc.graphics.*;

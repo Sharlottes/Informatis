@@ -1,5 +1,9 @@
 package informatis.ui.fragments;
 
+import informatis.ui.fragments.sidebar.dialogs.DialogManager;
+import informatis.ui.fragments.sidebar.TroopingFragment;
+import informatis.ui.fragments.sidebar.windows.WindowManager;
+
 import static arc.Core.scene;
 import static mindustry.Vars.ui;
 
@@ -8,6 +12,7 @@ public class FragmentManager {
     public static QuickSchemFragment quickSchemFragment;
     public static TileInfoFragment tileInfoFragment;
     public static ServerSearchFragment serverSearchFragment;
+    public static SidebarSwitcher sidebarSwitcherFragment;
 
     public static void init() {
         elementViewFragment = new ElementViewFragment(
@@ -17,9 +22,14 @@ public class FragmentManager {
                 ui.paused, ui.about, ui.bans, ui.admins, ui.traces, ui.maps, ui.content,
                 ui.planet, ui.research, ui.mods, ui.schematics, ui.logic
         );
+        serverSearchFragment = new ServerSearchFragment();
 
         quickSchemFragment = new QuickSchemFragment();
         tileInfoFragment = new TileInfoFragment();
-        serverSearchFragment = new ServerSearchFragment();
+        sidebarSwitcherFragment = new SidebarSwitcher(
+                    WindowManager.body,
+                    DialogManager.body,
+                    new TroopingFragment() // cache later?
+            );
     }
 }

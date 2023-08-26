@@ -1,4 +1,4 @@
-package informatis.ui.fragments;
+package informatis.ui.fragments.sidebar;
 
 import arc.struct.IntSeq;
 import arc.struct.Seq;

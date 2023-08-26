@@ -1,4 +1,4 @@
-package informatis.ui.windows;
+package informatis.ui.fragments.sidebar.windows;
 
 import informatis.ui.components.OverScrollPane;
 import mindustry.*;

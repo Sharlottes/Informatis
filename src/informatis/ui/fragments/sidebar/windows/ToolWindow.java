@@ -1,17 +1,10 @@
-package informatis.ui.windows;
+package informatis.ui.fragments.sidebar.windows;
 
-import arc.Events;
 import arc.graphics.Color;
-import arc.scene.Element;
 import arc.struct.Seq;
-import informatis.SVars;
 import informatis.draws.*;
-import arc.math.geom.*;
-import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
 import arc.util.*;
-import informatis.ui.components.OverScrollPane;
-import mindustry.game.EventType;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.ui.*;

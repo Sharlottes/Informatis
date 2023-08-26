@@ -98,19 +98,14 @@ public class Setting {
     }
 
     public static void init(){
-        BaseDialog dialog = new BaseDialog(bundle.get("setting.shar-title"));
-        dialog.addCloseButton();
-        sharset = new SettingsMenuDialog.SettingsTable();
-        dialog.cont.center().add(new Table(t -> t.pane(sharset).grow().row()));
-        ui.settings.shown(() -> {
-            Table settingUi = (Table)((Group)((Group)(ui.settings.getChildren().get(1))).getChildren().get(0)).getChildren().get(0); //This looks so stupid lol
-            settingUi.row();
-            settingUi.button(bundle.get("setting.shar-title"), Styles.cleart, dialog::show);
-        });
-
         Seq<Seq<SharSetting>> settingSeq = new Seq<>();
         Seq<SharSetting> tapSeq = new Seq<>();
+        addGraphicCheckSetting("tileinfo", true, tapSeq, () -> FragmentManager.tileInfoFragment.rebuildTileInfoTable());
         addGraphicCheckSetting("schem", !mobile, tapSeq, () -> FragmentManager.quickSchemFragment.rebuildBody());
+        addGraphicCheckSetting("sidebar", !mobile, tapSeq, () -> FragmentManager.sidebarSwitcherFragment.rebuildSidebarTable());
+        addGraphicCheckSetting("elementdebug", false, tapSeq);
+        addGraphicCheckSetting("hiddenElem", false, tapSeq);
+        addGraphicCheckSetting("serverfilter", false, tapSeq, () -> {});
 
         //TODO: remove all drawing settings
         Seq<SharSetting> drawSeq = new Seq<>();
@@ -120,11 +115,10 @@ public class Setting {
         addGraphicCheckSetting("select", false, drawSeq);
         addGraphicCheckSetting("distanceLine", false, drawSeq);
         addGraphicCheckSetting("spawnerarrow", false, drawSeq);
-        addGraphicCheckSetting("elementdebug", false, drawSeq);
-        addGraphicCheckSetting("hiddenElem", false, drawSeq);
 
         settingSeq.add(tapSeq, drawSeq);
 
+        sharset = new SettingsMenuDialog.SettingsTable();
         sharset.table(t -> {
             Seq<TextButton> buttons = new Seq<>();
             buttons.add(new TextButton(bundle.get("setting.shar-ui"), Styles.cleart));
@@ -154,6 +148,15 @@ public class Setting {
             }
             t.add(stack);
             t.fillParent = true;
+        });
+
+        BaseDialog dialog = new BaseDialog(bundle.get("setting.shar-title"));
+        dialog.addCloseButton();
+        dialog.cont.center().add(new Table(t -> t.pane(sharset).grow().row()));
+        ui.settings.shown(() -> {
+            Table settingUi = (Table)((Group)((Group)(ui.settings.getChildren().get(1))).getChildren().get(0)).getChildren().get(0); //This looks so stupid lol
+            settingUi.row();
+            settingUi.button(bundle.get("setting.shar-title"), Styles.cleart, dialog::show);
         });
     }
 }

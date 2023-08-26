@@ -11,7 +11,7 @@ import arc.scene.*;
 import arc.scene.style.*;
 import arc.util.Align;
 import arc.util.Tmp;
-import informatis.ui.windows.UnitWindow;
+import informatis.ui.fragments.sidebar.windows.UnitWindow;
 import mindustry.graphics.*;
 import mindustry.ui.Fonts;
 

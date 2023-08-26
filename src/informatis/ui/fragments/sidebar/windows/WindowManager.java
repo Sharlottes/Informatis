@@ -1,9 +1,8 @@
-package informatis.ui.windows;
+package informatis.ui.fragments.sidebar.windows;
 
 import arc.*;
 import arc.scene.ui.layout.Table;
 import arc.struct.*;
-import arc.util.Nullable;
 import mindustry.*;
 import mindustry.ui.*;
 

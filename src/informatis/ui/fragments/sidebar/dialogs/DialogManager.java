@@ -1,4 +1,4 @@
-package informatis.ui.dialogs;
+package informatis.ui.fragments.sidebar.dialogs;
 
 import arc.scene.ui.Dialog;
 import arc.scene.ui.layout.Table;

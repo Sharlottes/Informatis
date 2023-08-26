@@ -1,4 +1,4 @@
-package informatis.ui.windows;
+package informatis.ui.fragments.sidebar.windows;
 
 import arc.Events;
 import arc.graphics.g2d.*;
@@ -26,7 +26,7 @@ import mindustry.gen.*;
 import mindustry.ui.*;
 import mindustry.world.*;
 
-import static informatis.ui.windows.WindowManager.mapEditorWindow;
+import static informatis.ui.fragments.sidebar.windows.WindowManager.mapEditorWindow;
 import static mindustry.Vars.*;
 
 public class MapEditorWindow extends Window {

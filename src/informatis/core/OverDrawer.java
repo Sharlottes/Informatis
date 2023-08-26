@@ -1,14 +1,12 @@
 package informatis.core;
 
-import informatis.draws.*;
 import arc.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.math.geom.*;
 import arc.util.*;
-import informatis.ui.windows.UnitWindow;
-import informatis.ui.windows.WindowManager;
+import informatis.ui.fragments.sidebar.windows.WindowManager;
 import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;

@@ -38,7 +38,6 @@ public class QuickSchemFragment extends Table {
 
     public QuickSchemFragment() {
         right().defaults().growX().minWidth(180f);
-        visible(() -> settings.getBool(("schem")));
         Button button = add(new Button(Styles.squareTogglet) {{
             margin(0);
             add(bundle.get("hud.schematic-list"));
@@ -55,9 +54,11 @@ public class QuickSchemFragment extends Table {
     }
 
     public Table rebuildBody() {
+        visible = settings.getBool(("schem"));
+        if(!visible) return new Table();
+
         return new Table(t -> {
             t.background(Styles.black8).defaults().maxHeight(72 * 8f).growX();
-
             t.pane(noBarPane, tagsListTable -> {
                 tagsListTable.left().defaults().pad(2).height(42f);
 
@@ -127,7 +128,6 @@ public class QuickSchemFragment extends Table {
             }).growY().scrollX(false).scrollY(true);
         });
     }
-
 
     void showRename(Schematic schematic) {
         new Dialog("@schematic.rename"){{

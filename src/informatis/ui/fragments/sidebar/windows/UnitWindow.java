@@ -1,4 +1,4 @@
-package informatis.ui.windows;
+package informatis.ui.fragments.sidebar.windows;
 
 import arc.*;
 import arc.func.Floatp;
@@ -13,7 +13,6 @@ import arc.scene.ui.layout.*;
 import arc.struct.Bits;
 import arc.struct.*;
 import arc.util.*;
-import informatis.SUtils;
 import informatis.core.IRebuildable;
 import informatis.core.VDOM;
 import informatis.ui.components.SBar;

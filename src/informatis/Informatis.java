@@ -3,11 +3,9 @@ package informatis;
 import informatis.core.OverDrawer;
 import informatis.core.Setting;
 import informatis.draws.OverDraws;
-import informatis.ui.SidebarSwitcher;
-import informatis.ui.fragments.TroopingFragment;
 import informatis.ui.fragments.FragmentManager;
-import informatis.ui.dialogs.DialogManager;
-import informatis.ui.windows.*;
+import informatis.ui.fragments.sidebar.dialogs.DialogManager;
+import informatis.ui.fragments.sidebar.windows.*;
 import arc.*;
 import mindustry.*;
 import mindustry.game.EventType.*;
@@ -29,11 +27,6 @@ public class Informatis extends Mod {
             Setting.init();
             WindowManager.init();
             DialogManager.init();
-            new SidebarSwitcher(
-                WindowManager.body,
-                DialogManager.body,
-                new TroopingFragment() // cache later?
-            ).init();
             FragmentManager.init();
             OverDraws.init();
             OverDrawer.init();

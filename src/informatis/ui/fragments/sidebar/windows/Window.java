@@ -1,4 +1,4 @@
-package informatis.ui.windows;
+package informatis.ui.fragments.sidebar.windows;
 
 import arc.*;
 import arc.func.*;
@@ -7,7 +7,6 @@ import arc.math.Mathf;
 import arc.math.geom.*;
 import arc.scene.event.*;
 import arc.scene.style.*;
-import arc.scene.ui.ScrollPane;
 import arc.scene.ui.layout.*;
 import arc.util.*;
 import mindustry.gen.*;
@@ -63,12 +62,12 @@ public class Window extends Table {
         }).height(8 * 2f).growX();
 
         visible(() -> shown);
-        update(() ->
+        update(() -> {
             setPosition(
-                Mathf.clamp(x, 0, Core.graphics.getWidth() - getWidth()),
-                Mathf.clamp(y, 0, Core.graphics.getHeight() - getHeight())
-            )
-        );
+                    Mathf.clamp(x, 0, Core.graphics.getWidth() - getWidth()),
+                    Mathf.clamp(y, 0, Core.graphics.getHeight() - getHeight())
+            );
+        });
     }
 
     protected void buildBody(Table t){

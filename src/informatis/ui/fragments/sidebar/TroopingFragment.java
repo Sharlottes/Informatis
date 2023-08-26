@@ -1,8 +1,9 @@
-package informatis.ui.fragments;
+package informatis.ui.fragments.sidebar;
 
 import arc.input.KeyCode;
 import arc.scene.ui.layout.Table;
 import arc.struct.IntSeq;
+import arc.util.Log;
 import informatis.SUtils;
 import mindustry.Vars;
 import mindustry.gen.*;
@@ -35,12 +36,14 @@ public class TroopingFragment extends Table {
 
                     tab.add(String.valueOf(i)).fontScale(0.75f).width(15).padRight(30);
                     tab.image(() -> {
+                        Log.info("still updating");
                         if(troop.isEmpty()) return Icon.cancel.getRegion();
                         Unit unit = Groups.unit.getByID(troop.peek());
                         if(unit == null) return Icon.cancel.getRegion();
                         return unit.type.fullIcon;
                     }).size(10).padRight(10);
                     tab.label(() -> {
+                        Log.info("still updating");
                         int amount = 0;
                         for(int id : troop.toArray()) {
                             Unit unit = Groups.unit.getByID(id);
@@ -62,8 +65,6 @@ public class TroopingFragment extends Table {
         });
 
         update(() -> {
-            if(!visible) return;
-
             int i = 0;
             for(KeyCode numCode : KeyCode.numbers) {
                 if(input.keyTap(numCode)) {
