@@ -74,7 +74,7 @@ tasks.register('deploy', Jar) {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
-    options.compilerArgs += ["-Xlint:deprecation"]
+    options.compilerArgs += ["-Xlint:all"]
     if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
         options.compilerArgs.addAll(['--release', '8'])
     }
