@@ -8,5 +8,5 @@ set PATH_FROM=C:\Users\user\Documents\GitHub
 setlocal
 set PATH_TO=C:\Users\user\AppData\Roaming\Mindustry
 
-if exist %PATH_TO%\mods\raw-%MOD_NAME%.jar del %PATH_TO%\mods\raw-%MOD_NAME%.jar
-xcopy %PATH_FROM%\%MOD_NAME%\build\libs\raw-%MOD_NAME%.jar %PATH_TO%\mods\ /k /y
+if exist %PATH_TO%\mods\%MOD_NAME%Desktop.jar del %PATH_TO%\mods\%MOD_NAME%Desktop.jar
+xcopy %PATH_FROM%\%MOD_NAME%\build\libs\%MOD_NAME%Desktop.jar %PATH_TO%\mods\ /k /y
