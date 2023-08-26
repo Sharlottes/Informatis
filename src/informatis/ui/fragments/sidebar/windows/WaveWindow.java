@@ -23,85 +23,83 @@ import static arc.Core.settings;
 import static mindustry.Vars.*;
 
 public class WaveWindow extends Window {
-    static Vec2 scrollPos = new Vec2(0, 0);
-    float heat;
+    ScrollPane wavePane;
 
     public WaveWindow() {
         super(Icon.waves, "wave");
         height = 500;
         width = 450;
 
-        Events.run(EventType.Trigger.update, () -> {
-            heat += Time.delta;
-            if(heat >= 60f) {
-                heat = 0f;
-                ((ScrollPane) find("wave-pane")).setWidget(rebuild());
-            }
+        Events.on(EventType.WorldLoadEvent.class, e -> {
+            wavePane.clearChildren();
+            wavePane.setWidget(rebuild());
+        });
+
+        Events.on(EventType.WaveEvent.class, e -> {
+            wavePane.clearChildren();
+            wavePane.setWidget(rebuild());
         });
     }
 
     @Override
     public void buildBody(Table table) {
-        table.top().background(Styles.black8);
-        ScrollPane pane = new OverScrollPane(rebuild(), Styles.noBarPane, scrollPos).disableScroll(true, false);
-        table.add(pane).grow().name("wave-pane").row();
-        table.table(total -> {
-            total.left();
-            total.label(()->"~"+state.wave+"+");
-            total.field(""+settings.getInt("wavemax"), f->{
-                String str = f.replaceAll("\\D", "");
-                if(str.isEmpty()) settings.put("wavemax", 0);
-                else settings.put("wavemax", Integer.parseInt(str));
-            });
-            total.table().update(units->{
-                units.clear();
-                units.center();
+        Core.app.post(() -> ((ScrollPane) table.parent).setScrollingDisabled(true, true));
+        wavePane = new ScrollPane(rebuild(), Styles.noBarPane);
+        table.top().background(Styles.black8).margin(40f).defaults().grow();
+        table.add(wavePane);
+        table.row();
+        table.table(bottomTable -> {
+            bottomTable.top().center().defaults().growX();
+            bottomTable.table(total -> {
+                total.center();
+                total.label(() -> '~' + String.valueOf(state.wave) + '+');
+                total.field(String.valueOf(settings.getInt("wavemax")), f -> {
+                    String str = f.replaceAll("\\D", "");
+                    settings.put("wavemax", str.isEmpty() ? 0 : Integer.parseInt(str));
+                });
+                total.table().update(units -> {
+                    units.clear();
+                    units.left();
 
-                if(Groups.unit.count(u->u.team==state.rules.waveTeam) <= 0) {
-                    units.add("[lightgray]<Empty>[]");
-                    return;
-                }
-
-                int row = 0;
-                int max = Math.max(1, Math.round(getWidth()/2/8/2));
-                for (UnitType unit : Vars.content.units()) {
-                    int amount = Groups.unit.count(u->u.type==unit&&u.team==state.rules.waveTeam);
-                    if(amount<=0) continue;
-                    units.stack(
-                        new Table(ttt -> {
-                            ttt.center();
-                            ttt.image(unit.uiIcon).size(iconMed);
-                            ttt.pack();
-                        }),
-
-                        new Table(ttt -> {
-                            ttt.bottom().left();
-                            ttt.add(amount + "").padTop(2f).fontScale(0.9f);
-                            ttt.pack();
-                        })
-                    ).pad(2f);
-                    if(row++ % max == max-1){
-                        units.row();
+                    if(Groups.unit.count(u -> u.team == state.rules.waveTeam) <= 0) {
+                        units.add("[lightgray]<Empty>[]");
+                        return;
                     }
-                }
-            }).growX();
-        }).growX().row();
-        table.image().height(4f).color(Pal.gray).growX().row();
-        table.table(option->{
-            option.check("Show empty wave", settings.getBool("emptywave"), b->settings.put("emptywave", b)).margin(4f);
-            option.check("Show previous wave", settings.getBool("pastwave"), b->settings.put("pastwave", b)).margin(4f);
-        });
-        Events.on(EventType.WorldLoadEvent.class, e -> {
-            pane.clearChildren();
-            pane.setWidget(rebuild());
-        });
-        Events.on(EventType.WaveEvent.class, e -> {
-            pane.clearChildren();
-            pane.setWidget(rebuild());
+
+                    int row = 0;
+                    int max = Math.max(1, Math.round(getWidth() / 2 / 8 / 2));
+                    for (UnitType unit : Vars.content.units()) {
+                        int amount = Groups.unit.count(u -> u.type == unit && u.team == state.rules.waveTeam);
+                        if(amount <= 0) continue;
+                        units.stack(
+                            new Table(ttt -> {
+                                ttt.center();
+                                ttt.image(unit.uiIcon).size(iconMed);
+                                ttt.pack();
+                            }),
+                            new Table(ttt -> {
+                                ttt.bottom().left();
+                                ttt.add(String.valueOf(amount)).padTop(2f).fontScale(0.9f);
+                                ttt.pack();
+                            })
+                        ).pad(2f);
+                        if(row++ % max == max - 1){
+                            units.row();
+                        }
+                    }
+                }).growX();
+            });
+            bottomTable.row();
+            bottomTable.image().height(4f).color(Pal.gray);
+            bottomTable.row();
+            bottomTable.table(option -> {
+                option.check("Show empty wave", settings.getBool("emptywave"), b -> settings.put("emptywave", b)).margin(4f);
+                option.check("Show previous wave", settings.getBool("pastwave"), b -> settings.put("pastwave", b)).margin(4f);
+            });
         });
     }
 
-    public ObjectIntMap<SpawnGroup> getWaveGroup(int index) {
+    private ObjectIntMap<SpawnGroup> getWaveGroup(int index) {
         ObjectIntMap<SpawnGroup> groups = new ObjectIntMap<>();
         for (SpawnGroup group : state.rules.spawns) {
             if (group.getSpawned(index) <= 0) continue;
@@ -122,80 +120,81 @@ public class WaveWindow extends Window {
         return groupsTmp;
     }
     
-    Table rebuild(){
+    private Table rebuild() {
         return new Table(table -> {
             table.touchable = Touchable.enabled;
-            table.table(body->{
-                body.center();
-                for (int i = settings.getBool("pastwave") ? 1 : state.wave; i <= Math.min(state.wave + settings.getInt("wavemax"), (state.isCampaign() && state.rules.winWave > 0 ? state.rules.winWave : Integer.MAX_VALUE)); i++) {
-                    final int index = i;
+            table.center().defaults().growX();
+            for (int i = settings.getBool("pastwave") ? 1 : state.wave; i <= Math.min(state.wave + settings.getInt("wavemax"), (state.isCampaign() && state.rules.winWave > 0 ? state.rules.winWave : Integer.MAX_VALUE)); i++) {
+                final int index = i;
 
-                    if (state.rules.spawns.find(g -> g.getSpawned(index-1) > 0) == null && !settings.getBool("emptywave")) continue;
+                if (state.rules.spawns.find(g -> g.getSpawned(index-1) > 0) == null && !settings.getBool("emptywave")) continue;
 
-                    body.table(waveRow -> {
-                        waveRow.left();
+                table.table(waveRow -> {
+                    waveRow.left();
 
-                        waveRow.add(index+"").update(label -> {
-                            Color color = Pal.accent;
-                            if (state.wave == index) color = Color.red;
-                            else if (state.wave - 1 == index && state.enemies > 0) color = Color.red.cpy().shiftHue(Time.time);
+                    waveRow.add(String.valueOf(index)).update(label -> {
+                        Color color = Pal.accent;
+                        if (state.wave == index) color = Color.red;
+                        else if (state.wave - 1 == index && state.enemies > 0) color = Color.red.cpy().shiftHue(Time.time);
+                        label.setColor(color);
+                    });
+                    waveRow.table(unitTable -> {
+                        unitTable.center();
 
-                            label.setColor(color);
-                        });
-                        waveRow.table(unitTable -> {
-                            unitTable.center();
+                        if (state.rules.spawns.find(g -> g.getSpawned(index - 1) > 0) == null) {
+                            if (settings.getBool("emptywave")) unitTable.add(bundle.get("empty"));
+                            return;
+                        }
 
-                            if (state.rules.spawns.find(g -> g.getSpawned(index-1) > 0) == null) {
-                                if (settings.getBool("emptywave")) unitTable.add(bundle.get("empty"));
-                                return;
-                            }
+                        ObjectIntMap<SpawnGroup> groups = getWaveGroup(index-1);
 
-                            ObjectIntMap<SpawnGroup> groups = getWaveGroup(index-1);
-
-                            int row = 0;
-                            int max = Math.max(1, Math.round(getWidth()/64)-5);
-                            for (SpawnGroup group : groups.keys()) {
-                                int spawners = state.rules.waveTeam.cores().size + (group.type.flying ? spawner.countFlyerSpawns() : spawner.countGroundSpawns());
-                                int amount = groups.get(group);
-                                unitTable.stack(
-                                    new Table(ttt -> {
-                                        ttt.center();
-                                        ttt.image(group.type.uiIcon).size(iconMed);
-                                        ttt.pack();
-                                    }),
-
-                                    new Table(ttt -> {
-                                        ttt.bottom().left();
-                                        ttt.add(amount + "").padTop(2f).fontScale(0.9f);
-                                        ttt.add("[gray]x" + spawners).padTop(10f).fontScale(0.7f);
-                                        ttt.pack();
-                                    }),
-
-                                    new Table(ttt -> {
-                                        ttt.top().right();
-                                        ttt.image(Icon.warning.getRegion()).update(img -> img.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f)))).size(12f);
-                                        ttt.visible(() -> group.effect == StatusEffects.boss);
-                                        ttt.pack();
-                                    })
-                                ).pad(2f).get().addListener(new Tooltip(to -> {
-                                    to.background(Styles.black6);
-                                    to.margin(4f).left();
-                                    to.add("[stat]" + group.type.localizedName + "[]").row();
-                                    to.row();
-                                    to.add(bundle.format("shar-stat-waveAmount", amount + " [lightgray]x" + spawners + "[]")).row();
-                                    to.add(bundle.format("shar-stat-waveShield", group.getShield(index-1))).row();
-                                    if (group.effect != null && group.effect != StatusEffects.none)
-                                        to.add(bundle.get("shar-stat.waveStatus") + group.effect.emoji() + "[stat]" + group.effect.localizedName).row();
-                                }));
-                                if(row++ % max == max-1){
-                                    unitTable.row();
+                        int row = 0;
+                        int max = Math.max(1, Math.round(getWidth() / 64) - 5);
+                        for (SpawnGroup group : groups.keys()) {
+                            int spawners = state.rules.waveTeam.cores().size + (group.type.flying ? spawner.countFlyerSpawns() : spawner.countGroundSpawns());
+                            int amount = groups.get(group);
+                            unitTable.stack(
+                                new Table(ttt -> {
+                                    ttt.center();
+                                    ttt.image(group.type.uiIcon).size(iconMed);
+                                    ttt.pack();
+                                }),
+                                new Table(ttt -> {
+                                    ttt.bottom().left();
+                                    ttt.add(amount + "").padTop(2f).fontScale(0.9f);
+                                    ttt.add("[gray]x" + spawners).padTop(10f).fontScale(0.7f);
+                                    ttt.pack();
+                                }),
+                                new Table(ttt -> {
+                                    ttt.top().right();
+                                    ttt.image(Icon.warning.getRegion()).update(img -> img.setColor(Tmp.c2.set(Color.orange).lerp(Color.scarlet, Mathf.absin(Time.time, 2f, 1f)))).size(12f);
+                                    ttt.visible(() -> group.effect == StatusEffects.boss);
+                                    ttt.pack();
+                                })
+                            ).pad(2f).get().addListener(new Tooltip(to -> {
+                                to.background(Styles.black6);
+                                to.margin(4f).left();
+                                to.add("[stat]" + group.type.localizedName + "[]");
+                                to.row();
+                                to.add(bundle.format("shar-stat-waveAmount", amount + " [lightgray]x" + spawners + "[]"));
+                                to.row();
+                                to.add(bundle.format("shar-stat-waveShield", group.getShield(index - 1)));
+                                to.row();
+                                if (group.effect != null && group.effect != StatusEffects.none) {
+                                    to.add(bundle.get("shar-stat.waveStatus") + group.effect.emoji() + "[stat]" + group.effect.localizedName);
                                 }
+                            }));
+                            if(row++ % max == max - 1){
+                                unitTable.row();
                             }
-                        }).growX().margin(12f);
-                    }).growX().row();
-                    body.image().height(4f).color(Pal.gray).growX().row();
-                }
-            }).grow().margin(40f);
+                        }
+                    }).growX().margin(12f);
+                });
+                table.row();
+
+                table.image().height(4f).color(Pal.gray);
+                table.row();
+            }
         });
     }
 }
