@@ -9,7 +9,9 @@ public class ToolManager {
     public static void init() {
         Events.run(EventType.Trigger.update, () -> {
             for (Tool tool : tools) {
-                tool.onUpdate();
+                if(tool.isEnabled()) {
+                    tool.onUpdate();
+                }
             }
         });
     }
