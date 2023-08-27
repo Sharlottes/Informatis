@@ -1,4 +1,4 @@
-package informatis.draws;
+package informatis.ui.fragments.sidebar.windows.tools.draws;
 
 import arc.math.Angles;
 import arc.scene.ui.layout.Scl;

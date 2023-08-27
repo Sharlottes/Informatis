@@ -1,4 +1,4 @@
-package informatis.draws;
+package informatis.ui.fragments.sidebar.windows.tools.draws;
 
 import informatis.ui.components.FreeBar;
 import mindustry.gen.Unit;

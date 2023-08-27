@@ -1,4 +1,4 @@
-package informatis.draws;
+package informatis.ui.fragments.sidebar.windows.tools.draws;
 
 import arc.Core;
 import arc.graphics.Color;
@@ -7,7 +7,6 @@ import arc.util.Tmp;
 import mindustry.Vars;
 import mindustry.content.Fx;
 
-import static arc.Core.settings;
 import static mindustry.Vars.mobile;
 
 public class MagicCursorDraw extends OverDraw {

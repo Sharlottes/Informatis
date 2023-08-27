@@ -1,4 +1,4 @@
-package informatis.draws;
+package informatis.ui.fragments.sidebar.windows.tools.draws;
 
 import arc.graphics.g2d.*;
 import mindustry.game.*;
@@ -47,7 +47,7 @@ public class BlockRangeDraw extends OverDraw {
         float range = ((BaseTurret.BaseTurretBuild) build).range();
         Draw.color(Team.baseTeams[index].color);
         if (shader) {
-            Draw.z(OverDraws.zIndexTeamCache[index]);
+            Draw.z(OverDrawManager.zIndexTeamCache[index]);
             Fill.poly(build.x, build.y, Lines.circleVertices(range), range);
         } else {
             Drawf.dashCircle(build.x, build.y, range, Team.baseTeams[index].color);

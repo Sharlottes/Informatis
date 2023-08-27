@@ -1,4 +1,4 @@
-package informatis.draws;
+package informatis.ui.fragments.sidebar.windows.tools.draws;
 
 import arc.Core;
 import arc.Events;
@@ -18,7 +18,7 @@ import mindustry.world.Tile;
 import static arc.Core.graphics;
 import static informatis.SVars.turretRange;
 
-public class OverDraws {
+public class OverDrawManager {
     public static final ObjectMap<OverDrawCategory, OverDraw[]> draws = ObjectMap.of(
             OverDrawCategory.Block, new OverDraw[]{ new BlockBarDraw(), new BlockStatusDraw(), new PowerNodeDraw(), new MemoViewDraw() },
             OverDrawCategory.Unit, new OverDraw[] { new PathLineDraw(), new LogicLineDraw(), new CommandLineDraw(), new UnitPathLineDraw(), new UnitItemDraw(), new UnitBarDraw(), },

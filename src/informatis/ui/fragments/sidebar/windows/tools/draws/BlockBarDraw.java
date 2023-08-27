@@ -1,9 +1,8 @@
-package informatis.draws;
+package informatis.ui.fragments.sidebar.windows.tools.draws;
 
 import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Fill;
-import mindustry.Vars;
 import mindustry.gen.Building;
 import mindustry.graphics.Pal;
 import mindustry.world.Tile;

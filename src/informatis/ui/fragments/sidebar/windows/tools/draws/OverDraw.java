@@ -1,12 +1,10 @@
-package informatis.draws;
+package informatis.ui.fragments.sidebar.windows.tools.draws;
 
 import informatis.ui.fragments.sidebar.windows.SettingConfiger;
 import informatis.ui.fragments.sidebar.windows.ToolConfigable;
 import mindustry.gen.Building;
 import mindustry.gen.Unit;
 import mindustry.world.Tile;
-
-import java.util.Arrays;
 
 public class OverDraw extends SettingConfiger {
     private final ToolConfigable[] subConfigs;

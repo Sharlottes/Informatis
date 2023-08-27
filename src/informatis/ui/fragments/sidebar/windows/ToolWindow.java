@@ -3,7 +3,7 @@ package informatis.ui.fragments.sidebar.windows;
 import arc.graphics.Color;
 import arc.scene.ui.CheckBox;
 import arc.scene.ui.ScrollPane;
-import informatis.draws.*;
+import informatis.ui.fragments.sidebar.windows.tools.draws.*;
 import arc.scene.ui.layout.*;
 import arc.util.*;
 import informatis.ui.components.PageTabsFragment;
@@ -68,7 +68,7 @@ public class ToolWindow extends Window {
                         categoryTable.row();
                         categoryTable.table(configTable -> {
                             configTable.top().left().defaults().left().grow();
-                            for (ToolConfigable toolConfigable : OverDraws.draws.get(category)) {
+                            for (ToolConfigable toolConfigable : OverDrawManager.draws.get(category)) {
                                 configTable.button(bundle.get("setting." + toolConfigable.getName() + ".name"), Styles.flatToggleMenut, () -> toolConfigable.setEnabled(!toolConfigable.isEnabled()))
                                         .tooltip(t -> {
                                             t.background(Styles.black8).add(bundle.get("setting." + toolConfigable.getName() + ".description"));

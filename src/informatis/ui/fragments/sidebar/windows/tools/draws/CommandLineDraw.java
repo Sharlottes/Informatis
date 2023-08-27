@@ -1,4 +1,4 @@
-package informatis.draws;
+package informatis.ui.fragments.sidebar.windows.tools.draws;
 
 import arc.graphics.g2d.Lines;
 import mindustry.ai.types.CommandAI;

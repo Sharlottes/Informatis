@@ -1,4 +1,4 @@
-package informatis.draws;
+package informatis.ui.fragments.sidebar.windows.tools.draws;
 
 import arc.graphics.g2d.*;
 import mindustry.game.*;
@@ -38,7 +38,7 @@ public class UnitRangeDraw extends OverDraw {
         float range = unit.range();
         Draw.color(Team.baseTeams[index].color.cpy().shiftSaturation(0.25f));
         if (shader) {
-            Draw.z(OverDraws.zIndexTeamCache[index]);
+            Draw.z(OverDrawManager.zIndexTeamCache[index]);
             Fill.poly(unit.x, unit.y, Lines.circleVertices(range), range);
         } else Drawf.dashCircle(unit.x, unit.y, range, Team.baseTeams[index].color);
     }

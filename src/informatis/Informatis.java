@@ -2,7 +2,7 @@ package informatis;
 
 import informatis.core.OverDrawer;
 import informatis.core.Setting;
-import informatis.draws.OverDraws;
+import informatis.ui.fragments.sidebar.windows.tools.draws.OverDrawManager;
 import informatis.ui.fragments.FragmentManager;
 import informatis.ui.fragments.sidebar.dialogs.DialogManager;
 import informatis.ui.fragments.sidebar.windows.*;
@@ -28,7 +28,7 @@ public class Informatis extends Mod {
             WindowManager.init();
             DialogManager.init();
             FragmentManager.init();
-            OverDraws.init();
+            OverDrawManager.init();
             OverDrawer.init();
             SVars.init();
         });

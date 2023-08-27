@@ -1,12 +1,10 @@
-package informatis.draws;
+package informatis.ui.fragments.sidebar.windows.tools.draws;
 
 import arc.Events;
-import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Lines;
 import arc.math.Mathf;
 import arc.util.Time;
 import arc.util.Tmp;
-import mindustry.entities.Effect;
 import mindustry.game.EventType;
 import mindustry.graphics.Drawf;
 import mindustry.graphics.Pal;
