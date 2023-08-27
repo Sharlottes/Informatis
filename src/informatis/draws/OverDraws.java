@@ -21,12 +21,12 @@ import static informatis.SVars.turretRange;
 public class OverDraws {
     public static final ObjectMap<OverDrawCategory, OverDraw[]> draws = ObjectMap.of(
             OverDrawCategory.Block, new OverDraw[]{ new BlockBarDraw(), new BlockStatusDraw(), new PowerNodeDraw(), new MemoViewDraw() },
-            OverDrawCategory.Unit, new OverDraw[] { new PathLineDraw(), new LogicLineDraw(), new CommandLineDraw(), new UnitPathLineDraw(), new UnitItemDraw(),new UnitBarDraw(), },
+            OverDrawCategory.Unit, new OverDraw[] { new PathLineDraw(), new LogicLineDraw(), new CommandLineDraw(), new UnitPathLineDraw(), new UnitItemDraw(), new UnitBarDraw(), },
             OverDrawCategory.Range, new OverDraw[] { new BlockRangeDraw(), new UnitRangeDraw(), new PlayerRangeDraw() },
             OverDrawCategory.Link, new OverDraw[] { new UnitCargoLinkDraw(), new MassLinkDraw() },
             OverDrawCategory.Util, new OverDraw[] { new MagicCursorDraw(), new InfoRingDraw() }
     );
-    private static final Seq<OverDraw> overDraws = new Seq<>();
+    public static final Seq<OverDraw> overDraws = new Seq<>();
     public static float[] zIndexTeamCache = new float[Team.baseTeams.length];
     private static final FrameBuffer effectBuffer = new FrameBuffer();
 
