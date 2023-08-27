@@ -7,6 +7,7 @@ import informatis.ui.fragments.sidebar.windows.tools.draws.*;
 import arc.scene.ui.layout.*;
 import arc.util.*;
 import informatis.ui.components.PageTabsFragment;
+import informatis.ui.fragments.sidebar.windows.tools.tools.ToolManager;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.ui.*;
@@ -54,8 +55,8 @@ public class ToolWindow extends Window {
                     sidebarTable.row();
                 }
             }).padRight(2 * 8f);
-             bodyScroll[0] = mainTable.pane(Styles.smallPane, bodyTable -> {
-                 bodyTable.top().left().margin(12).defaults().growX();
+            bodyScroll[0] = mainTable.pane(Styles.smallPane, bodyTable -> {
+                bodyTable.top().left().margin(12).defaults().growX();
                 for (int i = 0; i < categories.length; i++) {
                     final OverDrawCategory category = categories[i];
 
@@ -66,29 +67,11 @@ public class ToolWindow extends Window {
                         categoryTable.row();
                         categoryTable.image().color(Color.gray).height(2f).pad(8, 0, 8, 0);
                         categoryTable.row();
-                        categoryTable.table(configTable -> {
-                            configTable.top().left().defaults().left().grow();
+                        categoryTable.table(configListTable -> {
+                            configListTable.top().left().defaults().left().grow();
                             for (ToolConfigable toolConfigable : OverDrawManager.draws.get(category)) {
-                                configTable.button(bundle.get("setting." + toolConfigable.getName() + ".name"), Styles.flatToggleMenut, () -> toolConfigable.setEnabled(!toolConfigable.isEnabled()))
-                                        .tooltip(t -> {
-                                            t.background(Styles.black8).add(bundle.get("setting." + toolConfigable.getName() + ".description"));
-                                        }).checked(toolConfigable.isEnabled()).padBottom(4).get().getLabelCell().labelAlign(Align.left).pad(8, 16, 8, 8).get().setFontScale(0.9f);
-                                configTable.row();
-                                if(toolConfigable.getSubConfigs().length == 0) continue;;
-                                configTable.table(subConfigTable -> {
-                                    subConfigTable.left().defaults().left().padBottom(4).labelAlign(Align.left);
-
-                                    for (ToolConfigable subConfigable : toolConfigable.getSubConfigs()) {
-                                        CheckBox checkBox = subConfigTable.check(bundle.get("setting." + subConfigable.getName() + ".name"), subConfigable.isEnabled(), subConfigable::setEnabled)
-                                                .tooltip(t -> {
-                                                    t.background(Styles.black8).add(bundle.get("setting." + subConfigable.getName() + ".description"));
-                                                }).disabled(x -> !toolConfigable.isEnabled()).get();
-                                        checkBox.getLabel().setFontScale(0.8f);
-                                        checkBox.getImage().setScale(0.7f);
-                                        subConfigTable.row();
-                                    }
-                                }).pad(4, 24, 16, 4);
-                                configTable.row();
+                                configListTable.add(buildConfigTable(toolConfigable));
+                                configListTable.row();
                             }
                         });
                     }).marginBottom(32f).prefHeight();
@@ -99,6 +82,39 @@ public class ToolWindow extends Window {
     }
 
     private Table rebuildToolsTable() {
-        return new Table();
+        return new Table(mainTable -> {
+            mainTable.pane(Styles.smallPane, bodyTable -> {
+                bodyTable.top().left().defaults().top().left().grow();
+                for (ToolConfigable toolConfigable : ToolManager.tools) {
+                    bodyTable.add(buildConfigTable(toolConfigable));
+                    bodyTable.row();
+                }
+            }).grow();
+        });
+    }
+
+    private Table buildConfigTable(ToolConfigable toolConfigable) {
+        return new Table(configTable -> {
+            configTable.top().left().defaults().left().grow();
+            configTable.button(bundle.get("setting." + toolConfigable.getName() + ".name"), Styles.flatToggleMenut, () -> toolConfigable.setEnabled(!toolConfigable.isEnabled()))
+                    .tooltip(t -> {
+                        t.background(Styles.black8).add(bundle.get("setting." + toolConfigable.getName() + ".description"));
+                    }).checked(toolConfigable.isEnabled()).padBottom(4).get().getLabelCell().labelAlign(Align.left).pad(8, 16, 8, 8).get().setFontScale(0.9f);
+            configTable.row();
+            if(toolConfigable.getSubConfigs().length == 0) return;
+            configTable.table(subConfigTable -> {
+                subConfigTable.left().defaults().left().padBottom(4).labelAlign(Align.left);
+
+                for (ToolConfigable subConfigable : toolConfigable.getSubConfigs()) {
+                    CheckBox checkBox = subConfigTable.check(bundle.get("setting." + subConfigable.getName() + ".name"), subConfigable.isEnabled(), subConfigable::setEnabled)
+                            .tooltip(t -> {
+                                t.background(Styles.black8).add(bundle.get("setting." + subConfigable.getName() + ".description"));
+                            }).disabled(x -> !toolConfigable.isEnabled()).get();
+                    checkBox.getLabel().setFontScale(0.8f);
+                    checkBox.getImage().setScale(0.7f);
+                    subConfigTable.row();
+                }
+            }).pad(4, 24, 16, 4);
+        });
     }
 }
