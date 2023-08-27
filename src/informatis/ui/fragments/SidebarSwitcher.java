@@ -34,9 +34,6 @@ public class SidebarSwitcher {
             actShowMoveX(currentSidebar, 0, -currentSidebar.getWidth());
             actShowMoveX(nextSidebar, -nextSidebar.getWidth(),0);
             actResizeWidth(this, nextSidebar.getWidth());
-
-            setDisabled(true);
-            Time.run(60, () -> setDisabled(false));
         });
     }};
     private static final ImageButton.ImageButtonStyle style = new ImageButton.ImageButtonStyle() {{
@@ -57,7 +54,7 @@ public class SidebarSwitcher {
 
     private static void actShowMoveX(Element element, float from, float to) {
         MoveToAction moveToAction = new MoveToAction();
-        moveToAction.setDuration(1);
+        moveToAction.setDuration(0.2f);
         moveToAction.setX(to);
         moveToAction.setInterpolation(Interp.circleOut);
         VisibleAction visibleAction = new VisibleAction();
@@ -73,7 +70,7 @@ public class SidebarSwitcher {
     private static void actResizeWidth(Element element, float width) {
         SizeToAction sizeToAction = new SizeToAction();
         sizeToAction.setSize(width, element.getHeight());
-        sizeToAction.setDuration(1);
+        sizeToAction.setDuration(0.2f);
         sizeToAction.setInterpolation(Interp.circleOut);
         element.actions(sizeToAction);
         element.act(Core.graphics.getDeltaTime());
