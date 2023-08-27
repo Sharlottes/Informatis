@@ -1,6 +1,8 @@
 package informatis.ui.fragments.sidebar.windows.tools.tools;
 
+import arc.Events;
 import mindustry.Vars;
+import mindustry.game.EventType;
 
 public class CameraScaler extends Tool {
     private float lastMinZoom;
@@ -10,12 +12,20 @@ public class CameraScaler extends Tool {
 
     public CameraScaler() {
         super("camerascaler");
+
+        Events.on(EventType.WorldLoadEndEvent.class, x -> {
+            toggleScaler();
+        });
     }
 
     @Override
     public void setEnabled(boolean value) {
         super.setEnabled(value);
-        if(value) {
+        toggleScaler();
+    }
+
+    private void toggleScaler() {
+        if(isEnabled()) {
             lastMinZoom = Vars.renderer.minZoom;
             Vars.renderer.minZoom = targetMinZoom;
         } else {
