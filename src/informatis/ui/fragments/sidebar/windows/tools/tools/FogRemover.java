@@ -19,8 +19,8 @@ public class FogRemover extends Tool {
             Vars.state.rules.staticColor = Color.clear;
             Vars.state.rules.dynamicColor = Color.clear;
         } else {
-            Vars.state.rules.staticColor = lastStaticColor;
-            Vars.state.rules.dynamicColor = lastDynamicColor;
+            Vars.state.rules.staticColor = lastStaticColor == null ? Vars.state.rules.staticColor : lastStaticColor;
+            Vars.state.rules.dynamicColor = lastDynamicColor == null ? Vars.state.rules.dynamicColor : lastDynamicColor;
         }
     }
 }
