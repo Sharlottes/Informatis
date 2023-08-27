@@ -27,6 +27,7 @@ public class WaveWindow extends Window {
 
     public WaveWindow() {
         super(Icon.waves, "wave");
+        disableRootScroll = true;
         height = 300;
         width = 300;
 
@@ -43,7 +44,6 @@ public class WaveWindow extends Window {
 
     @Override
     public void buildBody(Table table) {
-        Core.app.post(() -> ((ScrollPane) table.parent).setScrollingDisabled(true, true));
         wavePane = new ScrollPane(rebuild(), Styles.noBarPane);
         table.top().background(Styles.black8).margin(40f).defaults().grow();
         table.add(wavePane);

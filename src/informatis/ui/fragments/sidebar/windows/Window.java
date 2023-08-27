@@ -16,7 +16,7 @@ public class Window extends Table {
     public final TextureRegionDrawable icon;
     @Nullable
     public final Cons<Table> content;
-    public boolean shown = false;
+    public boolean shown = false, disableRootScroll = false;
 
     public float minWindowWidth = 160, minWindowHeight = 60;
     public static float maxWindowWidth = Float.MAX_VALUE, maxWindowHeight = Float.MAX_VALUE;
@@ -53,7 +53,7 @@ public class Window extends Table {
 
         row();
         table(Styles.black5, pt -> {
-             pt.pane(Styles.noBarPane, new Table(this::buildBody)).grow();
+             pt.pane(Styles.noBarPane, new Table(this::buildBody)).scrollX(!disableRootScroll).scrollY(!disableRootScroll).grow();
         }).grow();
         row();
         table(Styles.black5, t -> {
