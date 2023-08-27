@@ -25,6 +25,7 @@ public class TabsFragment extends Table {
                 });
                 eventEmitter.fire(Event.TabChanged);
             });
+            button.setChecked(i == currentTabIndex);
             add(button).height(50).growX();
         });
     }
