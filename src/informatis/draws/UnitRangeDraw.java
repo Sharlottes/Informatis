@@ -10,7 +10,7 @@ import static mindustry.Vars.player;
 
 public class UnitRangeDraw extends OverDraw {
     public UnitRangeDraw() {
-        super("unitRange");
+        super("unitRange", "airRange", "groundRange", "aliceRange", "invalidRange", "RangeShader");
     }
 
     @Override

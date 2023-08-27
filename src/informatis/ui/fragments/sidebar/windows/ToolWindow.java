@@ -1,6 +1,7 @@
 package informatis.ui.fragments.sidebar.windows;
 
 import arc.graphics.Color;
+import arc.scene.ui.CheckBox;
 import arc.scene.ui.ScrollPane;
 import informatis.draws.*;
 import arc.scene.ui.layout.*;
@@ -9,8 +10,6 @@ import informatis.ui.components.PageTabsFragment;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.ui.*;
-
-import java.util.concurrent.atomic.AtomicReference;
 
 import static arc.Core.*;
 import static mindustry.Vars.*;
@@ -60,20 +59,36 @@ public class ToolWindow extends Window {
                 for (int i = 0; i < categories.length; i++) {
                     final OverDrawCategory category = categories[i];
 
-                    anchorPoints[Math.min(i + 1, anchorPoints.length - 1)] = anchorPoints[i] + bodyTable.table(sectionTable -> {
-                        sectionTable.top().left().defaults().growX().left();
-                        sectionTable.add(category.name).color(Pal.accent).labelAlign(Align.left);
-                        sectionTable.row();
-                        sectionTable.image().color(Color.gray).height(2f).pad(8, 0, 8, 0);
-                        sectionTable.row();
-                        sectionTable.table(desc -> {
-                            desc.top().left().defaults().left().labelAlign(Align.left);
-                            for (OverDraw draw : OverDraws.draws.get(category)) {
-                                desc.check(bundle.get("setting." + draw.name + ".name"), draw.isEnabled(), draw::setEnabled)
+                    //set current corrination to next point so that scroll position is not end of this element.
+                    anchorPoints[Math.min(i + 1, anchorPoints.length - 1)] = anchorPoints[i] + bodyTable.table(categoryTable -> {
+                        categoryTable.top().left().defaults().growX().left();
+                        categoryTable.add(category.name).color(Pal.accent).labelAlign(Align.left);
+                        categoryTable.row();
+                        categoryTable.image().color(Color.gray).height(2f).pad(8, 0, 8, 0);
+                        categoryTable.row();
+                        categoryTable.table(configTable -> {
+                            configTable.top().left().defaults().left().grow();
+                            for (ToolConfigable toolConfigable : OverDraws.draws.get(category)) {
+                                configTable.button(bundle.get("setting." + toolConfigable.getName() + ".name"), Styles.flatToggleMenut, () -> toolConfigable.setEnabled(!toolConfigable.isEnabled()))
                                         .tooltip(t -> {
-                                            t.background(Styles.black8).add(bundle.get("setting." + draw.name + ".description"));
-                                        });
-                                desc.row();
+                                            t.background(Styles.black8).add(bundle.get("setting." + toolConfigable.getName() + ".description"));
+                                        }).checked(toolConfigable.isEnabled()).padBottom(4).get().getLabelCell().labelAlign(Align.left).pad(8, 16, 8, 8).get().setFontScale(0.9f);
+                                configTable.row();
+                                if(toolConfigable.getSubConfigs().length == 0) continue;;
+                                configTable.table(subConfigTable -> {
+                                    subConfigTable.left().defaults().left().padBottom(4).labelAlign(Align.left);
+
+                                    for (ToolConfigable subConfigable : toolConfigable.getSubConfigs()) {
+                                        CheckBox checkBox = subConfigTable.check(bundle.get("setting." + subConfigable.getName() + ".name"), subConfigable.isEnabled(), subConfigable::setEnabled)
+                                                .tooltip(t -> {
+                                                    t.background(Styles.black8).add(bundle.get("setting." + subConfigable.getName() + ".description"));
+                                                }).disabled(x -> !toolConfigable.isEnabled()).get();
+                                        checkBox.getLabel().setFontScale(0.8f);
+                                        checkBox.getImage().setScale(0.7f);
+                                        subConfigTable.row();
+                                    }
+                                }).pad(4, 24, 16, 4);
+                                configTable.row();
                             }
                         });
                     }).marginBottom(32f).prefHeight();

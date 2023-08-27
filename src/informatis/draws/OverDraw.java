@@ -1,26 +1,27 @@
 package informatis.draws;
 
-import arc.Core;
+import informatis.ui.fragments.sidebar.windows.SettingConfiger;
+import informatis.ui.fragments.sidebar.windows.ToolConfigable;
 import mindustry.gen.Building;
 import mindustry.gen.Unit;
 import mindustry.world.Tile;
 
-public class OverDraw {
-    public String name;
-    private boolean enabled;
+import java.util.Arrays;
 
-    OverDraw(String name) {
-        this.name = name;
-        this.enabled = Core.settings.getBool(name, false);
+public class OverDraw extends SettingConfiger {
+    private final ToolConfigable[] subConfigs;
+
+    public OverDraw(String name, String... subConfigNames) {
+        super(name);
+        subConfigs = new ToolConfigable[subConfigNames.length];
+        for(int i = 0; i < subConfigNames.length; i++) {
+            subConfigs[i] = new SettingConfiger(subConfigNames[i]);
+        }
     }
 
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean value) {
-        enabled = value;
-        Core.settings.put(name, value);
+    @Override
+    public ToolConfigable[] getSubConfigs() {
+        return subConfigs;
     }
 
     /**

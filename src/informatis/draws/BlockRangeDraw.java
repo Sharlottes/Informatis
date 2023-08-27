@@ -12,7 +12,7 @@ import static mindustry.Vars.player;
 
 public class BlockRangeDraw extends OverDraw {
     public BlockRangeDraw() {
-        super("blockRange");
+        super("blockRange", "airRange", "groundRange", "aliceRange", "invalidRange", "RangeShader");
     }
     private final static BlockRangeData blockRangeData = new BlockRangeData();
 
