@@ -22,7 +22,7 @@ public class OverDrawManager {
     public static final ObjectMap<OverDrawCategory, OverDraw[]> draws = ObjectMap.of(
             OverDrawCategory.Block, new OverDraw[]{ new BlockBarDraw(), new BlockStatusDraw(), new PowerNodeDraw(), new MemoViewDraw() },
             OverDrawCategory.Unit, new OverDraw[] { new PathLineDraw(), new LogicLineDraw(), new CommandLineDraw(), new UnitPathLineDraw(), new UnitItemDraw(), new UnitBarDraw(), },
-            OverDrawCategory.Range, new OverDraw[] { new BlockRangeDraw(), new UnitRangeDraw(), new PlayerRangeDraw() },
+            OverDrawCategory.Range, new OverDraw[] { new RangeDraw()  },
             OverDrawCategory.Link, new OverDraw[] { new UnitCargoLinkDraw(), new MassLinkDraw() },
             OverDrawCategory.Util, new OverDraw[] { new MagicCursorDraw(), new InfoRingDraw() }
     );
