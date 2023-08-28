@@ -5,12 +5,15 @@ import arc.func.*;
 import arc.input.*;
 import arc.math.Mathf;
 import arc.math.geom.*;
+import arc.scene.Element;
 import arc.scene.event.*;
 import arc.scene.style.*;
 import arc.scene.ui.layout.*;
 import arc.util.*;
 import mindustry.gen.*;
 import mindustry.ui.*;
+
+import static arc.Core.scene;
 
 public class Window extends Table {
     public final TextureRegionDrawable icon;
@@ -31,6 +34,14 @@ public class Window extends Table {
         this.icon = icon;
         this.name = name;
         this.content = content;
+
+        addListener(new HandCursorListener() {
+            @Override
+            public void exit(InputEvent event, float x, float y, int pointer, Element toActor) {
+                super.exit(event, x, y, pointer, toActor);
+                scene.setScrollFocus(null);
+            }
+        });
     }
 
     public void build() {
@@ -49,7 +60,6 @@ public class Window extends Table {
             t.addListener(new DragHandleListener(this));
         }).height(8 * 6f).growX().prefWidth();
         this.minWindowWidth = Math.max(this.minWindowWidth, width);
-
 
         row();
         table(Styles.black5, pt -> {

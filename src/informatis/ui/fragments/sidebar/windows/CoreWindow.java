@@ -2,12 +2,10 @@ package informatis.ui.fragments.sidebar.windows;
 
 import arc.*;
 import informatis.SUtils;
-import informatis.ui.components.OverScrollPane;
 import informatis.ui.components.SBar;
 import mindustry.game.*;
 import arc.graphics.*;
 import arc.math.*;
-import arc.math.geom.*;
 import arc.scene.event.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
@@ -25,7 +23,6 @@ import mindustry.world.blocks.storage.*;
 import static mindustry.Vars.*;
 
 public class CoreWindow extends Window {
-    Vec2 scrollPos = new Vec2(0, 0);
     Table window;
     float heat;
     ObjectMap<Team, ItemData> itemData = new ObjectMap<>();
@@ -54,10 +51,9 @@ public class CoreWindow extends Window {
     @Override
     public void buildBody(Table table) {
         window = table;
-        scrollPos = new Vec2(0, 0);
 
         table.background(Styles.black8).top();
-        table.add(new OverScrollPane(rebuild(), Styles.noBarPane, scrollPos).disableScroll(true, false)).grow().name("core-pane");
+        table.pane(Styles.noBarPane, rebuild()).grow().name("core-pane").get().setScrollingDisabled(true, false);
         Events.on(EventType.WorldLoadEvent.class, e -> resetUsed());
     }
 

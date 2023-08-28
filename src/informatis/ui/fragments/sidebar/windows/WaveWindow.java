@@ -1,12 +1,10 @@
 package informatis.ui.fragments.sidebar.windows;
 
-import informatis.ui.components.OverScrollPane;
 import mindustry.*;
 import mindustry.type.*;
 import arc.*;
 import arc.graphics.*;
 import arc.math.*;
-import arc.math.geom.*;
 import arc.scene.event.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;

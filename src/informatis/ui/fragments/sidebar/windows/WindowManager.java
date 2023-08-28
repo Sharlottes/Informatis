@@ -21,15 +21,11 @@ public class WindowManager {
             mapEditorWindow = new MapEditorWindow()
         );
 
-        for(Window window : windows) {
-            window.build();
-        }
-
         // windows place for dragging
         Vars.ui.hudGroup.fill(t -> {
             t.name = "Windows";
-
             for(Window window : windows) {
+                window.build();
                 t.add(window).height(window.getHeight()).width(window.getWidth());
             }
         });

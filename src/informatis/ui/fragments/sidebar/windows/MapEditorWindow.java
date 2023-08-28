@@ -6,7 +6,6 @@ import arc.math.geom.*;
 import arc.scene.*;
 import arc.scene.style.*;
 import arc.struct.*;
-import informatis.ui.components.OverScrollPane;
 import mindustry.editor.*;
 import mindustry.game.*;
 import mindustry.graphics.*;
@@ -30,7 +29,6 @@ import static informatis.ui.fragments.sidebar.windows.WindowManager.mapEditorWin
 import static mindustry.Vars.*;
 
 public class MapEditorWindow extends Window {
-    Vec2 scrollPos = new Vec2(0, 0);
     TextField search;
     EditorTool tool;
     final Vec2[][] brushPolygons = new Vec2[MapEditor.brushSizes.length][0];
@@ -141,7 +139,6 @@ public class MapEditorWindow extends Window {
 
     @Override
     public void buildBody(Table table) {
-        scrollPos = new Vec2(0, 0);
         search = Elem.newField(null, f->{});
         search.setMessageText(Core.bundle.get("players.search")+"...");
 
@@ -155,10 +152,12 @@ public class MapEditorWindow extends Window {
                 t.label(()-> drawBlock == null ? "[gray]None[]" : "[accent]" + drawBlock.localizedName + "[] "+ drawBlock.emoji());
                 t.add(search).growX().pad(8).name("search");
             }).growX().row();
-            display.add(new OverScrollPane(rebuildEditor(), Styles.noBarPane, scrollPos).disableScroll(true, false)).grow().name("editor-pane").row();
+            display.pane(Styles.noBarPane, rebuildEditor()).grow().name("editor-pane").get().setScrollingDisabled(true, false);
+            display.row();
         }));
         displays.put(Icon.settings, new Table(display -> {
-            display.add(new OverScrollPane(rebuildRule(), Styles.noBarPane, scrollPos).disableScroll(true, false)).grow().name("rule-pane").row();
+            display.pane(Styles.noBarPane, rebuildRule()).grow().name("rule-pane").get().setScrollingDisabled(true, false);
+            display.row();
         }));
 
         table.table(buttons -> {
