@@ -35,7 +35,7 @@ public class VDOM {
         return this;
     }
 
-    private class BuilderData {
+    private static class BuilderData {
         private final Seq<Status> statuses = new Seq<>();
         private final Cons<Object[]> render;
 
@@ -45,7 +45,7 @@ public class VDOM {
         }
     }
 
-    public class Status<T> {
+    public static class Status<T> {
         T prevStatus, currStatus;
 
         public Status() {
@@ -73,5 +73,9 @@ public class VDOM {
         public T getValue() {
             return currStatus;
         }
+    }
+
+    public interface IRebuildable {
+        void rebuild(Object[] statuses);
     }
 }

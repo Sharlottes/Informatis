@@ -13,7 +13,6 @@ import arc.scene.ui.layout.*;
 import arc.struct.Bits;
 import arc.struct.*;
 import arc.util.*;
-import informatis.core.IRebuildable;
 import informatis.core.VDOM;
 import informatis.ui.components.SBar;
 import mindustry.*;
@@ -51,7 +50,7 @@ import static mindustry.Vars.*;
 
 public class UnitWindow extends Window {
     private final VDOM vdom = new VDOM();
-    private final VDOM.Status<Teamc> target = vdom.new Status<>();
+    private final VDOM.Status<Teamc> target = new VDOM.Status<>();
     private final UnitWindowBody unitWindowBody = new UnitWindowBody();
 
     public UnitWindow() {
@@ -110,7 +109,7 @@ public class UnitWindow extends Window {
         }
     }
 
-    static class UnitWindowBody extends Table implements IRebuildable {
+    static class UnitWindowBody extends Table implements VDOM.IRebuildable {
         public boolean locked;
         private Seq<BarData> barDataSeq = new Seq<>();
 
