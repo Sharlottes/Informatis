@@ -1,5 +1,6 @@
 package informatis;
 
+import informatis.core.UpdateChecker;
 import informatis.ui.fragments.sidebar.windows.tools.draws.OverDrawManager;
 import informatis.ui.fragments.sidebar.windows.tools.tools.ToolManager;
 import informatis.ui.fragments.sidebar.dialogs.DialogManager;
@@ -26,6 +27,7 @@ public class Informatis extends Mod {
             ToolManager.init();
             OverDrawer.init();
             SVars.init();
+            UpdateChecker.init();
         });
     }
 }
