@@ -24,7 +24,7 @@ public class OverDrawManager {
             OverDrawCategory.Unit, new OverDraw[] { new PathLineDraw(), new LogicLineDraw(), new CommandLineDraw(), new UnitPathLineDraw(), new UnitItemDraw(), new UnitBarDraw(), },
             OverDrawCategory.Range, new OverDraw[] { new RangeDraw()  },
             OverDrawCategory.Link, new OverDraw[] { new UnitCargoLinkDraw(), new MassLinkDraw() },
-            OverDrawCategory.Util, new OverDraw[] { new MagicCursorDraw(), new InfoRingDraw(), new SelectArrawDraw(), new SpawnerArrawDraw(), new DistanceLineDraw() }
+            OverDrawCategory.Util, new OverDraw[] { new MagicCursorDraw(),new SelectArrawDraw(), new SpawnerArrawDraw(), new DistanceLineDraw() }
     );
     public static final Seq<OverDraw> overDraws = new Seq<>();
     public static float[] zIndexTeamCache = new float[Team.baseTeams.length];
