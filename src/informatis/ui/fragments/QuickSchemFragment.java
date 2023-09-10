@@ -12,10 +12,12 @@ import arc.scene.utils.Elem;
 import arc.struct.Seq;
 import arc.util.Align;
 import arc.util.*;
+import mindustry.Vars;
 import mindustry.ctype.*;
 import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.Pal;
+import mindustry.mod.Mod;
 import mindustry.ui.Styles;
 import mindustry.ui.dialogs.*;
 
@@ -54,6 +56,9 @@ public class QuickSchemFragment extends Table {
     }
 
     public Table rebuildBody() {
+        // scheme-size crashed the mod
+        if(mods.getMod("scheme-size") == null || mods.getMod("scheme-size").enabled()) return new Table();
+
         visible = settings.getBool(("schem"));
         if(!visible) return new Table();
 

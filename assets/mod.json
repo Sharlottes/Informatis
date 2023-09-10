@@ -4,7 +4,7 @@
   "author": "Sharlotte",
   "description": "The mod displays more information in-game, such as unit/building, wave, core, tile, item/unit total info etc",
   "subtitle": "hacky ui tool",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "main": "informatis.Informatis",
   "minGameVersion": "145.1",
   "dependencies": [],
