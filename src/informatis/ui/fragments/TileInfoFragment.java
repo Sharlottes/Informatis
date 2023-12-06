@@ -36,6 +36,10 @@ public class TileInfoFragment {
                     button.clicked(() -> {
                         waveShown = !waveShown;
 
+                        TextureRegionDrawable icon = waveShown ? Icon.upOpen : Icon.downOpen;
+                        button.getStyle().imageUp = icon;
+                        button.resizeImage(icon.imageSize());
+                        button.setChecked(waveShown);
                     });
                     collapseButton.add(button);
                 }).left().top()
