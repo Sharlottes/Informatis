@@ -15,6 +15,7 @@ import mindustry.ctype.*;
 import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.Pal;
+import mindustry.mod.Mods;
 import mindustry.ui.Styles;
 import mindustry.ui.dialogs.*;
 
@@ -53,7 +54,8 @@ public class QuickSchemFragment extends Table {
 
     public Table rebuildBody() {
         // scheme-size crashed the mod
-        if(mods.getMod("scheme-size") == null || mods.getMod("scheme-size").enabled()) return new Table();
+        Mods.LoadedMod schemSizeMod = mods.getMod("scheme-size");
+        if(schemSizeMod == null || schemSizeMod.enabled()) return new Table();
 
         visible = settings.getBool(("schem"));
         if(!visible) return new Table();

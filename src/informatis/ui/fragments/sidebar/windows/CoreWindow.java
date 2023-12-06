@@ -119,9 +119,12 @@ public class CoreWindow extends Window {
                 int row = 0;
 
                 CoreBlock.CoreBuild core = team.core();
+                if(core == null || core.items == null) {
+                    return;
+                }
                 for(int i = 0; i < Vars.content.items().size; i++){
                     Item item = Vars.content.item(i);
-                    if(!team.items().has(item)) return;
+                    if(!team.items().has(item)) continue;
                     itemTable.stack(
                         new Table(ttt -> {
                             ttt.image(item.uiIcon).size(iconSmall).tooltip(tttt -> tttt.background(Styles.black6).add(item.localizedName).style(Styles.outlineLabel).margin(2f));
@@ -189,16 +192,18 @@ public class CoreWindow extends Window {
 
         public void updateItems(Team team){
             CoreBlock.CoreBuild core = team.core();
-            if (core != null) {
-                Seq<ItemStack> stack = updateItems;
-                if(stack.isEmpty()) Vars.content.items().each(i -> stack.add(new ItemStack(i, 0)));
-                for (Item item : Vars.content.items()) {
-                    stack.get(item.id).set(item, core.items.get(item) - (prevItems != null ? prevItems.get(item.id).amount : 0));
-                    if (prevItems != null) prevItems.get(item.id).set(item, core.items.get(item));
-                }
+            if (core == null || core.items == null) return;
 
-                if(prevItems != null) prevItems.clear().addAll(Vars.content.items().map(i -> new ItemStack(i, core.items.get(i))));
+            Seq<ItemStack> stack = updateItems;
+            if(stack.isEmpty()) {
+                Vars.content.items().each(i -> stack.add(new ItemStack(i, 0)));
             }
+
+            for (Item item : Vars.content.items()) {
+                stack.get(item.id).set(item, core.items.get(item) - prevItems.get(item.id).amount);
+                prevItems.get(item.id).set(item, core.items.get(item));
+            }
+            prevItems.clear().addAll(Vars.content.items().map(i -> new ItemStack(i, core.items.get(i))));
         }
     }
 }

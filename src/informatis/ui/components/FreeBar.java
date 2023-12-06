@@ -10,6 +10,8 @@ import mindustry.graphics.*;
 import mindustry.type.*;
 import mindustry.world.blocks.payloads.Payload;
 
+import informatis.SVars;
+
 import static arc.Core.*;
 import static mindustry.Vars.*;
 
@@ -93,11 +95,15 @@ public class FreeBar {
                     x - width / 2, y - height));
         }
 
-        {
-            float max1 = ((ShieldRegenFieldAbility)content.units().copy().filter(ut -> ut.abilities.find(abil -> abil instanceof ShieldRegenFieldAbility) != null).sort(ut -> ((ShieldRegenFieldAbility)ut.abilities.find(abil -> abil instanceof ShieldRegenFieldAbility)).max).peek().abilities.find(abil -> abil instanceof ShieldRegenFieldAbility)).max;
-            float max2 = 0f;
-            if(unit.type.abilities.find(abil -> abil instanceof ForceFieldAbility) != null) max2 = ((ForceFieldAbility) unit.type.abilities.find(abil -> abil instanceof ForceFieldAbility)).max;
-            float max = Mathf.clamp(unit.shield / Math.max(max1, max2));
+        float maxShield = -1;
+        for(Ability ability : unit.abilities) {
+            if(ability instanceof  ForceFieldAbility forceFieldAbility) {
+                maxShield = forceFieldAbility.max;
+            }
+        }
+        if(maxShield != -1) {
+
+            float max = Mathf.clamp(unit.shield / Math.max(SVars.maxShieldAmongUnits, maxShield));
 
             float topWidth = - width / 2 + width * max;
             float moser = topWidth + height;

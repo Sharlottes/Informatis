@@ -383,8 +383,9 @@ public class MapEditorWindow extends Window {
         if(drawBlock.isMultiblock()){
             x = Mathf.clamp(x, (drawBlock.size - 1) / 2, world.width() - drawBlock.size / 2 - 1);
             y = Mathf.clamp(y, (drawBlock.size - 1) / 2, world.height() - drawBlock.size / 2 - 1);
-            if(!hasOverlap(x, y)){
-                world.tile(x, y).setBlock(drawBlock, drawTeam, rotation);
+            Tile tile = world.tile(x, y);
+            if(tile != null && !hasOverlap(tile)){
+                tile.setBlock(drawBlock, drawTeam, rotation);
             }
         }else{
             boolean isFloor = drawBlock.isFloor() && drawBlock != Blocks.air;
@@ -439,21 +440,20 @@ public class MapEditorWindow extends Window {
         }
     }
 
-    boolean hasOverlap(int x, int y){
-        Tile tile = world.tile(x, y);
+    boolean hasOverlap(Tile tile){
         //allow direct replacement of blocks of the same size
-        if(tile != null && tile.isCenter() && tile.block() != drawBlock && tile.block().size == drawBlock.size && tile.x == x && tile.y == y){
+        if(tile.isCenter() && tile.block() != drawBlock && tile.block().size == drawBlock.size && tile.x == x && tile.y == y){
             return false;
         }
 
         //else, check for overlap
-        int offsetx = -(drawBlock.size - 1) / 2;
-        int offsety = -(drawBlock.size - 1) / 2;
+        int offsetX = -(drawBlock.size - 1) / 2;
+        int offsetY = -(drawBlock.size - 1) / 2;
         for(int dx = 0; dx < drawBlock.size; dx++){
             for(int dy = 0; dy < drawBlock.size; dy++){
-                int worldx = dx + offsetx + x;
-                int worldy = dy + offsety + y;
-                Tile other = world.tile(worldx, worldy);
+                int worldX = dx + offsetX + tile.x;
+                int worldY = dy + offsetY + tile.y;
+                Tile other = world.tile(worldX, worldY);
 
                 if(other != null && other.block().isMultiblock()){
                     return true;
@@ -468,8 +468,9 @@ public class MapEditorWindow extends Window {
         pick(KeyCode.i){
             public void touched(int x, int y){
                 if(!Structs.inBounds(x, y, world.width(), world.height())) return;
-
                 Tile tile = world.tile(x, y);
+                if(tile == null) return;
+
                 drawBlock = tile.block() == Blocks.air || !tile.block().inEditor ? tile.overlay() == Blocks.air ? tile.floor() : tile.overlay() : tile.block();
             }
         },
@@ -549,8 +550,9 @@ public class MapEditorWindow extends Window {
 
             @Override
             public void touched(int x, int y){
-                if(!Structs.inBounds(x, y, world.width(), world.height()) || world.tile(x, y).block()!=null&&world.tile(x, y).block().isMultiblock()) return;
+                if(!Structs.inBounds(x, y, world.width(), world.height())) return;
                 Tile tile = world.tile(x, y);
+                if(tile == null) return;
 
                 //mode 0 or 1, fill everything with the floor/tile or replace it
                 if(mode == 0 || mode == -1){
@@ -579,7 +581,7 @@ public class MapEditorWindow extends Window {
 
                     //replace only when the mode is 0 using the specified functions
                     fill(x, y, mode == 0, tester, setter);
-                }else if(mode == 1){ //mode 1 is team fill
+                } else if(mode == 1){ //mode 1 is team fill
                     //only fill synthetic blocks, it's meaningless otherwise
                     if(tile.synthetic()){
                         Team dest = tile.team();

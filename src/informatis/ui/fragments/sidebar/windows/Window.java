@@ -32,7 +32,7 @@ public class Window extends Table {
     public Window(TextureRegionDrawable icon, String name){
         this(icon, name, null);
     }
-    public Window(TextureRegionDrawable icon, String name, Cons<Table> content) {
+    public Window(TextureRegionDrawable icon, String name, @Nullable Cons<Table> content) {
         this.icon = icon;
         this.name = name;
         this.content = content;

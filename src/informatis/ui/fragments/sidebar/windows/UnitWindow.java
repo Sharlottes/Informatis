@@ -12,6 +12,7 @@ import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.*;
+import informatis.SVars;
 import informatis.core.VDOM;
 import informatis.ui.components.SBar;
 import mindustry.*;
@@ -26,7 +27,6 @@ import mindustry.world.blocks.*;
 import mindustry.world.blocks.payloads.*;
 import mindustry.ctype.*;
 import mindustry.entities.Units;
-import mindustry.entities.abilities.*;
 import mindustry.logic.*;
 import mindustry.world.blocks.defense.*;
 import mindustry.world.blocks.defense.turrets.*;
@@ -245,11 +245,7 @@ public class UnitWindow extends Window {
             }
 
             if(target instanceof Unit unit){
-                float max = ((ShieldRegenFieldAbility) Vars.content.units().copy().max(ut -> {
-                    ShieldRegenFieldAbility ability = (ShieldRegenFieldAbility) ut.abilities.find(ab -> ab instanceof ShieldRegenFieldAbility);
-                    if(ability == null) return 0;
-                    return ability.max;
-                }).abilities.find(abil -> abil instanceof ShieldRegenFieldAbility)).max;
+                float max = SVars.maxShieldAmongUnits;
 
                 data.add(new BarData(
                         () -> bundle.format("shar-stat.shield", formatNumber(unit.shield())),
@@ -282,7 +278,7 @@ public class UnitWindow extends Window {
                 }
             }
             else if(target instanceof Building build){
-                if(build.block.hasLiquids) {
+                if(build.block.hasLiquids && build.liquids != null) {
                     data.add(new BarData(
                             () -> bundle.format("shar-stat.capacity", build.liquids.currentAmount() < 0.01f ? build.liquids.current().localizedName : bundle.get("bar.liquid"), formatNumber(build.liquids.currentAmount()), formatNumber(build.block.liquidCapacity)),
                             () -> build.liquids.current().color,
@@ -290,7 +286,7 @@ public class UnitWindow extends Window {
                     ));
                 }
 
-                if(build.block.hasPower && build.block.consPower != null){
+                if(build.block.hasPower && build.block.consPower != null && build.power != null){
                     ConsumePower cons = build.block.consPower;
                     data.add(new BarData(
                             () -> bundle.format("shar-stat.power", formatNumber(build.power.status * 60f * (cons.buffered ? cons.capacity : cons.usage)), formatNumber(60f * (cons.buffered ? cons.capacity : cons.usage))),
@@ -299,7 +295,7 @@ public class UnitWindow extends Window {
                             power
                     ));
                 }
-                if(build.block.hasItems) {
+                if(build.block.hasItems && build.items != null) {
                     float value;
                     if (target instanceof CoreBlock.CoreBuild cb) value = cb.storageCapacity * Vars.content.items().count(UnlockableContent::unlockedNow);
                     else if(target instanceof StorageBlock.StorageBuild sb && !sb.canPickup() && sb.linkedCore instanceof CoreBlock.CoreBuild cb) value = cb.storageCapacity * Vars.content.items().count(UnlockableContent::unlockedNow);
@@ -337,7 +333,14 @@ public class UnitWindow extends Window {
                 ));
             }
 
-            if(target instanceof MendProjector.MendBuild || target instanceof OverdriveProjector.OverdriveBuild || target instanceof ConstructBlock.ConstructBuild || target instanceof Reconstructor.ReconstructorBuild || target instanceof UnitFactory.UnitFactoryBuild || target instanceof Drill.DrillBuild || target instanceof GenericCrafter.GenericCrafterBuild) {
+            if(target instanceof MendProjector.MendBuild
+                    || target instanceof OverdriveProjector.OverdriveBuild
+                    || target instanceof ConstructBlock.ConstructBuild
+                    || target instanceof Reconstructor.ReconstructorBuild
+                    || target instanceof UnitFactory.UnitFactoryBuild
+                    || target instanceof Drill.DrillBuild
+                    || target instanceof GenericCrafter.GenericCrafterBuild
+            ) {
                 if(target instanceof MendProjector.MendBuild mend){
                     Tmp.c1.set(Pal.heal);
                 }
@@ -357,19 +360,6 @@ public class UnitWindow extends Window {
                 else if(target instanceof ConstructBlock.ConstructBuild construct){
                     Tmp.c1.set(Pal.darkerMetal);
                 }
-                else if(target instanceof UnitFactory.UnitFactoryBuild factory){
-                    Tmp.c1.set(Pal.darkerMetal);
-
-                    if(factory.unit() == null) data.add(new BarData("[lightgray]" + Iconc.cancel, Pal.power, 0f));
-                    else {
-                        float value = factory.team.data().countType(factory.unit());
-                        data.add(new BarData(
-                                () -> bundle.format("bar.unitcap", Fonts.getUnicodeStr(factory.unit().name), formatNumber(value), formatNumber(Units.getCap(factory.team))),
-                                () -> Pal.power,
-                                () -> value / Units.getCap(factory.team)
-                        ));
-                    }
-                }
                 else if(target instanceof Reconstructor.ReconstructorBuild reconstruct){
                     Tmp.c1.set(Pal.darkerMetal);
 
@@ -384,6 +374,21 @@ public class UnitWindow extends Window {
                     }
 
                 }
+                else if(target instanceof UnitFactory.UnitFactoryBuild factory){
+                    Tmp.c1.set(Pal.darkerMetal);
+
+                    UnitType unitType = factory.unit();
+                    if( unitType == null) {
+                        data.add(new BarData("[lightgray]" + Iconc.cancel, Pal.power, 0f));
+                    } else {
+                        float value = factory.team.data().countType(factory.unit());
+                        data.add(new BarData(
+                                () -> bundle.format("bar.unitcap", Fonts.getUnicodeStr(unitType.name), formatNumber(value), formatNumber(Units.getCap(factory.team))),
+                                () -> Pal.power,
+                                () -> value / Units.getCap(factory.team)
+                        ));
+                    }
+                }
                 else if(target instanceof Drill.DrillBuild drill){
                     Tmp.c1.set(drill.dominantItem == null ? Pal.items : drill.dominantItem.color);
 
@@ -393,8 +398,7 @@ public class UnitWindow extends Window {
                             () -> drill.warmup
                     ));
                 }
-                else {
-                    GenericCrafter.GenericCrafterBuild crafter = (GenericCrafter.GenericCrafterBuild) target;
+                else if(target instanceof GenericCrafter.GenericCrafterBuild crafter) {
                     GenericCrafter block = (GenericCrafter) crafter.block;
 
                     if(block.outputItem != null) Tmp.c1.set(block.outputItem.item.color);
@@ -406,7 +410,7 @@ public class UnitWindow extends Window {
                         pro -> bundle.format("shar-stat.progress", formatNumber(pro * 100f)),
                         pro -> Tmp.c1,
                         () -> {
-                            float pro;
+                            float pro = 0;
                             if(target instanceof MendProjector.MendBuild mend){
                                 pro = (float) mend.sense(LAccess.progress);
                                 Tmp.c1.set(Pal.heal);
@@ -426,10 +430,11 @@ public class UnitWindow extends Window {
                                 pro = factory.fraction();
                                 Tmp.c1.set(Pal.darkerMetal);
 
-                                if(factory.unit() == null) data.add(new BarData("[lightgray]" + Iconc.cancel, Pal.power, 0f));
+                                UnitType unitType = factory.unit();
+                                if(unitType == null) data.add(new BarData("[lightgray]" + Iconc.cancel, Pal.power, 0f));
                                 else {
                                     float value = factory.team.data().countType(factory.unit());
-                                    data.add(new BarData(bundle.format("bar.unitcap", Fonts.getUnicodeStr(factory.unit().name), formatNumber(value), formatNumber(Units.getCap(factory.team))), Pal.power, value / Units.getCap(factory.team)));
+                                    data.add(new BarData(bundle.format("bar.unitcap", Fonts.getUnicodeStr(unitType.name), formatNumber(value), formatNumber(Units.getCap(factory.team))), Pal.power, value / Units.getCap(factory.team)));
                                 }
                             }
                             else if(target instanceof Reconstructor.ReconstructorBuild reconstruct){
@@ -449,10 +454,8 @@ public class UnitWindow extends Window {
 
                                 data.add(new BarData(bundle.format("bar.drillspeed", formatNumber(drill.lastDrillSpeed * 60 * drill.timeScale())), Pal.ammo, drill.warmup));
                             }
-                            else {
-                                GenericCrafter.GenericCrafterBuild crafter = (GenericCrafter.GenericCrafterBuild) target;
+                            else if(target instanceof GenericCrafter.GenericCrafterBuild crafter) {
                                 GenericCrafter block = (GenericCrafter) crafter.block;
-
                                 pro = (float) crafter.sense(LAccess.progress);
                                 if(block.outputItem != null) Tmp.c1.set(block.outputItem.item.color);
                                 else if(block.outputLiquid != null) Tmp.c1.set(block.outputLiquid.liquid.color);
@@ -474,7 +477,8 @@ public class UnitWindow extends Window {
 
             if(target instanceof PowerNode.PowerNodeBuild || target instanceof PowerTurret.PowerTurretBuild) {
                 Floatp value, max;
-                if(target instanceof PowerNode.PowerNodeBuild node){
+                if(target instanceof PowerNode.PowerNodeBuild node) {
+                    if(node.power == null) return;
                     max = () -> node.power.graph.getLastPowerStored();
                     value = () -> node.power.graph.getLastCapacity();
 
@@ -501,11 +505,13 @@ public class UnitWindow extends Window {
                             () -> node.power.graph.getLastPowerProduced() / node.power.graph.getLastPowerNeeded(),
                             power
                     ));
-                }
-                else { //TODO: why is this different
-                    PowerTurret.PowerTurretBuild turret = (PowerTurret.PowerTurretBuild) target;
-                    max = () -> turret.block.consPower.usage;
-                    value = () -> turret.power.status * turret.power.graph.getLastScaledPowerIn();
+                } else {
+                    PowerTurret.PowerTurretBuild powerTurretBuild = (PowerTurret.PowerTurretBuild) target;
+
+                    if(powerTurretBuild.block.consPower == null || powerTurretBuild.power == null) return;
+
+                    max = () -> powerTurretBuild.block.consPower.usage;
+                    value = () -> powerTurretBuild.power.status * powerTurretBuild.power.graph.getLastScaledPowerIn();
                 }
 
                 data.add(new BarData(
@@ -525,7 +531,7 @@ public class UnitWindow extends Window {
                 ));
             }
 
-            if(target instanceof LiquidTurret.LiquidTurretBuild turret){
+            if(target instanceof LiquidTurret.LiquidTurretBuild turret && turret.liquids != null){
                 data.add(new BarData(
                         () -> bundle.format("shar-stat.capacity", turret.liquids.currentAmount() < 0.01f ? turret.liquids.current().localizedName : bundle.get("stat.ammo"), formatNumber(turret.liquids.get(turret.liquids.current())), formatNumber(turret.block.liquidCapacity)),
                         () -> turret.liquids.current().color,
@@ -559,7 +565,7 @@ public class UnitWindow extends Window {
                 data.add(new BarData(
                         () -> bundle.format("shar-stat.attr", Mathf.round(display.get())),
                         () -> Pal.ammo,
-                        () -> pro.get()
+                        pro
                 ));
             }
 
