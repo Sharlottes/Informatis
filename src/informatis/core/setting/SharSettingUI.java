@@ -1,14 +1,12 @@
 package informatis.core.setting;
 
 import arc.*;
-import arc.scene.Group;
 import arc.scene.ui.TextButton;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.Align;
-import informatis.ui.fragments.FragmentManager;
 import mindustry.ui.*;
-import mindustry.ui.dialogs.*;
+import informatis.ui.fragments.FragmentManager;
 
 import static arc.Core.*;
 import static informatis.core.setting.SettingHelper.*;
@@ -36,50 +34,37 @@ public class SharSettingUI {
 
         settingSeq.add(tapSeq, drawSeq);
 
-        SettingsMenuDialog.SettingsTable sharset = buildSharSettingTable(settingSeq);
+        ui.settings.addCategory(bundle.get("setting.shar-title"), settingsTable -> {
+            settingsTable.table(t -> {
+                Seq<TextButton> buttons = new Seq<>();
+                buttons.add(new TextButton(bundle.get("setting.shar-ui"), Styles.cleart));
+                buttons.add(new TextButton(bundle.get("setting.shar-draw"), Styles.cleart));
+                buttons.each(b -> b.clicked(() -> buttons.each(b1 -> b1.setChecked(b1 == b))));
+                t.table(Styles.black8, bt -> {
+                    bt.top().align(Align.top);
+                    buttons.each(b -> {
+                        b.getLabel().setFontScale(0.85f);
+                        bt.add(b).minHeight(60f * 0.85f).minWidth(150f * 0.85f).top();
+                    });
+                }).grow().row();
 
-        BaseDialog dialog = new BaseDialog(bundle.get("setting.shar-title"));
-        dialog.addCloseButton();
-        dialog.cont.center().add(new Table(t -> t.pane(sharset).grow().row()));
-        ui.settings.shown(() -> {
-            Table settingUi = (Table)((Group)((Group)(ui.settings.getChildren().get(1))).getChildren().get(0)).getChildren().get(0); //This looks so stupid lol
-            settingUi.row();
-            settingUi.button(bundle.get("setting.shar-title"), Styles.cleart, dialog::show);
+                Stack stack = new Stack();
+                for (int i = 0; i < settingSeq.size; i++) {
+                    int finalI = i;
+                    stack.add(new Table(st -> {
+                        for (SharSetting setting : settingSeq.get(finalI))
+                            st.table(setting::add).left().row();
+
+                        st.button(Core.bundle.get("settings.reset", "Reset to Defaults"), () -> {
+                            settingSeq.get(finalI).each(s -> Core.settings.put(s.name, Core.settings.getDefault(s.name)));
+                        }).margin(14.0f).width(240.0f).pad(6.0f);
+                        st.visibility = () -> buttons.get(finalI).isChecked();
+                        st.pack();
+                    }));
+                }
+                t.add(stack);
+                t.fillParent = true;
+            });
         });
-    }
-
-    private static SettingsMenuDialog.SettingsTable buildSharSettingTable(Seq<Seq<SharSetting>> settingSeq) {
-        SettingsMenuDialog.SettingsTable sharset = new SettingsMenuDialog.SettingsTable();
-        sharset.table(t -> {
-            Seq<TextButton> buttons = new Seq<>();
-            buttons.add(new TextButton(bundle.get("setting.shar-ui"), Styles.cleart));
-            buttons.add(new TextButton(bundle.get("setting.shar-draw"), Styles.cleart));
-            buttons.each(b -> b.clicked(() -> buttons.each(b1 -> b1.setChecked(b1 == b))));
-            t.table(Styles.black8, bt -> {
-                bt.top().align(Align.top);
-                buttons.each(b -> {
-                    b.getLabel().setFontScale(0.85f);
-                    bt.add(b).minHeight(60f * 0.85f).minWidth(150f * 0.85f).top();
-                });
-            }).grow().row();
-
-            Stack stack = new Stack();
-            for (int i = 0; i < settingSeq.size; i++) {
-                int finalI = i;
-                stack.add(new Table(st -> {
-                    for (SharSetting setting : settingSeq.get(finalI))
-                        st.table(setting::add).left().row();
-
-                    st.button(Core.bundle.get("settings.reset", "Reset to Defaults"), () -> {
-                        settingSeq.get(finalI).each(s -> Core.settings.put(s.name, Core.settings.getDefault(s.name)));
-                    }).margin(14.0f).width(240.0f).pad(6.0f);
-                    st.visibility = () -> buttons.get(finalI).isChecked();
-                    st.pack();
-                }));
-            }
-            t.add(stack);
-            t.fillParent = true;
-        });
-        return sharset;
     }
 }
