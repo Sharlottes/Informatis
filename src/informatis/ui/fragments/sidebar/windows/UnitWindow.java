@@ -74,9 +74,9 @@ public class UnitWindow extends Window {
     }
 
     public static class BarData  {
-        public Prov<String> name;
-        public Floatp fraction;
-        public Prov<Color> color;
+        public final Prov<String> name;
+        public final Floatp fraction;
+        public final Prov<Color> color;
         public final TextureRegion icon;
 
         public BarData(String name, Color color, float fraction) {
@@ -109,7 +109,7 @@ public class UnitWindow extends Window {
 
     static class UnitWindowBody extends Table implements VDOM.IRebuildable {
         public boolean locked;
-        private Seq<BarData> barDataSeq = new Seq<>();
+        private final Seq<BarData> barDataSeq = new Seq<>();
 
         public UnitWindowBody() {
             super();
@@ -229,7 +229,7 @@ public class UnitWindow extends Window {
                             bar.add(barIcon).size(iconMed * 0.75f).padLeft(8f);
                         }).growX();
                         bars.row();
-                    };
+                    }
                 });
             });
         }
@@ -662,7 +662,7 @@ public class UnitWindow extends Window {
             }
         }
         private static class BarIconImage extends Image {
-            public BarData barData;
+            public final BarData barData;
 
             public BarIconImage(BarData barData) {
                 super(barData.icon);

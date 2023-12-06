@@ -18,8 +18,8 @@ import static mindustry.Vars.tilesize;
 import static mindustry.Vars.world;
 
 public class MassLinkDraw extends OverDraw {
-    Seq<MassDriver.MassDriverBuild> linkedMasses = new Seq<>();
-    Seq<PayloadMassDriver.PayloadDriverBuild> linkedPayloadMasses = new Seq<>();
+    final Seq<MassDriver.MassDriverBuild> linkedMasses = new Seq<>();
+    final Seq<PayloadMassDriver.PayloadDriverBuild> linkedPayloadMasses = new Seq<>();
 
     public MassLinkDraw() {
         super("massLink");

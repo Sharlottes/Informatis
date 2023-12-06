@@ -15,8 +15,8 @@ import mindustry.ui.Styles;
 import static mindustry.Vars.*;
 
 public class ServerSearchFragment extends Table {
-    ObjectMap<ServerGroup, ObjectSet<Host>> servers = new ObjectMap<>();
-    static String[] modeNames = new String[]{ "Survival", "PvP", "Attack", "Sandbox", "Custom" };
+    final ObjectMap<ServerGroup, ObjectSet<Host>> servers = new ObjectMap<>();
+    static final String[] modeNames = new String[]{ "Survival", "PvP", "Attack", "Sandbox", "Custom" };
 
     public ServerSearchFragment() {
         super();

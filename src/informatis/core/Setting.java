@@ -16,6 +16,21 @@ import mindustry.ui.dialogs.*;
 import static arc.Core.*;
 import static mindustry.Vars.*;
 
+abstract class SharSetting extends SettingsMenuDialog.SettingsTable.Setting {
+
+    public SharSetting(String name) {
+        super(name);
+    }
+
+    public SharSetting(String name, Object def) {
+        this(name);
+        Core.settings.defaults(name, def);
+    }
+
+    public void add(Table table) { }
+    public void add(SettingsMenuDialog.SettingsTable table) { }
+}
+
 public class Setting {
     public static SettingsMenuDialog.SettingsTable sharset;
 
@@ -158,18 +173,4 @@ public class Setting {
             settingUi.button(bundle.get("setting.shar-title"), Styles.cleart, dialog::show);
         });
     }
-}
-abstract class SharSetting extends SettingsMenuDialog.SettingsTable.Setting {
-
-    public SharSetting(String name) {
-        super(name);
-    }
-
-    public SharSetting(String name, Object def) {
-        this(name);
-        Core.settings.defaults(name, def);
-    }
-
-    public void add(Table table) { }
-    public void add(SettingsMenuDialog.SettingsTable table) { }
 }

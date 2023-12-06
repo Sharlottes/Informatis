@@ -33,9 +33,7 @@ public class RangeDraw extends OverDraw {
 
         rangeData.init(target);
         if(groundRange.isEnabled() && rangeData.canDetectGround()) return true;
-        if(airRange.isEnabled() && rangeData.canDetectAir()) return true;
-
-        return false;
+        return airRange.isEnabled() && rangeData.canDetectAir();
     }
 
     @Override

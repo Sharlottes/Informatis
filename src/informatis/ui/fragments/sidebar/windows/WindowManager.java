@@ -7,7 +7,7 @@ import mindustry.*;
 import mindustry.ui.*;
 
 public class WindowManager {
-    public static Seq<Window> windows = new Seq<>();
+    public static final Seq<Window> windows = new Seq<>();
     public static UnitWindow unitWindow;
     public static MapEditorWindow mapEditorWindow;
     public static Table body;

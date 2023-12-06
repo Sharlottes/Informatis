@@ -14,7 +14,7 @@ import mindustry.graphics.Pal;
 public class SidebarSwitcher {
     private int showIndex = 0;
     private final Table sidebarTable = new Table();
-    private Table[] sidebars;
+    private final Table[] sidebars;
 
     private final ImageButton switchButton = new ImageButton(style) {
         @Override
@@ -25,6 +25,7 @@ public class SidebarSwitcher {
         }
      {
         clicked(() -> {
+            Table[] sidebars = getSidebars();
             Element currentSidebar = sidebars[showIndex];
             showIndex = (showIndex + 1) % sidebars.length;
             Element nextSidebar = sidebars[showIndex];
@@ -96,5 +97,9 @@ public class SidebarSwitcher {
         sidebarTable.add(sidebarTables).grow();
         sidebarTable.row();
         sidebarTable.add(switchButton).growX();
+    }
+
+    private Table[] getSidebars() {
+        return sidebars;
     }
 }

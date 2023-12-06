@@ -21,8 +21,10 @@ public class Window extends Table {
     public final Cons<Table> content;
     public boolean shown = false, disableRootScroll = false;
 
-    public float minWindowWidth = 160, minWindowHeight = 60;
-    public static float maxWindowWidth = Float.MAX_VALUE, maxWindowHeight = Float.MAX_VALUE;
+    public float minWindowWidth = 160;
+    public final float minWindowHeight = 60;
+    public static final float maxWindowWidth = Float.MAX_VALUE;
+    public static final float maxWindowHeight = Float.MAX_VALUE;
 
     public Window(String name){
         this(new TextureRegionDrawable(Core.atlas.find("clear")), name, null);
@@ -109,7 +111,7 @@ public class Window extends Table {
     }
 
     private static class DragHandleListener extends TouchPosInputListener {
-        Window targetWindow;
+        final Window targetWindow;
         public DragHandleListener(Window targetWindow) {
             this.targetWindow = targetWindow;
         }
@@ -133,7 +135,7 @@ public class Window extends Table {
     }
 
     private static class ScaleInputListener extends TouchPosInputListener {
-        Window targetWindow;
+        final Window targetWindow;
         public ScaleInputListener(Window targetWindow) {
             this.targetWindow = targetWindow;
         }

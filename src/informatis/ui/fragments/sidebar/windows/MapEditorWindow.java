@@ -199,7 +199,7 @@ public class MapEditorWindow extends Window {
         return new Table(table-> {
             table.top();
             Seq<Block> blocks = Vars.content.blocks().copy();
-            if(search.getText().length() > 0){
+            if(!search.getText().isEmpty()){
                 blocks.filter(p -> p.name.toLowerCase().contains(search.getText().toLowerCase())||p.localizedName.toLowerCase().contains(search.getText().toLowerCase()));
             }
             table.table(select-> this.buildBlockSelection(null, select, blocks, ()-> drawBlock, block-> drawBlock =block, false)).marginTop(16f).marginBottom(16f).row();
@@ -378,7 +378,7 @@ public class MapEditorWindow extends Window {
         drawBlocks(x, y, false, tester);
     }
 
-    int rotation = 0;
+    final int rotation = 0;
     public void drawBlocks(int x, int y, boolean square, Boolf<Tile> tester){
         if(drawBlock.isMultiblock()){
             x = Mathf.clamp(x, (drawBlock.size - 1) / 2, world.width() - drawBlock.size / 2 - 1);

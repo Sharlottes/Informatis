@@ -4,7 +4,7 @@ import arc.struct.*;
 import informatis.SUtils;
 
 public class EventEmitter<T> {
-    ObjectMap<T, ObjectSet<Runnable>> events = new ObjectMap<>();
+    final ObjectMap<T, ObjectSet<Runnable>> events = new ObjectMap<>();
 
     public Runnable subscribe(T event, Runnable listener) {
         ObjectSet<Runnable> listeners = events.get(event);

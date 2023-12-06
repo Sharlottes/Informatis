@@ -49,7 +49,7 @@ public class UpdateChecker {
                     updateBuild = version;
                     showUpdateDialog();
                     done.get(true);
-                };
+                }
             });
     }
 

@@ -15,8 +15,8 @@ import static mindustry.Vars.*;
 
 public class TileInfoFragment {
     private boolean waveShown;
-    Table tileInfoTable = new Table(Tex.buttonEdge4);
-    Stack tileInfoContainer;
+    final Table tileInfoTable = new Table(Tex.buttonEdge4);
+    final Stack tileInfoContainer;
 
     public TileInfoFragment() {
         Table waveTable = (Table) scene.find("waves");

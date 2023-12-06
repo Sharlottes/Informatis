@@ -233,7 +233,7 @@ class ColorPreviewFragment extends Table {
                     sum -= getWidth();
                     t.row();
                 }
-            };
+            }
         }, table -> {
             if(!Objects.equals(cachedId[0], getWidth() + ":" + tabsFragment.currentTabIndex)) {
                 cachedId[0] = getWidth()+":"+tabsFragment.currentTabIndex;

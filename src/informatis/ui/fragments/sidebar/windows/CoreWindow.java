@@ -25,7 +25,7 @@ import static mindustry.Vars.*;
 public class CoreWindow extends Window {
     Table window;
     float heat;
-    ObjectMap<Team, ItemData> itemData = new ObjectMap<>();
+    final ObjectMap<Team, ItemData> itemData = new ObjectMap<>();
 
     public CoreWindow()  {
         super(Icon.list, "core");
@@ -92,13 +92,7 @@ public class CoreWindow extends Window {
                         tt.stack(
                             new Table(s -> {
                                 s.center();
-                                Image image = new Image(core.block.uiIcon);
-                                image.clicked(() -> SUtils.moveCamera(core));
-                                HandCursorListener listener1 = new HandCursorListener();
-                                image.addListener(listener1);
-                                image.update(() -> {
-                                    image.color.lerp(!listener1.isOver() ? Color.lightGray : Color.white, Mathf.clamp(0.4f * Time.delta));
-                                });
+                                Image image = getCoreImage(core);
                                 Tooltip.Tooltips option = new Tooltip.Tooltips();
                                 option.animations=false;
                                 s.add(image).size(iconLarge).get().addListener(new Tooltip(tool -> {
@@ -168,9 +162,20 @@ public class CoreWindow extends Window {
         });
     }
 
+    private static Image getCoreImage(CoreBlock.CoreBuild core) {
+        Image image = new Image(core.block.uiIcon);
+        image.clicked(() -> SUtils.moveCamera(core));
+        HandCursorListener listener1 = new HandCursorListener();
+        image.addListener(listener1);
+        image.update(() -> {
+            image.color.lerp(!listener1.isOver() ? Color.lightGray : Color.white, Mathf.clamp(0.4f * Time.delta));
+        });
+        return image;
+    }
+
     static class ItemData {
-        Seq<ItemStack> prevItems = new Seq<>();
-        Seq<ItemStack> updateItems = new Seq<>();
+        final Seq<ItemStack> prevItems = new Seq<>();
+        final Seq<ItemStack> updateItems = new Seq<>();
 
         ItemData() {
             resetItems();

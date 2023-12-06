@@ -8,7 +8,7 @@ import mindustry.ui.Styles;
 
 public class TabsFragment extends Table {
     public int currentTabIndex = 0;
-    public EventEmitter<Event> eventEmitter = new EventEmitter<>();
+    public final EventEmitter<Event> eventEmitter = new EventEmitter<>();
 
     public TabsFragment(String... tabs) {
         super();

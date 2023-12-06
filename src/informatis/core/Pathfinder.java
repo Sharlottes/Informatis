@@ -81,11 +81,11 @@ public class Pathfinder implements Runnable{
     /** unordered array of path data for iteration only. DO NOT iterate or access this in the main thread. */
     Seq<Flowfield> threadList = new Seq<>(), mainList = new Seq<>();
     /** handles task scheduling on the update thread. */
-    TaskQueue queue = new TaskQueue();
+    final TaskQueue queue = new TaskQueue();
     /** Current pathfinding thread */
     @Nullable
     Thread thread;
-    IntSeq tmpArray = new IntSeq();
+    final IntSeq tmpArray = new IntSeq();
 
     public Pathfinder(){
         clearCache();
@@ -512,7 +512,7 @@ public class Pathfinder implements Runnable{
         /** search IDs of each position - the highest, most recent search is prioritized and overwritten */
         public int[] searches;
         /** search frontier, these are Pos objects */
-        IntQueue frontier = new IntQueue();
+        final IntQueue frontier = new IntQueue();
         /** all target positions; these positions have a cost of 0, and must be synchronized on! */
         final IntSeq targets = new IntSeq();
         /** current search ID */

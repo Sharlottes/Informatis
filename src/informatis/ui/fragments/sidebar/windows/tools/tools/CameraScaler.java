@@ -8,7 +8,7 @@ public class CameraScaler extends Tool {
     private float lastMinZoom = 1.5f;
 
     // TODO: set subconfig by slider later
-    private float targetMinZoom = 0.35f;
+    private final float targetMinZoom = 0.35f;
 
     public CameraScaler() {
         super("camerascaler");

@@ -7,9 +7,9 @@ import arc.util.Time;
 
 public
 class IntervalTableWrapper {
-    Cons<Table> tableCons;
-    Boolf<Table> condition;
-    int interval;
+    final Cons<Table> tableCons;
+    final Boolf<Table> condition;
+    final int interval;
 
     public IntervalTableWrapper() {
         this(t -> {});

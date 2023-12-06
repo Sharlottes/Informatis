@@ -27,7 +27,7 @@ public class OverDrawManager {
             OverDrawCategory.Util, new OverDraw[] { new MagicCursorDraw(),new SelectArrawDraw(), new SpawnerArrawDraw(), new DistanceLineDraw() }
     );
     public static final Seq<OverDraw> overDraws = new Seq<>();
-    public static float[] zIndexTeamCache = new float[Team.baseTeams.length];
+    public static final float[] zIndexTeamCache = new float[Team.baseTeams.length];
     private static final FrameBuffer effectBuffer = new FrameBuffer();
 
     public static void init() {

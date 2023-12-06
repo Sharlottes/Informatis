@@ -14,7 +14,7 @@ import static mindustry.Vars.tilesize;
 import static mindustry.Vars.world;
 
 public class PowerNodeDraw extends OverDraw {
-    Seq<Building> linkedNodes = new Seq<>();
+    final Seq<Building> linkedNodes = new Seq<>();
 
     public PowerNodeDraw() {
         super("powerNode");

@@ -8,7 +8,7 @@ import mindustry.gen.Groups;
 import mindustry.gen.Unit;
 
 public class TroopingManager {
-    static Seq<IntSeq> troops = new Seq<>(10) {{
+    static final Seq<IntSeq> troops = new Seq<>(10) {{
         SUtils.loop(10, (i) -> {
             add(new IntSeq());
         });

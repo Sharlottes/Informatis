@@ -267,7 +267,6 @@ public class QuickSchemFragment extends Table {
 
         }).fillX().left().height(42f).scrollY(false);
 
-        Seq<String> finalTags1 = tags;
         t.button(Icon.addSmall, () -> {
             var dialog = new BaseDialog("@schematic.addtag");
             dialog.addCloseButton();
@@ -276,7 +275,7 @@ public class QuickSchemFragment extends Table {
 
                 float sum = 0f;
                 Table current = new Table().left();
-                for(var tag : finalTags1){
+                for(var tag : tags){
                     if(schem.labels.contains(tag)) continue;
 
                     var next = Elem.newButton(tag, () -> {

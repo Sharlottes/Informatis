@@ -4,7 +4,7 @@ import arc.Core;
 import informatis.ui.fragments.sidebar.windows.ToolConfigable;
 
 public class SettingConfiger implements ToolConfigable {
-    public String name;
+    public final String name;
     private boolean enabled;
 
     public SettingConfiger(String name) {
