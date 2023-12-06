@@ -1,5 +1,6 @@
 package informatis;
 
+import informatis.core.setting.SharSettingUI;
 import informatis.core.UpdateChecker;
 import informatis.ui.fragments.sidebar.windows.tools.draws.OverDrawManager;
 import informatis.ui.fragments.sidebar.windows.tools.tools.ToolManager;
@@ -7,7 +8,6 @@ import informatis.ui.fragments.sidebar.dialogs.DialogManager;
 import informatis.ui.fragments.sidebar.windows.*;
 import informatis.ui.fragments.FragmentManager;
 import informatis.core.ModMetadata;
-import informatis.core.Setting;
 
 import mindustry.game.EventType.*;
 import mindustry.mod.*;
@@ -18,7 +18,7 @@ public class Informatis extends Mod {
     public void init(){
         Events.on(ClientLoadEvent.class, e -> {
             ModMetadata.init();
-            Setting.init();
+            SharSettingUI.init();
             WindowManager.init();
             DialogManager.init();
             FragmentManager.init();
