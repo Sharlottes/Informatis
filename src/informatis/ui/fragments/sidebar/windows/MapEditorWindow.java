@@ -646,8 +646,8 @@ public class MapEditorWindow extends Window {
                         //hack
                         stack = null;
                         System.gc();
-                        e.printStackTrace();
                         stack = new IntSeq();
+                        Log.err(e);
                     }
                 }
             }

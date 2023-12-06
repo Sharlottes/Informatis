@@ -274,7 +274,7 @@ public class Pathfinder implements Runnable{
                     return;
                 }
             }catch(Throwable e){
-                e.printStackTrace();
+                Log.err(e);
             }
         }
     }
