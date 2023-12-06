@@ -7,7 +7,9 @@ import arc.scene.*;
 import arc.scene.actions.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
+import arc.util.Log;
 import mindustry.*;
+import mindustry.game.EventType;
 import mindustry.gen.*;
 import mindustry.graphics.Pal;
 
@@ -16,7 +18,7 @@ public class SidebarSwitcher {
     private final Table sidebarTable = new Table();
     private final Table[] sidebars;
 
-    private final ImageButton switchButton = new ImageButton(style) {
+    private final ImageButton switchButton = new ImageButton() {
         @Override
         public void draw() {
             super.draw();
@@ -24,31 +26,34 @@ public class SidebarSwitcher {
             Lines.line(this.x, this.y + this.height, this.x + this.width, this.y + this.height);
         }
      {
+         setStyle(new ImageButton.ImageButtonStyle() {{
+             up = Tex.buttonEdge4;
+             imageUp = Icon.right;
+         }});
         clicked(() -> {
             Table[] sidebars = getSidebars();
             Element currentSidebar = sidebars[showIndex];
             showIndex = (showIndex + 1) % sidebars.length;
             Element nextSidebar = sidebars[showIndex];
 
+            Log.info(sidebars[showIndex].getWidth());
+            Log.info(sidebars[showIndex].getMinWidth());
+            Log.info(sidebars[showIndex].getPrefWidth());
             actShowMoveX(currentSidebar, 0, -currentSidebar.getWidth());
             actShowMoveX(nextSidebar, -nextSidebar.getWidth(),0);
             actResizeWidth(this, nextSidebar.getWidth());
         });
     }};
-    private static final ImageButton.ImageButtonStyle style = new ImageButton.ImageButtonStyle() {{
-        up = Tex.buttonEdge4;
-        imageUp = Icon.right;
-    }};
 
     public SidebarSwitcher(Table ...sidebars) {
         this.sidebars = sidebars;
-        rebuildSidebarTable();
 
         Vars.ui.hudGroup.fill(t -> {
             t.name = "informatis sidebar";
             t.left();
             t.add(sidebarTable);
         });
+        rebuildSidebarTable();
     }
 
     private static void actShowMoveX(Element element, float from, float to) {
@@ -90,13 +95,18 @@ public class SidebarSwitcher {
             elem.visible = false;
         }
         sidebars[showIndex].visible = true;
-        actResizeWidth(switchButton, sidebars[showIndex].getWidth());
 
         sidebarTable.clear();
         sidebarTable.top().left();
         sidebarTable.add(sidebarTables).grow();
         sidebarTable.row();
-        sidebarTable.add(switchButton).growX();
+        Cell cell = sidebarTable.add(switchButton).left();
+
+        sidebars[showIndex].invalidate();
+        Log.info(sidebars[showIndex].getWidth());
+        Log.info(sidebars[showIndex].getMinWidth());
+        Log.info(sidebars[showIndex].getPrefWidth());
+        cell.minWidth(sidebars[showIndex].getPrefWidth());
     }
 
     private Table[] getSidebars() {
