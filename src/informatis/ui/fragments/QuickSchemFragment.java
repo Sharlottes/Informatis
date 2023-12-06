@@ -10,20 +10,16 @@ import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
 import arc.scene.utils.Elem;
 import arc.struct.Seq;
-import arc.util.Align;
 import arc.util.*;
-import mindustry.Vars;
 import mindustry.ctype.*;
 import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.Pal;
-import mindustry.mod.Mod;
 import mindustry.ui.Styles;
 import mindustry.ui.dialogs.*;
 
 import static arc.Core.*;
 import static mindustry.Vars.*;
-import static mindustry.Vars.ui;
 import static mindustry.ui.Styles.*;
 
 public class QuickSchemFragment extends Table {

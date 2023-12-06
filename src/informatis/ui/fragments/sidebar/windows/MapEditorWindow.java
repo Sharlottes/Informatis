@@ -1,6 +1,5 @@
 package informatis.ui.fragments.sidebar.windows;
 
-import arc.Events;
 import arc.graphics.g2d.*;
 import arc.math.geom.*;
 import arc.scene.*;

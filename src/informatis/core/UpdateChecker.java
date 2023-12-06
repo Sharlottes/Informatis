@@ -13,8 +13,6 @@ import mindustry.graphics.Pal;
 
 import java.util.Objects;
 
-import static mindustry.Vars.ui;
-
 public class UpdateChecker {
     private static boolean updateAvailable = false;
     private static String updateBuild;

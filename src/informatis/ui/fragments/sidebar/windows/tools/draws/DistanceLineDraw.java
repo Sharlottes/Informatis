@@ -1,6 +1,5 @@
 package informatis.ui.fragments.sidebar.windows.tools.draws;
 
-import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Lines;
 import arc.math.Angles;
 import arc.math.Mathf;
@@ -11,15 +10,12 @@ import arc.util.Time;
 import arc.util.Tmp;
 import mindustry.gen.BlockUnitUnit;
 import mindustry.gen.Posc;
-import mindustry.graphics.Drawf;
-import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
 import mindustry.ui.Fonts;
 
 import static arc.Core.*;
 import static informatis.SUtils.getTarget;
 import static mindustry.Vars.*;
-import static mindustry.Vars.tilesize;
 
 public class DistanceLineDraw extends OverDraw {
     public DistanceLineDraw() {

@@ -15,7 +15,6 @@ import arc.util.Nullable;
 import arc.util.TaskQueue;
 import arc.util.Time;
 import informatis.SVars;
-import mindustry.content.Blocks;
 import mindustry.core.World;
 import mindustry.game.EventType;
 import mindustry.game.Team;

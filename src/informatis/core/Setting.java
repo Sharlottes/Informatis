@@ -7,7 +7,6 @@ import arc.scene.Group;
 import arc.scene.event.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
-import arc.scene.ui.layout.Stack;
 import arc.struct.*;
 import arc.util.*;
 import informatis.ui.fragments.FragmentManager;

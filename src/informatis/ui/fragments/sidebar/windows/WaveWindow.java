@@ -17,7 +17,6 @@ import mindustry.graphics.*;
 import mindustry.ui.*;
 
 import static arc.Core.*;
-import static arc.Core.settings;
 import static mindustry.Vars.*;
 
 public class WaveWindow extends Window {

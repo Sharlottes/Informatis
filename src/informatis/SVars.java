@@ -2,8 +2,6 @@ package informatis;
 
 import informatis.shaders.*;
 import arc.graphics.g2d.TextureRegion;
-import mindustry.ai.Pathfinder;
-import mindustry.gen.Teamc;
 
 import static arc.Core.atlas;
 

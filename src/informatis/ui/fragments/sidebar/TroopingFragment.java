@@ -3,7 +3,6 @@ package informatis.ui.fragments.sidebar;
 import arc.input.KeyCode;
 import arc.scene.ui.layout.Table;
 import arc.struct.IntSeq;
-import arc.util.Log;
 import informatis.SUtils;
 import mindustry.Vars;
 import mindustry.gen.*;

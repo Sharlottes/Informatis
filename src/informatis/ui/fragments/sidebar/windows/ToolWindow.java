@@ -1,10 +1,6 @@
 package informatis.ui.fragments.sidebar.windows;
 
-import arc.Core;
 import arc.graphics.Color;
-import arc.scene.Element;
-import arc.scene.event.HandCursorListener;
-import arc.scene.event.InputEvent;
 import arc.scene.ui.CheckBox;
 import arc.scene.ui.ScrollPane;
 import informatis.ui.fragments.sidebar.windows.tools.draws.*;

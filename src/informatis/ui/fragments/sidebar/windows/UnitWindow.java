@@ -10,7 +10,6 @@ import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
-import arc.struct.Bits;
 import arc.struct.*;
 import arc.util.*;
 import informatis.core.VDOM;
@@ -45,7 +44,6 @@ import static arc.Core.*;
 import static informatis.SVars.*;
 import static informatis.SUtils.*;
 import static informatis.ui.components.SIcons.*;
-import static informatis.ui.components.SIcons.liquid;
 import static mindustry.Vars.*;
 
 public class UnitWindow extends Window {
