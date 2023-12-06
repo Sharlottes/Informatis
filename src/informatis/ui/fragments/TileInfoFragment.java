@@ -1,5 +1,7 @@
 package informatis.ui.fragments;
 
+import arc.scene.style.TextureRegionDrawable;
+import arc.scene.ui.ImageButton;
 import arc.scene.ui.layout.*;
 import arc.util.*;
 import mindustry.gen.*;
@@ -16,27 +18,38 @@ import static mindustry.Vars.*;
 public class TileInfoFragment {
     private boolean waveShown;
     final Table tileInfoTable = new Table(Tex.buttonEdge4);
-    final Stack tileInfoContainer;
+    final Table tileInfoContainer;
 
     public TileInfoFragment() {
         Table waveTable = (Table) scene.find("waves");
         Table infoTable = (Table) scene.find("infotable");
         waveTable.removeChild(infoTable);
         waveTable.row();
-        tileInfoContainer = waveTable.stack(
-            new Table(tt -> tt.collapser(t -> t.stack(tileInfoTable, infoTable).growX(), true, () -> waveShown).growX()).top(),
-            new Table(tt -> tt.button(Icon.downOpen, Styles.clearTogglei, () -> waveShown = !waveShown).size(4 * 8f).checked(b -> {
-                b.getImage().setDrawable(waveShown ? Icon.upOpen : Icon.downOpen);
-                return waveShown;
-            })).left().top()
-        ).fillX().get();
+        tileInfoContainer = waveTable.table(titleInfoBody -> {
+            titleInfoBody.left();
+            titleInfoBody.stack(
+                new Table(collapse -> {
+                    collapse.collapser(tileInfoTable, true, () -> waveShown).growX();
+                }).top(),
+                new Table(collapseButton -> {
+                    ImageButton button = new ImageButton(Icon.downOpen, Styles.clearTogglei);
+                    button.clicked(() -> {
+                        waveShown = !waveShown;
 
+                    });
+                    collapseButton.add(button);
+                }).left().top()
+            ).growX();
+            titleInfoBody.row();
+            titleInfoBody.add(infoTable).left();
+        }).growX().get();
         rebuildTileInfoTable();
     }
 
     public void rebuildTileInfoTable() {
-        tileInfoContainer.visible = settings.getBool(("tileinfo"));
+        tileInfoContainer.visible = settings.getBool("tileinfo");
         if(!tileInfoContainer.visible) return;
+
         tileInfoTable.clear();
         tileInfoTable.center();
         tileInfoTable.table(head -> {
