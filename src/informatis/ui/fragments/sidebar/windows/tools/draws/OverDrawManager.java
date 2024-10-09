@@ -7,6 +7,7 @@ import arc.graphics.g2d.Draw;
 import arc.graphics.gl.FrameBuffer;
 import arc.struct.*;
 import arc.util.Tmp;
+import informatis.shaders.Shaders;
 import mindustry.Vars;
 import mindustry.game.EventType;
 import mindustry.game.Team;
@@ -16,7 +17,6 @@ import mindustry.gen.Unit;
 import mindustry.world.Tile;
 
 import static arc.Core.graphics;
-import static informatis.SVars.turretRange;
 
 public class OverDrawManager {
     public static final ObjectMap<OverDrawCategory, OverDraw[]> draws = ObjectMap.of(
@@ -45,7 +45,7 @@ public class OverDrawManager {
             for(float zIndex : zIndexTeamCache) {
                 Draw.drawRange(zIndex, () -> effectBuffer.begin(Color.clear), () -> {
                     effectBuffer.end();
-                    effectBuffer.blit(turretRange);
+                    effectBuffer.blit(Shaders.turretRange);
                 });
             }
 

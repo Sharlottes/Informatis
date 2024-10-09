@@ -11,10 +11,8 @@ import static arc.Core.atlas;
 import static mindustry.Vars.content;
 
 public class SVars {
-    public static final TextureRegion
-            clear = atlas.find("clear");
+    public static final TextureRegion clear = atlas.find("clear");
     public static final TextureRegion error = atlas.find("error");
-    public static final RangeShader turretRange = new RangeShader();
     public static informatis.core.Pathfinder pathfinder;
 
     public static void init() {
@@ -31,5 +29,11 @@ public class SVars {
                 if(ability.max > maxShieldAmongUnits) maxShieldAmongUnits = ability.max;
             }
         });
+    }
+}
+
+class Cl {
+    public Cl(string asdf = "how") {
+
     }
 }
