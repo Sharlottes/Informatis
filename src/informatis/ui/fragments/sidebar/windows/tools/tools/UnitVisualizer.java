@@ -26,7 +26,7 @@ public class UnitVisualizer extends Tool {
             alpha = Mathf.lerpDelta(alpha, alphaTo, 0.06f);
             Shaders.transparent.alpha = alpha;
             if (Mathf.equal(alpha, 1f)) return;
-            Log.info(alpha);
+
             buffer.resize(Core.graphics.getWidth(), Core.graphics.getHeight());
             for (float layer : layers) {
                 Draw.drawRange(layer, () -> buffer.begin(Color.clear), () -> {

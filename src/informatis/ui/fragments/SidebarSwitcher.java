@@ -36,9 +36,6 @@ public class SidebarSwitcher {
             showIndex = (showIndex + 1) % sidebars.length;
             Element nextSidebar = sidebars[showIndex];
 
-            Log.info(sidebars[showIndex].getWidth());
-            Log.info(sidebars[showIndex].getMinWidth());
-            Log.info(sidebars[showIndex].getPrefWidth());
             actShowMoveX(currentSidebar, 0, -currentSidebar.getWidth());
             actShowMoveX(nextSidebar, -nextSidebar.getWidth(),0);
             actResizeWidth(this, nextSidebar.getWidth());
@@ -103,9 +100,6 @@ public class SidebarSwitcher {
         Cell<ImageButton> cell = sidebarTable.add(switchButton).left();
 
         sidebars[showIndex].invalidate();
-        Log.info(sidebars[showIndex].getWidth());
-        Log.info(sidebars[showIndex].getMinWidth());
-        Log.info(sidebars[showIndex].getPrefWidth());
         cell.minWidth(sidebars[showIndex].getPrefWidth());
     }
 
