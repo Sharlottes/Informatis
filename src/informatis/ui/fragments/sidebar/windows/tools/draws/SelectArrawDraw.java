@@ -24,6 +24,9 @@ public class SelectArrawDraw extends OverDraw {
     @Override
     public void draw() {
         Teamc target = getTarget();
+
+        if(target == null) return;
+
         Draw.z(Layer.max);
         Draw.color(Tmp.c1.set(WindowManager.unitWindow.isLocked() ? Color.orange : Color.darkGray).lerp(WindowManager.unitWindow.isLocked() ? Color.scarlet : Color.gray, Mathf.absin(Time.time, 3f, 1f)).a(settings.getInt("selectopacity") / 100f));
 

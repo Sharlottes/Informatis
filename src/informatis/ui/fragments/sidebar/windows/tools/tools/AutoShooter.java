@@ -20,18 +20,24 @@ public class AutoShooter extends Tool {
     @Override
     public void onUpdate() {
         Unit unit = player.unit();
-        if (unit.type == null) return;
+
+        if (unit == null || unit.type == null) return;
+
         boolean omni = unit.type.omniMovement;
         boolean validHealTarget = unit.type.canHeal && shotTarget instanceof Building b && b.isValid() && b.damaged() && shotTarget.team() == unit.team && shotTarget.within(unit, unit.type.range);
         boolean boosted = (unit instanceof Mechc && unit.isFlying());
+
         if ((unit.type != null && Units.invalidateTarget(shotTarget, unit, unit.type.range) && !validHealTarget) || state.isEditor()) {
             shotTarget = null;
         }
+
         float mouseAngle = unit.angleTo(unit.aimX(), unit.aimY());
         boolean aimCursor = omni && player.shooting && unit.type.hasWeapons() && unit.type.faceTarget && !boosted && unit.type.rotateToBuilding;
+
         unit.lookAt(aimCursor ? mouseAngle : unit.prefRotation());
+
         //update shooting if not building + not mining
-        if(!player.unit().activelyBuilding() && player.unit().mineTile == null) {
+        if(!unit.activelyBuilding() && unit.mineTile == null) {
             if(input.keyDown(KeyCode.mouseLeft)) {
                 player.shooting = !boosted;
                 unit.aim(player.mouseX = input.mouseWorldX(), player.mouseY = input.mouseWorldY());

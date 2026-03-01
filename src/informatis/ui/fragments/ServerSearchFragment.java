@@ -84,7 +84,7 @@ public class ServerSearchFragment extends Table {
     }
 
     void loadServers() {
-        var url = becontrol.active() ? serverJsonBeURL : serverJsonURL;
+        String url = becontrol.active() ? serverJsonBeURLs[0] : serverJsonURLs[0];
         Log.info("[Informatis] Fetching community servers at @", url);
 
         //get servers

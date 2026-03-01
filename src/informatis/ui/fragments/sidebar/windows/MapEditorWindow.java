@@ -199,9 +199,11 @@ public class MapEditorWindow extends Window {
         return new Table(table-> {
             table.top();
             Seq<Block> blocks = Vars.content.blocks().copy();
+
             if(!search.getText().isEmpty()){
-                blocks.filter(p -> p.name.toLowerCase().contains(search.getText().toLowerCase())||p.localizedName.toLowerCase().contains(search.getText().toLowerCase()));
+                blocks.retainAll(p -> p.name.toLowerCase().contains(search.getText().toLowerCase())||p.localizedName.toLowerCase().contains(search.getText().toLowerCase()));
             }
+
             table.table(select-> this.buildBlockSelection(null, select, blocks, ()-> drawBlock, block-> drawBlock =block, false)).marginTop(16f).marginBottom(16f).row();
             table.image().height(4f).color(Pal.gray).growX().row();
             table.table(select-> this.buildTeamSelection(player.team(), select, Seq.with(Team.all), ()->drawTeam, block->drawTeam=block, false)).marginTop(16f).marginBottom(16f).row();
@@ -571,7 +573,7 @@ public class MapEditorWindow extends Window {
                         Block dest = tile.floor();
                         if(dest == drawBlock) return;
                         tester = t -> t.floor() == dest;
-                        setter = t -> t.setFloorUnder(drawBlock.asFloor());
+                        setter = t -> t.setFloor(drawBlock.asFloor());
                     }else{
                         Block dest = tile.block();
                         if(dest == drawBlock) return;

@@ -5,6 +5,7 @@ import arc.graphics.g2d.Lines;
 import arc.math.Mathf;
 import arc.util.Time;
 import arc.util.Tmp;
+import mindustry.gen.Unit;
 import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
@@ -20,9 +21,13 @@ public class SpawnerArrawDraw extends OverDraw {
 
     @Override
     public void draw() {
-        Draw.z(Layer.max);
+        Unit playerUnit = player.unit();
         float sin = Mathf.absin(Time.time, 6f, 1f);
-        float leng = (player.unit() != null && player.unit().hitSize > 4 * 8f ? player.unit().hitSize * 1.5f : 4 * 8f) +  sin;
+        float leng = (playerUnit != null && playerUnit.hitSize > 4 * 8f ? playerUnit.hitSize * 1.5f : 4 * 8f) +  sin;
+
+        if(playerUnit == null) return;
+
+        Draw.z(Layer.max);
         Tmp.v1.set(camera.position);
         Lines.stroke(1f + sin / 2, Pal.accent);
         Lines.circle(Tmp.v1.x, Tmp.v1.y, leng - 4f);

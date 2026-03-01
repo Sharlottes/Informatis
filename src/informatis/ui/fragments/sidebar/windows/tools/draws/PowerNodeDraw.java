@@ -33,7 +33,7 @@ public class PowerNodeDraw extends OverDraw {
         if(linkedNodes.contains(node)) return;
 
         linkedNodes.add(node);
-        IntSeq seq = node.proximity().mapInt(Building::pos);
+        IntSeq seq = node.proximity.mapInt(Building::pos);
         seq.addAll(node.power.links);
         for(int i : seq.items) {
             Building other = world.build(i);

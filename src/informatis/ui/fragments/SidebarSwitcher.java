@@ -100,7 +100,7 @@ public class SidebarSwitcher {
         sidebarTable.top().left();
         sidebarTable.add(sidebarTables).grow();
         sidebarTable.row();
-        Cell cell = sidebarTable.add(switchButton).left();
+        Cell<ImageButton> cell = sidebarTable.add(switchButton).left();
 
         sidebars[showIndex].invalidate();
         Log.info(sidebars[showIndex].getWidth());

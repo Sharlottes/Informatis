@@ -29,6 +29,7 @@ public class MassLinkDraw extends OverDraw {
     @Override
     public void draw() {
         Teamc target = getTarget();
+
         if(target instanceof Building build) {
             if (target instanceof MassDriver.MassDriverBuild mass) {
                 linkedMasses.clear();

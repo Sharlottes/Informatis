@@ -217,7 +217,14 @@ public class UnitWindow extends Window {
                     });
                 table.row();
 
-                table.image().color((target == null ? player.unit() : target).team().color).height(4f);
+                Cell<Image> image = table.image().height(4f);
+
+                if(target != null) {
+                    image.color(target.team().color);
+                } else {
+                    image.color(player.team().color);
+                }
+
                 table.row();
 
                 table.table(bars -> {

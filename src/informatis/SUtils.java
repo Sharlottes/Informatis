@@ -118,6 +118,8 @@ public class SUtils {
     public static void moveCamera(Position pos) {
         moveCamera(pos.getX(), pos.getY());
     }
+
+    @Nullable
     @SuppressWarnings("unchecked")
     public static <T extends Teamc> T getTarget(){
         Seq<Unit> units = Groups.unit.intersect(input.mouseWorldX(), input.mouseWorldY(), 4, 4); // well, 0.5tile is enough to search them
@@ -181,7 +183,9 @@ public class SUtils {
     static void getNextTile(Tile tile, Pathfinder.Flowfield field, Seq<Tile> pathTiles) {
         Tile nextTile = SVars.pathfinder.getTargetTile(tile, field);
         pathTiles.add(nextTile);
+
         if(nextTile == tile || nextTile == null) return;
+
         getNextTile(nextTile, field, pathTiles);
     }
 

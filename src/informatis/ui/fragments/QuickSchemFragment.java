@@ -106,7 +106,7 @@ public class QuickSchemFragment extends Table {
                             } else {
                                 toolbarTable.button(Icon.trash, cleari, () -> {
                                     if(schematic.mod != null) {
-                                        ui.showInfo(Core.bundle.format("mod.item.remove", schematic.mod.meta.displayName()));
+                                        ui.showInfo(Core.bundle.format("mod.item.remove", schematic.mod.meta.displayName));
                                     } else {
                                         ui.showConfirm("@confirm", "@schematic.delete.confirm", () -> {
                                             schematics.remove(schematic);

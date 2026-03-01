@@ -6,14 +6,14 @@ sourceSets {
 }
 
 ext {
-    mindustryVersion = 'v145.1'
+    mindustryVersion = 'v155.4'
     artifactFilename = "Informatis"
     sdkRoot = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
 }
 
 java {
     targetCompatibility = 8
-    sourceCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_HIGHER
 }
 
 repositories {

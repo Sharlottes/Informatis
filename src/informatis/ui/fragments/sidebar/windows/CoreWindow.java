@@ -71,7 +71,15 @@ public class CoreWindow extends Window {
     }
 
     public Seq<Team> getTeams(){
-        return Seq.with(Team.all).filter(Team::active);
+        Seq<Team> newTeams = new Seq<>();
+
+        for (Team team : Team.all) {
+            if(team.active()) {
+                newTeams.add(team);
+            }
+        }
+
+        return newTeams;
     }
 
     public void resetUsed(){

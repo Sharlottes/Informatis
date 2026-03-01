@@ -31,9 +31,3 @@ public class SVars {
         });
     }
 }
-
-class Cl {
-    public Cl(string asdf = "how") {
-
-    }
-}
