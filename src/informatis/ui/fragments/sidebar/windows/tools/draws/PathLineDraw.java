@@ -17,9 +17,13 @@ public class PathLineDraw extends OverDraw {
         Seq<Tile> pathTiles = SUtils.generatePathTiles();
 
         Lines.stroke(1, state.rules.waveTeam.color);
+
         for(int i = 0; i < pathTiles.size - 1; i++) {
-            Tile from = pathTiles.get(i), to = pathTiles.get(i + 1);
+            Tile from = pathTiles.get(i);
+            Tile to = pathTiles.get(i + 1);
+
             if(from == null || to == null) continue;
+
             Lines.line(from.worldx(), from.worldy(), to.worldx(), to.worldy());
         }
     }

@@ -42,6 +42,7 @@ public class OverDrawManager {
         Events.run(EventType.Trigger.draw, () -> {
             Core.camera.bounds(Tmp.r1);
             effectBuffer.resize(graphics.getWidth(), graphics.getHeight());
+
             for(float zIndex : zIndexTeamCache) {
                 Draw.drawRange(zIndex, () -> effectBuffer.begin(Color.clear), () -> {
                     effectBuffer.end();
@@ -66,10 +67,10 @@ public class OverDrawManager {
                     draw.onTile(tile);
                     Draw.reset();
                 }
+
                 draw.draw();
                 Draw.reset();
             }
         });
     }
-
 }

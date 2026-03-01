@@ -5,6 +5,7 @@ import arc.math.Mathf;
 import arc.struct.Seq;
 import arc.util.Time;
 import arc.util.Tmp;
+import informatis.draws.SLines;
 import mindustry.gen.Building;
 import mindustry.gen.Groups;
 import mindustry.gen.Teamc;
@@ -25,12 +26,11 @@ public class MassLinkDraw extends OverDraw {
         super("massLink");
     }
 
-
     @Override
     public void draw() {
         Teamc target = getTarget();
 
-        if(target instanceof Building build) {
+        if(target instanceof Building) {
             if (target instanceof MassDriver.MassDriverBuild mass) {
                 linkedMasses.clear();
                 drawMassLink(mass);
@@ -40,7 +40,6 @@ public class MassLinkDraw extends OverDraw {
             }
         }
     }
-
 
     void drawMassPayloadLink(PayloadMassDriver.PayloadDriverBuild from){
         float sin = Mathf.absin(Time.time, 6f, 1f);
@@ -91,18 +90,17 @@ public class MassLinkDraw extends OverDraw {
         }
 
         //get and draw line between this mass driver and linked one
-        Building target = world.build(from.link);
-        if(target instanceof MassDriver.MassDriverBuild targetDriver) {
-            Tmp.v1.set(from.x + from.block.offset, from.y + from.block.offset).sub(targetDriver.x, targetDriver.y).limit(from.block.size * tilesize +  sin + 0.5f);
-            float x2 = from.x - Tmp.v1.x, y2 = from.y - Tmp.v1.y, x1 = targetDriver.x + Tmp.v1.x, y1 = targetDriver.y + Tmp.v1.y;
-            int segs = (int) (targetDriver.dst(from.x, from.y) / tilesize);
-            Lines.stroke(4f, Pal.gray);
-            Lines.dashLine(x1, y1, x2, y2, segs);
-            Lines.stroke(2f, Pal.placing);
-            Lines.dashLine(x1, y1, x2, y2, segs);
+        if(world.build(from.link) instanceof MassDriver.MassDriverBuild targetDriver) {
+            SLines.segmentLine(
+                    from.x, from.y,
+                    targetDriver.x, targetDriver.y,
+                    from.block.size * tilesize, from.block.offset,
+                    Pal.placing
+            );
             Lines.stroke(1f, Pal.accent);
             Drawf.circles(from.x, from.y, (from.tile.block().size / 2f + 1) * tilesize +  sin - 2f, Pal.accent);
             Drawf.arrow(from.x, from.y, targetDriver.x, targetDriver.y, from.block.size * tilesize +  sin, 4f +  sin);
+
             for (Building shooter : from.waitingShooters) {
                 Drawf.circles(shooter.x, shooter.y, (from.tile.block().size / 2f + 1) * tilesize +  sin - 2f);
                 Drawf.arrow(shooter.x, shooter.y, from.x, from.y, from.block.size * tilesize +  sin, 4f +  sin);

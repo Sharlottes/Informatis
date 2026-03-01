@@ -21,7 +21,9 @@ public class BlockBarDraw extends OverDraw {
 
     @Override
     public void onTile(Tile tile) {
-        if(!isInCamera(tile.worldx(), tile.worldy(), 8) || tile.build == null) return;
+        if(!isInCamera(tile.worldx(), tile.worldy(), 8) || tile.build == null) {
+            return;
+        }
 
         Building b = tile.build;
 
@@ -31,30 +33,42 @@ public class BlockBarDraw extends OverDraw {
             if (b instanceof Turret.TurretBuild turretBuild) {
                 drawBar(b, 0, b.block.size * 4 - 2, turretBuild.reloadCounter / ((Turret) b.block).reload, Pal.ammo);
             }
-            if(b instanceof ConstructBlock.ConstructBuild constructBuild)
+
+            if(b instanceof ConstructBlock.ConstructBuild constructBuild) {
                 drawBar(b, 0, b.block.size * 4 - 2, constructBuild.progress(), b.team.color);
-            if(b instanceof Reconstructor.ReconstructorBuild reconstructorBuild)
+            }
+
+            if(b instanceof Reconstructor.ReconstructorBuild reconstructorBuild) {
                 drawBar(b, 0, b.block.size * 4 - 2, reconstructorBuild.fraction(), b.team.color);
-            if(b instanceof UnitFactory.UnitFactoryBuild factoryBuild)
+            }
+
+            if(b instanceof UnitFactory.UnitFactoryBuild factoryBuild) {
                 drawBar(b, 0, b.block.size * 4 - 2, factoryBuild.fraction(), b.team.color);
+            }
         }
     }
 
     void drawBar(Building b, float offsetX, float offsetY, float progress, Color color) {
-        float bx = b.x + offsetX, by = b.y + offsetY;
-        float width = b.block.size * 7.5f, height = 2;
+        float bx = b.x + offsetX;
+        float by = b.y + offsetY;
+        float backgroundWidth = b.block.size * 7.5f;
+        float backgroundHeight = 2;
+        float progressWidth = b.block.size * 7.5f - 0.5f;
+        float progressHeight = 2 - 0.5f;
+
+
         Draw.color(Pal.gray);
         Fill.quad(
-                bx - width/2, by + height/2,
-                bx - width/2, by - height/2,
-                bx + width/2, by - height/2,
-                bx + width/2, by + height/2);
+                bx - backgroundWidth/2, by + backgroundHeight/2,
+                bx - backgroundWidth/2, by - backgroundHeight/2,
+                bx + backgroundWidth/2, by - backgroundHeight/2,
+                bx + backgroundWidth/2, by + backgroundHeight/2);
         Draw.color(color);
-        width = b.block.size * 7.5f - 0.5f; height = 2 - 0.5f;
         Fill.quad(
-                bx - width/2, by + height/2,
-                bx - width/2, by - height/2,
-                bx - width/2 + width * progress, by - height/2,
-                bx - width/2 + width * progress, by + height/2);
+                bx - progressWidth/2, by + progressHeight/2,
+                bx - progressWidth/2, by - progressHeight/2,
+                bx - progressWidth/2 + progressWidth * progress, by - progressHeight/2,
+                bx - progressWidth/2 + progressWidth * progress, by + progressHeight/2);
+        Draw.color();
     }
 }

@@ -37,6 +37,8 @@ public class UnitPathLineDraw extends OverDraw {
 
                 Lines.line(from.worldx(), from.worldy(), to.worldx(), to.worldy());
             }
+
+            Draw.color();
         }
     }
 }
